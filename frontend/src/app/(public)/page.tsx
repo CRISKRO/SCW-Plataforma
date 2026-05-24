@@ -141,7 +141,7 @@ export default function Home() {
         </AnimatePresence>
 
         {/* Content */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-16">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full -mt-8 md:mt-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={`content-${currentSlide}`}
@@ -149,24 +149,24 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.7, ease: "easeOut" }}
-              className={`flex items-center gap-12 ${slide.id ? 'justify-between' : 'justify-start'}`}
+              className={`flex flex-col-reverse lg:flex-row items-center gap-6 lg:gap-12 ${slide.id ? 'justify-between' : 'justify-start'}`}
             >
               {/* Left: Text content */}
-              <div className="max-w-2xl flex-shrink-0">
+              <div className="w-full max-w-2xl flex-shrink-0 text-center lg:text-left flex flex-col items-center lg:items-start">
                 {/* Event badge */}
                 {slide.date && (
-                  <div className="flex flex-wrap items-center gap-3 mb-6">
-                    <span className="inline-flex items-center gap-2 bg-red-600/90 backdrop-blur-sm text-white text-xs font-black uppercase tracking-widest px-4 py-2 rounded-full">
-                      <Ticket className="w-3.5 h-3.5" />
+                  <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 mb-4 lg:mb-6">
+                    <span className="inline-flex items-center gap-1.5 bg-red-600/90 backdrop-blur-sm text-white text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-full">
+                      <Ticket className="w-3 h-3" />
                       Próximo Evento
                     </span>
-                    <span className="inline-flex items-center gap-1.5 text-zinc-300 text-sm font-medium bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/10">
-                      <Calendar className="w-3.5 h-3.5 text-red-400" />
+                    <span className="inline-flex items-center gap-1.5 text-zinc-300 text-[10px] sm:text-sm font-medium bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/10">
+                      <Calendar className="w-3 h-3 text-red-400" />
                       {new Date(slide.date).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}
                     </span>
                     {slide.location && (
-                      <span className="inline-flex items-center gap-1.5 text-zinc-300 text-sm font-medium bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/10">
-                        <MapPin className="w-3.5 h-3.5 text-red-400" />
+                      <span className="inline-flex items-center gap-1.5 text-zinc-300 text-[10px] sm:text-sm font-medium bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/10">
+                        <MapPin className="w-3 h-3 text-red-400" />
                         {slide.location}
                       </span>
                     )}
@@ -184,7 +184,7 @@ export default function Home() {
                   ))}
                 </h1>
 
-                <p className="text-base md:text-xl text-zinc-400 font-light max-w-xl mb-8 md:mb-10 line-clamp-3 md:line-clamp-2">
+                <p className="text-sm sm:text-base md:text-xl text-zinc-300 font-light max-w-xl mb-6 md:mb-10 line-clamp-none">
                   {slide.subtitle}
                 </p>
 
@@ -220,12 +220,12 @@ export default function Home() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 60 }}
                   transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
-                  className="hidden lg:block flex-shrink-0 relative"
+                  className="block flex-shrink-0 relative w-48 sm:w-64 lg:w-96 xl:w-[420px] mx-auto lg:mx-0"
                 >
                   {/* Glow effect behind poster */}
-                  <div className="absolute -inset-8 bg-red-600/15 blur-3xl rounded-full" />
+                  <div className="absolute -inset-4 sm:-inset-8 bg-red-600/15 blur-2xl sm:blur-3xl rounded-full" />
                   {/* Poster image */}
-                  <div className="relative w-96 xl:w-[420px] aspect-[2/3] rounded-2xl overflow-hidden border border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.9)]">
+                  <div className="relative w-full aspect-[2/3] rounded-xl sm:rounded-2xl overflow-hidden border border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.9)]">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={slide.image}
