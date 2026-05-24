@@ -188,7 +188,7 @@ export default function Home() {
                   {slide.subtitle}
                 </p>
 
-                <div className="flex flex-wrap gap-4">
+                <div className="flex flex-col sm:flex-row gap-4">
                   {(slide.cta || []).map((btn: any) => (
                     btn.primary ? (
                       <Link
