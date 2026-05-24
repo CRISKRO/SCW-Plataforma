@@ -86,8 +86,9 @@ class CreateOrderView(APIView):
                 
                 commission = getattr(settings, 'MERCADOPAGO_COMMISSION_RATE', 0.0401)
                 price_with_commission = round(float(item_data['price']) * (1 + commission), 2)
+                size_str = f"({item_data['size']})" if item_data['size'] else ""
                 mp_items.append({
-                    "title": f"{item_data['product_name']} {f'({item_data['size']})' if item_data['size'] else ''}".strip(),
+                    "title": f"{item_data['product_name']} {size_str}".strip(),
                     "quantity": item_data['quantity'],
                     "currency_id": "MXN",
                     "unit_price": price_with_commission
