@@ -55,13 +55,20 @@ function generateOTP() {
 }
 
 function normalizePhone(phone) {
-  let p = phone.replace(/[\s\-\(\)]/g, '');
-  if (p.startsWith('00')) p = '+' + p.slice(2);
-  if (!p.startsWith('+')) {
-    p = '+52' + p.replace(/^0/, '');
+  // Eliminar espacios, guiones, paréntesis y el signo +
+  let p = phone.replace(/[\s\-\(\)\+]/g, '');
+  
+  if (p.startsWith('00')) p = p.slice(2);
+  if (p.startsWith('044') || p.startsWith('045')) p = p.slice(3); // Prefijos antiguos de México
+  
+  // Si el número tiene 10 dígitos, asumimos que es de México
+  if (p.length === 10) {
+    p = '52' + p;
   }
-  const digits = p.replace('+', '');
-  return digits + '@c.us';
+  // Si tiene 12 dígitos pero empieza con 1 (ej. US), lo dejamos como está.
+  // La lógica principal confía en que si empieza con 52 o ya tiene su lada internacional, estará bien.
+
+  return p + '@c.us';
 }
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
@@ -196,21 +203,35 @@ app.post('/send-otp', async (req, res) => {
   }
 
   const code = generateOTP();
-  const whatsappId = normalizePhone(phone);
   const expiresAt = Date.now() + 10 * 60 * 1000; // 10 min
 
-  otpStore.set(phone, { code, expiresAt });
-
-  const message =
-    `🥊 *SCW — Código de Verificación*\n\n` +
-    `Tu código para el SCW Dojo es:\n\n` +
-    `*${code}*\n\n` +
-    `⏳ Válido por 10 minutos.\n` +
-    `Si no solicitaste esto, ignora el mensaje.`;
+  let digits = normalizePhone(phone).replace('@c.us', '');
 
   try {
+    // Intentar obtener el ID registrado en WhatsApp
+    let numberId = await client.getNumberId(digits);
+    
+    // Si no se encuentra y es un número de México (52 + 10 dígitos), intentar con el prefijo 521
+    if (!numberId && digits.startsWith('52') && digits.length === 12) {
+      numberId = await client.getNumberId('521' + digits.slice(2));
+    }
+
+    if (!numberId) {
+      return res.status(400).json({ error: 'El número no está registrado en WhatsApp.' });
+    }
+
+    const whatsappId = numberId._serialized;
+    otpStore.set(phone, { code, expiresAt });
+
+    const message =
+      `🥊 *SCW — Código de Verificación*\n\n` +
+      `Tu código para el SCW Dojo es:\n\n` +
+      `*${code}*\n\n` +
+      `⏳ Válido por 10 minutos.\n` +
+      `Si no solicitaste esto, ignora el mensaje.`;
+
     await client.sendMessage(whatsappId, message);
-    console.log(`📤 Código enviado a ${phone}`);
+    console.log(`📤 Código enviado a ${phone} (${whatsappId})`);
     res.json({ success: true, message: 'Código enviado por WhatsApp.' });
   } catch (error) {
     console.error('Error enviando:', error.message);

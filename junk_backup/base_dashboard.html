@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es-mx">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SCW Dashboard{% endblock %}</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>SCW ADMIN</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="{% url 'dashboard_index' %}" class="nav-item">Resumen</a></li>
+                    <li><a href="{% url 'dashboard_event_list' %}" class="nav-item">Eventos</a></li>
+                    <li><a href="#" class="nav-item">Roster</a></li>
+                    <li><a href="#" class="nav-item">Tienda (Merch)</a></li>
+                    <li><a href="#" class="nav-item">Escuela (Alumnos)</a></li>
+                    <li><a href="#" class="nav-item">Noticias y Galería</a></li>
+                    <li><a href="#" class="nav-item">PPV / Suscripciones</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="{% url 'home' %}" class="btn btn-outline" style="width:100%; text-align:center;">Ver Sitio Web</a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="topbar">
+                <div class="topbar-title">
+                    <h3>{% block page_title %}Dashboard{% endblock %}</h3>
+                </div>
+                <div class="topbar-user">
+                    <span>Hola, {{ request.user.username }}</span>
+                </div>
+            </header>
+
+            <div class="content-area">
+                {% block content %}
+                {% endblock %}
+            </div>
+        </main>
+    </div>
+</body>
+</html>

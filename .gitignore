@@ -1,0 +1,31 @@
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+venv/
+env/
+.env
+db.sqlite3
+
+# WhatsApp
+.wwebjs_auth/
+.wwebjs_cache/
+
+# Android
+.gradle/
+.idea/
+local.properties
+app/build/
+build/
+
+# IDEs
+.vscode/
+*.swp
+.DS_Store

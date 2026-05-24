@@ -32,11 +32,17 @@ class Order(models.Model):
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.RESTRICT)
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True)
     product_name = models.CharField(_('nombre del producto (snapshot)'), max_length=200)
     quantity = models.PositiveIntegerField(default=1)
     price = models.DecimalField(_('precio unitario (snapshot)'), max_digits=8, decimal_places=2)
-    size = models.CharField(_('talla'), max_length=20, blank=True)
+    size = models.CharField(_('talla o variante'), max_length=100, blank=True)
+    
+    # Nuevos campos para validación de boletos QR
+    is_scanned = models.BooleanField(_('ya escaneado'), default=False)
+    scanned_at = models.DateTimeField(_('fecha/hora de escaneo'), null=True, blank=True)
+    event = models.ForeignKey('events.Event', on_delete=models.SET_NULL, null=True, blank=True, help_text="Vincular a un evento para verificar vigencia")
+
 
     class Meta:
         verbose_name = 'Artículo de Orden'

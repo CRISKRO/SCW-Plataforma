@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="hero-section">
+    <h2>La Emoción de la Lucha Libre</h2>
+    <p>Siente la adrenalina, apoya a tus favoritos y únete a la mejor escuela.</p>
+</section>
+
+<section class="carousel-section">
+    <h3 style="margin-left: 5%; margin-top: 2rem;">Destacados</h3>
+    <div class="carousel-container">
+        
+        <!-- School Plan -->
+        <div class="carousel-item">
+            <h3>Plan de Escuela</h3>
+            <p>Aprende de los mejores. Conviértete en el próximo campeón de la SCW. Inscríbete hoy y comienza tu camino a la gloria.</p>
+            <a href="#" class="btn">Quiero inscribirme</a>
+        </div>
+
+        <!-- Upcoming Events -->
+        {% for event in upcoming_events %}
+        <div class="carousel-item">
+            <h3>{{ event.title }}</h3>
+            <p>{{ event.date|date:"d M, Y H:i" }}</p>
+            <p>{{ event.description|truncatewords:15 }}</p>
+            <a href="#" class="btn btn-outline">Comprar Boletos</a>
+        </div>
+        {% empty %}
+        <div class="carousel-item">
+            <h3>Próximos Eventos</h3>
+            <p>Mantente atento, pronto anunciaremos nuevas carteleras.</p>
+        </div>
+        {% endfor %}
+
+        <!-- Videos / News -->
+        {% for article in latest_news %}
+        <div class="carousel-item">
+            <h3>{{ article.title }}</h3>
+            <p>Noticia - {{ article.created_at|date:"d M, Y" }}</p>
+            <a href="#" class="btn btn-outline">Leer más / Ver Video</a>
+        </div>
+        {% endfor %}
+        
+    </div>
+</section>
+{% endblock content %}

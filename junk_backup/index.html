@@ -1,0 +1,24 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_title %}Resumen General{% endblock %}
+
+{% block content %}
+<div class="stat-grid">
+    <div class="stat-card">
+        <h4>Próximos Eventos</h4>
+        <div class="number">{{ events_count }}</div>
+    </div>
+    <div class="stat-card">
+        <h4>Luchadores (Roster)</h4>
+        <div class="number">{{ wrestlers_count }}</div>
+    </div>
+    <div class="stat-card">
+        <h4>Alumnos Activos</h4>
+        <div class="number">{{ students_count }}</div>
+    </div>
+    <div class="stat-card">
+        <h4>Productos Activos</h4>
+        <div class="number">{{ products_count }}</div>
+    </div>
+</div>
+{% endblock %}
