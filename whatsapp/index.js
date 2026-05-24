@@ -80,6 +80,16 @@ function normalizePhone(phone) {
   return p + '@c.us';
 }
 
+const crypto = require('crypto');
+
+function generateStatelessOTP(phone) {
+  const hour = Math.floor(Date.now() / (1000 * 60 * 60)); 
+  const secret = 'SCW_PRO_WRESTLING_2026';
+  const data = `${phone}-${secret}-${hour}`;
+  const hash = crypto.createHash('md5').update(data).digest('hex');
+  return parseInt(hash.substring(0, 8), 16).toString().substring(0, 6).padStart(6, '1');
+}
+
 // ─── Routes ───────────────────────────────────────────────────────────────────
 
 // QR Code page — scan this in WhatsApp to link
@@ -211,16 +221,12 @@ app.post('/send-otp', async (req, res) => {
     });
   }
 
-  const code = generateOTP();
-  const expiresAt = Date.now() + 10 * 60 * 1000; // 10 min
+  const code = generateStatelessOTP(phone);
 
   let digits = normalizePhone(phone).replace('@c.us', '');
 
   try {
-    // Intentar obtener el ID registrado en WhatsApp
     let numberId = await client.getNumberId(digits);
-    
-    // Si no se encuentra y es un número de México (52 + 10 dígitos), intentar con el prefijo 521
     if (!numberId && digits.startsWith('52') && digits.length === 12) {
       numberId = await client.getNumberId('521' + digits.slice(2));
     }
@@ -230,13 +236,12 @@ app.post('/send-otp', async (req, res) => {
     }
 
     const whatsappId = numberId._serialized;
-    otpStore.set(phone, { code, expiresAt });
 
     const message =
       `🥊 *SCW — Código de Verificación*\n\n` +
       `Tu código para el SCW Dojo es:\n\n` +
       `*${code}*\n\n` +
-      `⏳ Válido por 10 minutos.\n` +
+      `⏳ Válido temporalmente.\n` +
       `Si no solicitaste esto, ignora el mensaje.`;
 
     await client.sendMessage(whatsappId, message);
@@ -253,19 +258,20 @@ app.post('/verify-otp', (req, res) => {
   const { phone, code } = req.body;
   if (!phone || !code) return res.status(400).json({ error: 'Se requieren "phone" y "code".' });
 
-  const stored = otpStore.get(phone);
-  if (!stored) return res.status(400).json({ error: 'No hay código activo. Solicita uno nuevo.' });
-  if (Date.now() > stored.expiresAt) {
-    otpStore.delete(phone);
-    return res.status(400).json({ error: 'El código expiró. Solicita uno nuevo.' });
-  }
-  if (stored.code !== String(code)) {
-    return res.status(400).json({ error: 'Código incorrecto. Intenta de nuevo.' });
-  }
+  // Generate the expected code statelessly
+  const expectedCode = generateStatelessOTP(phone);
+  // Also check previous hour just in case they rolled over the hour boundary
+  const prevHour = Math.floor(Date.now() / (1000 * 60 * 60)) - 1;
+  const dataPrev = `${phone}-SCW_PRO_WRESTLING_2026-${prevHour}`;
+  const hashPrev = crypto.createHash('md5').update(dataPrev).digest('hex');
+  const expectedCodePrev = parseInt(hashPrev.substring(0, 8), 16).toString().substring(0, 6).padStart(6, '1');
 
-  otpStore.delete(phone);
-  console.log(`✅ Verificado: ${phone}`);
-  res.json({ success: true });
+  if (String(code) === expectedCode || String(code) === expectedCodePrev) {
+    console.log(`✅ Verificado: ${phone}`);
+    res.json({ success: true });
+  } else {
+    return res.status(400).json({ error: 'Código incorrecto o expirado. Intenta de nuevo.' });
+  }
 });
 
 // ─── Start ────────────────────────────────────────────────────────────────────
