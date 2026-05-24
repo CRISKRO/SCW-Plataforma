@@ -173,7 +173,7 @@ export default function Home() {
                   </div>
                 )}
 
-                <h1 className="text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter uppercase leading-none mb-6">
+                <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter uppercase leading-none mb-4 md:mb-6">
                   {slide.title.split(' ').map((word: string, i: number) => (
                     <span key={i}>
                       {i === slide.title.split(' ').length - 1
@@ -184,7 +184,7 @@ export default function Home() {
                   ))}
                 </h1>
 
-                <p className="text-lg md:text-xl text-zinc-400 font-light max-w-xl mb-10 line-clamp-2">
+                <p className="text-base md:text-xl text-zinc-400 font-light max-w-xl mb-8 md:mb-10 line-clamp-3 md:line-clamp-2">
                   {slide.subtitle}
                 </p>
 
@@ -194,17 +194,17 @@ export default function Home() {
                       <Link
                         key={btn.label}
                         href={btn.href}
-                        className="group inline-flex items-center gap-2 px-8 py-4 font-black uppercase tracking-widest text-black bg-white hover:bg-zinc-100 transition-all hover:scale-105 rounded-sm"
+                        className="group flex-1 md:flex-none inline-flex justify-center items-center gap-2 px-4 py-3 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-black uppercase tracking-widest text-black bg-white hover:bg-zinc-100 transition-all hover:scale-105 rounded-sm"
                       >
-                        <Ticket className="w-5 h-5" />
+                        <Ticket className="w-4 h-4 md:w-5 md:h-5" />
                         {btn.label}
-                        <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        <ChevronRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
                       </Link>
                     ) : (
                       <Link
                         key={btn.label}
                         href={btn.href}
-                        className="inline-flex items-center gap-2 px-8 py-4 font-bold uppercase tracking-widest text-white border border-white/30 bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all hover:scale-105 rounded-sm"
+                        className="flex-1 md:flex-none inline-flex justify-center items-center gap-2 px-4 py-3 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-bold uppercase tracking-widest text-white border border-white/30 bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all hover:scale-105 rounded-sm"
                       >
                         {btn.label}
                       </Link>

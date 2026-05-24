@@ -241,39 +241,41 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                   </div>
 
                   {/* Seats by row */}
-                  <div className="space-y-4">
-                    {Array.from(new Set(selectedZone.seats.map((s: any) => s.row_name))).map((rowName: any) => (
-                      <div key={rowName} className="flex items-center gap-3">
-                        <span className="w-14 text-right text-xs font-bold text-zinc-500 shrink-0">Fila {rowName}</span>
-                        <div className="flex gap-1.5 flex-wrap">
-                          {selectedZone.seats
-                            .filter((s: any) => s.row_name === rowName)
-                            .sort((a: any, b: any) => a.seat_number - b.seat_number)
-                            .map((seat: any) => {
-                              const isSelected = isSeatSelected(seat.id);
-                              return (
-                                <button
-                                  key={seat.id}
-                                  disabled={!seat.is_available}
-                                  onClick={() => toggleSeat(seat, selectedZone)}
-                                  title={seat.is_available
-                                    ? `Fila ${seat.row_name} · Asiento ${seat.seat_number}`
-                                    : 'Ocupado'}
-                                  className={`w-9 h-9 rounded-t-lg border-b-4 flex items-center justify-center text-xs font-bold transition-all select-none ${
-                                    !seat.is_available
-                                      ? 'bg-red-950/50 border-red-900/50 text-red-900 cursor-not-allowed'
-                                      : isSelected
-                                        ? 'bg-red-600 border-red-400 text-white scale-110 shadow-[0_0_10px_rgba(239,68,68,0.5)]'
-                                        : 'bg-zinc-800 border-zinc-600 hover:bg-zinc-600 hover:border-zinc-400 text-zinc-300'
-                                  }`}
-                                >
-                                  {seat.seat_number}
-                                </button>
-                              );
-                            })}
+                  <div className="overflow-x-auto pb-6 -mx-4 px-4 md:mx-0 md:px-0">
+                    <div className="space-y-4 min-w-[max-content]">
+                      {Array.from(new Set(selectedZone.seats.map((s: any) => s.row_name))).map((rowName: any) => (
+                        <div key={rowName} className="flex items-center gap-3">
+                          <span className="w-14 text-right text-xs font-bold text-zinc-500 shrink-0">Fila {rowName}</span>
+                          <div className="flex gap-1.5 flex-wrap">
+                            {selectedZone.seats
+                              .filter((s: any) => s.row_name === rowName)
+                              .sort((a: any, b: any) => a.seat_number - b.seat_number)
+                              .map((seat: any) => {
+                                const isSelected = isSeatSelected(seat.id);
+                                return (
+                                  <button
+                                    key={seat.id}
+                                    disabled={!seat.is_available}
+                                    onClick={() => toggleSeat(seat, selectedZone)}
+                                    title={seat.is_available
+                                      ? `Fila ${seat.row_name} · Asiento ${seat.seat_number}`
+                                      : 'Ocupado'}
+                                    className={`w-9 h-9 rounded-t-lg border-b-4 flex items-center justify-center text-xs font-bold transition-all select-none shrink-0 ${
+                                      !seat.is_available
+                                        ? 'bg-red-950/50 border-red-900/50 text-red-900 cursor-not-allowed'
+                                        : isSelected
+                                          ? 'bg-red-600 border-red-400 text-white scale-110 shadow-[0_0_10px_rgba(239,68,68,0.5)]'
+                                          : 'bg-zinc-800 border-zinc-600 hover:bg-zinc-600 hover:border-zinc-400 text-zinc-300'
+                                    }`}
+                                  >
+                                    {seat.seat_number}
+                                  </button>
+                                );
+                              })}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
 
                   {/* Legend */}

@@ -86,9 +86,10 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* CTA / Auth */}
-          <div className="hidden md:flex items-center space-x-6">
+          {/* Right Side Actions */}
+          <div className="flex items-center space-x-4 md:space-x-6">
             
+            {/* Always visible Cart */}
             <Link href="/carrito" className="relative text-zinc-300 hover:text-white transition-colors">
               <ShoppingCart className="w-6 h-6" />
               {mounted && totalItems > 0 && (
@@ -98,40 +99,43 @@ export default function Navbar() {
               )}
             </Link>
 
-            {isAuthenticated ? (
-              <div className="flex items-center gap-6">
-                {(user?.role === 'SUPERADMIN' || user?.role === 'ADMIN') && (
-                  <Link href="/admin" className="text-red-500 hover:text-red-400 text-sm font-bold uppercase tracking-widest transition-colors flex items-center gap-1">
-                    [Panel Admin]
+            {/* Desktop Auth */}
+            <div className="hidden md:flex items-center space-x-6">
+              {isAuthenticated ? (
+                <div className="flex items-center gap-6">
+                  {(user?.role === 'SUPERADMIN' || user?.role === 'ADMIN') && (
+                    <Link href="/admin" className="text-red-500 hover:text-red-400 text-sm font-bold uppercase tracking-widest transition-colors flex items-center gap-1">
+                      [Panel Admin]
+                    </Link>
+                  )}
+                  <Link href="/dashboard" className="flex items-center gap-2 text-sm font-medium text-white hover:text-zinc-300 transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center font-bold">
+                      {user?.first_name?.charAt(0) || 'U'}
+                    </div>
+                    {user?.first_name}
                   </Link>
-                )}
-                <Link href="/dashboard" className="flex items-center gap-2 text-sm font-medium text-white hover:text-zinc-300 transition-colors">
-                  <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center font-bold">
-                    {user?.first_name?.charAt(0) || 'U'}
-                  </div>
-                  {user?.first_name}
-                </Link>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-4">
-                <Link href="/login" className="text-zinc-300 hover:text-white text-sm font-medium uppercase tracking-widest transition-colors">
-                  Login
-                </Link>
-                <Link href="/register" className="bg-white text-black hover:bg-zinc-200 px-5 py-2.5 text-sm font-bold uppercase tracking-widest transition-all hover:scale-105">
-                  Unirse
-                </Link>
-              </div>
-            )}
-          </div>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-4">
+                  <Link href="/login" className="text-zinc-300 hover:text-white text-sm font-medium uppercase tracking-widest transition-colors">
+                    Login
+                  </Link>
+                  <Link href="/register" className="bg-white text-black hover:bg-zinc-200 px-5 py-2.5 text-sm font-bold uppercase tracking-widest transition-all hover:scale-105">
+                    Unirse
+                  </Link>
+                </div>
+              )}
+            </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="text-zinc-300 hover:text-white focus:outline-none"
-            >
-              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
+            {/* Mobile menu button */}
+            <div className="md:hidden flex items-center">
+              <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="text-zinc-300 hover:text-white focus:outline-none"
+              >
+                {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </button>
+            </div>
           </div>
         </div>
       </div>
