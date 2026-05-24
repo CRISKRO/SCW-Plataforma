@@ -23,6 +23,9 @@ const EXPERIENCE_LABELS: Record<string, string> = {
   ADVANCED: 'Avanzado (Ya he luchado o estoy listo para debutar)',
 };
 
+type Step = 'check' | 'verify_whatsapp' | 'form' | 'success';
+
+
 export default function EscuelaPage() {
   const { isAuthenticated, user } = useAuthStore();
   const [step, setStep] = useState<Step>('check');
