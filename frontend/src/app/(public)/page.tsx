@@ -108,7 +108,7 @@ export default function Home() {
     <div className="bg-black text-white selection:bg-zinc-500 selection:text-white">
 
       {/* Hero Section Carousel */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[110dvh] md:min-h-0 md:h-screen flex items-center justify-center overflow-hidden pb-32 md:pb-0">
 
         {/* Background: full-screen for static slides, dark for event slides */}
         <AnimatePresence mode="wait">
