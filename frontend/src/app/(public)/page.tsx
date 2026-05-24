@@ -188,13 +188,13 @@ export default function Home() {
                   {slide.subtitle}
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 md:gap-4">
                   {(slide.cta || []).map((btn: any) => (
                     btn.primary ? (
                       <Link
                         key={btn.label}
                         href={btn.href}
-                        className="group flex-1 md:flex-none inline-flex justify-center items-center gap-2 px-4 py-3 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-black uppercase tracking-widest text-black bg-white hover:bg-zinc-100 transition-all hover:scale-105 rounded-sm"
+                        className="group inline-flex justify-center items-center gap-2 px-6 py-3 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-black uppercase tracking-widest text-black bg-white hover:bg-zinc-100 transition-all hover:scale-105 rounded-sm"
                       >
                         <Ticket className="w-4 h-4 md:w-5 md:h-5" />
                         {btn.label}
@@ -204,7 +204,7 @@ export default function Home() {
                       <Link
                         key={btn.label}
                         href={btn.href}
-                        className="flex-1 md:flex-none inline-flex justify-center items-center gap-2 px-4 py-3 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-bold uppercase tracking-widest text-white border border-white/30 bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all hover:scale-105 rounded-sm"
+                        className="inline-flex justify-center items-center gap-2 px-6 py-3 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-bold uppercase tracking-widest text-white border border-white/30 bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all hover:scale-105 rounded-sm"
                       >
                         {btn.label}
                       </Link>
@@ -248,18 +248,18 @@ export default function Home() {
           </AnimatePresence>
         </div>
 
-        {/* Navigation arrows */}
+        {/* Navigation arrows (hidden on mobile to prevent text overlap) */}
         {slides.length > 1 && (
           <>
             <button
               onClick={() => goTo(currentSlide - 1)}
-              className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-black/50 border border-white/10 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white hover:text-black transition-all"
+              className="hidden md:flex absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-black/50 border border-white/10 backdrop-blur-sm items-center justify-center text-white hover:bg-white hover:text-black transition-all"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
             <button
               onClick={() => goTo(currentSlide + 1)}
-              className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-black/50 border border-white/10 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white hover:text-black transition-all"
+              className="hidden md:flex absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-black/50 border border-white/10 backdrop-blur-sm items-center justify-center text-white hover:bg-white hover:text-black transition-all"
             >
               <ChevronRight className="w-6 h-6" />
             </button>
