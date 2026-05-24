@@ -15,7 +15,7 @@ const envWhatsappUrl = typeof process !== 'undefined' && process.env?.NEXT_PUBLI
   ? process.env.NEXT_PUBLIC_WHATSAPP_SERVICE
   : undefined;
 
-const WHATSAPP_SERVICE = envWhatsappUrl || `${browserOrigin.replace(/:\d+$/, '')}:3001`;
+const WHATSAPP_SERVICE = envWhatsappUrl || 'https://scw-whatsapp.onrender.com';
 const EXPERIENCE_LABELS: Record<string, string> = {
   NONE: 'Ninguna. Quiero empezar desde cero.',
   BEGINNER: 'Principiante (He entrenado un poco)',
