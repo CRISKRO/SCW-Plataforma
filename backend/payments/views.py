@@ -118,7 +118,10 @@ class CreateOrderView(APIView):
                 preference_response = mp.preference().create(preference_data)
                 preference = preference_response.get("response", {})
                 
-                init_point = preference.get("init_point", "")
+                is_test = settings.MERCADOPAGO_ACCESS_TOKEN.startswith("TEST-")
+                init_point = preference.get("sandbox_init_point") if is_test else preference.get("init_point")
+                if not init_point:
+                    init_point = preference.get("init_point", "")
                 order.mp_preference_id = preference.get("id", "")
                 order.save()
 
