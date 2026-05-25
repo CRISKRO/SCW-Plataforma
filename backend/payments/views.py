@@ -97,16 +97,21 @@ class CreateOrderView(APIView):
             # Integrate with MercadoPago SDK to generate a real preference_id
             try:
                 mp = mercadopago.SDK(settings.MERCADOPAGO_ACCESS_TOKEN)
+                frontend_url = request.headers.get('origin', 'http://localhost:3000')
+                backend_url = f"{request.scheme}://{request.get_host()}"
+                
                 preference_data = {
                     "items": mp_items,
                     "payer": {
                         "email": data['contact_email']
                     },
                     "back_urls": {
-                        "success": "http://localhost:3000/carrito/success",
-                        "failure": "http://localhost:3000/carrito",
-                        "pending": "http://localhost:3000/carrito"
+                        "success": f"{frontend_url}/carrito/success",
+                        "failure": f"{frontend_url}/carrito",
+                        "pending": f"{frontend_url}/carrito"
                     },
+                    "auto_return": "approved",
+                    "notification_url": f"{backend_url}/api/payments/webhook/",
                     "external_reference": str(order.id)
                 }
                 
@@ -317,3 +322,51 @@ class ValidateTicketView(APIView):
 
         return Response({"valid": True, "message": "✅ Acceso autorizado", "item": item.product_name, "size": item.size})
 
+
+class WebhookView(APIView):
+    """Webhook para notificaciones asíncronas de Mercado Pago"""
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        topic = request.query_params.get("topic") or request.data.get("type")
+        
+        if topic == "payment":
+            payment_id = request.query_params.get("id") or request.data.get("data", {}).get("id")
+            if payment_id:
+                try:
+                    mp = mercadopago.SDK(settings.MERCADOPAGO_ACCESS_TOKEN)
+                    pay_response = mp.payment().get(int(payment_id))
+                    payment = pay_response.get("response", {})
+                    
+                    external_reference = payment.get("external_reference")
+                    verified_status = payment.get("status", "")
+                    
+                    if external_reference and verified_status == "approved":
+                        order = Order.objects.get(id=int(external_reference))
+                        
+                        if order.status != Order.Status.PAID:
+                            order.mp_payment_id = str(payment_id)
+                            order.status = Order.Status.PAID
+                            order.save()
+
+                            try:
+                                from .email_tickets import send_ticket_email
+                                send_ticket_email(order)
+                            except Exception as mail_err:
+                                print("Email error from webhook:", mail_err)
+                except Exception as e:
+                    print("Webhook error:", e)
+        
+        return Response({"status": "ok"}, status=200)
+
+
+from rest_framework.permissions import IsAuthenticated
+
+class MyOrdersView(APIView):
+    """Retorna el historial de compras del usuario autenticado"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        orders = Order.objects.filter(user=request.user).order_by('-created_at')
+        serializer = OrderSerializer(orders, many=True)
+        return Response(serializer.data, status=200)

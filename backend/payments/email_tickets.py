@@ -89,6 +89,7 @@ def send_ticket_email(order):
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=[order.contact_email]
     )
+    email.mixed_subtype = 'related'
     email.attach_alternative(html_body, "text/html")
 
     # Attach QR images inline

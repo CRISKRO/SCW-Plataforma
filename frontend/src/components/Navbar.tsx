@@ -158,12 +158,35 @@ export default function Navbar() {
                 {item.name}
               </Link>
             ))}
-            {!isAuthenticated && (
+            
+            {isAuthenticated ? (
               <div className="pt-4 flex flex-col gap-3 px-3">
-                <Link href="/login" className="text-center text-white border border-white/20 py-3 uppercase tracking-widest font-medium">
+                <Link 
+                  href="/dashboard" 
+                  className="flex items-center gap-3 text-white border border-white/20 py-3 px-4 uppercase tracking-widest font-medium"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center font-bold">
+                    {user?.first_name?.charAt(0) || 'U'}
+                  </div>
+                  Mi Perfil
+                </Link>
+                {(user?.role === 'SUPERADMIN' || user?.role === 'ADMIN') && (
+                  <Link 
+                    href="/admin" 
+                    className="text-center text-red-500 border border-red-500/20 py-3 uppercase tracking-widest font-medium"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Panel Admin
+                  </Link>
+                )}
+              </div>
+            ) : (
+              <div className="pt-4 flex flex-col gap-3 px-3">
+                <Link href="/login" onClick={() => setIsOpen(false)} className="text-center text-white border border-white/20 py-3 uppercase tracking-widest font-medium">
                   Login
                 </Link>
-                <Link href="/register" className="text-center bg-white text-black py-3 uppercase tracking-widest font-bold">
+                <Link href="/register" onClick={() => setIsOpen(false)} className="text-center bg-white text-black py-3 uppercase tracking-widest font-bold">
                   Unirse
                 </Link>
               </div>

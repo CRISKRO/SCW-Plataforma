@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import CreateOrderView, OrderViewSet, MPPublicKeyView, ProcessCardPaymentView, VerifyPaymentView, ValidateTicketView
+from .views import CreateOrderView, OrderViewSet, MPPublicKeyView, ProcessCardPaymentView, VerifyPaymentView, ValidateTicketView, WebhookView, MyOrdersView
 
 router = DefaultRouter()
 router.register(r'orders', OrderViewSet, basename='order')
@@ -11,5 +11,7 @@ urlpatterns = [
     path('process-card/', ProcessCardPaymentView.as_view(), name='process-card'),
     path('verify/', VerifyPaymentView.as_view(), name='verify-payment'),
     path('validate-ticket/', ValidateTicketView.as_view(), name='validate-ticket'),
+    path('webhook/', WebhookView.as_view(), name='webhook'),
+    path('my-orders/', MyOrdersView.as_view(), name='my-orders'),
     path('', include(router.urls)),
 ]

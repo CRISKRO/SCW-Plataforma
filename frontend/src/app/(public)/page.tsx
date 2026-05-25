@@ -194,7 +194,7 @@ export default function Home() {
                       <Link
                         key={btn.label}
                         href={btn.href}
-                        className="group inline-flex justify-center items-center gap-2 px-6 py-3 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-black uppercase tracking-widest text-black bg-white hover:bg-zinc-100 transition-all hover:scale-105 rounded-sm"
+                        className="group inline-flex w-full sm:w-auto justify-center items-center gap-2 px-6 py-3 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-black uppercase tracking-widest text-black bg-white hover:bg-zinc-100 transition-all hover:scale-105 rounded-sm"
                       >
                         <Ticket className="w-4 h-4 md:w-5 md:h-5" />
                         {btn.label}
@@ -204,7 +204,7 @@ export default function Home() {
                       <Link
                         key={btn.label}
                         href={btn.href}
-                        className="inline-flex justify-center items-center gap-2 px-6 py-3 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-bold uppercase tracking-widest text-white border border-white/30 bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all hover:scale-105 rounded-sm"
+                        className="inline-flex w-full sm:w-auto justify-center items-center gap-2 px-6 py-3 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-bold uppercase tracking-widest text-white border border-white/30 bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all hover:scale-105 rounded-sm"
                       >
                         {btn.label}
                       </Link>
