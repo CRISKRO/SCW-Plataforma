@@ -12,7 +12,10 @@ import {
   GraduationCap,
   Video,
   LogOut,
-  Settings
+  Settings,
+  Menu,
+  X,
+  Home
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
@@ -34,6 +37,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { isAuthenticated, user, logout } = useAuthStore();
   const [mounted, setMounted] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -41,6 +45,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       router.push('/login');
     }
   }, [isAuthenticated, user, router]);
+
+  // Cerrar sidebar al cambiar de ruta en móviles
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [pathname]);
 
   const handleLogout = () => {
     logout();
@@ -59,11 +68,43 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen bg-black text-white">
-      {/* Sidebar */}
-      <aside className="w-64 flex-shrink-0 border-r border-white/10 bg-zinc-950 flex flex-col">
-        <div className="h-16 flex items-center px-6 border-b border-white/10">
-          <h1 className="text-xl font-bold tracking-widest uppercase">SCW Admin</h1>
+    <div className="flex h-screen bg-black text-white relative overflow-hidden">
+      {/* Backdrop oscuro para dispositivos móviles */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 md:hidden transition-all duration-300"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - Oculto con animación de traslación en móviles y visible en escritorio */}
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 border-r border-white/10 bg-zinc-950 flex flex-col transform ${
+        isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      } md:translate-x-0 md:relative md:flex transition-transform duration-300 ease-in-out`}>
+        
+        {/* Encabezado lateral */}
+        <div className="h-16 flex items-center justify-between px-6 border-b border-white/10 flex-shrink-0">
+          <h1 className="text-xl font-bold tracking-widest uppercase bg-clip-text bg-gradient-to-r from-white to-zinc-400">
+            SCW Admin
+          </h1>
+          <button 
+            onClick={() => setIsSidebarOpen(false)}
+            className="p-1.5 text-zinc-400 hover:text-white md:hidden rounded-lg hover:bg-white/5 transition-all"
+            aria-label="Cerrar menú"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Botón para regresar al sitio público / Inicio */}
+        <div className="px-4 py-3 border-b border-white/5 flex-shrink-0">
+          <Link 
+            href="/" 
+            className="flex items-center justify-center gap-2.5 w-full px-3 py-2.5 bg-red-600/10 border border-red-500/20 text-red-400 hover:bg-red-600 hover:text-white rounded-lg text-sm font-bold transition-all duration-300"
+          >
+            <Home className="w-4 h-4" />
+            Regresar al Inicio
+          </Link>
         </div>
         
         <nav className="flex-1 overflow-y-auto py-4">
@@ -75,9 +116,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 <li key={item.name}>
                   <Link 
                     href={item.href}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                       isActive 
-                        ? 'bg-white text-black font-medium' 
+                        ? 'bg-white text-black font-semibold' 
                         : 'text-zinc-400 hover:bg-white/5 hover:text-white'
                     }`}
                   >
@@ -90,10 +131,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </ul>
         </nav>
 
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-white/10 flex-shrink-0">
           <button 
             onClick={handleLogout}
-            className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-red-400 hover:bg-red-500/10 transition-colors text-left"
+            className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-red-400 hover:bg-red-500/10 transition-colors text-left font-medium"
           >
             <LogOut className="w-5 h-5" />
             Cerrar Sesión
@@ -101,11 +142,21 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      {/* Main Content Area */}
+      {/* Área de Contenido Principal */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-black">
-        {/* Topbar */}
-        <header className="h-16 flex items-center justify-between px-8 border-b border-white/10 bg-zinc-950/50 backdrop-blur-md">
-          <h2 className="text-lg font-medium text-zinc-200">Panel de Control</h2>
+        {/* Barra superior con botón hamburguesa móvil */}
+        <header className="h-16 flex items-center justify-between px-6 md:px-8 border-b border-white/10 bg-zinc-950/50 backdrop-blur-md flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 -ml-2 text-zinc-400 hover:text-white md:hidden rounded-lg hover:bg-white/5 transition-all"
+              aria-label="Abrir menú"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+            <h2 className="text-lg font-medium text-zinc-200">Panel de Control</h2>
+          </div>
+          
           <div className="flex items-center gap-4">
             <div className="w-8 h-8 rounded-full bg-zinc-800 border border-white/20 flex items-center justify-center">
               <span className="text-xs font-bold">AD</span>
@@ -113,8 +164,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
         
-        {/* Page Content */}
-        <div className="flex-1 overflow-auto p-8">
+        {/* Contenido Dinámico de la Página con paddings responsivos */}
+        <div className="flex-1 overflow-auto p-4 md:p-8">
           {children}
         </div>
       </main>
