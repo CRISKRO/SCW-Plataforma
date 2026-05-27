@@ -14,6 +14,7 @@ const staticSlides = [
     title: "Lucha Extrema",
     subtitle: "Siente el impacto. Vive la gloria. La plataforma oficial de SCW Strong Classic Wrestling.",
     image: "/images/logoring.png",
+    mobileImage: "/images/logoring_mobile.jpg",
     date: null,
     location: null,
     cta: [
@@ -127,11 +128,20 @@ export default function Home() {
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_left,_#18181b_0%,_#000_60%)]" />
               </>
             ) : (
-              // Static slide: full bleed background image
+              // Static slide: full bleed background image (separated for mobile and desktop)
               <>
+                {/* Desktop Background */}
                 <div
-                  className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                  className="hidden md:block absolute inset-0 bg-cover bg-center bg-no-repeat"
                   style={{ backgroundImage: `url(${slide.image})`, filter: 'brightness(0.35)' }}
+                />
+                {/* Mobile Background */}
+                <div
+                  className="block md:hidden absolute inset-0 bg-cover bg-center bg-no-repeat"
+                  style={{ 
+                    backgroundImage: `url(${slide.mobileImage || slide.image})`, 
+                    filter: 'brightness(0.35)' 
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/60" />

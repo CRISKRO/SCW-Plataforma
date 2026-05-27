@@ -18,7 +18,7 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -51,6 +51,8 @@ api.interceptors.response.use(
         // Clear invalid tokens
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
+        sessionStorage.removeItem('access_token');
+        sessionStorage.removeItem('refresh_token');
         
         // Remove the Authorization header and retry the request
         if (originalRequest.headers) {

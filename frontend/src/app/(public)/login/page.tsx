@@ -11,6 +11,7 @@ import Link from 'next/link';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const setAuth = useAuthStore(state => state.setAuth);
@@ -21,10 +22,10 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
     try {
-      const data = await authService.login({ email, password });
+      const data = await authService.login({ email, password }, rememberMe);
       // Fetch profile after login
       const profile = await authService.getProfile();
-      setAuth(profile, data.access);
+      setAuth(profile, data.access, rememberMe);
       router.push('/dashboard'); // Default redirect
     } catch (err: any) {
       setError('Credenciales inválidas. Intenta de nuevo.');
@@ -100,8 +101,15 @@ export default function LoginPage() {
 
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <input id="remember-me" name="remember-me" type="checkbox" className="h-4 w-4 bg-zinc-900 border-zinc-700 rounded text-white focus:ring-white accent-white" />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-zinc-400">
+              <input 
+                id="remember-me" 
+                name="remember-me" 
+                type="checkbox" 
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-4 w-4 bg-zinc-900 border-zinc-700 rounded text-white focus:ring-white accent-white cursor-pointer" 
+              />
+              <label htmlFor="remember-me" className="ml-2 block text-sm text-zinc-400 cursor-pointer select-none">
                 Recordarme
               </label>
             </div>
