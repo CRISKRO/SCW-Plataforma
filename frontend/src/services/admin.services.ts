@@ -30,6 +30,14 @@ export const adminService = {
     const response = await api.patch(`/students/enrollments/${id}/`, { status });
     return response.data;
   },
+  registerStudentPayment: async (id: number) => {
+    const response = await api.post(`/students/enrollments/${id}/register_payment/`);
+    return response.data;
+  },
+  sendStudentPaymentReminder: async (id: number) => {
+    const response = await api.post(`/students/enrollments/${id}/send_payment_reminder/`);
+    return response.data;
+  },
 
   // Tickets / Zones
   getZonesByEvent: async (eventId: number) => {

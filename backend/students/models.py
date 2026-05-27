@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from datetime import date, timedelta
 
 
 class Enrollment(models.Model):
@@ -29,9 +30,40 @@ class Enrollment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     is_contacted = models.BooleanField(_('ya contactado'), default=False)
 
+    # Campos de control de mensualidad escolar
+    payment_status = models.CharField(
+        _('estado de pago'),
+        max_length=20,
+        choices=[
+            ('PAID', _('Pagado')),
+            ('UNPAID', _('Debe')),
+            ('EXPIRING', _('Por vencer')),
+        ],
+        default='UNPAID'
+    )
+    last_payment_date = models.DateField(_('fecha de último pago'), null=True, blank=True)
+    payment_due_date = models.DateField(_('fecha de próximo vencimiento'), null=True, blank=True)
+
     class Meta:
         verbose_name = 'Inscripción al Dojo'
         verbose_name_plural = 'Inscripciones al Dojo'
 
     def __str__(self):
         return f"Aspirante: {self.name} - {self.get_experience_display()}"
+
+    def update_dynamic_payment_status(self):
+        """Automatically recalculates the payment status based on the due date."""
+        if self.status == 'APPROVED' and self.payment_due_date:
+            today = date.today()
+            if self.payment_due_date < today:
+                if self.payment_status != 'UNPAID':
+                    self.payment_status = 'UNPAID'
+                    self.save(update_fields=['payment_status'])
+            elif today <= self.payment_due_date <= today + timedelta(days=5):
+                if self.payment_status != 'EXPIRING':
+                    self.payment_status = 'EXPIRING'
+                    self.save(update_fields=['payment_status'])
+            else:
+                if self.payment_status != 'PAID':
+                    self.payment_status = 'PAID'
+                    self.save(update_fields=['payment_status'])

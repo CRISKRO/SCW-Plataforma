@@ -210,6 +210,42 @@ app.get('/status', (req, res) => {
   res.json({ ready: clientReady, hasQR: !!latestQR });
 });
 
+// Send custom WhatsApp message
+app.post('/send-message', async (req, res) => {
+  const { phone, message } = req.body;
+  if (!phone || !message) {
+    return res.status(400).json({ error: 'Los campos "phone" y "message" son requeridos.' });
+  }
+
+  if (!clientReady) {
+    return res.status(503).json({
+      error: 'WhatsApp no está conectado. Escanea el QR en: http://localhost:3001/qr'
+    });
+  }
+
+  let digits = normalizePhone(phone).replace('@c.us', '');
+
+  try {
+    let numberId = await client.getNumberId(digits);
+    if (!numberId && digits.startsWith('52') && digits.length === 12) {
+      numberId = await client.getNumberId('521' + digits.slice(2));
+    }
+
+    if (!numberId) {
+      return res.status(400).json({ error: 'El número no está registrado en WhatsApp.' });
+    }
+
+    const whatsappId = numberId._serialized;
+
+    await client.sendMessage(whatsappId, message);
+    console.log(`📤 Mensaje enviado a ${phone} (${whatsappId})`);
+    res.json({ success: true, message: 'Mensaje enviado por WhatsApp.' });
+  } catch (error) {
+    console.error('Error enviando mensaje personalizado:', error.message);
+    res.status(500).json({ error: 'No se pudo enviar el mensaje.' });
+  }
+});
+
 // Send OTP
 app.post('/send-otp', async (req, res) => {
   const { phone } = req.body;
