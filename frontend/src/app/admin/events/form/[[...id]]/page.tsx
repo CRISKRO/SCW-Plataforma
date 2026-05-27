@@ -159,30 +159,16 @@ export default function EventFormPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-white uppercase tracking-widest">Fecha y Hora</label>
-            <input
-              type="datetime-local"
-              name="date_time"
-              value={formData.date_time}
-              onChange={handleChange}
-              required
-              className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-white uppercase tracking-widest">Link de Boletos (Opcional)</label>
-            <input
-              type="url"
-              name="ticket_link"
-              value={formData.ticket_link}
-              onChange={handleChange}
-              className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
-              placeholder="https://..."
-            />
-          </div>
+        <div className="space-y-2">
+          <label className="text-sm font-bold text-white uppercase tracking-widest">Fecha y Hora</label>
+          <input
+            type="datetime-local"
+            name="date_time"
+            value={formData.date_time}
+            onChange={handleChange}
+            required
+            className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
+          />
         </div>
 
         <div className="space-y-2">
