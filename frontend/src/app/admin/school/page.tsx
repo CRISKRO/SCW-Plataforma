@@ -533,7 +533,8 @@ export default function AdminSchoolPage() {
           </div>
         ) : (
           <AdminTable columns={requestColumns} data={enrollments} />
-        )}
+        )
+      )}
     </div>
   );
 }
