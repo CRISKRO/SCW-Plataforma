@@ -7,6 +7,7 @@ from datetime import date, timedelta
 import requests
 import os
 import logging
+from api.models import get_active_config
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,8 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
         enrollment.save()
 
         # Enviar confirmación por WhatsApp
-        whatsapp_url = os.environ.get('WHATSAPP_SERVICE_URL', 'http://localhost:3001')
+        config = get_active_config()
+        whatsapp_url = config.whatsapp_service_url if config.whatsapp_service_url else 'http://localhost:3001'
         phone = enrollment.phone
         due_date_str = enrollment.payment_due_date.strftime('%d/%m/%Y')
         last_payment_str = enrollment.last_payment_date.strftime('%d/%m/%Y')
@@ -61,18 +63,19 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
         )
 
         whatsapp_sent = False
-        try:
-            res = requests.post(
-                f"{whatsapp_url}/send-message",
-                json={'phone': phone, 'message': message},
-                timeout=8
-            )
-            if res.status_code == 200:
-                whatsapp_sent = True
-            else:
-                logger.error(f"Error al enviar mensaje por WhatsApp: {res.text}")
-        except Exception as e:
-            logger.error(f"Error de conexión con el servicio de WhatsApp: {e}")
+        if config.whatsapp_enabled:
+            try:
+                res = requests.post(
+                    f"{whatsapp_url}/send-message",
+                    json={'phone': phone, 'message': message},
+                    timeout=8
+                )
+                if res.status_code == 200:
+                    whatsapp_sent = True
+                else:
+                    logger.error(f"Error al enviar mensaje por WhatsApp: {res.text}")
+            except Exception as e:
+                logger.error(f"Error de conexión con el servicio de WhatsApp: {e}")
 
         return Response({
             "success": True,
@@ -99,7 +102,8 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
         # Recalcular el estado dinámicamente antes de enviar
         enrollment.update_dynamic_payment_status()
 
-        whatsapp_url = os.environ.get('WHATSAPP_SERVICE_URL', 'http://localhost:3001')
+        config = get_active_config()
+        whatsapp_url = config.whatsapp_service_url if config.whatsapp_service_url else 'http://localhost:3001'
         phone = enrollment.phone
         due_date_str = enrollment.payment_due_date.strftime('%d/%m/%Y')
 
@@ -122,21 +126,22 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
             )
 
         whatsapp_sent = False
-        try:
-            res = requests.post(
-                f"{whatsapp_url}/send-message",
-                json={'phone': phone, 'message': message},
-                timeout=8
-            )
-            if res.status_code == 200:
-                whatsapp_sent = True
-            else:
-                logger.error(f"Error al enviar recordatorio por WhatsApp: {res.text}")
-        except Exception as e:
-            logger.error(f"Error de conexión con el servicio de WhatsApp: {e}")
+        if config.whatsapp_enabled:
+            try:
+                res = requests.post(
+                    f"{whatsapp_url}/send-message",
+                    json={'phone': phone, 'message': message},
+                    timeout=8
+                )
+                if res.status_code == 200:
+                    whatsapp_sent = True
+                else:
+                    logger.error(f"Error al enviar recordatorio por WhatsApp: {res.text}")
+            except Exception as e:
+                logger.error(f"Error de conexión con el servicio de WhatsApp: {e}")
 
         return Response({
             "success": True,
             "whatsapp_sent": whatsapp_sent,
-            "message": "Recordatorio enviado con éxito." if whatsapp_sent else "No se pudo enviar el mensaje por WhatsApp. ¿Está el microservicio encendido?"
+            "message": "Recordatorio enviado con éxito." if whatsapp_sent else ("No se pudo enviar el mensaje por WhatsApp. ¿Está el microservicio encendido?" if config.whatsapp_enabled else "Las notificaciones de WhatsApp están desactivadas en la configuración.")
         })

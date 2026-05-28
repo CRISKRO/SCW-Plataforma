@@ -4,9 +4,10 @@ Sends a beautiful HTML email with QR codes attached for each purchased item.
 """
 import base64
 from email.mime.image import MIMEImage
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives, get_connection
 from django.conf import settings
 from .qr import generate_ticket_qr
+from api.models import get_active_config
 
 
 def send_ticket_email(order):
@@ -83,10 +84,13 @@ def send_ticket_email(order):
 
     text_body = f"¡Pago confirmado! Orden #{order.id}. Encuentra tus boletos QR en la versión HTML de este correo."
 
+    config = get_active_config()
+    from_email = config.default_from_email if config.default_from_email else settings.DEFAULT_FROM_EMAIL
+
     email = EmailMultiAlternatives(
         subject=f"🎟️ Tus Boletos SCW – Orden #{order.id}",
         body=text_body,
-        from_email=settings.DEFAULT_FROM_EMAIL,
+        from_email=from_email,
         to=[order.contact_email]
     )
     email.mixed_subtype = 'related'
@@ -100,5 +104,15 @@ def send_ticket_email(order):
         img.add_header('Content-Disposition', 'inline', filename=f"boleto_{qr['item'].id}.png")
         email.attach(img)
 
-    email.send(fail_silently=False)
+    connection = None
+    if config.email_host_user and config.email_host_password:
+        connection = get_connection(
+            host=config.email_host,
+            port=config.email_port,
+            username=config.email_host_user,
+            password=config.email_host_password,
+            use_tls=config.email_use_tls,
+        )
+
+    email.send(fail_silently=False, connection=connection)
     return True

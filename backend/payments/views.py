@@ -7,11 +7,14 @@ from rest_framework.permissions import AllowAny, IsAdminUser
 from .models import Order, OrderItem
 from merch.models import Product
 from .serializers import OrderSerializer
+from api.models import get_active_config
 
 class MPPublicKeyView(APIView):
     permission_classes = [AllowAny]
     def get(self, request):
-        return Response({"public_key": settings.MERCADOPAGO_PUBLIC_KEY})
+        config = get_active_config()
+        public_key = config.mercadopago_public_key if config.mercadopago_public_key else settings.MERCADOPAGO_PUBLIC_KEY
+        return Response({"public_key": public_key})
 
 class OrderItemInputSerializer(serializers.Serializer):
     product_id = serializers.IntegerField(required=False, allow_null=True)
@@ -84,7 +87,8 @@ class CreateOrderView(APIView):
                     size=item_data['size']
                 )
                 
-                commission = getattr(settings, 'MERCADOPAGO_COMMISSION_RATE', 0.0401)
+                config = get_active_config()
+                commission = float(config.mercadopago_commission_rate)
                 price_with_commission = round(float(item_data['price']) * (1 + commission), 2)
                 size_str = f"({item_data['size']})" if item_data['size'] else ""
                 mp_items.append({
@@ -96,7 +100,9 @@ class CreateOrderView(APIView):
 
             # Integrate with MercadoPago SDK to generate a real preference_id
             try:
-                mp = mercadopago.SDK(settings.MERCADOPAGO_ACCESS_TOKEN)
+                config = get_active_config()
+                access_token = config.mercadopago_access_token if config.mercadopago_access_token else settings.MERCADOPAGO_ACCESS_TOKEN
+                mp = mercadopago.SDK(access_token)
                 frontend_url = request.headers.get('origin', 'http://localhost:3000')
                 backend_url = f"{request.scheme}://{request.get_host()}"
                 
@@ -118,7 +124,7 @@ class CreateOrderView(APIView):
                 preference_response = mp.preference().create(preference_data)
                 preference = preference_response.get("response", {})
                 
-                is_test = settings.MERCADOPAGO_ACCESS_TOKEN.startswith("TEST-")
+                is_test = access_token.startswith("TEST-")
                 init_point = preference.get("sandbox_init_point") if is_test else preference.get("init_point")
                 if not init_point:
                     init_point = preference.get("init_point", "")
@@ -193,7 +199,9 @@ class ProcessCardPaymentView(APIView):
 
         # Process payment via MP Payments API
         try:
-            mp = mercadopago.SDK(settings.MERCADOPAGO_ACCESS_TOKEN)
+            config = get_active_config()
+            access_token = config.mercadopago_access_token if config.mercadopago_access_token else settings.MERCADOPAGO_ACCESS_TOKEN
+            mp = mercadopago.SDK(access_token)
             payment_data = {
                 "transaction_amount": total_amount,
                 "token": card_data.get("token"),
@@ -250,7 +258,9 @@ class VerifyPaymentView(APIView):
 
         # Verify with MP API
         try:
-            mp = mercadopago.SDK(settings.MERCADOPAGO_ACCESS_TOKEN)
+            config = get_active_config()
+            access_token = config.mercadopago_access_token if config.mercadopago_access_token else settings.MERCADOPAGO_ACCESS_TOKEN
+            mp = mercadopago.SDK(access_token)
             pay_response = mp.payment().get(int(payment_id))
             payment = pay_response.get("response", {})
             verified_status = payment.get("status", "")
@@ -337,7 +347,9 @@ class WebhookView(APIView):
             payment_id = request.query_params.get("id") or request.data.get("data", {}).get("id")
             if payment_id:
                 try:
-                    mp = mercadopago.SDK(settings.MERCADOPAGO_ACCESS_TOKEN)
+                    config = get_active_config()
+                    access_token = config.mercadopago_access_token if config.mercadopago_access_token else settings.MERCADOPAGO_ACCESS_TOKEN
+                    mp = mercadopago.SDK(access_token)
                     pay_response = mp.payment().get(int(payment_id))
                     payment = pay_response.get("response", {})
                     

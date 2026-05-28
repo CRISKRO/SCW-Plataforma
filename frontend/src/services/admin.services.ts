@@ -70,4 +70,14 @@ export const adminService = {
     const response = await api.delete(`/premium/videos/${id}/`);
     return response.data;
   },
+  
+  // System Configurations
+  getSettings: async () => {
+    const response = await api.get('/settings/');
+    return response.data;
+  },
+  updateSettings: async (data: any) => {
+    const response = await api.put('/settings/', data);
+    return response.data;
+  },
 }

@@ -28,6 +28,7 @@ urlpatterns = [
     path('api/payments/', include('payments.urls')),
     path('api/tickets/', include('tickets.urls')),
     path('api/students/', include('students.urls')),
+    path('api/settings/', include('api.urls')),
 ]
 
 # Serve uploaded media files in development

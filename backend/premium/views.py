@@ -2,6 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission, SAFE_METHODS
 from rest_framework.response import Response
+from api.models import get_active_config
 from .models import SubscriptionPlan, PremiumVideo, UserSubscription
 from .serializers import SubscriptionPlanSerializer, PremiumVideoSerializer
 from django.utils import timezone
@@ -67,7 +68,9 @@ class SubscribeView(APIView):
         )
         
         try:
-            mp = mercadopago.SDK(settings.MERCADOPAGO_ACCESS_TOKEN)
+            config = get_active_config()
+            access_token = config.mercadopago_access_token if config.mercadopago_access_token else settings.MERCADOPAGO_ACCESS_TOKEN
+            mp = mercadopago.SDK(access_token)
             preference_data = {
                 "items": [
                     {
