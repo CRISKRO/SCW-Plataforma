@@ -35,6 +35,18 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleDeleteUser = async (userId: number, email: string) => {
+    if (confirm(`¿Estás seguro de que deseas eliminar permanentemente al usuario "${email}"? Esta acción no se puede deshacer y borrará todos sus datos asociados.`)) {
+      try {
+        await adminService.deleteUser(userId);
+        setUsers(users.filter(u => u.id !== userId));
+      } catch (error) {
+        console.error("Error deleting user:", error);
+        alert("Error al eliminar el usuario. Es posible que tenga relaciones que impidan su eliminación directa.");
+      }
+    }
+  };
+
   const columns = [
     { key: 'id', label: 'ID' },
     { key: 'email', label: 'Email' },
@@ -61,6 +73,18 @@ export default function AdminUsersPage() {
           <option value="ADMIN">ADMIN</option>
           <option value="SUPERADMIN">SUPERADMIN</option>
         </select>
+      )
+    },
+    {
+      key: 'actions',
+      label: 'Acciones',
+      render: (_: any, item: any) => (
+        <button
+          onClick={() => handleDeleteUser(item.id, item.email)}
+          className="px-3 py-1 bg-red-600/10 text-red-500 hover:bg-red-600 hover:text-white rounded border border-red-600/20 hover:border-red-600 text-xs font-semibold transition"
+        >
+          Eliminar
+        </button>
       )
     }
   ];

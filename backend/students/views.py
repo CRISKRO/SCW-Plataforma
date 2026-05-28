@@ -41,11 +41,14 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
             self.send_admission_whatsapp(updated_instance)
 
     def send_admission_whatsapp(self, enrollment):
-        config = get_active_config()
-        if not config.whatsapp_enabled:
+        try:
+            config = get_active_config()
+            if not config.whatsapp_enabled:
+                return
+            whatsapp_url = config.whatsapp_service_url if config.whatsapp_service_url else 'http://localhost:3001'
+        except Exception as e:
+            logger.error(f"Error al obtener la configuración activa (¿falta migrar?): {e}")
             return
-            
-        whatsapp_url = config.whatsapp_service_url if config.whatsapp_service_url else 'http://localhost:3001'
         phone = enrollment.phone
         
         message = (

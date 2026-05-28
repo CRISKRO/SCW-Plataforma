@@ -10,6 +10,10 @@ export const adminService = {
     const response = await api.patch(`/auth/users/${id}/`, { role });
     return response.data;
   },
+  deleteUser: async (id: number) => {
+    const response = await api.delete(`/auth/users/${id}/`);
+    return response.data;
+  },
   
   // Finances / Orders
   getOrders: async () => {
@@ -18,6 +22,10 @@ export const adminService = {
   },
   updateOrderStatus: async (id: number, status: string) => {
     const response = await api.patch(`/payments/orders/${id}/`, { status });
+    return response.data;
+  },
+  deleteOrder: async (id: number) => {
+    const response = await api.delete(`/payments/orders/${id}/`);
     return response.data;
   },
 

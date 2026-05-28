@@ -35,6 +35,18 @@ export default function AdminFinancesPage() {
     }
   };
 
+  const handleDeleteOrder = async (orderId: number) => {
+    if (confirm(`¿Estás seguro de que deseas eliminar permanentemente la orden #${orderId}? Esta acción no se puede deshacer y borrará todos los registros de pago y tickets asociados.`)) {
+      try {
+        await adminService.deleteOrder(orderId);
+        setOrders(orders.filter(o => o.id !== orderId));
+      } catch (error) {
+        console.error("Error deleting order:", error);
+        alert("Error al eliminar la orden. Es posible que tenga relaciones activas que impidan su eliminación.");
+      }
+    }
+  };
+
   const columns = [
     { key: 'id', label: '# Orden' },
     { key: 'contact_email', label: 'Email Cliente' },
@@ -67,6 +79,18 @@ export default function AdminFinancesPage() {
           <option value="COMPLETED">COMPLETADO</option>
           <option value="CANCELLED">CANCELADO</option>
         </select>
+      )
+    },
+    {
+      key: 'actions',
+      label: 'Acciones',
+      render: (_: any, item: any) => (
+        <button
+          onClick={() => handleDeleteOrder(item.id)}
+          className="px-3 py-1 bg-red-600/10 text-red-500 hover:bg-red-600 hover:text-white rounded border border-red-600/20 hover:border-red-600 text-xs font-semibold transition"
+        >
+          Eliminar
+        </button>
       )
     }
   ];
