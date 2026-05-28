@@ -32,6 +32,42 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
             student.update_dynamic_payment_status()
         return super().list(request, *args, **kwargs)
 
+    def perform_update(self, serializer):
+        instance = self.get_object()
+        original_status = instance.status
+        updated_instance = serializer.save()
+        
+        if original_status != 'APPROVED' and updated_instance.status == 'APPROVED':
+            self.send_admission_whatsapp(updated_instance)
+
+    def send_admission_whatsapp(self, enrollment):
+        config = get_active_config()
+        if not config.whatsapp_enabled:
+            return
+            
+        whatsapp_url = config.whatsapp_service_url if config.whatsapp_service_url else 'http://localhost:3001'
+        phone = enrollment.phone
+        
+        message = (
+            f"🎉 *¡SCW Dojo — Felicitaciones, has sido Admitido!* 🥊\n\n"
+            f"¡Hola *{enrollment.name}*!\n\n"
+            f"Nos complace informarte que tu solicitud de inscripción al SCW Dojo ha sido **APROBADA** por la administración. ¡Ya eres parte oficial del equipo! 🥊⚡\n\n"
+            f"📍 *Nivel de Experiencia:* {enrollment.get_experience_display()}\n\n"
+            f"Te esperamos en tu primera sesión de entrenamiento. ¡Prepárate para darlo todo en el ring! ⚡🥊\n\n"
+            f"Si tienes alguna duda sobre los horarios, uniformes o mensualidades, no dudes en escribirnos por este medio."
+        )
+        
+        try:
+            res = requests.post(
+                f"{whatsapp_url}/send-message",
+                json={'phone': phone, 'message': message},
+                timeout=8
+            )
+            if res.status_code != 200:
+                logger.error(f"Error al enviar mensaje de admisión por WhatsApp: {res.text}")
+        except Exception as e:
+            logger.error(f"Error de conexión con el servicio de WhatsApp al enviar admisión: {e}")
+
     @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
     def register_payment(self, request, pk=None):
         enrollment = self.get_object()
