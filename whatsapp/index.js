@@ -1,4 +1,4 @@
-const { Client, LocalAuth } = require('whatsapp-web.js');
+const { Client, LocalAuth, RemoteAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const QRCode = require('qrcode');
 const express = require('express');
@@ -15,54 +15,90 @@ const otpStore = new Map();
 let latestQR = null;
 let clientReady = false;
 
-// ─── WhatsApp Client ──────────────────────────────────────────────────────────
-const client = new Client({
-  authStrategy: new LocalAuth({ dataPath: './.wwebjs_auth' }),
-  puppeteer: {
-    headless: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-gpu',
-      '--disable-dev-shm-usage',
-      '--no-first-run',
-      '--no-zygote',
-      '--single-process',
-      '--disable-extensions',
-      '--disable-audio-output',
-      '--disable-software-rasterizer',
-      '--disable-features=site-per-process',
-      '--disable-features=Translate',
-      '--disable-features=IsolateOrigins',
-      '--js-flags=--max-old-space-size=150'
-    ],
-  },
-});
+// Global Client Reference
+let client = null;
 
-client.on('qr', async (qr) => {
-  latestQR = qr;
-  // Also print in terminal (small)
-  console.log('\n📱 Nuevo QR generado. Ábrelo en el navegador: http://localhost:3001/qr\n');
-  qrcode.generate(qr, { small: true });
-});
+// ─── WhatsApp Client Async Initialization ─────────────────────────────────────────
+(async () => {
+  let authStrategy;
+  const MONGODB_URI = process.env.MONGODB_URI;
 
-client.on('ready', () => {
-  clientReady = true;
-  latestQR = null;
-  console.log('\n✅ WhatsApp conectado y listo para enviar mensajes.\n');
-});
+  if (MONGODB_URI) {
+    try {
+      const mongoose = require('mongoose');
+      const { MongoStore } = require('wwebjs-mongo');
+      
+      console.log('⏳ Conectando a MongoDB Atlas para persistencia de sesión...');
+      await mongoose.connect(MONGODB_URI);
+      console.log('📦 Conectado a MongoDB Atlas con éxito.');
+      
+      const store = new MongoStore({ mongoose: mongoose });
+      authStrategy = new RemoteAuth({
+        store: store,
+        backupSyncIntervalMs: 60000,
+        clientId: 'scw-session'
+      });
+    } catch (err) {
+      console.error('❌ Error de conexión con MongoDB. Usando sesión local temporal:', err);
+      authStrategy = new LocalAuth({ dataPath: './.wwebjs_auth' });
+    }
+  } else {
+    console.log('⚠️ MONGODB_URI no configurada. Usando sesión local (.wwebjs_auth).');
+    authStrategy = new LocalAuth({ dataPath: './.wwebjs_auth' });
+  }
 
-client.on('auth_failure', () => {
-  clientReady = false;
-  console.error('❌ Falló la autenticación de WhatsApp.');
-});
+  client = new Client({
+    authStrategy: authStrategy,
+    puppeteer: {
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-gpu',
+        '--disable-dev-shm-usage',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process',
+        '--disable-extensions',
+        '--disable-audio-output',
+        '--disable-software-rasterizer',
+        '--disable-features=site-per-process',
+        '--disable-features=Translate',
+        '--disable-features=IsolateOrigins',
+        '--js-flags=--max-old-space-size=150'
+      ],
+    },
+  });
 
-client.on('disconnected', (reason) => {
-  clientReady = false;
-  console.log('⚠️  WhatsApp desconectado:', reason);
-});
+  client.on('qr', async (qr) => {
+    latestQR = qr;
+    console.log('\n📱 Nuevo QR generado. Ábrelo en el navegador: http://localhost:3001/qr\n');
+    qrcode.generate(qr, { small: true });
+  });
 
-client.initialize();
+  client.on('ready', () => {
+    clientReady = true;
+    latestQR = null;
+    console.log('\n✅ WhatsApp conectado y listo para enviar mensajes.\n');
+  });
+
+  client.on('auth_failure', () => {
+    clientReady = false;
+    console.error('❌ Falló la autenticación de WhatsApp.');
+  });
+
+  client.on('disconnected', (reason) => {
+    clientReady = false;
+    console.log('⚠️ WhatsApp desconectado:', reason);
+  });
+
+  // Si usamos RemoteAuth, guardará los archivos del navegador automáticamente al estar listo
+  client.on('remote_session_saved', () => {
+    console.log('💾 Sesión de WhatsApp guardada con éxito en MongoDB Atlas.');
+  });
+
+  client.initialize();
+})();
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function generateOTP() {
