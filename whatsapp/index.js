@@ -28,7 +28,13 @@ const client = new Client({
       '--no-first-run',
       '--no-zygote',
       '--single-process',
-      '--disable-accelerated-2d-canvas'
+      '--disable-extensions',
+      '--disable-audio-output',
+      '--disable-software-rasterizer',
+      '--disable-features=site-per-process',
+      '--disable-features=Translate',
+      '--disable-features=IsolateOrigins',
+      '--js-flags=--max-old-space-size=150'
     ],
   },
 });
