@@ -46,6 +46,10 @@ export const adminService = {
     const response = await api.post(`/students/enrollments/${id}/send_payment_reminder/`);
     return response.data;
   },
+  deleteEnrollment: async (id: number) => {
+    const response = await api.delete(`/students/enrollments/${id}/`);
+    return response.data;
+  },
 
   // Tickets / Zones
   getZonesByEvent: async (eventId: number) => {

@@ -106,6 +106,18 @@ export default function AdminSchoolPage() {
     }
   };
 
+  const handleDeleteEnrollment = async (enrollmentId: number, name: string) => {
+    if (confirm(`¿Estás seguro de que deseas eliminar permanentemente la inscripción/alumno "${name}"?\nEsta acción no se puede deshacer y borrará todo su historial.`)) {
+      try {
+        await adminService.deleteEnrollment(enrollmentId);
+        setEnrollments(enrollments.filter(e => e.id !== enrollmentId));
+      } catch (error) {
+        console.error("Error deleting enrollment:", error);
+        alert("Error al eliminar la inscripción/alumno.");
+      }
+    }
+  };
+
   // Lists configurations
   const activeStudents = enrollments.filter(e => e.status === 'APPROVED');
   const pendingRequests = enrollments.filter(e => e.status === 'PENDING');
@@ -182,6 +194,19 @@ export default function AdminSchoolPage() {
           </div>
         );
       }
+    },
+    {
+      key: 'actions',
+      label: 'Acciones',
+      render: (_: any, item: any) => (
+        <button
+          onClick={() => handleDeleteEnrollment(item.id, item.name)}
+          className="px-2.5 py-1.5 bg-red-600/10 text-red-500 hover:bg-red-600 hover:text-white rounded-lg text-xs font-bold transition-all border border-red-600/20 hover:border-red-600"
+          title="Eliminar solicitud permanentemente"
+        >
+          Eliminar
+        </button>
+      )
     }
   ];
 
@@ -496,8 +521,7 @@ export default function AdminSchoolPage() {
                                 className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-500 text-black hover:bg-green-400 font-bold rounded-lg text-xs transition-all transform active:scale-95 shadow-md shadow-green-950/10"
                                 title="Registrar pago del alumno y enviar confirmación por WhatsApp"
                               >
-                                <DollarSign className="w-3.5 h-3.5" />
-                                Registrar Pago
+                                                        Registrar Pago
                               </button>
                               
                               <button
@@ -511,6 +535,14 @@ export default function AdminSchoolPage() {
                               >
                                 <MessageSquare className="w-3.5 h-3.5" />
                                 Recordatorio
+                              </button>
+
+                              <button
+                                onClick={() => handleDeleteEnrollment(student.id, student.name)}
+                                className="inline-flex items-center gap-1 px-3 py-1.5 bg-red-600/10 text-red-500 hover:bg-red-600 hover:text-white rounded-lg text-xs font-bold transition-all border border-red-600/20 hover:border-red-600"
+                                title="Eliminar alumno permanentemente"
+                              >
+                                Eliminar
                               </button>
                             </>
                           )}
