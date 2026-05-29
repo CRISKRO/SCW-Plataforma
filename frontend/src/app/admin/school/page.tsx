@@ -53,6 +53,31 @@ export default function AdminSchoolPage() {
         await adminService.updateEnrollmentStatus(enrollmentId, newStatus);
         setEnrollments(enrollments.map(e => e.id === enrollmentId ? { ...e, status: newStatus } : e));
         alert(`Solicitud de ingreso ${newStatus === 'APPROVED' ? 'aprobada' : 'rechazada'} con éxito.`);
+        
+        if (newStatus === 'APPROVED') {
+          // Intentar enviar WhatsApp directo de bienvenida desde el navegador
+          try {
+            const student = enrollments.find(e => e.id === enrollmentId);
+            if (student) {
+              const experienceStr = student.experience === 'BEGINNER' ? 'Principiante' : student.experience === 'INTERMEDIATE' ? 'Intermedio' : 'Avanzado';
+              const message = 
+                `🎉 *¡SCW Dojo — Felicitaciones, has sido Admitido!* 🥊\n\n` +
+                `¡Hola *${student.name}*!\n\n` +
+                `Nos complace informarte que tu solicitud de inscripción al SCW Dojo ha sido **APROBADA** por la administración. ¡Ya eres parte oficial del equipo! 🥊⚡\n\n` +
+                `📍 *Nivel de Experiencia:* ${experienceStr}\n\n` +
+                `Te esperamos en tu primera sesión de entrenamiento. ¡Prepárate para darlo todo en el ring! ⚡🥊\n\n` +
+                `Si tienes alguna duda sobre los horarios, uniformes o mensualidades, no dudes en escribirnos por este medio.`;
+
+              await fetch('http://localhost:3001/send-message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone: student.phone, message: message })
+              });
+            }
+          } catch (localErr) {
+            console.error("Error al enviar WhatsApp de bienvenida directo:", localErr);
+          }
+        }
       } catch (error) {
         console.error("Error updating status:", error);
         alert("Error al actualizar el estado de la solicitud.");
@@ -74,10 +99,40 @@ export default function AdminSchoolPage() {
           payment_due_date: response.data.payment_due_date
         } : e));
 
-        if (response.whatsapp_sent) {
+        let whatsappSentSuccessfully = response.whatsapp_sent;
+
+        // Si el backend en PythonAnywhere no pudo enviarlo, lo enviamos directo desde el navegador local
+        if (!whatsappSentSuccessfully) {
+          try {
+            const student = response.data;
+            const lastPaymentDateStr = student.last_payment_date ? new Date(student.last_payment_date + 'T12:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
+            const dueDateStr = student.payment_due_date ? new Date(student.payment_due_date + 'T12:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
+            
+            const message = 
+              `🥊 *SCW Dojo — Confirmación de Mensualidad*\n\n` +
+              `¡Hola *${student.name}*!\n\n` +
+              `Te confirmamos que hemos registrado con éxito el pago de tu mensualidad el día *${lastPaymentDateStr}*.\n\n` +
+              `📅 *Próximo Vencimiento:* ${dueDateStr}\n\n` +
+              `¡Muchas gracias por seguir entrenando en el SCW Dojo! ¡A seguir dándolo todo en el ring! 🥊⚡`;
+
+            const localRes = await fetch('http://localhost:3001/send-message', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ phone: student.phone, message: message })
+            });
+            const localData = await localRes.json();
+            if (localRes.ok && localData.success) {
+              whatsappSentSuccessfully = true;
+            }
+          } catch (localErr) {
+            console.error("Error al enviar WhatsApp directo desde el navegador:", localErr);
+          }
+        }
+
+        if (whatsappSentSuccessfully) {
           alert(`✅ Pago registrado con éxito.\n📲 Se envió la confirmación de pago por WhatsApp a ${studentName}.`);
         } else {
-          alert(`⚠️ Pago registrado con éxito en el sistema.\n❌ Sin embargo, el mensaje por WhatsApp no pudo enviarse. Por favor verifica que el microservicio esté activo.`);
+          alert(`⚠️ Pago registrado con éxito en el sistema.\n❌ Sin embargo, el mensaje por WhatsApp no pudo enviarse. Por favor verifica que el microservicio esté activo y tu celular esté vinculado en http://localhost:3001/qr`);
         }
       } catch (error: any) {
         console.error("Error registering payment:", error);
@@ -93,10 +148,52 @@ export default function AdminSchoolPage() {
       setActionLoading(prev => ({ ...prev, [studentId]: true }));
       const response = await adminService.sendStudentPaymentReminder(studentId);
       
-      if (response.whatsapp_sent) {
+      let whatsappSentSuccessfully = response.whatsapp_sent;
+
+      // Si el backend en PythonAnywhere no pudo enviarlo, lo enviamos directo desde el navegador local
+      if (!whatsappSentSuccessfully) {
+        try {
+          const student = enrollments.find(e => e.id === studentId);
+          if (student) {
+            const dueDateStr = student.payment_due_date ? new Date(student.payment_due_date + 'T12:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
+            
+            let message = '';
+            if (student.payment_status === 'UNPAID') {
+              message = 
+                `🚨 *SCW Dojo — Recordatorio de Pago Vencido*\n\n` +
+                `¡Hola *${student.name}*!\n\n` +
+                `Te recordamos que el pago de tu mensualidad del Dojo se encuentra *VENCIDO* desde el día *${dueDateStr}*.\n\n` +
+                `Para mantener tu lugar activo en los entrenamientos, te pedimos realizar tu pago a la brevedad.\n\n` +
+                `¡Te esperamos en el entrenamiento! ¡A seguir preparándote! 🥊`;
+            } else {
+              message = 
+                `⏰ *SCW Dojo — Recordatorio de Mensualidad Próxima a Vencer*\n\n` +
+                `¡Hola *${student.name}*!\n\n` +
+                `Te recordamos de manera atenta que tu mensualidad del Dojo está próxima a vencer.\n\n` +
+                `📅 *Fecha Límite:* ${dueDateStr}\n\n` +
+                `Por favor tómalo en cuenta para realizar tu pago a tiempo y no perder ritmo.\n\n` +
+                `¡Nos vemos en el entrenamiento! 🥊⚡`;
+            }
+
+            const localRes = await fetch('http://localhost:3001/send-message', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ phone: student.phone, message: message })
+            });
+            const localData = await localRes.json();
+            if (localRes.ok && localData.success) {
+              whatsappSentSuccessfully = true;
+            }
+          }
+        } catch (localErr) {
+          console.error("Error al enviar recordatorio directo desde el navegador:", localErr);
+        }
+      }
+
+      if (whatsappSentSuccessfully) {
         alert(`📲 Recordatorio enviado con éxito por WhatsApp a ${studentName}.`);
       } else {
-        alert(`❌ No se pudo enviar el recordatorio por WhatsApp.\nDetalle: ${response.message || 'Error de conexión con el microservicio.'}`);
+        alert(`❌ No se pudo enviar el recordatorio por WhatsApp.\nDetalle: Asegúrate de que el microservicio esté activo y tu celular esté vinculado en http://localhost:3001/qr`);
       }
     } catch (error: any) {
       console.error("Error sending reminder:", error);
