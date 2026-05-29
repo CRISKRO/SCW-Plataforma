@@ -247,6 +247,44 @@ class VerifyPaymentView(APIView):
         if not payment_id or not external_reference:
             return Response({"error": "Faltan datos de verificación."}, status=status.HTTP_400_BAD_REQUEST)
 
+        if str(external_reference).startswith("SUB_"):
+            try:
+                sub_id = int(str(external_reference).replace("SUB_", ""))
+                from premium.models import UserSubscription
+                from django.utils import timezone
+                from datetime import timedelta
+                subscription = UserSubscription.objects.get(id=sub_id)
+            except (UserSubscription.DoesNotExist, ValueError):
+                return Response({"error": "Suscripción no encontrada."}, status=status.HTTP_404_NOT_FOUND)
+
+            if subscription.is_active:
+                return Response({"status": "approved", "already_processed": True, "subscription_id": subscription.id})
+
+            try:
+                config = get_active_config()
+                access_token = config.mercadopago_access_token if config.mercadopago_access_token else settings.MERCADOPAGO_ACCESS_TOKEN
+                mp = mercadopago.SDK(access_token)
+                pay_response = mp.payment().get(int(payment_id))
+                payment = pay_response.get("response", {})
+                verified_status = payment.get("status", "")
+
+                if verified_status == "approved":
+                    subscription.is_active = True
+                    subscription.end_date = timezone.now() + timedelta(days=subscription.plan.duration_days)
+                    subscription.save()
+
+                    user = subscription.user
+                    if getattr(user, 'role', 'USER') == 'USER':
+                        user.role = 'PREMIUM'
+                        user.save()
+
+                    return Response({"status": "approved", "subscription_id": subscription.id})
+                else:
+                    return Response({"status": verified_status, "subscription_id": subscription.id})
+            except Exception as e:
+                print("Verify subscription error:", e)
+                return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         try:
             order = Order.objects.get(id=int(external_reference))
         except (Order.DoesNotExist, ValueError):
@@ -357,18 +395,37 @@ class WebhookView(APIView):
                     verified_status = payment.get("status", "")
                     
                     if external_reference and verified_status == "approved":
-                        order = Order.objects.get(id=int(external_reference))
-                        
-                        if order.status != Order.Status.PAID:
-                            order.mp_payment_id = str(payment_id)
-                            order.status = Order.Status.PAID
-                            order.save()
-
+                        if str(external_reference).startswith("SUB_"):
+                            sub_id = int(str(external_reference).replace("SUB_", ""))
+                            from premium.models import UserSubscription
+                            from django.utils import timezone
+                            from datetime import timedelta
                             try:
-                                from .email_tickets import send_ticket_email
-                                send_ticket_email(order)
-                            except Exception as mail_err:
-                                print("Email error from webhook:", mail_err)
+                                subscription = UserSubscription.objects.get(id=sub_id)
+                                if not subscription.is_active:
+                                    subscription.is_active = True
+                                    subscription.end_date = timezone.now() + timedelta(days=subscription.plan.duration_days)
+                                    subscription.save()
+
+                                    user = subscription.user
+                                    if getattr(user, 'role', 'USER') == 'USER':
+                                        user.role = 'PREMIUM'
+                                        user.save()
+                            except UserSubscription.DoesNotExist:
+                                print(f"Subscription {sub_id} not found in webhook")
+                        else:
+                            order = Order.objects.get(id=int(external_reference))
+                            
+                            if order.status != Order.Status.PAID:
+                                order.mp_payment_id = str(payment_id)
+                                order.status = Order.Status.PAID
+                                order.save()
+
+                                try:
+                                    from .email_tickets import send_ticket_email
+                                    send_ticket_email(order)
+                                except Exception as mail_err:
+                                    print("Email error from webhook:", mail_err)
                 except Exception as e:
                     print("Webhook error:", e)
         

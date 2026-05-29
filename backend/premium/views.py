@@ -59,12 +59,12 @@ class SubscribeView(APIView):
         # Deactivate any existing active subscriptions to avoid overlap
         UserSubscription.objects.filter(user=user, is_active=True).update(is_active=False)
         
-        # Create new subscription (Active for testing/demo purposes, should use Webhooks in prod)
+        # Create new subscription as PENDING (starts inactive)
         subscription = UserSubscription.objects.create(
             user=user,
             plan=plan,
             end_date=timezone.now() + timedelta(days=plan.duration_days),
-            is_active=True 
+            is_active=False
         )
         
         try:
