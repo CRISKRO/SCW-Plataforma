@@ -33,6 +33,7 @@ export default function CartPage() {
     try {
       const orderItems = items.map(item => ({
         product_id: item.id,
+        seat_id: item.seat_id,
         name: item.name,
         price: item.price,
         quantity: item.quantity,

@@ -8,6 +8,7 @@ export interface CartItem {
   quantity: number;
   image_url: string;
   size?: string;
+  seat_id?: number;
 }
 
 interface CartState {

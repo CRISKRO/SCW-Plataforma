@@ -18,6 +18,7 @@ class MPPublicKeyView(APIView):
 
 class OrderItemInputSerializer(serializers.Serializer):
     product_id = serializers.IntegerField(required=False, allow_null=True)
+    seat_id = serializers.IntegerField(required=False, allow_null=True)
     name = serializers.CharField(max_length=200, required=False, allow_blank=True)
     price = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
     quantity = serializers.IntegerField(min_value=1)
@@ -42,6 +43,7 @@ class CreateOrderView(APIView):
 
             for item in data['items']:
                 product = None
+                seat = None
                 price = item.get('price', 0)
                 name = item.get('name', 'Artículo')
                 
@@ -54,11 +56,19 @@ class CreateOrderView(APIView):
                         # Could be a ticket or other non-DB product item. We rely on the frontend name/price.
                         if not price or not name:
                             return Response({"error": f"Product {item['product_id']} not found or inactive."}, status=status.HTTP_400_BAD_REQUEST)
+
+                if item.get('seat_id'):
+                    from tickets.models import Seat
+                    try:
+                        seat = Seat.objects.get(id=item['seat_id'])
+                    except Seat.DoesNotExist:
+                        pass
                 
                 total_amount += price * item['quantity']
                 
                 order_items_data.append({
                     'product': product,
+                    'seat': seat,
                     'product_name': name,
                     'quantity': item['quantity'],
                     'price': price,
@@ -81,6 +91,7 @@ class CreateOrderView(APIView):
                 OrderItem.objects.create(
                     order=order,
                     product=item_data['product'],
+                    seat=item_data.get('seat'),
                     product_name=item_data['product_name'],
                     quantity=item_data['quantity'],
                     price=item_data['price'],
@@ -169,6 +180,7 @@ class ProcessCardPaymentView(APIView):
 
         for item in items_data:
             product = None
+            seat = None
             price = float(item.get('price', 0))
             name = item.get('name', 'Artículo')
             qty = int(item.get('quantity', 1))
@@ -181,8 +193,15 @@ class ProcessCardPaymentView(APIView):
                 except Product.DoesNotExist:
                     pass
 
+            if item.get('seat_id'):
+                from tickets.models import Seat
+                try:
+                    seat = Seat.objects.get(id=item['seat_id'])
+                except Seat.DoesNotExist:
+                    pass
+
             total_amount += price * qty
-            order_items_data.append({'product': product, 'product_name': name, 'quantity': qty, 'price': price, 'size': item.get('size', '')})
+            order_items_data.append({'product': product, 'seat': seat, 'product_name': name, 'quantity': qty, 'price': price, 'size': item.get('size', '')})
             mp_items.append({'title': name, 'quantity': qty, 'unit_price': price, 'currency_id': 'MXN'})
 
         # Create Order record
@@ -221,6 +240,10 @@ class ProcessCardPaymentView(APIView):
             order.mp_payment_id = str(payment.get("id", ""))
             if pay_status == "approved":
                 order.status = Order.Status.PAID
+                for item in order.items.all():
+                    if getattr(item, 'seat', None) and item.seat.is_available:
+                        item.seat.is_available = False
+                        item.seat.save()
             order.save()
 
             return Response({
@@ -357,6 +380,12 @@ class VerifyPaymentView(APIView):
                 order.mp_payment_id = str(payment_id)
                 order.status = Order.Status.PAID
                 order.save()
+
+                # Bloquear asientos
+                for item in order.items.all():
+                    if getattr(item, 'seat', None) and item.seat.is_available:
+                        item.seat.is_available = False
+                        item.seat.save()
 
                 # Send ticket email
                 try:
@@ -503,6 +532,12 @@ class WebhookView(APIView):
                                 order.mp_payment_id = str(payment_id)
                                 order.status = Order.Status.PAID
                                 order.save()
+
+                                # Bloquear asientos
+                                for item in order.items.all():
+                                    if getattr(item, 'seat', None) and item.seat.is_available:
+                                        item.seat.is_available = False
+                                        item.seat.save()
 
                                 try:
                                     from .email_tickets import send_ticket_email

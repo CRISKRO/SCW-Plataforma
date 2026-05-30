@@ -42,6 +42,7 @@ class OrderItem(models.Model):
     is_scanned = models.BooleanField(_('ya escaneado'), default=False)
     scanned_at = models.DateTimeField(_('fecha/hora de escaneo'), null=True, blank=True)
     event = models.ForeignKey('events.Event', on_delete=models.SET_NULL, null=True, blank=True, help_text="Vincular a un evento para verificar vigencia")
+    seat = models.ForeignKey('tickets.Seat', on_delete=models.SET_NULL, null=True, blank=True, help_text="Vincular a un asiento para bloquearlo tras el pago")
 
 
     class Meta:
