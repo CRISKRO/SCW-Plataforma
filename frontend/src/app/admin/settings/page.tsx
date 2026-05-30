@@ -36,6 +36,7 @@ export default function AdminSettingsPage() {
     email_host_user: '',
     email_host_password: '',
     default_from_email: 'SCW Boletos <boletos.scw@gmail.com>',
+    whatsapp_service_url: 'https://scw-whatsapp.onrender.com',
     whatsapp_enabled: true,
     tuition_fee: 500.00,
   });
