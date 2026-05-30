@@ -35,7 +35,7 @@ export default function AdminSettingsPage() {
     email_host_user: '',
     email_host_password: '',
     default_from_email: 'SCW Boletos <boletos.scw@gmail.com>',
-    whatsapp_service_url: 'http://localhost:3001',
+    whatsapp_service_url: 'https://scw-whatsapp.onrender.com',
     whatsapp_enabled: true,
   });
 
@@ -54,7 +54,7 @@ export default function AdminSettingsPage() {
             email_host_user: data.email_host_user || '',
             email_host_password: data.email_host_password || '',
             default_from_email: data.default_from_email || 'SCW Boletos <boletos.scw@gmail.com>',
-            whatsapp_service_url: data.whatsapp_service_url || 'http://localhost:3001',
+            whatsapp_service_url: data.whatsapp_service_url || 'https://scw-whatsapp.onrender.com',
             whatsapp_enabled: data.whatsapp_enabled !== undefined ? Boolean(data.whatsapp_enabled) : true,
           });
         }
@@ -378,7 +378,7 @@ export default function AdminSettingsPage() {
                     name="whatsapp_service_url"
                     value={formData.whatsapp_service_url}
                     onChange={handleInputChange}
-                    placeholder="http://localhost:3001"
+                    placeholder="https://scw-whatsapp.onrender.com"
                     className="w-full bg-zinc-900/80 border border-white/10 hover:border-white/20 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none rounded-xl px-4 py-3 text-white transition-all text-sm font-mono"
                   />
                 </div>

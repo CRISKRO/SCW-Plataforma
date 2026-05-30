@@ -68,7 +68,7 @@ export default function AdminSchoolPage() {
                 `Te esperamos en tu primera sesión de entrenamiento. ¡Prepárate para darlo todo en el ring! ⚡🥊\n\n` +
                 `Si tienes alguna duda sobre los horarios, uniformes o mensualidades, no dudes en escribirnos por este medio.`;
 
-              await fetch('http://localhost:3001/send-message', {
+              await fetch('https://scw-whatsapp.onrender.com/send-message', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ phone: student.phone, message: message })
@@ -115,7 +115,7 @@ export default function AdminSchoolPage() {
               `📅 *Próximo Vencimiento:* ${dueDateStr}\n\n` +
               `¡Muchas gracias por seguir entrenando en el SCW Dojo! ¡A seguir dándolo todo en el ring! 🥊⚡`;
 
-            const localRes = await fetch('http://localhost:3001/send-message', {
+            const localRes = await fetch('https://scw-whatsapp.onrender.com/send-message', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ phone: student.phone, message: message })
@@ -132,7 +132,7 @@ export default function AdminSchoolPage() {
         if (whatsappSentSuccessfully) {
           alert(`✅ Pago registrado con éxito.\n📲 Se envió la confirmación de pago por WhatsApp a ${studentName}.`);
         } else {
-          alert(`⚠️ Pago registrado con éxito en el sistema.\n❌ Sin embargo, el mensaje por WhatsApp no pudo enviarse. Por favor verifica que el microservicio esté activo y tu celular esté vinculado en http://localhost:3001/qr`);
+          alert(`⚠️ Pago registrado con éxito en el sistema.\n❌ Sin embargo, el mensaje por WhatsApp no pudo enviarse. Por favor verifica que el microservicio esté activo y tu celular esté vinculado en https://scw-whatsapp.onrender.com/qr`);
         }
       } catch (error: any) {
         console.error("Error registering payment:", error);
@@ -175,7 +175,7 @@ export default function AdminSchoolPage() {
                 `¡Nos vemos en el entrenamiento! 🥊⚡`;
             }
 
-            const localRes = await fetch('http://localhost:3001/send-message', {
+            const localRes = await fetch('https://scw-whatsapp.onrender.com/send-message', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ phone: student.phone, message: message })
@@ -193,7 +193,7 @@ export default function AdminSchoolPage() {
       if (whatsappSentSuccessfully) {
         alert(`📲 Recordatorio enviado con éxito por WhatsApp a ${studentName}.`);
       } else {
-        alert(`❌ No se pudo enviar el recordatorio por WhatsApp.\nDetalle: Asegúrate de que el microservicio esté activo y tu celular esté vinculado en http://localhost:3001/qr`);
+        alert(`❌ No se pudo enviar el recordatorio por WhatsApp.\nDetalle: Asegúrate de que el microservicio esté activo y tu celular esté vinculado en https://scw-whatsapp.onrender.com/qr`);
       }
     } catch (error: any) {
       console.error("Error sending reminder:", error);
