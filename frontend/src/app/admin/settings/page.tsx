@@ -15,7 +15,8 @@ import {
   Sliders,
   Server,
   ToggleLeft,
-  ToggleRight
+  ToggleRight,
+  DollarSign
 } from 'lucide-react';
 
 export default function AdminSettingsPage() {
@@ -35,8 +36,8 @@ export default function AdminSettingsPage() {
     email_host_user: '',
     email_host_password: '',
     default_from_email: 'SCW Boletos <boletos.scw@gmail.com>',
-    whatsapp_service_url: 'https://scw-whatsapp.onrender.com',
     whatsapp_enabled: true,
+    tuition_fee: 500.00,
   });
 
   useEffect(() => {
@@ -56,6 +57,7 @@ export default function AdminSettingsPage() {
             default_from_email: data.default_from_email || 'SCW Boletos <boletos.scw@gmail.com>',
             whatsapp_service_url: data.whatsapp_service_url || 'https://scw-whatsapp.onrender.com',
             whatsapp_enabled: data.whatsapp_enabled !== undefined ? Boolean(data.whatsapp_enabled) : true,
+            tuition_fee: data.tuition_fee !== undefined ? Number(data.tuition_fee) : 500.00,
           });
         }
       } catch (error) {
@@ -249,6 +251,28 @@ export default function AdminSettingsPage() {
                     </div>
                     <p className="text-zinc-500 text-xs mt-1.5">
                       Valor decimal que se le cobra adicionalmente al cliente por transacción. Ej: 0.0401 equivale a 4.01% (3.49% MP fee + IVA).
+                    </p>
+                  </div>
+
+                  <div className="pt-4 border-t border-white/10">
+                    <label className="block text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                      <DollarSign className="w-4 h-4 text-green-500" />
+                      Costo de Mensualidad del Dojo
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm font-bold">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        name="tuition_fee"
+                        value={formData.tuition_fee}
+                        onChange={handleInputChange}
+                        className="w-full bg-zinc-900/80 border border-white/10 hover:border-white/20 focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none rounded-xl px-4 py-3 text-white transition-all text-sm pl-8"
+                      />
+                    </div>
+                    <p className="text-zinc-500 text-xs mt-1.5">
+                      Este es el monto base (en MXN) que se le cobrará a los alumnos cada mes a través de su panel.
                     </p>
                   </div>
                 </div>

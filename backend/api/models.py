@@ -74,6 +74,15 @@ class SystemConfiguration(models.Model):
         verbose_name=_("Notificaciones de WhatsApp Activas"),
         help_text=_("Indica si se deben enviar notificaciones por WhatsApp")
     )
+    
+    # Dojo Settings
+    tuition_fee = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        default=500.00,
+        verbose_name=_("Costo de Mensualidad del Dojo"),
+        help_text=_("Costo a cobrar por la mensualidad escolar a través de Mercado Pago")
+    )
 
     class Meta:
         verbose_name = _("Configuración del Sistema")

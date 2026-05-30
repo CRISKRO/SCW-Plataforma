@@ -285,6 +285,56 @@ class VerifyPaymentView(APIView):
                 print("Verify subscription error:", e)
                 return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+        if str(external_reference).startswith("TUITION_"):
+            try:
+                tuition_id = int(str(external_reference).replace("TUITION_", ""))
+                from students.models import Enrollment
+                from django.utils import timezone
+                from datetime import timedelta
+                enrollment = Enrollment.objects.get(id=tuition_id)
+            except (Enrollment.DoesNotExist, ValueError):
+                return Response({"error": "Inscripción no encontrada."}, status=status.HTTP_404_NOT_FOUND)
+
+            try:
+                config = get_active_config()
+                access_token = config.mercadopago_access_token if config.mercadopago_access_token else settings.MERCADOPAGO_ACCESS_TOKEN
+                mp = mercadopago.SDK(access_token)
+                pay_response = mp.payment().get(int(payment_id))
+                payment = pay_response.get("response", {})
+                verified_status = payment.get("status", "")
+
+                if verified_status == "approved":
+                    if enrollment.payment_status != 'PAID' or enrollment.last_payment_date != timezone.now().date():
+                        enrollment.payment_status = 'PAID'
+                        enrollment.last_payment_date = timezone.now().date()
+                        enrollment.payment_due_date = timezone.now().date() + timedelta(days=30)
+                        enrollment.save()
+                        
+                        # Automate WhatsApp receipt
+                        whatsapp_url = config.whatsapp_service_url if config.whatsapp_service_url else 'https://scw-whatsapp.onrender.com'
+                        due_date_str = enrollment.payment_due_date.strftime('%d/%m/%Y')
+                        last_payment_str = enrollment.last_payment_date.strftime('%d/%m/%Y')
+                        message = (
+                            f"🥊 *SCW Dojo — Confirmación de Mensualidad*\n\n"
+                            f"¡Hola *{enrollment.name}*!\n\n"
+                            f"Te confirmamos que hemos recibido con éxito el pago de tu mensualidad por Mercado Pago el día *{last_payment_str}*.\n\n"
+                            f"📅 *Próximo Vencimiento:* {due_date_str}\n\n"
+                            f"¡Muchas gracias por seguir entrenando en el SCW Dojo! ¡A seguir dándolo todo en el ring! 🥊⚡"
+                        )
+                        if config.whatsapp_enabled:
+                            import requests
+                            try:
+                                requests.post(f"{whatsapp_url}/send-message", json={'phone': enrollment.phone, 'message': message}, timeout=8)
+                            except Exception as e:
+                                print("Error sending tuition receipt:", e)
+
+                    return Response({"status": "approved", "enrollment_id": enrollment.id})
+                else:
+                    return Response({"status": verified_status, "enrollment_id": enrollment.id})
+            except Exception as e:
+                print("Verify tuition error:", e)
+                return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         try:
             order = Order.objects.get(id=int(external_reference))
         except (Order.DoesNotExist, ValueError):
@@ -413,6 +463,39 @@ class WebhookView(APIView):
                                         user.save()
                             except UserSubscription.DoesNotExist:
                                 print(f"Subscription {sub_id} not found in webhook")
+                        elif str(external_reference).startswith("TUITION_"):
+                            tuition_id = int(str(external_reference).replace("TUITION_", ""))
+                            from students.models import Enrollment
+                            from django.utils import timezone
+                            from datetime import timedelta
+                            try:
+                                enrollment = Enrollment.objects.get(id=tuition_id)
+                                if enrollment.payment_status != 'PAID' or enrollment.last_payment_date != timezone.now().date():
+                                    enrollment.payment_status = 'PAID'
+                                    enrollment.last_payment_date = timezone.now().date()
+                                    enrollment.payment_due_date = timezone.now().date() + timedelta(days=30)
+                                    enrollment.save()
+
+                                    # Automate WhatsApp receipt
+                                    whatsapp_url = config.whatsapp_service_url if config.whatsapp_service_url else 'https://scw-whatsapp.onrender.com'
+                                    due_date_str = enrollment.payment_due_date.strftime('%d/%m/%Y')
+                                    last_payment_str = enrollment.last_payment_date.strftime('%d/%m/%Y')
+                                    message = (
+                                        f"🥊 *SCW Dojo — Confirmación de Mensualidad*\n\n"
+                                        f"¡Hola *{enrollment.name}*!\n\n"
+                                        f"Te confirmamos que hemos recibido con éxito el pago de tu mensualidad por Mercado Pago el día *{last_payment_str}*.\n\n"
+                                        f"📅 *Próximo Vencimiento:* {due_date_str}\n\n"
+                                        f"¡Muchas gracias por seguir entrenando en el SCW Dojo! ¡A seguir dándolo todo en el ring! 🥊⚡"
+                                    )
+                                    if config.whatsapp_enabled:
+                                        import requests
+                                        try:
+                                            requests.post(f"{whatsapp_url}/send-message", json={'phone': enrollment.phone, 'message': message}, timeout=8)
+                                        except Exception as e:
+                                            print("Error sending tuition receipt:", e)
+
+                            except Enrollment.DoesNotExist:
+                                print(f"Enrollment {tuition_id} not found in webhook")
                         else:
                             order = Order.objects.get(id=int(external_reference))
                             

@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
-import { LogOut, Ticket, Settings, ShoppingBag } from 'lucide-react';
+import { LogOut, Ticket, Settings, ShoppingBag, Swords, CreditCard, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { paymentService } from '@/services/payments.services';
+import api from '@/services/api';
 
 export default function UserDashboard() {
   const { user, isAuthenticated, logout } = useAuthStore();
@@ -14,7 +15,11 @@ export default function UserDashboard() {
   const [mounted, setMounted] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'orders' | 'settings'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'settings' | 'dojo'>('orders');
+  
+  const [studentData, setStudentData] = useState<any>(null);
+  const [tuitionFee, setTuitionFee] = useState<string>('0.00');
+  const [payingTuition, setPayingTuition] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -22,6 +27,7 @@ export default function UserDashboard() {
       router.push('/login');
     } else {
       fetchOrders();
+      fetchStudentData();
     }
   }, [isAuthenticated, router]);
 
@@ -34,6 +40,33 @@ export default function UserDashboard() {
       console.error("Error loading orders:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchStudentData = async () => {
+    try {
+      const res = await api.get('/students/enrollments/my/');
+      if (res.data && res.data.enrollment) {
+        setStudentData(res.data.enrollment);
+        setTuitionFee(res.data.tuition_fee);
+      }
+    } catch (error) {
+      // 404 means not a student, ignore.
+    }
+  };
+
+  const handlePayTuition = async () => {
+    if (!studentData) return;
+    setPayingTuition(true);
+    try {
+      const res = await api.post(`/students/enrollments/${studentData.id}/pay_tuition/`);
+      if (res.data.init_point) {
+        window.location.href = res.data.init_point;
+      }
+    } catch (error: any) {
+      console.error(error);
+      alert(error?.response?.data?.error || "Error al procesar el pago.");
+      setPayingTuition(false);
     }
   };
 
@@ -95,6 +128,15 @@ export default function UserDashboard() {
           >
             <Settings className="w-4 h-4" /> Configuración de Cuenta
           </button>
+          
+          {studentData && (
+            <button 
+              onClick={() => setActiveTab('dojo')}
+              className={`flex items-center gap-2 px-4 py-2 font-bold uppercase tracking-widest text-sm transition-colors whitespace-nowrap ${activeTab === 'dojo' ? 'text-red-500 border-b-2 border-red-500' : 'text-zinc-500 hover:text-zinc-300'}`}
+            >
+              <Swords className="w-4 h-4" /> Dojo SCW
+            </button>
+          )}
         </div>
 
         {/* Contenido */}
@@ -191,6 +233,66 @@ export default function UserDashboard() {
               <button disabled className="bg-white/10 text-zinc-500 cursor-not-allowed font-bold uppercase tracking-widest px-6 py-3 rounded-lg w-full">
                 Actualizar Datos (Próximamente)
               </button>
+            </div>
+          </motion.div>
+        )}
+
+        {activeTab === 'dojo' && studentData && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-2xl bg-zinc-900 border border-white/10 rounded-xl p-8">
+            <div className="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
+              <Swords className="w-8 h-8 text-red-500" />
+              <div>
+                <h2 className="text-2xl font-bold uppercase tracking-tight">Portal del Alumno</h2>
+                <p className="text-zinc-400 text-sm">Gestiona tu colegiatura y estado en el Dojo.</p>
+              </div>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="flex justify-between items-center bg-black/50 p-4 rounded-lg border border-white/5">
+                <div>
+                  <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Estado de Pago</p>
+                  <p className={`text-lg font-black mt-1 ${
+                    studentData.payment_status === 'PAID' ? 'text-green-500' :
+                    studentData.payment_status === 'EXPIRING' ? 'text-yellow-500' : 'text-red-500'
+                  }`}>
+                    {studentData.payment_status === 'PAID' ? '✅ AL CORRIENTE' :
+                     studentData.payment_status === 'EXPIRING' ? '⚠️ POR VENCER' : '🚨 DEBE'}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Próximo Vencimiento</p>
+                  <p className="text-white font-bold mt-1">
+                    {studentData.payment_due_date ? new Date(studentData.payment_due_date + 'T12:00:00').toLocaleDateString('es-MX', {day: '2-digit', month: 'short', year: 'numeric'}) : 'No registrado'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-red-500/5 border border-red-500/20 p-6 rounded-xl text-center">
+                <p className="text-zinc-300 mb-4 text-sm">
+                  Mantén tu colegiatura al día para seguir entrenando y participar en los próximos eventos de SCW.
+                </p>
+                <div className="flex flex-col items-center gap-2">
+                  <span className="text-3xl font-black text-white">${tuitionFee} <span className="text-sm text-zinc-500 font-medium">MXN / mes</span></span>
+                  
+                  <button 
+                    onClick={handlePayTuition}
+                    disabled={payingTuition}
+                    className="mt-4 flex items-center justify-center gap-2 w-full max-w-sm bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold uppercase tracking-widest py-3 px-6 rounded-xl transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50"
+                  >
+                    {payingTuition ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <>
+                        <CreditCard className="w-5 h-5" />
+                        Pagar Mensualidad
+                      </>
+                    )}
+                  </button>
+                  <p className="text-xs text-zinc-500 mt-3 flex items-center justify-center gap-1">
+                    Pago seguro procesado por Mercado Pago
+                  </p>
+                </div>
+              </div>
             </div>
           </motion.div>
         )}

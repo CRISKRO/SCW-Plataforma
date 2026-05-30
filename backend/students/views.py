@@ -1,5 +1,5 @@
 from rest_framework import serializers, viewsets, status
-from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Enrollment
@@ -184,3 +184,82 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
             "whatsapp_sent": whatsapp_sent,
             "message": "Recordatorio enviado con éxito." if whatsapp_sent else ("No se pudo enviar el mensaje por WhatsApp. ¿Está el microservicio encendido?" if config.whatsapp_enabled else "Las notificaciones de WhatsApp están desactivadas en la configuración.")
         })
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def my(self, request):
+        """Returns the approved enrollment for the current user."""
+        enrollment = Enrollment.objects.filter(email=request.user.email, status='APPROVED').first()
+        if not enrollment:
+            return Response({"error": "No eres un alumno activo."}, status=status.HTTP_404_NOT_FOUND)
+        
+        enrollment.update_dynamic_payment_status()
+        
+        config = get_active_config()
+        return Response({
+            "enrollment": EnrollmentSerializer(enrollment).data,
+            "tuition_fee": str(config.tuition_fee)
+        })
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def pay_tuition(self, request, pk=None):
+        """Generates a MercadoPago preference to pay the monthly tuition."""
+        enrollment = self.get_object()
+        
+        if enrollment.email != request.user.email and not request.user.is_staff:
+            return Response({"error": "No puedes pagar la colegiatura de otro alumno."}, status=status.HTTP_403_FORBIDDEN)
+            
+        if enrollment.status != 'APPROVED':
+            return Response({"error": "Solo alumnos confirmados pueden pagar colegiatura."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        config = get_active_config()
+        tuition_fee = float(config.tuition_fee)
+        commission = float(config.mercadopago_commission_rate)
+        price_with_commission = round(tuition_fee * (1 + commission), 2)
+        
+        try:
+            import mercadopago
+            from django.conf import settings
+            access_token = config.mercadopago_access_token if config.mercadopago_access_token else settings.MERCADOPAGO_ACCESS_TOKEN
+            mp = mercadopago.SDK(access_token)
+            
+            frontend_url = request.headers.get('origin', 'http://localhost:3000')
+            backend_url = f"{request.scheme}://{request.get_host()}"
+            
+            preference_data = {
+                "items": [
+                    {
+                        "title": f"Mensualidad SCW Dojo - {enrollment.name}",
+                        "quantity": 1,
+                        "currency_id": "MXN",
+                        "unit_price": price_with_commission
+                    }
+                ],
+                "payer": {
+                    "email": request.user.email
+                },
+                "back_urls": {
+                    "success": f"{frontend_url}/dashboard?tuition=success",
+                    "failure": f"{frontend_url}/dashboard?tuition=failure",
+                    "pending": f"{frontend_url}/dashboard?tuition=pending"
+                },
+                "auto_return": "approved",
+                "notification_url": f"{backend_url}/api/payments/webhook/",
+                "external_reference": f"TUITION_{enrollment.id}"
+            }
+            
+            preference_response = mp.preference().create(preference_data)
+            preference = preference_response.get("response", {})
+            
+            is_test = access_token.startswith("TEST-")
+            init_point = preference.get("sandbox_init_point") if is_test else preference.get("init_point")
+            if not init_point:
+                init_point = preference.get("init_point", "")
+                
+            return Response({
+                "init_point": init_point,
+                "preference_id": preference.get("id", "")
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Error generando preferencia MP para colegiatura: {e}")
+            return Response({"error": f"No se pudo conectar con MercadoPago: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
