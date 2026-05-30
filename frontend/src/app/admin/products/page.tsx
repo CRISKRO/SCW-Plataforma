@@ -435,17 +435,33 @@ export default function AdminProductsPage() {
                   {/* Category Selection */}
                   <div className="space-y-1.5">
                     <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500">Categoría *</label>
-                    <select
-                      required
-                      value={prodCategory}
-                      onChange={(e) => setProdCategory(e.target.value)}
-                      className="w-full bg-black border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-red-500/50 transition-all"
-                    >
-                      <option value="">Selecciona categoría</option>
-                      {categories.map(cat => (
-                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                      ))}
-                    </select>
+                    {categories.length === 0 ? (
+                      <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-xs text-red-400">
+                        <p className="font-semibold mb-1">No hay categorías registradas.</p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsModalOpen(false);
+                            setIsCatModalOpen(true);
+                          }}
+                          className="text-red-400 hover:text-white underline font-bold transition-colors"
+                        >
+                          Crear una categoría aquí
+                        </button>
+                      </div>
+                    ) : (
+                      <select
+                        required
+                        value={prodCategory}
+                        onChange={(e) => setProdCategory(e.target.value)}
+                        className="w-full bg-black border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-red-500/50 transition-all"
+                      >
+                        <option value="">Selecciona categoría</option>
+                        {categories.map(cat => (
+                          <option key={cat.id} value={cat.id}>{cat.name}</option>
+                        ))}
+                      </select>
+                    )}
                   </div>
 
                   {/* Price and Stock */}
