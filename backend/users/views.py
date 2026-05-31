@@ -72,8 +72,8 @@ class SendEmailOTPView(APIView):
             email_msg.send(fail_silently=False, connection=connection)
             return Response({"message": "Código enviado correctamente."}, status=status.HTTP_200_OK)
         except Exception as e:
-            print("Error enviando correo OTP:", e)
-            return Response({"error": "Error al enviar el correo. Intenta de nuevo."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            print("Error enviando correo OTP:", str(e))
+            return Response({"error": f"Error al enviar el correo: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class VerifyEmailOTPView(APIView):
     permission_classes = (IsAuthenticated,)
