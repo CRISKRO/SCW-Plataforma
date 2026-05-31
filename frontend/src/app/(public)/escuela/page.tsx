@@ -84,7 +84,7 @@ export default function EscuelaPage() {
     setSendingCode(true);
     setVerifyError('');
     try {
-      const res = await api.post('/users/send-email-otp/');
+      const res = await api.post('/auth/send-email-otp/');
       if (res.data.error) throw new Error(res.data.error);
       setCodeSent(true);
     } catch (error: any) {
@@ -97,7 +97,7 @@ export default function EscuelaPage() {
   const handleVerifyCode = async () => {
     setVerifyError('');
     try {
-      const res = await api.post('/users/verify-email-otp/', { code: verifyCode });
+      const res = await api.post('/auth/verify-email-otp/', { code: verifyCode });
       if (res.data.error) throw new Error(res.data.error);
       setStep('form');
     } catch (error: any) {
