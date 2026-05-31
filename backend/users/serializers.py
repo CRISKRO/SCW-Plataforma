@@ -62,7 +62,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.save()
         
         import random
-        from django.core.mail import send_mail
+        from django.core.mail import EmailMultiAlternatives, get_connection
         from api.models import get_active_config
         from users.models import EmailVerification
         
@@ -70,16 +70,26 @@ class RegisterSerializer(serializers.ModelSerializer):
         EmailVerification.objects.update_or_create(user=user, defaults={'code': code})
         
         config = get_active_config()
-        from_email = config.default_from_email if config else 'SCW Boletos <boletos.scw@gmail.com>'
+        from_email = config.default_from_email if config.default_from_email else 'SCW Boletos <boletos.scw@gmail.com>'
+        
+        connection = None
+        if config and config.email_host_user and config.email_host_password:
+            connection = get_connection(
+                host=config.email_host,
+                port=config.email_port,
+                username=config.email_host_user,
+                password=config.email_host_password,
+                use_tls=config.email_use_tls,
+            )
         
         try:
-            send_mail(
+            email_msg = EmailMultiAlternatives(
                 subject='Código de Verificación - SCW',
-                message=f'Hola {user.first_name},\n\nTu código de verificación es: {code}\n\nIngresa este código en la página para activar tu cuenta.\n\nSaludos,\nSCW Dojo',
+                body=f'Hola {user.first_name},\n\nTu código de verificación es: {code}\n\nIngresa este código en la página para activar tu cuenta.\n\nSaludos,\nSCW Dojo',
                 from_email=from_email,
-                recipient_list=[user.email],
-                fail_silently=False,
+                to=[user.email]
             )
+            email_msg.send(fail_silently=False, connection=connection)
         except Exception as e:
             print("Error enviando correo OTP:", e)
             
