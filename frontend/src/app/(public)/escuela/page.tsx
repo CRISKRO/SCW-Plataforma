@@ -64,13 +64,16 @@ export default function EscuelaPage() {
     const checkEnrollment = async () => {
       if (isAuthenticated) {
         try {
-          const res = await api.get('/students/enrollments/my/');
-          if (res.data && res.data.id) {
+          const res = await api.get('/students/enrollments/status/');
+          if (res.data.status === 'PENDING') {
+            setStep('success'); // Muestra: Tu solicitud está en revisión
+            return;
+          } else if (res.data.status === 'APPROVED') {
             setStep('already_enrolled');
             return;
           }
         } catch (e) {
-          // not enrolled
+          // not enrolled or error
         }
         setStep('verify_email');
       } else {

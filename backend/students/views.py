@@ -186,6 +186,17 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
         })
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def status(self, request):
+        """Returns the enrollment status for the current user (PENDING or APPROVED)."""
+        enrollment = Enrollment.objects.filter(email=request.user.email).first()
+        if not enrollment:
+            return Response({"status": "NONE"}, status=status.HTTP_200_OK)
+        return Response({
+            "status": enrollment.status,
+            "enrollment": EnrollmentSerializer(enrollment).data
+        }, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def my(self, request):
         """Returns the approved enrollment for the current user."""
         enrollment = Enrollment.objects.filter(email=request.user.email, status='APPROVED').first()
