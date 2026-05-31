@@ -69,7 +69,8 @@ class SendEmailOTPView(APIView):
                 from_email=from_email,
                 to=[user.email]
             )
-            email_msg.send(fail_silently=False, connection=connection)
+            email_msg.connection = connection
+            email_msg.send(fail_silently=False)
             return Response({"message": "Código enviado correctamente."}, status=status.HTTP_200_OK)
         except Exception as e:
             print("Error enviando correo OTP:", str(e))

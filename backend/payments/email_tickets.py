@@ -114,5 +114,6 @@ def send_ticket_email(order):
             use_tls=config.email_use_tls,
         )
 
-    email.send(fail_silently=False, connection=connection)
+    email.connection = connection
+    email.send(fail_silently=False)
     return True
