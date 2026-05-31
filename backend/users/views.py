@@ -34,3 +34,32 @@ class UserViewSet(viewsets.ModelViewSet):
             user.is_staff = False
             user.is_superuser = False
         user.save()
+
+class VerifyEmailView(APIView):
+    permission_classes = (AllowAny,)
+    
+    def post(self, request):
+        email = request.data.get('email')
+        code = request.data.get('code')
+        
+        if not email or not code:
+            return Response({"error": "Email y código son requeridos."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            user = User.objects.get(email=email)
+            if user.is_active:
+                return Response({"message": "La cuenta ya está activa."}, status=status.HTTP_200_OK)
+                
+            from .models import EmailVerification
+            verification = EmailVerification.objects.get(user=user, code=code)
+            
+            user.is_active = True
+            user.save()
+            verification.delete()
+            
+            return Response({"message": "Cuenta activada correctamente."}, status=status.HTTP_200_OK)
+            
+        except User.DoesNotExist:
+            return Response({"error": "Usuario no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception:
+            return Response({"error": "Código incorrecto o expirado."}, status=status.HTTP_400_BAD_REQUEST)

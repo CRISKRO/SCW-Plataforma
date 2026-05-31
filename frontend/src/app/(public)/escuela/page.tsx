@@ -23,7 +23,7 @@ const EXPERIENCE_LABELS: Record<string, string> = {
   ADVANCED: 'Avanzado (Ya he luchado o estoy listo para debutar)',
 };
 
-type Step = 'check' | 'verify_whatsapp' | 'form' | 'success';
+type Step = 'check' | 'verify_whatsapp' | 'form' | 'success' | 'already_enrolled';
 
 
 export default function EscuelaPage() {
@@ -61,11 +61,23 @@ export default function EscuelaPage() {
 
   // Determine starting step
   useEffect(() => {
-    if (isAuthenticated) {
-      setStep('verify_whatsapp');
-    } else {
-      setStep('check');
-    }
+    const checkEnrollment = async () => {
+      if (isAuthenticated) {
+        try {
+          const res = await api.get('/students/enrollments/my/');
+          if (res.data && res.data.id) {
+            setStep('already_enrolled');
+            return;
+          }
+        } catch (e) {
+          // not enrolled
+        }
+        setStep('verify_whatsapp');
+      } else {
+        setStep('check');
+      }
+    };
+    checkEnrollment();
   }, [isAuthenticated]);
 
   const handleSendCode = async () => {
@@ -205,6 +217,24 @@ export default function EscuelaPage() {
 
           <div className="p-8 md:p-12">
             <AnimatePresence mode="wait">
+
+              {/* STEP: Already Enrolled */}
+              {step === 'already_enrolled' && (
+                <motion.div key="already_enrolled" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="text-center p-8">
+                  <div className="w-20 h-20 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <CheckCircle className="w-10 h-10" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-4">Ya estás inscrito</h3>
+                  <p className="text-zinc-400 mb-8 max-w-md mx-auto">
+                    Ya hemos recibido tu solicitud o ya formas parte del SCW Dojo. Puedes ver el estado de tu suscripción en tu panel de alumno.
+                  </p>
+                  <Link href="/dashboard">
+                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="px-8 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold uppercase tracking-widest transition-colors">
+                      Ir a mi Panel
+                    </motion.button>
+                  </Link>
+                </motion.div>
+              )}
 
               {/* STEP 1: Must be logged in */}
               {step === 'check' && (

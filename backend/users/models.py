@@ -32,3 +32,11 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return f"{self.email} ({self.get_role_display()})"
+
+class EmailVerification(models.Model):
+    user = models.OneToOneField(CustomUser, related_name='email_verification', on_delete=models.CASCADE)
+    code = models.CharField(_('código'), max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"OTP para {self.user.email}"
