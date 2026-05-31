@@ -63,13 +63,13 @@ class RegisterSerializer(serializers.ModelSerializer):
         
         import random
         from django.core.mail import send_mail
-        from api.models import SystemConfiguration
+        from api.models import get_active_config
         from users.models import EmailVerification
         
         code = f"{random.randint(100000, 999999)}"
         EmailVerification.objects.update_or_create(user=user, defaults={'code': code})
         
-        config = SystemConfiguration.objects.filter(is_active=True).first()
+        config = get_active_config()
         from_email = config.default_from_email if config else 'SCW Boletos <boletos.scw@gmail.com>'
         
         try:
