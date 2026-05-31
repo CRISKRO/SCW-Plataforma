@@ -23,7 +23,7 @@ const EXPERIENCE_LABELS: Record<string, string> = {
   ADVANCED: 'Avanzado (Ya he luchado o estoy listo para debutar)',
 };
 
-type Step = 'check' | 'verify_whatsapp' | 'form' | 'success' | 'already_enrolled';
+type Step = 'check' | 'verify_email' | 'form' | 'success' | 'already_enrolled';
 
 
 export default function EscuelaPage() {
@@ -72,7 +72,7 @@ export default function EscuelaPage() {
         } catch (e) {
           // not enrolled
         }
-        setStep('verify_whatsapp');
+        setStep('verify_email');
       } else {
         setStep('check');
       }
@@ -81,43 +81,27 @@ export default function EscuelaPage() {
   }, [isAuthenticated]);
 
   const handleSendCode = async () => {
-    const phone = formData.phone || user?.phone_number || '';
-    if (!phone) {
-      setVerifyError('Ingresa un número de WhatsApp primero.');
-      return;
-    }
     setSendingCode(true);
     setVerifyError('');
     try {
-      const res = await fetch(`${WHATSAPP_SERVICE}/send-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Error al enviar el código.');
+      const res = await api.post('/users/send-email-otp/');
+      if (res.data.error) throw new Error(res.data.error);
       setCodeSent(true);
     } catch (error: any) {
-      setVerifyError(error.message || 'Error al enviar el código. Verifica el número.');
+      setVerifyError(error.response?.data?.error || error.message || 'Error al enviar el código al correo.');
     } finally {
       setSendingCode(false);
     }
   };
 
   const handleVerifyCode = async () => {
-    const phone = formData.phone || user?.phone_number || '';
     setVerifyError('');
     try {
-      const res = await fetch(`${WHATSAPP_SERVICE}/verify-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, code: verifyCode }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Código incorrecto.');
+      const res = await api.post('/users/verify-email-otp/', { code: verifyCode });
+      if (res.data.error) throw new Error(res.data.error);
       setStep('form');
     } catch (error: any) {
-      setVerifyError(error.message || 'Código incorrecto. Intenta de nuevo.');
+      setVerifyError(error.response?.data?.error || error.message || 'Código incorrecto. Intenta de nuevo.');
     }
   };
 
@@ -205,7 +189,7 @@ export default function EscuelaPage() {
           <div className="flex border-b border-white/10">
             {[
               { label: 'Cuenta', n: 1, active: step === 'check' },
-              { label: 'Verificar', n: 2, active: step === 'verify_whatsapp' },
+              { label: 'Verificar', n: 2, active: step === 'verify_email' },
               { label: 'Solicitud', n: 3, active: step === 'form' },
             ].map((s, i) => (
               <div key={s.label} className={`flex-1 py-4 text-center text-xs font-bold uppercase tracking-widest transition-colors ${s.active ? 'text-white bg-zinc-800' : 'text-zinc-600'}`}>
@@ -253,16 +237,16 @@ export default function EscuelaPage() {
                 </motion.div>
               )}
 
-              {/* STEP 2: WhatsApp Verification */}
-              {step === 'verify_whatsapp' && (
+              {/* STEP 2: Email Verification */}
+              {step === 'verify_email' && (
                 <motion.div key="verify" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
                   <div className="flex items-center gap-4 mb-2">
-                    <div className="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center">
-                      <MessageCircle className="w-6 h-6 text-green-500" />
+                    <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center">
+                      <Mail className="w-6 h-6 text-red-500" />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-black uppercase tracking-tight">Verificar WhatsApp</h2>
-                      <p className="text-zinc-400 text-sm mt-1">Te enviamos un código de 6 dígitos para confirmar tu identidad.</p>
+                      <h2 className="text-2xl font-black uppercase tracking-tight">Verificar Correo</h2>
+                      <p className="text-zinc-400 text-sm mt-1">Te enviaremos un código de 6 dígitos para confirmar tu identidad.</p>
                     </div>
                   </div>
 
@@ -276,31 +260,18 @@ export default function EscuelaPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
-                      <Phone className="w-4 h-4" /> Número de WhatsApp
-                    </label>
-                    <input
-                      type="tel"
-                      value={formData.phone}
-                      onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full bg-black border border-white/20 rounded-xl p-4 text-white focus:outline-none focus:border-green-500 transition-colors"
-                      placeholder="+52 443 000 0000"
-                    />
-                  </div>
-
                   {!codeSent ? (
                     <button
                       onClick={handleSendCode}
                       disabled={sendingCode}
-                      className="w-full bg-green-600 hover:bg-green-500 text-white py-4 font-bold uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                      className="w-full bg-red-600 hover:bg-red-500 text-white py-4 font-bold uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50 mt-4"
                     >
-                      <MessageCircle className="w-5 h-5" />
-                      {sendingCode ? 'Enviando...' : 'Enviar Código por WhatsApp'}
+                      <Mail className="w-5 h-5" />
+                      {sendingCode ? 'Enviando...' : 'Enviar Código al Correo'}
                     </button>
                   ) : (
                     <div className="space-y-4">
-                      <p className="text-green-400 text-sm font-medium text-center">✅ Código enviado. Revisa tu WhatsApp.</p>
+                      <p className="text-red-400 text-sm font-medium text-center">✅ Código enviado. Revisa tu correo electrónico.</p>
                       <div className="space-y-2">
                         <label className="text-xs font-bold uppercase tracking-widest text-zinc-500">Código de 6 dígitos</label>
                         <input
@@ -308,7 +279,7 @@ export default function EscuelaPage() {
                           maxLength={6}
                           value={verifyCode}
                           onChange={e => setVerifyCode(e.target.value.replace(/\D/, ''))}
-                          className="w-full bg-black border border-white/20 rounded-xl p-4 text-white text-center text-2xl font-black tracking-[0.5em] focus:outline-none focus:border-green-500 transition-colors"
+                          className="w-full bg-black border border-white/20 rounded-xl p-4 text-white text-center text-2xl font-black tracking-[0.5em] focus:outline-none focus:border-red-500 transition-colors"
                           placeholder="000000"
                         />
                       </div>

@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import RegisterView, UserProfileView, UserViewSet, VerifyEmailView
+from .views import RegisterView, UserProfileView, UserViewSet, SendEmailOTPView, VerifyEmailOTPView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 router = DefaultRouter()
@@ -8,7 +8,8 @@ router.register(r'users', UserViewSet, basename='user')
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='auth_register'),
-    path('verify-email/', VerifyEmailView.as_view(), name='verify_email'),
+    path('send-email-otp/', SendEmailOTPView.as_view(), name='send_email_otp'),
+    path('verify-email-otp/', VerifyEmailOTPView.as_view(), name='verify_email_otp'),
     path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('login/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('profile/', UserProfileView.as_view(), name='auth_profile'),

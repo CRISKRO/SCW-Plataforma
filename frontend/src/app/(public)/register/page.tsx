@@ -7,6 +7,12 @@ import { authService } from '@/services/auth.services';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+const envWhatsappUrl = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_WHATSAPP_SERVICE
+  ? process.env.NEXT_PUBLIC_WHATSAPP_SERVICE
+  : undefined;
+
+const WHATSAPP_SERVICE = envWhatsappUrl || 'https://scw-whatsapp.onrender.com';
+
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
     first_name: '',
@@ -37,11 +43,24 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!formData.phone_number) {
+      setError('El número de WhatsApp es requerido');
+      setLoading(false);
+      return;
+    }
+
     try {
-      await authService.register(formData);
+      const res = await fetch(`${WHATSAPP_SERVICE}/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: formData.phone_number })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al enviar código de WhatsApp.');
+      
       setStep('verify');
     } catch (err: any) {
-      setError(err.response?.data?.email?.[0] || 'Error al registrar la cuenta.');
+      setError(err.message || 'Error al conectar con WhatsApp.');
     } finally {
       setLoading(false);
     }
@@ -52,17 +71,18 @@ export default function RegisterPage() {
     setLoading(true);
     setError('');
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
-      const res = await fetch(`${apiUrl}/users/verify-email/`, {
+      const verifyRes = await fetch(`${WHATSAPP_SERVICE}/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email, code: verifyCode })
+        body: JSON.stringify({ phone: formData.phone_number, code: verifyCode })
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Código incorrecto');
+      const verifyData = await verifyRes.json();
+      if (!verifyRes.ok) throw new Error(verifyData.error || 'Código de WhatsApp incorrecto');
+
+      await authService.register(formData);
       router.push('/login?registered=true');
     } catch(err: any) {
-      setError(err.message || 'Error al verificar');
+      setError(err.response?.data?.email?.[0] || err.message || 'Error al registrar la cuenta');
     } finally {
       setLoading(false);
     }
@@ -183,9 +203,9 @@ export default function RegisterPage() {
           <form className="mt-6 space-y-5" onSubmit={handleVerify}>
             <div className="text-center mb-6">
               <p className="text-zinc-300 text-sm">
-                Hemos enviado un código de verificación al correo:
+                Hemos enviado un código de verificación por WhatsApp al número:
                 <br />
-                <span className="font-bold text-white">{formData.email}</span>
+                <span className="font-bold text-white">{formData.phone_number}</span>
               </p>
             </div>
             

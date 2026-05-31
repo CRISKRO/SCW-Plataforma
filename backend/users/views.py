@@ -35,31 +35,65 @@ class UserViewSet(viewsets.ModelViewSet):
             user.is_superuser = False
         user.save()
 
-class VerifyEmailView(APIView):
-    permission_classes = (AllowAny,)
+class SendEmailOTPView(APIView):
+    permission_classes = (IsAuthenticated,)
     
     def post(self, request):
-        email = request.data.get('email')
-        code = request.data.get('code')
+        user = request.user
         
-        if not email or not code:
-            return Response({"error": "Email y código son requeridos."}, status=status.HTTP_400_BAD_REQUEST)
+        import random
+        from django.core.mail import EmailMultiAlternatives, get_connection
+        from api.models import get_active_config
+        from .models import EmailVerification
+        
+        code = f"{random.randint(100000, 999999)}"
+        EmailVerification.objects.update_or_create(user=user, defaults={'code': code})
+        
+        config = get_active_config()
+        from_email = config.default_from_email if config.default_from_email else 'SCW Boletos <boletos.scw@gmail.com>'
+        
+        connection = None
+        if config and config.email_host_user and config.email_host_password:
+            connection = get_connection(
+                host=config.email_host,
+                port=config.email_port,
+                username=config.email_host_user,
+                password=config.email_host_password,
+                use_tls=config.email_use_tls,
+            )
+        
+        try:
+            email_msg = EmailMultiAlternatives(
+                subject='Código de Verificación - SCW',
+                body=f'Hola {user.first_name},\n\nTu código de verificación es: {code}\n\nIngresa este código en la página para continuar tu registro en la Escuela SCW.\n\nSaludos,\nSCW Dojo',
+                from_email=from_email,
+                to=[user.email]
+            )
+            email_msg.send(fail_silently=False, connection=connection)
+            return Response({"message": "Código enviado correctamente."}, status=status.HTTP_200_OK)
+        except Exception as e:
+            print("Error enviando correo OTP:", e)
+            return Response({"error": "Error al enviar el correo. Intenta de nuevo."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class VerifyEmailOTPView(APIView):
+    permission_classes = (IsAuthenticated,)
+    
+    def post(self, request):
+        code = request.data.get('code')
+        user = request.user
+        
+        if not code:
+            return Response({"error": "El código es requerido."}, status=status.HTTP_400_BAD_REQUEST)
             
         try:
-            user = User.objects.get(email=email)
-            if user.is_active:
-                return Response({"message": "La cuenta ya está activa."}, status=status.HTTP_200_OK)
-                
             from .models import EmailVerification
             verification = EmailVerification.objects.get(user=user, code=code)
             
-            user.is_active = True
-            user.save()
+            # The OTP is valid, delete it so it can't be reused
             verification.delete()
             
-            return Response({"message": "Cuenta activada correctamente."}, status=status.HTTP_200_OK)
+            return Response({"message": "Código verificado correctamente."}, status=status.HTTP_200_OK)
             
-        except User.DoesNotExist:
-            return Response({"error": "Usuario no encontrado."}, status=status.HTTP_404_NOT_FOUND)
         except Exception:
             return Response({"error": "Código incorrecto o expirado."}, status=status.HTTP_400_BAD_REQUEST)
+
