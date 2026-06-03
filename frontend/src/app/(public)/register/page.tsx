@@ -80,10 +80,14 @@ export default function RegisterPage() {
       if (!verifyRes.ok) throw new Error(verifyData.error || 'Código de WhatsApp incorrecto');
 
       await authService.register(formData);
-      await authService.login({ email: formData.email, password: formData.password });
-      window.location.href = '/dashboard';
+      try {
+        await authService.login({ email: formData.email, password: formData.password });
+        window.location.href = '/dashboard';
+      } catch (loginErr: any) {
+        setError("Cuenta creada exitosamente, pero falló el auto-login: " + (loginErr.response?.data?.detail || loginErr.message));
+      }
     } catch(err: any) {
-      setError(err.response?.data?.email?.[0] || err.message || 'Error al registrar la cuenta');
+      setError("Error al registrar: " + (err.response?.data?.email?.[0] || err.message));
     } finally {
       setLoading(false);
     }

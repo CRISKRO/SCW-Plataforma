@@ -8,10 +8,16 @@ from .serializers import SubscriptionPlanSerializer, PremiumVideoSerializer
 from django.utils import timezone
 from datetime import timedelta
 
-class SubscriptionPlanViewSet(viewsets.ReadOnlyModelViewSet):
+class IsAdminOrReadOnly(BasePermission):
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+        return request.user and request.user.is_authenticated and (request.user.is_staff or getattr(request.user, 'role', None) in ['ADMIN', 'SUPERADMIN'])
+
+class SubscriptionPlanViewSet(viewsets.ModelViewSet):
     queryset = SubscriptionPlan.objects.filter(is_active=True)
     serializer_class = SubscriptionPlanSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminOrReadOnly]
 
 class IsPremiumOrAdmin(BasePermission):
     """Admins can write; authenticated premium users can read."""

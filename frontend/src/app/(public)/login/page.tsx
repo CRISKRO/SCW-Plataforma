@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Lock, Mail, ArrowRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Lock, Mail, ArrowRight, X, Key } from 'lucide-react';
 import { authService } from '@/services/auth.services';
 import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
@@ -16,6 +16,15 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const setAuth = useAuthStore(state => state.setAuth);
   const router = useRouter();
+
+  // Forgot Password State
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotStep, setForgotStep] = useState(1);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotCode, setForgotCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotError, setForgotError] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +40,38 @@ export default function LoginPage() {
       setError('Credenciales inválidas. Intenta de nuevo.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSendOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotLoading(true);
+    setForgotError('');
+    try {
+      await authService.sendPasswordResetOTP(forgotEmail);
+      setForgotStep(2);
+    } catch (err: any) {
+      setForgotError('Error al enviar el correo. Intenta de nuevo.');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotLoading(true);
+    setForgotError('');
+    try {
+      await authService.resetPasswordWithOTP({
+        email: forgotEmail,
+        code: forgotCode,
+        new_password: newPassword
+      });
+      setForgotStep(3);
+    } catch (err: any) {
+      setForgotError('Código incorrecto o expirado.');
+    } finally {
+      setForgotLoading(false);
     }
   };
 
@@ -114,9 +155,20 @@ export default function LoginPage() {
               </label>
             </div>
             <div className="text-sm">
-              <a href="#" className="font-medium text-white hover:text-zinc-300 transition-colors">
+              <button 
+                type="button" 
+                onClick={() => {
+                  setShowForgotModal(true);
+                  setForgotStep(1);
+                  setForgotEmail('');
+                  setForgotCode('');
+                  setNewPassword('');
+                  setForgotError('');
+                }}
+                className="font-medium text-white hover:text-zinc-300 transition-colors"
+              >
                 ¿Olvidaste tu contraseña?
-              </a>
+              </button>
             </div>
           </div>
 
@@ -147,6 +199,125 @@ export default function LoginPage() {
           </div>
         </form>
       </motion.div>
+
+      {/* Forgot Password Modal */}
+      <AnimatePresence>
+        {showForgotModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50"
+              onClick={() => setShowForgotModal(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed inset-0 flex items-center justify-center z-50 p-4"
+            >
+              <div className="bg-zinc-950 border border-white/10 rounded-2xl p-8 w-full max-w-md shadow-2xl relative">
+                <button 
+                  onClick={() => setShowForgotModal(false)} 
+                  className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+                
+                <h2 className="text-2xl font-bold text-white mb-2">Recuperar Contraseña</h2>
+                
+                {forgotError && (
+                  <div className="mb-4 p-3 bg-red-900/50 border border-red-500/50 rounded-lg text-red-200 text-sm text-center">
+                    {forgotError}
+                  </div>
+                )}
+
+                {forgotStep === 1 && (
+                  <form onSubmit={handleSendOTP} className="space-y-4">
+                    <p className="text-zinc-400 text-sm mb-4">Ingresa tu correo electrónico y te enviaremos un código de verificación.</p>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Mail className="h-5 w-5 text-zinc-500" />
+                      </div>
+                      <input
+                        type="email"
+                        required
+                        className="appearance-none rounded-xl relative block w-full px-3 py-3 pl-10 border border-zinc-700 bg-zinc-900/50 placeholder-zinc-500 text-white focus:outline-none focus:ring-2 focus:ring-white focus:border-white sm:text-sm"
+                        placeholder="Correo Electrónico"
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={forgotLoading}
+                      className="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-black bg-white hover:bg-zinc-200 focus:outline-none transition-all disabled:opacity-50"
+                    >
+                      {forgotLoading ? 'Enviando...' : 'Enviar Código'}
+                    </button>
+                  </form>
+                )}
+
+                {forgotStep === 2 && (
+                  <form onSubmit={handleResetPassword} className="space-y-4">
+                    <p className="text-zinc-400 text-sm mb-4">Ingresa el código que enviamos a tu correo y tu nueva contraseña.</p>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Key className="h-5 w-5 text-zinc-500" />
+                      </div>
+                      <input
+                        type="text"
+                        required
+                        className="appearance-none rounded-xl relative block w-full px-3 py-3 pl-10 border border-zinc-700 bg-zinc-900/50 placeholder-zinc-500 text-white focus:outline-none focus:ring-2 focus:ring-white focus:border-white sm:text-sm"
+                        placeholder="Código de 6 dígitos"
+                        value={forgotCode}
+                        onChange={(e) => setForgotCode(e.target.value)}
+                        maxLength={6}
+                      />
+                    </div>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Lock className="h-5 w-5 text-zinc-500" />
+                      </div>
+                      <input
+                        type="password"
+                        required
+                        className="appearance-none rounded-xl relative block w-full px-3 py-3 pl-10 border border-zinc-700 bg-zinc-900/50 placeholder-zinc-500 text-white focus:outline-none focus:ring-2 focus:ring-white focus:border-white sm:text-sm"
+                        placeholder="Nueva Contraseña"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={forgotLoading}
+                      className="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-black bg-white hover:bg-zinc-200 focus:outline-none transition-all disabled:opacity-50"
+                    >
+                      {forgotLoading ? 'Actualizando...' : 'Actualizar Contraseña'}
+                    </button>
+                  </form>
+                )}
+
+                {forgotStep === 3 && (
+                  <div className="text-center space-y-4">
+                    <div className="w-16 h-16 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Lock className="w-8 h-8" />
+                    </div>
+                    <p className="text-white font-medium">¡Contraseña actualizada con éxito!</p>
+                    <button
+                      onClick={() => setShowForgotModal(false)}
+                      className="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-black bg-white hover:bg-zinc-200 focus:outline-none transition-all"
+                    >
+                      Volver al Login
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

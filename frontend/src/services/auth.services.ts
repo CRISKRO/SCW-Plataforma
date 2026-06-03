@@ -27,5 +27,15 @@ export const authService = {
   getProfile: async () => {
     const response = await api.get('/auth/profile/');
     return response.data;
+  },
+
+  sendPasswordResetOTP: async (email: string) => {
+    const response = await api.post('/auth/password-reset-otp/', { email });
+    return response.data;
+  },
+
+  resetPasswordWithOTP: async (data: any) => {
+    const response = await api.post('/auth/password-reset-confirm/', data);
+    return response.data;
   }
 };

@@ -32,19 +32,33 @@ export default function AdminPremiumPage() {
   const [form, setForm] = useState({ ...EMPTY_FORM });
   const [previewThumb, setPreviewThumb] = useState('');
 
-  const fetchVideos = async () => {
+  // Plan State
+  const [plan, setPlan] = useState<any>(null);
+  const [planSaving, setPlanSaving] = useState(false);
+  const [editPlanPrice, setEditPlanPrice] = useState('');
+  const [editPlanDesc, setEditPlanDesc] = useState('');
+
+  const fetchData = async () => {
     try {
-      const data = await adminService.getPremiumVideos();
-      setVideos(data);
+      const [videosData, plansData] = await Promise.all([
+        adminService.getPremiumVideos(),
+        adminService.getSubscriptionPlans()
+      ]);
+      setVideos(videosData);
+      if (plansData.length > 0) {
+        setPlan(plansData[0]);
+        setEditPlanPrice(plansData[0].price);
+        setEditPlanDesc(plansData[0].description);
+      }
     } catch (error) {
-      console.error("Error loading videos:", error);
+      console.error("Error loading data:", error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchVideos();
+    fetchData();
   }, []);
 
   // Live thumbnail preview from YouTube URL
@@ -116,6 +130,25 @@ export default function AdminPremiumPage() {
     }
   };
 
+  const handleUpdatePlan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!plan) return;
+    setPlanSaving(true);
+    try {
+      const updated = await adminService.updateSubscriptionPlan(plan.id, {
+        price: editPlanPrice,
+        description: editPlanDesc
+      });
+      setPlan(updated);
+      alert("Plan actualizado exitosamente");
+    } catch (error) {
+      console.error("Error updating plan:", error);
+      alert("Error al actualizar el plan");
+    } finally {
+      setPlanSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -135,6 +168,46 @@ export default function AdminPremiumPage() {
           Agregar Video
         </button>
       </div>
+
+      {/* Plan Config */}
+      {plan && (
+        <div className="bg-zinc-900 border border-white/10 rounded-xl p-6">
+          <h2 className="text-lg font-bold text-white mb-4">Costo y Descripción de la Membresía</h2>
+          <form onSubmit={handleUpdatePlan} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+            <div className="md:col-span-2">
+              <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2 block">Costo (MXN)</label>
+              <input 
+                type="number"
+                step="0.01"
+                required
+                value={editPlanPrice}
+                onChange={e => setEditPlanPrice(e.target.value)}
+                className="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-red-500 text-sm"
+              />
+            </div>
+            <div className="md:col-span-7">
+              <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2 block">Descripción Breve</label>
+              <input 
+                type="text"
+                required
+                value={editPlanDesc}
+                onChange={e => setEditPlanDesc(e.target.value)}
+                className="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-red-500 text-sm"
+              />
+            </div>
+            <div className="md:col-span-3">
+              <button 
+                type="submit" 
+                disabled={planSaving}
+                className="w-full flex items-center justify-center gap-2 bg-white/10 text-white py-2.5 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-white/20 transition-colors disabled:opacity-50 border border-white/20"
+              >
+                <Save className="w-3.5 h-3.5" />
+                {planSaving ? 'Guardando...' : 'Actualizar Plan'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">

@@ -1,6 +1,12 @@
 import api from './api';
 
 export const adminService = {
+  // Dashboard
+  getDashboardStats: async () => {
+    const response = await api.get('/settings/dashboard-stats/');
+    return response.data;
+  },
+
   // Users
   getUsers: async () => {
     const response = await api.get('/auth/users/');
@@ -8,6 +14,10 @@ export const adminService = {
   },
   updateUserRole: async (id: number, role: string) => {
     const response = await api.patch(`/auth/users/${id}/`, { role });
+    return response.data;
+  },
+  updateUser: async (id: number, data: any) => {
+    const response = await api.patch(`/auth/users/${id}/`, data);
     return response.data;
   },
   deleteUser: async (id: number) => {
@@ -65,7 +75,15 @@ export const adminService = {
     return response.data;
   },
 
-  // Premium Videos
+  // Premium Videos & Plans
+  getSubscriptionPlans: async () => {
+    const response = await api.get('/premium/plans/');
+    return response.data;
+  },
+  updateSubscriptionPlan: async (id: number, data: any) => {
+    const response = await api.patch(`/premium/plans/${id}/`, data);
+    return response.data;
+  },
   getPremiumVideos: async () => {
     const response = await api.get('/premium/videos/');
     return response.data;
