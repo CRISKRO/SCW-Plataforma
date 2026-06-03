@@ -14,6 +14,9 @@ class IsAdminOrReadOnly(BasePermission):
             return True
         return request.user and request.user.is_authenticated and (request.user.is_staff or getattr(request.user, 'role', None) in ['ADMIN', 'SUPERADMIN'])
 
+    def has_object_permission(self, request, view, obj):
+        return self.has_permission(request, view)
+
 class SubscriptionPlanViewSet(viewsets.ModelViewSet):
     queryset = SubscriptionPlan.objects.filter(is_active=True)
     serializer_class = SubscriptionPlanSerializer
@@ -30,20 +33,20 @@ class IsPremiumOrAdmin(BasePermission):
 
 class PremiumVideoViewSet(viewsets.ModelViewSet):
     serializer_class = PremiumVideoSerializer
-    permission_classes = [IsPremiumOrAdmin]
+    
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [AllowAny()]
+        return [IsPremiumOrAdmin()]
 
     def get_queryset(self):
         user = self.request.user
         # Admins see all videos
-        if user.is_staff or getattr(user, 'role', None) in ['ADMIN', 'SUPERADMIN']:
+        if user and user.is_authenticated and (user.is_staff or getattr(user, 'role', None) in ['ADMIN', 'SUPERADMIN']):
             return PremiumVideo.objects.all().order_by('-release_date')
-        # Premium/subscriber users see only published videos
-        has_active_sub = UserSubscription.objects.filter(
-            user=user, is_active=True, end_date__gt=timezone.now()
-        ).exists()
-        if getattr(user, 'role', None) in ['PREMIUM'] or has_active_sub:
-            return PremiumVideo.objects.filter(is_published=True).order_by('-release_date')
-        return PremiumVideo.objects.none()
+        
+        # Everyone else (including unauthenticated) sees published videos only
+        return PremiumVideo.objects.filter(is_published=True).order_by('-release_date')
 
 class SubscribeView(APIView):
     permission_classes = [IsAuthenticated]

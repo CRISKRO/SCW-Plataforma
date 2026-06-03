@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check, Lock, PlayCircle, Video, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuthStore } from '@/store/authStore';
 import api from '@/services/api';
 
@@ -25,14 +26,12 @@ export default function PremiumPage() {
   const isPremium = isAuthenticated && ['PREMIUM', 'ADMIN', 'SUPERADMIN'].includes(user?.role || '');
 
   useEffect(() => {
-    if (isAuthenticated) {
-      setLoadingVideos(true);
-      api.get('/premium/videos/')
-        .then(res => setVideos(res.data))
-        .catch(() => setVideos([]))
-        .finally(() => setLoadingVideos(false));
-    }
-  }, [isAuthenticated]);
+    setLoadingVideos(true);
+    api.get('/premium/videos/')
+      .then(res => setVideos(res.data))
+      .catch(() => setVideos([]))
+      .finally(() => setLoadingVideos(false));
+  }, []);
 
   return (
     <div className="bg-black min-h-screen text-white pt-20">
@@ -100,11 +99,34 @@ export default function PremiumPage() {
 
           {loadingVideos ? (
             <div className="text-zinc-500 py-12 text-center">Cargando videos...</div>
-          ) : isPremium && videos.length > 0 ? (
-            // Premium user — show real videos with YouTube links
+          ) : videos.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {videos.map((video, i) => {
-                const thumb = getYoutubeThumbnail(video.video_url);
+                const thumb = video.youtube_id ? `https://img.youtube.com/vi/${video.youtube_id}/hqdefault.jpg` : '';
+                const isLocked = !video.video_url;
+
+                if (isLocked) {
+                  return (
+                    <motion.div
+                      key={video.id}
+                      initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                      className="group relative aspect-video bg-zinc-900 rounded-2xl overflow-hidden cursor-pointer border border-white/5"
+                    >
+                      {thumb && <Image src={thumb} alt={video.title} fill className="object-cover transition-transform duration-500 filter blur-[2px] opacity-60 group-hover:scale-105" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />}
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[1px] group-hover:bg-black/20 transition-colors">
+                        <PlayCircle className="w-12 h-12 text-white/50 group-hover:text-white transition-colors shadow-lg" />
+                      </div>
+                      <div className="absolute bottom-0 left-0 p-5 w-full bg-gradient-to-t from-black to-transparent">
+                        <h3 className="text-sm font-bold text-white line-clamp-1">{video.title}</h3>
+                        {video.description && <p className="text-xs text-zinc-400 mt-1 line-clamp-1">{video.description}</p>}
+                      </div>
+                      <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/80 flex items-center justify-center backdrop-blur-md border border-white/10 shadow-lg">
+                        <Lock className="w-4 h-4 text-zinc-400" />
+                      </div>
+                    </motion.div>
+                  );
+                }
+
                 return (
                   <motion.a
                     key={video.id}
@@ -120,8 +142,7 @@ export default function PremiumPage() {
                     {/* Thumbnail */}
                     <div className="relative aspect-video bg-zinc-900">
                       {thumb ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={thumb} alt={video.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <Image src={thumb} alt={video.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center">
                           <Video className="w-14 h-14 text-zinc-700" />
@@ -154,33 +175,7 @@ export default function PremiumPage() {
               })}
             </div>
           ) : (
-            // Non-premium or no videos — blurred preview
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                { title: 'Documental: El Origen de la Sangre', duration: '45 min' },
-                { title: 'Backstage: NO WAY OUT', duration: '22 min' },
-                { title: 'Entrevista Exclusiva: El Matador', duration: '15 min' },
-                { title: 'Clásicos: Final Campeonato 2025', duration: '55 min' },
-              ].map((video, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                  className="group relative aspect-video bg-zinc-900 rounded-xl overflow-hidden cursor-pointer"
-                >
-                  <div className="absolute inset-0 bg-zinc-800 transition-transform duration-500 group-hover:scale-105 filter blur-[2px]"></div>
-                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-[1px]">
-                    <PlayCircle className="w-12 h-12 text-white/50 group-hover:text-white transition-colors" />
-                  </div>
-                  <div className="absolute bottom-0 left-0 p-4 w-full bg-gradient-to-t from-black to-transparent">
-                    <h3 className="text-sm font-bold text-white truncate">{video.title}</h3>
-                    <p className="text-xs text-zinc-400 mt-1">{video.duration}</p>
-                  </div>
-                  <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/80 flex items-center justify-center backdrop-blur-md border border-white/10">
-                    <Lock className="w-4 h-4 text-zinc-400" />
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+            <div className="text-zinc-500 py-12 text-center">No hay videos disponibles por el momento.</div>
           )}
 
           {isAuthenticated && !isPremium && (

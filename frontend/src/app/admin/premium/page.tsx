@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Trash2, Edit, Video, Eye, EyeOff, Save, X, ExternalLink } from 'lucide-react';
+import Image from 'next/image';
 import { adminService } from '@/services/admin.services';
 
 function getYoutubeId(url: string): string | null {
@@ -136,7 +137,7 @@ export default function AdminPremiumPage() {
     setPlanSaving(true);
     try {
       const updated = await adminService.updateSubscriptionPlan(plan.id, {
-        price: editPlanPrice,
+        price: Number(editPlanPrice),
         description: editPlanDesc
       });
       setPlan(updated);
@@ -247,8 +248,7 @@ export default function AdminPremiumPage() {
                 {/* Thumbnail */}
                 <div className="relative aspect-video bg-zinc-900">
                   {thumb ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={thumb} alt={video.title} className="w-full h-full object-cover" />
+                    <Image src={thumb} alt={video.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center">
                       <Video className="w-12 h-12 text-zinc-700" />
