@@ -44,7 +44,6 @@ export default function EventTicketsPage() {
           eventsService.getEventDetails(eventId),
           adminService.getZonesByEvent(eventId),
         ]);
-        const zonesData = await adminService.getZonesByEvent(eventId);
         setEvent(eventData);
         setZones(zonesData);
         
