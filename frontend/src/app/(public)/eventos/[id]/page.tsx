@@ -153,34 +153,8 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
 
         <div className="flex flex-col-reverse lg:grid lg:grid-cols-3 gap-8">
 
-          {/* --- LEFT: Zone selector + Selected seats summary --- */}
+          {/* --- LEFT: Selected seats summary --- */}
           <div className="lg:col-span-1 space-y-6">
-            <div>
-              <h2 className="text-xl font-bold uppercase mb-4 flex items-center gap-2">
-                <Ticket className="w-5 h-5 text-red-500" />
-                Resumen de Zonas
-              </h2>
-              {parsedZones.length === 0 ? (
-                <p className="text-zinc-500">Aún no hay zonas configuradas para este evento.</p>
-              ) : (
-                <div className="space-y-3">
-                  {parsedZones.map((zone) => (
-                    <div
-                      key={zone.id}
-                      className="w-full text-left p-5 rounded-xl border bg-zinc-950 border-white/5"
-                    >
-                      <div className="flex justify-between items-center">
-                        <h3 className="font-bold uppercase tracking-widest text-sm">{ZONE_LABELS[zone.zone_type] || zone.zone_type}</h3>
-                        <span className="text-lg font-black">${zone.price}</span>
-                      </div>
-                      <p className="text-xs text-zinc-500 mt-1">
-                        {zone.seats?.filter((s: any) => s.is_available).length ?? '—'} asientos disponibles
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
 
             {/* Selected seats list */}
             <AnimatePresence>
