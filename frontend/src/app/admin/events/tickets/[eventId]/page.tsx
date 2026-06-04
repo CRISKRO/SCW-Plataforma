@@ -121,7 +121,7 @@ export default function EventTicketsPage() {
   const existingZoneTypes = zones.map(z => z.zone_type);
   const availableZoneTypes = ZONE_TYPES.filter(zt => !existingZoneTypes.includes(zt.value));
 
-  const renderZone = (zone: any) => {
+  const renderZone = (zone: any, position: 'top'|'bottom'|'left'|'right'|'default' = 'default') => {
     if (!zone) return null;
     const groupedSeats: Record<string, any[]> = {};
     zone.seats?.forEach((seat: any) => {
@@ -129,24 +129,31 @@ export default function EventTicketsPage() {
       groupedSeats[seat.row_name].push(seat);
     });
 
+    const sortedRowNames = Object.keys(groupedSeats).sort();
+    if (position === 'left' || position === 'top') {
+      sortedRowNames.reverse();
+    }
+
+    const isVertical = position === 'left' || position === 'right';
+
     return (
-      <div key={zone.id} className="flex flex-col items-center gap-3">
-        <div className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${ZONE_COLORS[zone.zone_type] || 'bg-zinc-800 text-zinc-400'}`}>
+      <div key={zone.id} className="bg-zinc-800/90 p-5 rounded-3xl border-[3px] border-zinc-700/60 flex flex-col items-center gap-4 relative shadow-2xl backdrop-blur-sm">
+        <div className={`px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-zinc-950 shadow-inner border border-white/5 ${ZONE_COLORS[zone.zone_type] ? ZONE_COLORS[zone.zone_type].replace('bg-','text-') : 'text-zinc-300'}`}>
           {ZONE_TYPES.find(zt => zt.value === zone.zone_type)?.label}
         </div>
-        <div className="flex flex-col gap-1">
-          {Object.keys(groupedSeats).sort().map(rowName => (
-            <div key={rowName} className="flex items-center gap-2 justify-center">
-              <div className="w-5 text-center font-bold text-zinc-500 text-xs">{rowName}</div>
-              <div className="flex gap-1">
+        <div className={`flex gap-2 ${isVertical ? 'flex-row' : 'flex-col'}`}>
+          {sortedRowNames.map(rowName => (
+            <div key={rowName} className={`flex items-center justify-center gap-1 ${isVertical ? 'flex-col' : 'flex-row'}`}>
+              <div className="w-5 h-5 flex items-center justify-center font-bold text-zinc-500 text-[10px] bg-zinc-900/60 rounded-md">{rowName}</div>
+              <div className={`flex gap-1 ${isVertical ? 'flex-col' : 'flex-row'}`}>
                 {groupedSeats[rowName].sort((a, b) => a.seat_number - b.seat_number).map(seat => (
                   <button
                     key={seat.id}
                     onClick={() => handleToggleSeat(zone.id, seat.id, seat.is_available)}
-                    className={`w-6 h-6 md:w-8 md:h-8 rounded flex items-center justify-center text-[10px] font-bold transition-all ${
+                    className={`w-6 h-6 md:w-8 md:h-8 rounded-md flex items-center justify-center text-[11px] font-black transition-all shadow-md ${
                       seat.is_available 
-                        ? 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/40 hover:scale-110' 
-                        : 'bg-zinc-800/80 text-zinc-600 border border-zinc-700/50 hover:bg-zinc-700 opacity-40 hover:opacity-80'
+                        ? 'bg-red-600/90 text-white border border-red-500 hover:bg-red-500 hover:scale-110 z-10' 
+                        : 'bg-zinc-950 text-zinc-700 border border-zinc-800 hover:bg-zinc-900 opacity-50 hover:opacity-100'
                     }`}
                     title={`Fila ${rowName} - Asiento ${seat.seat_number} (${ZONE_TYPES.find(zt => zt.value === zone.zone_type)?.label})`}
                   >
@@ -154,7 +161,7 @@ export default function EventTicketsPage() {
                   </button>
                 ))}
               </div>
-              <div className="w-5 text-center font-bold text-zinc-500 text-xs">{rowName}</div>
+              <div className="w-5 h-5 flex items-center justify-center font-bold text-zinc-500 text-[10px] bg-zinc-900/60 rounded-md">{rowName}</div>
             </div>
           ))}
         </div>
@@ -337,43 +344,75 @@ export default function EventTicketsPage() {
             Haz clic en los asientos para deshabilitarlos o habilitarlos. Los asientos deshabilitados (oscuros) no aparecerán en el plano de compra, lo que te permite diseñar pasillos o esculpir formas reales en las gradas.
           </p>
 
-          <div className="overflow-x-auto pb-8">
+          <div className="overflow-x-auto pb-12">
             <div className="inline-block min-w-full text-center">
-              <div className="bg-zinc-900 rounded-3xl p-10 inline-flex flex-col items-center gap-8 border border-white/5 shadow-2xl relative">
+              <div className="bg-zinc-900/40 rounded-3xl p-10 inline-flex flex-col items-center justify-center border border-white/5 relative min-w-[800px]">
                 
                 {/* Ringside Norte */}
-                {renderZone(zoneNorte)}
+                {zoneNorte && (
+                  <div className="flex justify-center mb-8">
+                    {renderZone(zoneNorte, 'top')}
+                  </div>
+                )}
 
-                <div className="flex items-center gap-12 my-4">
+                <div className="flex items-center justify-center w-full">
                   {/* Ringside Oeste */}
-                  {renderZone(zoneOeste)}
+                  <div className="flex-1 flex justify-end pr-8">
+                    {renderZone(zoneOeste, 'left')}
+                  </div>
 
-                  {/* El Ring Central */}
-                  <div className="relative w-40 h-40 md:w-56 md:h-56 bg-zinc-950 border-4 border-red-600/40 rounded-xl flex items-center justify-center shadow-[0_0_40px_rgba(220,38,38,0.15)] z-10 overflow-hidden">
-                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/20 via-transparent to-transparent"></div>
-                    <div className="absolute top-2 left-2 w-3 h-3 bg-red-600 rounded-full shadow-lg"></div>
-                    <div className="absolute top-2 right-2 w-3 h-3 bg-red-600 rounded-full shadow-lg"></div>
-                    <div className="absolute bottom-2 left-2 w-3 h-3 bg-red-600 rounded-full shadow-lg"></div>
-                    <div className="absolute bottom-2 right-2 w-3 h-3 bg-red-600 rounded-full shadow-lg"></div>
-                    <span className="text-zinc-600 font-black text-2xl md:text-4xl tracking-[0.3em] rotate-45 opacity-30 select-none">RING</span>
+                  {/* El Ring Central - Diseño Realista */}
+                  <div className="relative w-48 h-48 md:w-64 md:h-64 bg-[#d4d4d8] border-[8px] border-zinc-950 rounded flex items-center justify-center shadow-[0_0_80px_rgba(255,255,255,0.05)] z-10 shrink-0 mx-4">
+                    {/* Cuerdas */}
+                    <div className="absolute inset-1 border-[1.5px] border-red-600/80 rounded-sm"></div>
+                    <div className="absolute inset-2 border-[1.5px] border-zinc-100 rounded-sm"></div>
+                    <div className="absolute inset-3 border-[1.5px] border-red-600/80 rounded-sm"></div>
+                    
+                    {/* Esquinas (Esquineros) */}
+                    {/* Top Left */}
+                    <div className="absolute -top-2 -left-2 w-5 h-5 bg-red-600 rounded-full shadow-lg border-2 border-black z-20"></div>
+                    <div className="absolute top-2 left-2 w-6 h-6 bg-zinc-900 rotate-45 transform -translate-x-1 -translate-y-1 rounded-sm z-10"></div>
+                    
+                    {/* Top Right */}
+                    <div className="absolute -top-2 -right-2 w-5 h-5 bg-blue-600 rounded-full shadow-lg border-2 border-black z-20"></div>
+                    <div className="absolute top-2 right-2 w-6 h-6 bg-zinc-900 -rotate-45 transform translate-x-1 -translate-y-1 rounded-sm z-10"></div>
+                    
+                    {/* Bottom Left */}
+                    <div className="absolute -bottom-2 -left-2 w-5 h-5 bg-blue-600 rounded-full shadow-lg border-2 border-black z-20"></div>
+                    <div className="absolute bottom-2 left-2 w-6 h-6 bg-zinc-900 -rotate-45 transform -translate-x-1 translate-y-1 rounded-sm z-10"></div>
+                    
+                    {/* Bottom Right */}
+                    <div className="absolute -bottom-2 -right-2 w-5 h-5 bg-red-600 rounded-full shadow-lg border-2 border-black z-20"></div>
+                    <div className="absolute bottom-2 right-2 w-6 h-6 bg-zinc-900 rotate-45 transform translate-x-1 translate-y-1 rounded-sm z-10"></div>
+
+                    {/* Logo Central */}
+                    <div className="relative flex items-center justify-center w-24 h-24 border-4 border-zinc-400/50 rounded-full">
+                      <span className="text-zinc-400/80 font-black text-4xl tracking-tighter select-none">SCW</span>
+                    </div>
                   </div>
 
                   {/* Ringside Este */}
-                  {renderZone(zoneEste)}
+                  <div className="flex-1 flex justify-start pl-8">
+                    {renderZone(zoneEste, 'right')}
+                  </div>
                 </div>
 
                 {/* Ringside Sur */}
-                {renderZone(zoneSur)}
+                {zoneSur && (
+                  <div className="flex justify-center mt-8">
+                    {renderZone(zoneSur, 'bottom')}
+                  </div>
+                )}
 
                 {/* Separador */}
                 {(zoneVip || zoneGeneral) && (
-                  <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-8" />
+                  <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-12" />
                 )}
 
                 {/* Otras Zonas (VIP, General) */}
-                <div className="flex flex-col gap-12">
-                  {renderZone(zoneVip)}
-                  {renderZone(zoneGeneral)}
+                <div className="flex flex-col gap-12 mt-4">
+                  {renderZone(zoneVip, 'default')}
+                  {renderZone(zoneGeneral, 'default')}
                 </div>
 
               </div>
