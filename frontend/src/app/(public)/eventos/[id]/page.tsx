@@ -16,21 +16,17 @@ interface SelectedSeat {
 }
 
 const ZONE_LABELS: Record<string, string> = {
-  VIP: 'VIP',
-  RINGSIDE_N: 'Ringside Norte',
-  RINGSIDE_S: 'Ringside Sur',
-  RINGSIDE_E: 'Ringside Este',
-  RINGSIDE_O: 'Ringside Oeste',
-  GENERAL: 'General',
+  NORTE: 'Norte',
+  SUR: 'Sur',
+  ESTE: 'Este',
+  OESTE: 'Oeste',
 };
 
 const ZONE_COLORS: Record<string, string> = {
-  VIP: 'text-yellow-400 border-yellow-500',
-  RINGSIDE_N: 'text-red-400 border-red-500',
-  RINGSIDE_S: 'text-red-400 border-red-500',
-  RINGSIDE_E: 'text-red-400 border-red-500',
-  RINGSIDE_O: 'text-red-400 border-red-500',
-  GENERAL: 'text-zinc-300 border-zinc-500',
+  NORTE: 'text-red-400 border-red-500',
+  SUR: 'text-red-400 border-red-500',
+  ESTE: 'text-red-400 border-red-500',
+  OESTE: 'text-red-400 border-red-500',
 };
 
 export default function EventDetail({ params }: { params: Promise<{ id: string }> }) {
@@ -39,7 +35,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
 
   const [event, setEvent] = useState<any>(null);
   const [zones, setZones] = useState<any[]>([]);
-  const [selectedZone, setSelectedZone] = useState<any>(null);
+  const [selectedSeats, setSelectedSeats] = useState<SelectedSeat[]>([]);
   const [selectedSeats, setSelectedSeats] = useState<SelectedSeat[]>([]);
   const [showConfirmPanel, setShowConfirmPanel] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -103,7 +99,6 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
     });
     setSelectedSeats([]);
     setShowConfirmPanel(false);
-    setSelectedZone(null);
   };
 
   const totalPrice = selectedSeats.reduce((acc, s) => acc + s.price, 0);
@@ -143,30 +138,25 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
             <div>
               <h2 className="text-xl font-bold uppercase mb-4 flex items-center gap-2">
                 <Ticket className="w-5 h-5 text-red-500" />
-                1. Elige tu Zona
+                Resumen de Zonas
               </h2>
               {zones.length === 0 ? (
                 <p className="text-zinc-500">Aún no hay zonas configuradas para este evento.</p>
               ) : (
                 <div className="space-y-3">
                   {zones.map((zone) => (
-                    <button
+                    <div
                       key={zone.id}
-                      onClick={() => setSelectedZone(zone)}
-                      className={`w-full text-left p-5 rounded-xl border transition-all ${
-                        selectedZone?.id === zone.id
-                          ? 'bg-zinc-900 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)]'
-                          : 'bg-zinc-950 border-white/5 hover:border-white/20'
-                      }`}
+                      className="w-full text-left p-5 rounded-xl border bg-zinc-950 border-white/5"
                     >
                       <div className="flex justify-between items-center">
                         <h3 className="font-bold uppercase tracking-widest text-sm">{ZONE_LABELS[zone.zone_type] || zone.zone_type}</h3>
                         <span className="text-lg font-black">${zone.price}</span>
                       </div>
                       <p className="text-xs text-zinc-500 mt-1">
-                        {zone.seats?.filter((s: any) => s.is_available).length ?? '—'} disponibles
+                        {zone.seats?.filter((s: any) => s.is_available).length ?? '—'} asientos disponibles
                       </p>
-                    </button>
+                    </div>
                   ))}
                 </div>
               )}
@@ -224,78 +214,218 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
           {/* --- RIGHT: Seat map --- */}
           <div className="lg:col-span-2">
             <h2 className="text-xl font-bold uppercase mb-4">
-              2. Selecciona tus Asientos
+              Selecciona tus Asientos
             </h2>
 
             <div className="bg-zinc-950 border border-white/10 rounded-3xl p-8 min-h-[400px]">
-              {!selectedZone ? (
+              {zones.length === 0 ? (
                 <div className="flex items-center justify-center h-64 text-zinc-500 text-center">
-                  ← Selecciona una zona para ver el mapa de asientos.
+                  El mapa de asientos aún no está disponible para este evento.
                 </div>
               ) : (
-                <div>
-                  {/* Ring indicator */}
-                  <div className="text-center mb-10">
-                    <div className="inline-block px-16 py-4 border-2 border-dashed border-red-500/30 text-red-500/40 uppercase font-black tracking-[0.4em] text-xs">
-                      R I N G
-                    </div>
-                  </div>
+                <div className="overflow-x-auto pb-12">
+                  <div className="inline-block min-w-full text-center">
+                    <div className="bg-zinc-900/40 rounded-3xl p-10 inline-flex flex-col items-center justify-center border border-white/5 relative min-w-[800px]">
+                      
+                      {/* Norte */}
+                      {zones.find(z => z.zone_type === 'NORTE') && (
+                        <div className="flex justify-center mb-8">
+                          {(() => {
+                            const zone = zones.find(z => z.zone_type === 'NORTE');
+                            const groupedSeats: Record<string, any[]> = {};
+                            zone.seats?.forEach((seat: any) => {
+                              if (!groupedSeats[seat.row_name]) groupedSeats[seat.row_name] = [];
+                              groupedSeats[seat.row_name].push(seat);
+                            });
+                            const sortedRowNames = Object.keys(groupedSeats).sort().reverse();
+                            
+                            return (
+                              <div className="bg-zinc-800/90 p-5 rounded-3xl border-[3px] border-zinc-700/60 flex flex-col items-center gap-4 relative shadow-2xl backdrop-blur-sm">
+                                <div className="px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-zinc-950 shadow-inner border border-white/5 text-zinc-300">
+                                  Norte - ${zone.price}
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                  {sortedRowNames.map(rowName => (
+                                    <div key={rowName} className="flex items-center justify-center gap-1 flex-row">
+                                      <div className="w-5 h-5 flex items-center justify-center font-bold text-zinc-500 text-[10px] bg-zinc-900/60 rounded-md">{rowName}</div>
+                                      <div className="flex gap-1 flex-row">
+                                        {groupedSeats[rowName].sort((a, b) => a.seat_number - b.seat_number).map(seat => {
+                                          const isSelected = isSeatSelected(seat.id);
+                                          return (
+                                            <button
+                                              key={seat.id}
+                                              disabled={!seat.is_available}
+                                              onClick={() => toggleSeat(seat, zone)}
+                                              className={`w-6 h-6 md:w-8 md:h-8 rounded-md flex items-center justify-center text-[11px] font-black transition-all shadow-md ${!seat.is_available ? 'bg-zinc-950 text-zinc-700 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:border-zinc-400 hover:scale-110 z-10'}`}
+                                              title={seat.is_available ? `Fila ${rowName} - Asiento ${seat.seat_number}` : 'Ocupado'}
+                                            >{seat.seat_number}</button>
+                                          );
+                                        })}
+                                      </div>
+                                      <div className="w-5 h-5 flex items-center justify-center font-bold text-zinc-500 text-[10px] bg-zinc-900/60 rounded-md">{rowName}</div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
 
-                  {/* Seats by row */}
-                  <div className="overflow-x-auto pb-6 -mx-4 px-4 md:mx-0 md:px-0">
-                    <div className="space-y-4 min-w-[max-content]">
-                      {Array.from(new Set(selectedZone.seats.map((s: any) => s.row_name))).map((rowName: any) => (
-                        <div key={rowName} className="flex items-center gap-3">
-                          <span className="w-14 text-right text-xs font-bold text-zinc-500 shrink-0">Fila {rowName}</span>
-                          <div className="flex gap-1.5 flex-wrap">
-                            {selectedZone.seats
-                              .filter((s: any) => s.row_name === rowName)
-                              .sort((a: any, b: any) => a.seat_number - b.seat_number)
-                              .map((seat: any) => {
-                                const isSelected = isSeatSelected(seat.id);
-                                return (
-                                  <button
-                                    key={seat.id}
-                                    disabled={!seat.is_available}
-                                    onClick={() => toggleSeat(seat, selectedZone)}
-                                    title={seat.is_available
-                                      ? `Fila ${seat.row_name} · Asiento ${seat.seat_number}`
-                                      : 'Ocupado'}
-                                    className={`w-9 h-9 rounded-t-lg border-b-4 flex items-center justify-center text-xs font-bold transition-all select-none shrink-0 ${
-                                      !seat.is_available
-                                        ? 'bg-red-950/50 border-red-900/50 text-red-900 cursor-not-allowed'
-                                        : isSelected
-                                          ? 'bg-red-600 border-red-400 text-white scale-110 shadow-[0_0_10px_rgba(239,68,68,0.5)]'
-                                          : 'bg-zinc-800 border-zinc-600 hover:bg-zinc-600 hover:border-zinc-400 text-zinc-300'
-                                    }`}
-                                  >
-                                    {seat.seat_number}
-                                  </button>
-                                );
-                              })}
+                      <div className="flex items-center justify-center w-full">
+                        {/* Oeste */}
+                        <div className="flex-1 flex justify-end pr-8">
+                          {(() => {
+                            const zone = zones.find(z => z.zone_type === 'OESTE');
+                            if (!zone) return null;
+                            const groupedSeats: Record<string, any[]> = {};
+                            zone.seats?.forEach((seat: any) => {
+                              if (!groupedSeats[seat.row_name]) groupedSeats[seat.row_name] = [];
+                              groupedSeats[seat.row_name].push(seat);
+                            });
+                            const sortedRowNames = Object.keys(groupedSeats).sort().reverse();
+                            
+                            return (
+                              <div className="bg-zinc-800/90 p-5 rounded-3xl border-[3px] border-zinc-700/60 flex flex-col items-center gap-4 relative shadow-2xl backdrop-blur-sm">
+                                <div className="px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-zinc-950 shadow-inner border border-white/5 text-zinc-300">
+                                  Oeste - ${zone.price}
+                                </div>
+                                <div className="flex flex-row gap-2">
+                                  {sortedRowNames.map(rowName => (
+                                    <div key={rowName} className="flex items-center justify-center gap-1 flex-col">
+                                      <div className="w-5 h-5 flex items-center justify-center font-bold text-zinc-500 text-[10px] bg-zinc-900/60 rounded-md">{rowName}</div>
+                                      <div className="flex gap-1 flex-col">
+                                        {groupedSeats[rowName].sort((a, b) => a.seat_number - b.seat_number).map(seat => {
+                                          const isSelected = isSeatSelected(seat.id);
+                                          return (
+                                            <button
+                                              key={seat.id}
+                                              disabled={!seat.is_available}
+                                              onClick={() => toggleSeat(seat, zone)}
+                                              className={`w-6 h-6 md:w-8 md:h-8 rounded-md flex items-center justify-center text-[11px] font-black transition-all shadow-md ${!seat.is_available ? 'bg-zinc-950 text-zinc-700 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:border-zinc-400 hover:scale-110 z-10'}`}
+                                              title={seat.is_available ? `Fila ${rowName} - Asiento ${seat.seat_number}` : 'Ocupado'}
+                                            >{seat.seat_number}</button>
+                                          );
+                                        })}
+                                      </div>
+                                      <div className="w-5 h-5 flex items-center justify-center font-bold text-zinc-500 text-[10px] bg-zinc-900/60 rounded-md">{rowName}</div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </div>
+
+                        {/* El Ring Central - Diseño Realista */}
+                        <div className="relative w-48 h-48 md:w-64 md:h-64 bg-[#d4d4d8] border-[8px] border-zinc-950 rounded flex items-center justify-center shadow-[0_0_80px_rgba(255,255,255,0.05)] z-10 shrink-0 mx-4">
+                          <div className="absolute inset-1 border-[1.5px] border-red-600/80 rounded-sm"></div>
+                          <div className="absolute inset-2 border-[1.5px] border-zinc-100 rounded-sm"></div>
+                          <div className="absolute inset-3 border-[1.5px] border-red-600/80 rounded-sm"></div>
+                          <div className="absolute -top-2 -left-2 w-5 h-5 bg-red-600 rounded-full shadow-lg border-2 border-black z-20"></div>
+                          <div className="absolute top-2 left-2 w-6 h-6 bg-zinc-900 rotate-45 transform -translate-x-1 -translate-y-1 rounded-sm z-10"></div>
+                          <div className="absolute -top-2 -right-2 w-5 h-5 bg-blue-600 rounded-full shadow-lg border-2 border-black z-20"></div>
+                          <div className="absolute top-2 right-2 w-6 h-6 bg-zinc-900 -rotate-45 transform translate-x-1 -translate-y-1 rounded-sm z-10"></div>
+                          <div className="absolute -bottom-2 -left-2 w-5 h-5 bg-blue-600 rounded-full shadow-lg border-2 border-black z-20"></div>
+                          <div className="absolute bottom-2 left-2 w-6 h-6 bg-zinc-900 -rotate-45 transform -translate-x-1 translate-y-1 rounded-sm z-10"></div>
+                          <div className="absolute -bottom-2 -right-2 w-5 h-5 bg-red-600 rounded-full shadow-lg border-2 border-black z-20"></div>
+                          <div className="absolute bottom-2 right-2 w-6 h-6 bg-zinc-900 rotate-45 transform translate-x-1 translate-y-1 rounded-sm z-10"></div>
+                          <div className="relative flex items-center justify-center w-24 h-24 border-4 border-zinc-400/50 rounded-full">
+                            <span className="text-zinc-400/80 font-black text-4xl tracking-tighter select-none">SCW</span>
                           </div>
                         </div>
-                      ))}
+
+                        {/* Este */}
+                        <div className="flex-1 flex justify-start pl-8">
+                          {(() => {
+                            const zone = zones.find(z => z.zone_type === 'ESTE');
+                            if (!zone) return null;
+                            const groupedSeats: Record<string, any[]> = {};
+                            zone.seats?.forEach((seat: any) => {
+                              if (!groupedSeats[seat.row_name]) groupedSeats[seat.row_name] = [];
+                              groupedSeats[seat.row_name].push(seat);
+                            });
+                            const sortedRowNames = Object.keys(groupedSeats).sort();
+                            
+                            return (
+                              <div className="bg-zinc-800/90 p-5 rounded-3xl border-[3px] border-zinc-700/60 flex flex-col items-center gap-4 relative shadow-2xl backdrop-blur-sm">
+                                <div className="px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-zinc-950 shadow-inner border border-white/5 text-zinc-300">
+                                  Este - ${zone.price}
+                                </div>
+                                <div className="flex flex-row gap-2">
+                                  {sortedRowNames.map(rowName => (
+                                    <div key={rowName} className="flex items-center justify-center gap-1 flex-col">
+                                      <div className="w-5 h-5 flex items-center justify-center font-bold text-zinc-500 text-[10px] bg-zinc-900/60 rounded-md">{rowName}</div>
+                                      <div className="flex gap-1 flex-col">
+                                        {groupedSeats[rowName].sort((a, b) => a.seat_number - b.seat_number).map(seat => {
+                                          const isSelected = isSeatSelected(seat.id);
+                                          return (
+                                            <button
+                                              key={seat.id}
+                                              disabled={!seat.is_available}
+                                              onClick={() => toggleSeat(seat, zone)}
+                                              className={`w-6 h-6 md:w-8 md:h-8 rounded-md flex items-center justify-center text-[11px] font-black transition-all shadow-md ${!seat.is_available ? 'bg-zinc-950 text-zinc-700 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:border-zinc-400 hover:scale-110 z-10'}`}
+                                              title={seat.is_available ? `Fila ${rowName} - Asiento ${seat.seat_number}` : 'Ocupado'}
+                                            >{seat.seat_number}</button>
+                                          );
+                                        })}
+                                      </div>
+                                      <div className="w-5 h-5 flex items-center justify-center font-bold text-zinc-500 text-[10px] bg-zinc-900/60 rounded-md">{rowName}</div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      </div>
+
+                      {/* Sur */}
+                      {zones.find(z => z.zone_type === 'SUR') && (
+                        <div className="flex justify-center mt-8">
+                          {(() => {
+                            const zone = zones.find(z => z.zone_type === 'SUR');
+                            const groupedSeats: Record<string, any[]> = {};
+                            zone.seats?.forEach((seat: any) => {
+                              if (!groupedSeats[seat.row_name]) groupedSeats[seat.row_name] = [];
+                              groupedSeats[seat.row_name].push(seat);
+                            });
+                            const sortedRowNames = Object.keys(groupedSeats).sort();
+                            
+                            return (
+                              <div className="bg-zinc-800/90 p-5 rounded-3xl border-[3px] border-zinc-700/60 flex flex-col items-center gap-4 relative shadow-2xl backdrop-blur-sm">
+                                <div className="px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-zinc-950 shadow-inner border border-white/5 text-zinc-300">
+                                  Sur - ${zone.price}
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                  {sortedRowNames.map(rowName => (
+                                    <div key={rowName} className="flex items-center justify-center gap-1 flex-row">
+                                      <div className="w-5 h-5 flex items-center justify-center font-bold text-zinc-500 text-[10px] bg-zinc-900/60 rounded-md">{rowName}</div>
+                                      <div className="flex gap-1 flex-row">
+                                        {groupedSeats[rowName].sort((a, b) => a.seat_number - b.seat_number).map(seat => {
+                                          const isSelected = isSeatSelected(seat.id);
+                                          return (
+                                            <button
+                                              key={seat.id}
+                                              disabled={!seat.is_available}
+                                              onClick={() => toggleSeat(seat, zone)}
+                                              className={`w-6 h-6 md:w-8 md:h-8 rounded-md flex items-center justify-center text-[11px] font-black transition-all shadow-md ${!seat.is_available ? 'bg-zinc-950 text-zinc-700 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:border-zinc-400 hover:scale-110 z-10'}`}
+                                              title={seat.is_available ? `Fila ${rowName} - Asiento ${seat.seat_number}` : 'Ocupado'}
+                                            >{seat.seat_number}</button>
+                                          );
+                                        })}
+                                      </div>
+                                      <div className="w-5 h-5 flex items-center justify-center font-bold text-zinc-500 text-[10px] bg-zinc-900/60 rounded-md">{rowName}</div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
                     </div>
                   </div>
-
-                  {/* Legend */}
-                  <div className="mt-10 pt-6 border-t border-white/5 flex flex-wrap justify-center gap-6">
-                    {[
-                      { color: 'bg-zinc-800 border-zinc-600', label: 'Disponible' },
-                      { color: 'bg-red-600 border-red-400', label: 'Seleccionado' },
-                      { color: 'bg-red-950/50 border-red-900/50', label: 'Ocupado' },
-                    ].map(item => (
-                      <div key={item.label} className="flex items-center gap-2">
-                        <div className={`w-6 h-6 rounded-t border-b-2 ${item.color}`} />
-                        <span className="text-xs text-zinc-400 uppercase tracking-widest">{item.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       </div>
 
