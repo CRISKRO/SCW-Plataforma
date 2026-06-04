@@ -8,6 +8,9 @@ class Order(models.Model):
     class Status(models.TextChoices):
         PENDING = 'PENDING', _('Pendiente')
         PAID = 'PAID', _('Pagado')
+        PROCESSING = 'PROCESSING', _('Preparando')
+        SHIPPED = 'SHIPPED', _('Enviado')
+        DELIVERED = 'DELIVERED', _('Entregado')
         CANCELLED = 'CANCELLED', _('Cancelado')
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='orders', on_delete=models.SET_NULL, null=True, blank=True)

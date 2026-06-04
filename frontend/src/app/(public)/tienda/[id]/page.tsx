@@ -183,17 +183,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
             <div className="flex flex-col gap-3 mt-auto">
               <button
-                onClick={handleBuyNow}
-                disabled={product.stock === 0}
-                className={`w-full py-4 rounded-md font-semibold text-base transition-colors ${
-                  product.stock === 0
-                    ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
-                    : 'bg-[#3483fa] hover:bg-[#2968c8] text-white'
-                }`}
-              >
-                Comprar ahora
-              </button>
-              <button
                 onClick={handleAddToCart}
                 disabled={product.stock === 0}
                 className={`w-full py-4 rounded-md font-semibold text-base transition-colors ${

@@ -16,7 +16,8 @@ import {
   Menu,
   X,
   Home,
-  ShoppingBag
+  ShoppingBag,
+  Package
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
@@ -28,6 +29,7 @@ const sidebarItems = [
   { name: 'Luchadores', href: '/admin/fighters', icon: Trophy },
   { name: 'Usuarios', href: '/admin/users', icon: Users },
   { name: 'Productos', href: '/admin/products', icon: ShoppingBag },
+  { name: 'Pedidos', href: '/admin/orders', icon: Package },
   { name: 'Finanzas', href: '/admin/finances', icon: CreditCard },
   { name: 'Escuela', href: '/admin/school', icon: GraduationCap },
   { name: 'Premium', href: '/admin/premium', icon: Video },

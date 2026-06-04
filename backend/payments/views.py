@@ -159,6 +159,16 @@ class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
     permission_classes = [IsAdminUser]
 
+    def perform_update(self, serializer):
+        old_status = serializer.instance.status
+        instance = serializer.save()
+        if old_status != instance.status and instance.status in ['PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']:
+            try:
+                from .email_orders import send_status_update_email
+                send_status_update_email(instance)
+            except Exception as e:
+                print("Error sending status update email:", e)
+
 class ProcessCardPaymentView(APIView):
     """Receives card_data token from MP Brick and processes a direct charge."""
     permission_classes = [AllowAny]
@@ -387,10 +397,17 @@ class VerifyPaymentView(APIView):
                         item.seat.is_available = False
                         item.seat.save()
 
-                # Send ticket email
+                # Send ticket/merch email
                 try:
-                    from .email_tickets import send_ticket_email
-                    send_ticket_email(order)
+                    has_tickets = order.items.filter(seat__isnull=False).exists() or order.items.filter(product__isnull=True).exists()
+                    has_merch = order.items.filter(product__isnull=False).exists()
+                    
+                    if has_tickets:
+                        from .email_tickets import send_ticket_email
+                        send_ticket_email(order)
+                    if has_merch:
+                        from .email_orders import send_order_receipt_email
+                        send_order_receipt_email(order)
                 except Exception as mail_err:
                     print("Email error:", mail_err)
 
@@ -540,8 +557,15 @@ class WebhookView(APIView):
                                         item.seat.save()
 
                                 try:
-                                    from .email_tickets import send_ticket_email
-                                    send_ticket_email(order)
+                                    has_tickets = order.items.filter(seat__isnull=False).exists() or order.items.filter(product__isnull=True).exists()
+                                    has_merch = order.items.filter(product__isnull=False).exists()
+                                    
+                                    if has_tickets:
+                                        from .email_tickets import send_ticket_email
+                                        send_ticket_email(order)
+                                    if has_merch:
+                                        from .email_orders import send_order_receipt_email
+                                        send_order_receipt_email(order)
                                 except Exception as mail_err:
                                     print("Email error from webhook:", mail_err)
                 except Exception as e:

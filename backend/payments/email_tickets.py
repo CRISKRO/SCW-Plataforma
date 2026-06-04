@@ -14,7 +14,11 @@ def send_ticket_email(order):
     """
     Send a ticket confirmation email with QR codes for each item in the order.
     """
-    items = order.items.all()
+    # Only process items that are NOT physical merch (e.g., tickets, seats, events)
+    items = order.items.filter(product__isnull=True)
+    if not items.exists():
+        # Fallback if somehow called with no tickets
+        items = order.items.filter(seat__isnull=False)
 
     # Build QR attachments
     qr_images = []

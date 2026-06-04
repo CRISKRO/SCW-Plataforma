@@ -49,13 +49,6 @@ export default function StorePage() {
             </motion.h1>
             <p className="mt-2 text-zinc-400">Encuentra los mejores productos originales de SCW con envío disponible a todo México.</p>
           </div>
-          <div className="hidden md:flex items-center gap-4 text-sm text-zinc-400 mt-4 md:mt-0 bg-zinc-950 p-4 rounded-xl border border-white/5">
-            <Truck className="w-8 h-8 text-green-500" />
-            <div>
-              <p className="font-bold text-white uppercase tracking-widest">Envíos Rápidos</p>
-              <p>Seguros y garantizados</p>
-            </div>
-          </div>
         </div>
 
         {/* Filter Categories */}
