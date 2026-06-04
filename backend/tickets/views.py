@@ -15,6 +15,9 @@ class IsAdminOrReadOnly(BasePermission):
             (request.user.is_staff or getattr(request.user, 'role', None) in ['ADMIN', 'SUPERADMIN'])
         )
 
+    def has_object_permission(self, request, view, obj):
+        return self.has_permission(request, view)
+
 class EventZoneViewSet(viewsets.ModelViewSet):
     queryset = EventZone.objects.all()
     serializer_class = EventZoneSerializer
@@ -29,7 +32,7 @@ class EventZoneViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         return Response([])
 
-class SeatViewSet(viewsets.ReadOnlyModelViewSet):
+class SeatViewSet(viewsets.ModelViewSet):
     queryset = Seat.objects.all()
     serializer_class = SeatSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminOrReadOnly]
