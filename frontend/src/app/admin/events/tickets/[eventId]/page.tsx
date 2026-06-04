@@ -121,6 +121,54 @@ export default function EventTicketsPage() {
   const existingZoneTypes = zones.map(z => z.zone_type);
   const availableZoneTypes = ZONE_TYPES.filter(zt => !existingZoneTypes.includes(zt.value));
 
+  const renderZone = (zone: any) => {
+    if (!zone) return null;
+    const groupedSeats: Record<string, any[]> = {};
+    zone.seats?.forEach((seat: any) => {
+      if (!groupedSeats[seat.row_name]) groupedSeats[seat.row_name] = [];
+      groupedSeats[seat.row_name].push(seat);
+    });
+
+    return (
+      <div key={zone.id} className="flex flex-col items-center gap-3">
+        <div className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${ZONE_COLORS[zone.zone_type] || 'bg-zinc-800 text-zinc-400'}`}>
+          {ZONE_TYPES.find(zt => zt.value === zone.zone_type)?.label}
+        </div>
+        <div className="flex flex-col gap-1">
+          {Object.keys(groupedSeats).sort().map(rowName => (
+            <div key={rowName} className="flex items-center gap-2 justify-center">
+              <div className="w-5 text-center font-bold text-zinc-500 text-xs">{rowName}</div>
+              <div className="flex gap-1">
+                {groupedSeats[rowName].sort((a, b) => a.seat_number - b.seat_number).map(seat => (
+                  <button
+                    key={seat.id}
+                    onClick={() => handleToggleSeat(zone.id, seat.id, seat.is_available)}
+                    className={`w-6 h-6 md:w-8 md:h-8 rounded flex items-center justify-center text-[10px] font-bold transition-all ${
+                      seat.is_available 
+                        ? 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/40 hover:scale-110' 
+                        : 'bg-zinc-800/80 text-zinc-600 border border-zinc-700/50 hover:bg-zinc-700 opacity-40 hover:opacity-80'
+                    }`}
+                    title={`Fila ${rowName} - Asiento ${seat.seat_number} (${ZONE_TYPES.find(zt => zt.value === zone.zone_type)?.label})`}
+                  >
+                    {seat.seat_number}
+                  </button>
+                ))}
+              </div>
+              <div className="w-5 text-center font-bold text-zinc-500 text-xs">{rowName}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const zoneNorte = zones.find(z => z.zone_type === 'RINGSIDE_N');
+  const zoneSur = zones.find(z => z.zone_type === 'RINGSIDE_S');
+  const zoneEste = zones.find(z => z.zone_type === 'RINGSIDE_E');
+  const zoneOeste = zones.find(z => z.zone_type === 'RINGSIDE_O');
+  const zoneVip = zones.find(z => z.zone_type === 'VIP');
+  const zoneGeneral = zones.find(z => z.zone_type === 'GENERAL');
+
   return (
     <div className="max-w-4xl space-y-8">
       {/* Header */}
@@ -289,52 +337,45 @@ export default function EventTicketsPage() {
             Haz clic en los asientos para deshabilitarlos o habilitarlos. Los asientos deshabilitados (oscuros) no aparecerán en el plano de compra, lo que te permite diseñar pasillos o esculpir formas reales en las gradas.
           </p>
 
-          <div className="overflow-x-auto pb-4">
+          <div className="overflow-x-auto pb-8">
             <div className="inline-block min-w-full text-center">
-              <div className="bg-zinc-900 rounded-xl p-8 inline-flex flex-col gap-10 border border-white/5">
-                <div className="w-full h-8 bg-zinc-800 rounded-lg flex items-center justify-center text-xs font-bold text-zinc-500 tracking-widest uppercase mb-2">
-                  Escenario / Ring
+              <div className="bg-zinc-900 rounded-3xl p-10 inline-flex flex-col items-center gap-8 border border-white/5 shadow-2xl relative">
+                
+                {/* Ringside Norte */}
+                {renderZone(zoneNorte)}
+
+                <div className="flex items-center gap-12 my-4">
+                  {/* Ringside Oeste */}
+                  {renderZone(zoneOeste)}
+
+                  {/* El Ring Central */}
+                  <div className="relative w-40 h-40 md:w-56 md:h-56 bg-zinc-950 border-4 border-red-600/40 rounded-xl flex items-center justify-center shadow-[0_0_40px_rgba(220,38,38,0.15)] z-10 overflow-hidden">
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/20 via-transparent to-transparent"></div>
+                    <div className="absolute top-2 left-2 w-3 h-3 bg-red-600 rounded-full shadow-lg"></div>
+                    <div className="absolute top-2 right-2 w-3 h-3 bg-red-600 rounded-full shadow-lg"></div>
+                    <div className="absolute bottom-2 left-2 w-3 h-3 bg-red-600 rounded-full shadow-lg"></div>
+                    <div className="absolute bottom-2 right-2 w-3 h-3 bg-red-600 rounded-full shadow-lg"></div>
+                    <span className="text-zinc-600 font-black text-2xl md:text-4xl tracking-[0.3em] rotate-45 opacity-30 select-none">RING</span>
+                  </div>
+
+                  {/* Ringside Este */}
+                  {renderZone(zoneEste)}
                 </div>
 
-                {zones.map(zone => {
-                  const groupedSeats: Record<string, any[]> = {};
-                  zone.seats?.forEach((seat: any) => {
-                    if (!groupedSeats[seat.row_name]) groupedSeats[seat.row_name] = [];
-                    groupedSeats[seat.row_name].push(seat);
-                  });
+                {/* Ringside Sur */}
+                {renderZone(zoneSur)}
 
-                  return (
-                    <div key={zone.id} className="flex flex-col items-center gap-4">
-                      <div className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest ${ZONE_COLORS[zone.zone_type] || 'bg-zinc-800 text-zinc-400'}`}>
-                        {ZONE_TYPES.find(zt => zt.value === zone.zone_type)?.label}
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        {Object.keys(groupedSeats).sort().map(rowName => (
-                          <div key={rowName} className="flex items-center gap-4 justify-center">
-                            <div className="w-6 text-center font-bold text-zinc-500">{rowName}</div>
-                            <div className="flex gap-2">
-                              {groupedSeats[rowName].sort((a, b) => a.seat_number - b.seat_number).map(seat => (
-                                <button
-                                  key={seat.id}
-                                  onClick={() => handleToggleSeat(zone.id, seat.id, seat.is_available)}
-                                  className={`w-8 h-8 md:w-10 md:h-10 rounded-md flex items-center justify-center text-xs font-bold transition-all ${
-                                    seat.is_available 
-                                      ? 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/40' 
-                                      : 'bg-zinc-800 text-zinc-600 border border-zinc-700/30 hover:bg-zinc-700 opacity-50'
-                                  }`}
-                                  title={`Fila ${rowName} - Asiento ${seat.seat_number} (${ZONE_TYPES.find(zt => zt.value === zone.zone_type)?.label})`}
-                                >
-                                  {seat.seat_number}
-                                </button>
-                              ))}
-                            </div>
-                            <div className="w-6 text-center font-bold text-zinc-500">{rowName}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
+                {/* Separador */}
+                {(zoneVip || zoneGeneral) && (
+                  <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-8" />
+                )}
+
+                {/* Otras Zonas (VIP, General) */}
+                <div className="flex flex-col gap-12">
+                  {renderZone(zoneVip)}
+                  {renderZone(zoneGeneral)}
+                </div>
+
               </div>
             </div>
           </div>
