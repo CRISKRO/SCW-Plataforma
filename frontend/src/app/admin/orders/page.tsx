@@ -157,11 +157,10 @@ export default function AdminOrdersPage() {
                           <select
                             value={order.status}
                             onChange={(e) => handleUpdateStatus(order.id, e.target.value)}
-                            disabled={order.status === 'PENDING'}
                             className="bg-zinc-900 border border-white/10 text-xs text-white rounded-lg px-2 py-1 focus:outline-none focus:border-blue-500"
                           >
-                            <option value="PENDING" disabled>Pendiente</option>
-                            <option value="PAID">Pagado</option>
+                            <option value="PENDING">Pendiente (No Pagado)</option>
+                            <option value="PAID">Pagado (Simular)</option>
                             <option value="PROCESSING">Preparando</option>
                             <option value="SHIPPED">Enviado</option>
                             <option value="DELIVERED">Entregado</option>

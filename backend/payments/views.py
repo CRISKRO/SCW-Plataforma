@@ -162,12 +162,27 @@ class OrderViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         old_status = serializer.instance.status
         instance = serializer.save()
-        if old_status != instance.status and instance.status in ['PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']:
-            try:
-                from .email_orders import send_status_update_email
-                send_status_update_email(instance)
-            except Exception as e:
-                print("Error sending status update email:", e)
+        if old_status != instance.status:
+            if instance.status == 'PAID':
+                # Simular lógica de webhook: enviar recibo/boleto
+                try:
+                    has_tickets = instance.items.filter(seat__isnull=False).exists() or instance.items.filter(product__isnull=True).exists()
+                    has_merch = instance.items.filter(product__isnull=False).exists()
+                    
+                    if has_tickets:
+                        from .email_tickets import send_ticket_email
+                        send_ticket_email(instance)
+                    if has_merch:
+                        from .email_orders import send_order_receipt_email
+                        send_order_receipt_email(instance)
+                except Exception as mail_err:
+                    print("Email error simulating PAID status:", mail_err)
+            elif instance.status in ['PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']:
+                try:
+                    from .email_orders import send_status_update_email
+                    send_status_update_email(instance)
+                except Exception as e:
+                    print("Error sending status update email:", e)
 
 class ProcessCardPaymentView(APIView):
     """Receives card_data token from MP Brick and processes a direct charge."""
