@@ -44,8 +44,15 @@ export default function EventTicketsPage() {
           eventsService.getEventDetails(eventId),
           adminService.getZonesByEvent(eventId),
         ]);
+        const zonesData = await adminService.getZonesByEvent(eventId);
         setEvent(eventData);
         setZones(zonesData);
+        
+        const existing = zonesData.map((z: any) => z.zone_type);
+        const available = ZONE_TYPES.filter(zt => !existing.includes(zt.value));
+        if (available.length > 0) {
+          setNewZone(prev => ({ ...prev, zone_type: available[0].value }));
+        }
       } catch (error) {
         console.error("Error loading data:", error);
       } finally {
@@ -57,17 +64,35 @@ export default function EventTicketsPage() {
 
   const handleAddZone = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const existingZ = zones.map(z => z.zone_type);
+    const availableZ = ZONE_TYPES.filter(zt => !existingZ.includes(zt.value));
+    let typeToSubmit = newZone.zone_type;
+    if (!availableZ.find(zt => zt.value === typeToSubmit) && availableZ.length > 0) {
+      typeToSubmit = availableZ[0].value;
+    }
+
     setSaving(true);
     try {
       const created = await adminService.createZone({
         event: eventId,
-        zone_type: newZone.zone_type,
+        zone_type: typeToSubmit,
         price: newZone.price,
         rows: Number(newZone.rows),
         seats_per_row: Number(newZone.seats_per_row),
       });
-      setZones([...zones, created]);
-      setNewZone({ zone_type: 'NORTE', price: '', rows: 3, seats_per_row: 10 });
+      const updatedZones = [...zones, created];
+      setZones(updatedZones);
+      
+      const newExisting = updatedZones.map(z => z.zone_type);
+      const newAvailable = ZONE_TYPES.filter(zt => !newExisting.includes(zt.value));
+      
+      setNewZone({ 
+        zone_type: newAvailable.length > 0 ? newAvailable[0].value : 'NORTE', 
+        price: '', 
+        rows: 3, 
+        seats_per_row: 10 
+      });
     } catch (error: any) {
       const msg = error?.response?.data?.non_field_errors?.[0] || "Error al crear la zona.";
       alert(msg.includes('unique_together') ? 'Esta zona ya existe para este evento.' : msg);
