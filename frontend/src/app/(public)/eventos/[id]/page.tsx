@@ -36,7 +36,6 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
   const [event, setEvent] = useState<any>(null);
   const [zones, setZones] = useState<any[]>([]);
   const [selectedSeats, setSelectedSeats] = useState<SelectedSeat[]>([]);
-  const [selectedSeats, setSelectedSeats] = useState<SelectedSeat[]>([]);
   const [showConfirmPanel, setShowConfirmPanel] = useState(false);
   const [loading, setLoading] = useState(true);
   const addItem = useCartStore((state) => state.addItem);
