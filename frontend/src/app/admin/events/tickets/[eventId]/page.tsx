@@ -8,21 +8,17 @@ import { eventsService } from '@/services/events.services';
 import { adminService } from '@/services/admin.services';
 
 const ZONE_TYPES = [
-  { value: 'RINGSIDE_N', label: 'Ringside Norte' },
-  { value: 'RINGSIDE_S', label: 'Ringside Sur' },
-  { value: 'RINGSIDE_E', label: 'Ringside Este' },
-  { value: 'RINGSIDE_O', label: 'Ringside Oeste' },
-  { value: 'VIP', label: 'VIP' },
-  { value: 'GENERAL', label: 'General / Gradas' },
+  { value: 'NORTE', label: 'Norte' },
+  { value: 'SUR', label: 'Sur' },
+  { value: 'ESTE', label: 'Este' },
+  { value: 'OESTE', label: 'Oeste' },
 ];
 
 const ZONE_COLORS: Record<string, string> = {
-  VIP: 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30',
-  RINGSIDE_N: 'bg-red-500/20 text-red-400 border-red-500/30',
-  RINGSIDE_S: 'bg-red-500/20 text-red-400 border-red-500/30',
-  RINGSIDE_E: 'bg-red-500/20 text-red-400 border-red-500/30',
-  RINGSIDE_O: 'bg-red-500/20 text-red-400 border-red-500/30',
-  GENERAL: 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30',
+  NORTE: 'bg-red-500/20 text-red-400 border-red-500/30',
+  SUR: 'bg-red-500/20 text-red-400 border-red-500/30',
+  ESTE: 'bg-red-500/20 text-red-400 border-red-500/30',
+  OESTE: 'bg-red-500/20 text-red-400 border-red-500/30',
 };
 
 export default function EventTicketsPage() {
@@ -35,7 +31,7 @@ export default function EventTicketsPage() {
   const [saving, setSaving] = useState(false);
 
   const [newZone, setNewZone] = useState({
-    zone_type: 'GENERAL',
+    zone_type: 'NORTE',
     price: '',
     rows: 3,
     seats_per_row: 10,
@@ -71,7 +67,7 @@ export default function EventTicketsPage() {
         seats_per_row: Number(newZone.seats_per_row),
       });
       setZones([...zones, created]);
-      setNewZone({ zone_type: 'GENERAL', price: '', rows: 3, seats_per_row: 10 });
+      setNewZone({ zone_type: 'NORTE', price: '', rows: 3, seats_per_row: 10 });
     } catch (error: any) {
       const msg = error?.response?.data?.non_field_errors?.[0] || "Error al crear la zona.";
       alert(msg.includes('unique_together') ? 'Esta zona ya existe para este evento.' : msg);
@@ -169,12 +165,10 @@ export default function EventTicketsPage() {
     );
   };
 
-  const zoneNorte = zones.find(z => z.zone_type === 'RINGSIDE_N');
-  const zoneSur = zones.find(z => z.zone_type === 'RINGSIDE_S');
-  const zoneEste = zones.find(z => z.zone_type === 'RINGSIDE_E');
-  const zoneOeste = zones.find(z => z.zone_type === 'RINGSIDE_O');
-  const zoneVip = zones.find(z => z.zone_type === 'VIP');
-  const zoneGeneral = zones.find(z => z.zone_type === 'GENERAL');
+  const zoneNorte = zones.find(z => z.zone_type === 'NORTE');
+  const zoneSur = zones.find(z => z.zone_type === 'SUR');
+  const zoneEste = zones.find(z => z.zone_type === 'ESTE');
+  const zoneOeste = zones.find(z => z.zone_type === 'OESTE');
 
   return (
     <div className="max-w-4xl space-y-8">
@@ -348,7 +342,7 @@ export default function EventTicketsPage() {
             <div className="inline-block min-w-full text-center">
               <div className="bg-zinc-900/40 rounded-3xl p-10 inline-flex flex-col items-center justify-center border border-white/5 relative min-w-[800px]">
                 
-                {/* Ringside Norte */}
+                {/* Norte */}
                 {zoneNorte && (
                   <div className="flex justify-center mb-8">
                     {renderZone(zoneNorte, 'top')}
@@ -356,7 +350,7 @@ export default function EventTicketsPage() {
                 )}
 
                 <div className="flex items-center justify-center w-full">
-                  {/* Ringside Oeste */}
+                  {/* Oeste */}
                   <div className="flex-1 flex justify-end pr-8">
                     {renderZone(zoneOeste, 'left')}
                   </div>
@@ -391,29 +385,18 @@ export default function EventTicketsPage() {
                     </div>
                   </div>
 
-                  {/* Ringside Este */}
+                  {/* Este */}
                   <div className="flex-1 flex justify-start pl-8">
                     {renderZone(zoneEste, 'right')}
                   </div>
                 </div>
 
-                {/* Ringside Sur */}
+                {/* Sur */}
                 {zoneSur && (
                   <div className="flex justify-center mt-8">
                     {renderZone(zoneSur, 'bottom')}
                   </div>
                 )}
-
-                {/* Separador */}
-                {(zoneVip || zoneGeneral) && (
-                  <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-12" />
-                )}
-
-                {/* Otras Zonas (VIP, General) */}
-                <div className="flex flex-col gap-12 mt-4">
-                  {renderZone(zoneVip, 'default')}
-                  {renderZone(zoneGeneral, 'default')}
-                </div>
 
               </div>
             </div>

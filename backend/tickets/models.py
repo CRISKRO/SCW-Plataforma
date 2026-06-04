@@ -4,12 +4,10 @@ from events.models import Event
 
 class EventZone(models.Model):
     class ZoneType(models.TextChoices):
-        RINGSIDE_N = 'RINGSIDE_N', _('Ringside Norte')
-        RINGSIDE_S = 'RINGSIDE_S', _('Ringside Sur')
-        RINGSIDE_E = 'RINGSIDE_E', _('Ringside Este')
-        RINGSIDE_O = 'RINGSIDE_O', _('Ringside Oeste')
-        GENERAL = 'GENERAL', _('General / Gradas')
-        VIP = 'VIP', _('VIP')
+        NORTE = 'NORTE', _('Norte')
+        SUR = 'SUR', _('Sur')
+        ESTE = 'ESTE', _('Este')
+        OESTE = 'OESTE', _('Oeste')
 
     event = models.ForeignKey(Event, related_name='zones', on_delete=models.CASCADE)
     zone_type = models.CharField(_('tipo de zona'), max_length=20, choices=ZoneType.choices)
