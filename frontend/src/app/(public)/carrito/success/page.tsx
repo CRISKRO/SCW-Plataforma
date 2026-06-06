@@ -13,6 +13,8 @@ function SuccessContent() {
   const [state, setState] = useState<'loading' | 'approved' | 'pending' | 'failed'>('loading');
   const [orderId, setOrderId] = useState<string | null>(null);
   const [alreadyProcessed, setAlreadyProcessed] = useState(false);
+  const [hasTickets, setHasTickets] = useState(true); // Default true for direct access without data
+  const [hasMerch, setHasMerch] = useState(false);
 
   useEffect(() => {
     const payment_id = searchParams.get('payment_id');
@@ -38,6 +40,13 @@ function SuccessContent() {
 
         if (res.data.status === 'approved') {
           setState('approved');
+          // Guardar tipo de compra para mostrar el mensaje correcto
+          if (res.data.has_tickets !== undefined) {
+            setHasTickets(res.data.has_tickets);
+          }
+          if (res.data.has_merch !== undefined) {
+            setHasMerch(res.data.has_merch);
+          }
         } else if (res.data.status === 'in_process' || res.data.status === 'pending') {
           setState('pending');
         } else {
@@ -117,33 +126,51 @@ function SuccessContent() {
           transition={{ delay: 0.2 }}
           className="space-y-4"
         >
-          {/* Email Notice */}
-          <div className="bg-zinc-900 border border-green-500/30 rounded-2xl p-6 flex items-start gap-4 text-left">
-            <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-              <Mail className="w-6 h-6 text-green-400" />
-            </div>
-            <div>
-              <h3 className="font-bold text-lg mb-1">Revisa tu correo</h3>
-              <p className="text-zinc-400 text-sm leading-relaxed">
-                Te hemos enviado un correo con tus <strong className="text-white">boletos QR</strong>. Preséntalo en la entrada del evento para que el personal escanee tu código y te dé acceso.
-              </p>
-            </div>
-          </div>
-
           {/* Ticket Notice */}
-          <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 flex items-start gap-4 text-left">
-            <div className="w-12 h-12 bg-zinc-800 rounded-xl flex items-center justify-center flex-shrink-0">
-              <Ticket className="w-6 h-6 text-zinc-400" />
+          {hasTickets && (
+            <>
+              <div className="bg-zinc-900 border border-green-500/30 rounded-2xl p-6 flex items-start gap-4 text-left">
+                <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Mail className="w-6 h-6 text-green-400" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg mb-1">Revisa tu correo</h3>
+                  <p className="text-zinc-400 text-sm leading-relaxed">
+                    Te hemos enviado un correo con tus <strong className="text-white">boletos QR</strong>. Preséntalo en la entrada del evento para que el personal escanee tu código y te dé acceso.
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 flex items-start gap-4 text-left">
+                <div className="w-12 h-12 bg-zinc-800 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Ticket className="w-6 h-6 text-zinc-400" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg mb-1">Instrucciones de acceso</h3>
+                  <ul className="text-zinc-400 text-sm space-y-1">
+                    <li>• Cada QR es único y de un solo uso</li>
+                    <li>• Muéstralo en tu teléfono o impreso</li>
+                    <li>• Llega con tiempo antes del evento</li>
+                  </ul>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Merch Notice */}
+          {hasMerch && (
+            <div className="bg-zinc-900 border border-green-500/30 rounded-2xl p-6 flex items-start gap-4 text-left">
+              <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Mail className="w-6 h-6 text-green-400" />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg mb-1">Tu pedido está en camino</h3>
+                <p className="text-zinc-400 text-sm leading-relaxed">
+                  Te hemos enviado un correo con el <strong className="text-white">recibo de tu compra</strong>. Te mantendremos informado sobre el estado de tu envío.
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-bold text-lg mb-1">Instrucciones de acceso</h3>
-              <ul className="text-zinc-400 text-sm space-y-1">
-                <li>• Cada QR es único y de un solo uso</li>
-                <li>• Muéstralo en tu teléfono o impreso</li>
-                <li>• Llega con tiempo antes del evento</li>
-              </ul>
-            </div>
-          </div>
+          )}
         </motion.div>
 
         <motion.div

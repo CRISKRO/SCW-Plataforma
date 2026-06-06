@@ -390,7 +390,15 @@ class VerifyPaymentView(APIView):
 
         # Already processed
         if order.status == Order.Status.PAID:
-            return Response({"status": "approved", "already_processed": True, "order_id": order.id})
+            has_tickets = order.items.filter(seat__isnull=False).exists() or order.items.filter(product__isnull=True, product_name__icontains='Boleto').exists()
+            has_merch = order.items.filter(product__isnull=False).exists() or order.items.filter(product__isnull=True).exclude(product_name__icontains='Boleto').exists()
+            return Response({
+                "status": "approved", 
+                "already_processed": True, 
+                "order_id": order.id,
+                "has_tickets": has_tickets,
+                "has_merch": has_merch
+            })
 
         # Verify with MP API
         try:
@@ -572,8 +580,8 @@ class WebhookView(APIView):
                                         item.seat.save()
 
                                 try:
-                                    has_tickets = order.items.filter(seat__isnull=False).exists() or order.items.filter(product__isnull=True).exists()
-                                    has_merch = order.items.filter(product__isnull=False).exists()
+                                    has_tickets = order.items.filter(seat__isnull=False).exists() or order.items.filter(product__isnull=True, product_name__icontains='Boleto').exists()
+                                    has_merch = order.items.filter(product__isnull=False).exists() or order.items.filter(product__isnull=True).exclude(product_name__icontains='Boleto').exists()
                                     
                                     if has_tickets:
                                         from .email_tickets import send_ticket_email
