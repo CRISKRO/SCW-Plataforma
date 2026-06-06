@@ -263,8 +263,6 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                             })()}
                           </div>
                         )}
-                          </div>
-                        )}
 
                       <div className="flex items-center justify-center w-full gap-4 md:gap-8 lg:gap-12">
                         {/* Oeste */}
