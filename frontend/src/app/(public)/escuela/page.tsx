@@ -125,8 +125,19 @@ export default function EscuelaPage() {
 
       await api.post('/students/enrollments/', data);
       setStep('success');
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      const serverError = error.response?.data;
+      let errorMsg = 'Error al enviar la solicitud.';
+      if (serverError) {
+        if (typeof serverError === 'string') errorMsg = serverError;
+        else if (serverError.error) errorMsg = serverError.error;
+        else if (serverError.detail) errorMsg = serverError.detail;
+        else errorMsg = JSON.stringify(serverError);
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      setVerifyError(errorMsg);
       setFormStatus('error');
     }
   };
