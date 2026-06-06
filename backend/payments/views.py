@@ -14,7 +14,10 @@ class MPPublicKeyView(APIView):
     def get(self, request):
         config = get_active_config()
         public_key = config.mercadopago_public_key if config.mercadopago_public_key else settings.MERCADOPAGO_PUBLIC_KEY
-        return Response({"public_key": public_key})
+        return Response({
+            "public_key": public_key,
+            "shipping_cost": config.shipping_cost
+        })
 
 class OrderItemInputSerializer(serializers.Serializer):
     product_id = serializers.IntegerField(required=False, allow_null=True)
@@ -27,6 +30,14 @@ class OrderItemInputSerializer(serializers.Serializer):
 class CreateOrderSerializer(serializers.Serializer):
     contact_email = serializers.EmailField()
     contact_phone = serializers.CharField(max_length=20, allow_blank=True, required=False)
+    
+    # Shipping fields
+    shipping_address = serializers.CharField(max_length=255, allow_blank=True, required=False)
+    shipping_city = serializers.CharField(max_length=100, allow_blank=True, required=False)
+    shipping_state = serializers.CharField(max_length=100, allow_blank=True, required=False)
+    shipping_zipcode = serializers.CharField(max_length=20, allow_blank=True, required=False)
+    shipping_cost = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, default=0.00)
+    
     items = OrderItemInputSerializer(many=True)
 
 class CreateOrderView(APIView):
@@ -82,7 +93,12 @@ class CreateOrderView(APIView):
                 user=user,
                 contact_email=data['contact_email'],
                 contact_phone=data.get('contact_phone', ''),
-                total_amount=total_amount,
+                shipping_address=data.get('shipping_address', ''),
+                shipping_city=data.get('shipping_city', ''),
+                shipping_state=data.get('shipping_state', ''),
+                shipping_zipcode=data.get('shipping_zipcode', ''),
+                shipping_cost=data.get('shipping_cost', 0),
+                total_amount=total_amount + data.get('shipping_cost', 0),
                 status=Order.Status.PENDING
             )
 
@@ -107,6 +123,15 @@ class CreateOrderView(APIView):
                     "quantity": item_data['quantity'],
                     "currency_id": "MXN",
                     "unit_price": price_with_commission
+                })
+
+            shipping_cost = data.get('shipping_cost', 0)
+            if shipping_cost > 0:
+                mp_items.append({
+                    "title": "Costo de Envío",
+                    "quantity": 1,
+                    "currency_id": "MXN",
+                    "unit_price": float(shipping_cost) * (1 + commission)
                 })
 
             # Integrate with MercadoPago SDK to generate a real preference_id
@@ -229,12 +254,22 @@ class ProcessCardPaymentView(APIView):
             order_items_data.append({'product': product, 'seat': seat, 'product_name': name, 'quantity': qty, 'price': price, 'size': item.get('size', '')})
             mp_items.append({'title': name, 'quantity': qty, 'unit_price': price, 'currency_id': 'MXN'})
 
+        shipping_cost = float(data.get('shipping_cost', 0))
+        if shipping_cost > 0:
+            total_amount += shipping_cost
+            mp_items.append({'title': "Costo de Envío", 'quantity': 1, 'unit_price': shipping_cost, 'currency_id': 'MXN'})
+
         # Create Order record
         user = request.user if request.user.is_authenticated else None
         order = Order.objects.create(
             user=user,
             contact_email=contact_email,
             contact_phone=contact_phone,
+            shipping_address=data.get('shipping_address', ''),
+            shipping_city=data.get('shipping_city', ''),
+            shipping_state=data.get('shipping_state', ''),
+            shipping_zipcode=data.get('shipping_zipcode', ''),
+            shipping_cost=shipping_cost,
             total_amount=total_amount,
             status=Order.Status.PENDING
         )

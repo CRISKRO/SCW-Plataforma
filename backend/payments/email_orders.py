@@ -21,8 +21,12 @@ def send_order_receipt_email(order):
     """
     Send a purchase receipt for merch (physical items). No QR codes.
     """
-    items = order.items.all()
+    from django.db.models import Q
+    items = order.items.filter(Q(product__isnull=False) | Q(product__isnull=True, seat__isnull=True)).exclude(product_name__icontains='Boleto')
     
+    if not items.exists():
+        return False
+        
     items_html = ""
     for item in items:
         items_html += f"""
@@ -65,6 +69,10 @@ def send_order_receipt_email(order):
         <h3 style="color:#fff;font-size:14px;text-transform:uppercase;letter-spacing:2px;margin:0 0 16px;">Detalle de la compra</h3>
         {items_html}
         
+        <div style="display:flex;justify-content:space-between;border-top:1px solid #333;padding-top:16px;margin-top:8px;">
+            <span style="color:#aaa;font-weight:bold;text-transform:uppercase;">Envío</span>
+            <span style="color:#fff;font-weight:bold;font-size:16px;">${float(order.shipping_cost):.2f} MXN</span>
+        </div>
         <div style="display:flex;justify-content:space-between;border-top:1px solid #333;padding-top:16px;margin-top:8px;">
             <span style="color:#aaa;font-weight:bold;text-transform:uppercase;">Total</span>
             <span style="color:#fff;font-weight:bold;font-size:18px;">${float(order.total_amount):.2f} MXN</span>

@@ -15,13 +15,36 @@ export default function CartPage() {
   const [mounted, setMounted] = useState(false);
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  
+  // Shipping states
+  const [address, setAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [zipcode, setZipcode] = useState('');
+  const [shippingCost, setShippingCost] = useState(0);
+
   const [loading, setLoading] = useState(false);
   const { items, removeItem, updateQuantity, getTotalPrice, getTotalItems, clearCart } = useCartStore();
+
+  const hasMerch = items.some(i => !i.name.includes('Boleto'));
 
   useEffect(() => {
     setMounted(true);
     if (user?.email) setEmail(user.email);
     if (user?.phone_number) setPhone(user.phone_number);
+    
+    // Fetch shipping cost from config
+    const fetchConfig = async () => {
+      try {
+        const res = await api.get('/payments/public-key/');
+        if (res.data.shipping_cost) {
+          setShippingCost(parseFloat(res.data.shipping_cost));
+        }
+      } catch (error) {
+        console.error("Error fetching config:", error);
+      }
+    };
+    fetchConfig();
   }, [user]);
 
   const handleCheckout = async () => {
@@ -29,6 +52,11 @@ export default function CartPage() {
       alert("Por favor ingresa tu correo electrónico.");
       return;
     }
+    if (hasMerch && (!address || !city || !state || !zipcode || !phone)) {
+      alert("Por favor completa todos los datos de envío y teléfono de contacto.");
+      return;
+    }
+    
     setLoading(true);
     try {
       const orderItems = items.map(item => ({
@@ -40,11 +68,21 @@ export default function CartPage() {
         size: item.size || ''
       }));
 
-      const response = await api.post('/payments/create-order/', {
+      const payload: any = {
         contact_email: email,
         contact_phone: phone,
         items: orderItems
-      });
+      };
+
+      if (hasMerch) {
+        payload.shipping_address = address;
+        payload.shipping_city = city;
+        payload.shipping_state = state;
+        payload.shipping_zipcode = zipcode;
+        payload.shipping_cost = shippingCost;
+      }
+
+      const response = await api.post('/payments/create-order/', payload);
 
       if (response.data.init_point) {
         clearCart();
@@ -136,12 +174,16 @@ export default function CartPage() {
                     </div>
                     <div className="flex justify-between">
                       <span>Envío</span>
-                      <span className="text-green-400">A calcular</span>
+                      {hasMerch ? (
+                        <span className="text-white">${shippingCost.toFixed(2)}</span>
+                      ) : (
+                        <span className="text-zinc-500">No aplica</span>
+                      )}
                     </div>
                   </div>
                   <div className="border-t border-white/10 pt-4 mt-4 flex justify-between items-end">
                     <span className="font-bold">Total</span>
-                    <span className="text-3xl font-black">${getTotalPrice().toFixed(2)} <span className="text-sm font-normal text-zinc-500">MXN</span></span>
+                    <span className="text-3xl font-black">${(getTotalPrice() + (hasMerch ? shippingCost : 0)).toFixed(2)} <span className="text-sm font-normal text-zinc-500">MXN</span></span>
                   </div>
                 </div>
 
@@ -156,6 +198,38 @@ export default function CartPage() {
                     className="w-full bg-black border border-white/20 p-3 rounded-xl text-white focus:outline-none focus:border-[#009EE3] transition-colors text-sm"
                   />
                 </div>
+
+                {hasMerch && (
+                  <div className="space-y-4 pt-4 border-t border-white/10">
+                    <h3 className="font-bold uppercase text-sm">Datos de Envío</h3>
+                    
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-widest text-zinc-500">Teléfono de contacto</label>
+                      <input type="tel" placeholder="10 dígitos" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-black border border-white/20 p-3 rounded-xl text-white focus:outline-none focus:border-[#009EE3] transition-colors text-sm" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-widest text-zinc-500">Dirección (Calle y Número)</label>
+                      <input type="text" placeholder="Ej. Av. Siempre Viva 123" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full bg-black border border-white/20 p-3 rounded-xl text-white focus:outline-none focus:border-[#009EE3] transition-colors text-sm" />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-widest text-zinc-500">Ciudad</label>
+                        <input type="text" placeholder="Ciudad" value={city} onChange={(e) => setCity(e.target.value)} className="w-full bg-black border border-white/20 p-3 rounded-xl text-white focus:outline-none focus:border-[#009EE3] transition-colors text-sm" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-widest text-zinc-500">Estado</label>
+                        <input type="text" placeholder="Estado" value={state} onChange={(e) => setState(e.target.value)} className="w-full bg-black border border-white/20 p-3 rounded-xl text-white focus:outline-none focus:border-[#009EE3] transition-colors text-sm" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-widest text-zinc-500">Código Postal</label>
+                      <input type="text" placeholder="C.P." value={zipcode} onChange={(e) => setZipcode(e.target.value)} className="w-full bg-black border border-white/20 p-3 rounded-xl text-white focus:outline-none focus:border-[#009EE3] transition-colors text-sm" />
+                    </div>
+                  </div>
+                )}
 
                 {/* Botón de Pago */}
                 <div className="space-y-3">
@@ -172,7 +246,7 @@ export default function CartPage() {
                     ) : (
                       <>
                         <CreditCard className="w-5 h-5" />
-                        Pagar ${getTotalPrice().toFixed(2)} con Mercado Pago
+                        Pagar ${(getTotalPrice() + (hasMerch ? shippingCost : 0)).toFixed(2)} con Mercado Pago
                       </>
                     )}
                   </button>

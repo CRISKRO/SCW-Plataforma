@@ -21,6 +21,13 @@ class Order(models.Model):
     status = models.CharField(_('estado'), max_length=15, choices=Status.choices, default=Status.PENDING)
     mp_preference_id = models.CharField(_('MercadoPago Preference ID'), max_length=255, blank=True)
     mp_payment_id = models.CharField(_('MercadoPago Payment ID'), max_length=255, blank=True)
+    
+    # Datos de Envío
+    shipping_address = models.CharField(_('Dirección de envío'), max_length=255, blank=True)
+    shipping_city = models.CharField(_('Ciudad'), max_length=100, blank=True)
+    shipping_state = models.CharField(_('Estado/Provincia'), max_length=100, blank=True)
+    shipping_zipcode = models.CharField(_('Código Postal'), max_length=20, blank=True)
+    shipping_cost = models.DecimalField(_('Costo de envío cobrado'), max_digits=10, decimal_places=2, default=0.00)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
