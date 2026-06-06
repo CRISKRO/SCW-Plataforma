@@ -151,19 +151,19 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
           </div>
         </div>
 
-        <div className="flex flex-col-reverse lg:grid lg:grid-cols-3 gap-8">
+        <div className={`flex flex-col-reverse lg:flex-row gap-8 items-start transition-all duration-500`}>
 
-          {/* --- LEFT: Selected seats summary --- */}
-          <div className="lg:col-span-1 space-y-6">
+          {/* --- LEFT / CART: Selected seats summary --- */}
+          <div className={`w-full lg:w-1/3 space-y-6 sticky top-24 ${selectedSeats.length > 0 ? 'block' : 'hidden'}`}>
 
             {/* Selected seats list */}
             <AnimatePresence>
               {selectedSeats.length > 0 && (
                 <motion.div
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 16 }}
-                  className="bg-zinc-950 border border-white/10 rounded-2xl p-5"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="bg-zinc-950 border border-white/10 rounded-2xl p-5 shadow-2xl"
                 >
                   <h3 className="font-bold uppercase tracking-widest text-sm text-white mb-4 flex items-center gap-2">
                     <ShoppingCart className="w-4 h-4 text-red-500" />
@@ -206,12 +206,13 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
           </div>
 
           {/* --- RIGHT: Seat map --- */}
-          <div className="lg:col-span-2">
-            <h2 className="text-xl font-bold uppercase mb-4">
-              Selecciona tus Asientos
+          <div className={`w-full ${selectedSeats.length > 0 ? 'lg:w-2/3' : 'lg:w-full'} transition-all duration-500`}>
+            <h2 className="text-xl md:text-3xl font-black uppercase mb-6 tracking-tight flex items-center justify-between">
+              <span>Selecciona tus Asientos</span>
+              {selectedSeats.length === 0 && <span className="text-sm font-medium text-zinc-500 tracking-normal hidden md:inline-block">Haz clic en un asiento para comenzar</span>}
             </h2>
 
-            <div className="bg-zinc-950 border border-white/10 rounded-3xl p-4 md:p-8 min-h-[400px]">
+            <div className="bg-zinc-950 border border-white/10 rounded-3xl p-4 md:p-8 lg:p-12 min-h-[500px] shadow-2xl relative overflow-hidden flex items-center justify-center w-full">
               {parsedZones.length === 0 ? (
                 <div className="flex items-center justify-center h-64 text-zinc-500 text-center">
                   El mapa de asientos aún no está disponible para este evento.
@@ -221,25 +222,25 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                   <div className="absolute top-0 right-0 z-20 md:hidden bg-zinc-900/80 text-zinc-400 text-[10px] px-3 py-1 rounded-full uppercase tracking-widest border border-white/10 backdrop-blur-sm pointer-events-none">
                     ↔ Desliza el mapa
                   </div>
-                  <div className="overflow-x-auto pb-12 custom-scrollbar touch-pan-x touch-pan-y">
-                    <div className="inline-block min-w-[700px] md:min-w-[900px] w-full text-center">
-                      <div className="bg-zinc-900/40 rounded-3xl p-4 md:p-10 inline-flex flex-col items-center justify-center border border-white/5 relative">
+                  <div className="overflow-x-auto pb-12 pt-4 custom-scrollbar touch-pan-x touch-pan-y w-full">
+                    <div className="inline-block min-w-max w-full text-center">
+                      <div className="bg-zinc-900/40 rounded-[3rem] p-6 md:p-12 lg:p-16 inline-flex flex-col items-center justify-center border border-white/5 relative shadow-inner">
                         
                         {/* Norte */}
                         {parsedZones.find(z => z.zone_type === 'NORTE') && (
-                          <div className="flex justify-center mb-4 md:mb-8">
+                          <div className="flex justify-center mb-6 md:mb-10 lg:mb-14">
                             {(() => {
                               const zone = parsedZones.find(z => z.zone_type === 'NORTE');
                               return (
-                                <div className="bg-zinc-800/90 p-3 md:p-5 rounded-3xl border-[3px] border-zinc-700/60 flex flex-col items-center gap-2 md:gap-4 relative shadow-2xl backdrop-blur-sm">
-                                  <div className="px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-zinc-950 shadow-inner border border-white/5 text-zinc-300">
+                                <div className="bg-zinc-800/90 p-4 md:p-6 lg:p-8 rounded-3xl border-[3px] border-zinc-700/60 flex flex-col items-center gap-3 md:gap-4 lg:gap-5 relative shadow-2xl backdrop-blur-sm transition-transform hover:scale-[1.02] duration-300">
+                                  <div className="px-6 py-2 rounded-full text-xs md:text-sm font-black uppercase tracking-widest bg-zinc-950 shadow-inner border border-white/5 text-zinc-300">
                                     Norte - ${zone.price}
                                   </div>
-                                  <div className="flex flex-col gap-1.5 md:gap-2">
+                                  <div className="flex flex-col gap-2 md:gap-3">
                                     {zone.sortedRowNamesReversed.map((rowName: string) => (
-                                      <div key={rowName} className="flex items-center justify-center gap-1 flex-row">
-                                        <div className="w-5 h-5 flex items-center justify-center font-bold text-zinc-500 text-[9px] md:text-[10px] bg-zinc-900/60 rounded-md shrink-0">{rowName}</div>
-                                        <div className="flex gap-1 flex-row">
+                                      <div key={rowName} className="flex items-center justify-center gap-2 flex-row">
+                                        <div className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 flex items-center justify-center font-bold text-zinc-500 text-[10px] md:text-xs lg:text-sm bg-zinc-900/60 rounded-md lg:rounded-lg shrink-0">{rowName}</div>
+                                        <div className="flex gap-2 flex-row">
                                           {zone.groupedSeats[rowName].map((seat: any) => {
                                             const isSelected = isSeatSelected(seat.id);
                                             return (
@@ -247,13 +248,13 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                                                 key={seat.id}
                                                 disabled={!seat.is_available}
                                                 onClick={() => toggleSeat(seat, zone)}
-                                                className={`w-6 h-6 md:w-8 md:h-8 rounded-md flex items-center justify-center text-[10px] md:text-[11px] font-black transition-all shadow-md shrink-0 ${!seat.is_available ? 'bg-zinc-950 text-zinc-700 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:border-zinc-400 hover:scale-110 z-10'}`}
+                                                className={`w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 rounded-md lg:rounded-lg flex items-center justify-center text-xs md:text-sm lg:text-base font-black transition-all shadow-md shrink-0 ${!seat.is_available ? 'bg-zinc-950 text-zinc-700 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_15px_rgba(239,68,68,0.6)]' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:border-zinc-400 hover:scale-110 z-10 hover:shadow-lg'}`}
                                                 title={seat.is_available ? `Fila ${rowName} - Asiento ${seat.seat_number}` : 'Ocupado'}
                                               >{seat.seat_number}</button>
                                             );
                                           })}
                                         </div>
-                                        <div className="w-5 h-5 flex items-center justify-center font-bold text-zinc-500 text-[9px] md:text-[10px] bg-zinc-900/60 rounded-md shrink-0">{rowName}</div>
+                                        <div className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 flex items-center justify-center font-bold text-zinc-500 text-[10px] md:text-xs lg:text-sm bg-zinc-900/60 rounded-md lg:rounded-lg shrink-0">{rowName}</div>
                                       </div>
                                     ))}
                                   </div>
@@ -262,23 +263,25 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                             })()}
                           </div>
                         )}
+                          </div>
+                        )}
 
-                      <div className="flex items-center justify-center w-full">
+                      <div className="flex items-center justify-center w-full gap-4 md:gap-8 lg:gap-12">
                         {/* Oeste */}
-                        <div className="flex-1 flex justify-end pr-4 md:pr-8">
+                        <div className="flex-1 flex justify-end">
                           {(() => {
                             const zone = parsedZones.find(z => z.zone_type === 'OESTE');
                             if (!zone) return null;
                             return (
-                              <div className="bg-zinc-800/90 p-3 md:p-5 rounded-3xl border-[3px] border-zinc-700/60 flex flex-col items-center gap-2 md:gap-4 relative shadow-2xl backdrop-blur-sm">
-                                <div className="px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-zinc-950 shadow-inner border border-white/5 text-zinc-300">
+                              <div className="bg-zinc-800/90 p-4 md:p-6 lg:p-8 rounded-3xl border-[3px] border-zinc-700/60 flex flex-col items-center gap-3 md:gap-4 lg:gap-5 relative shadow-2xl backdrop-blur-sm transition-transform hover:scale-[1.02] duration-300">
+                                <div className="px-6 py-2 rounded-full text-xs md:text-sm font-black uppercase tracking-widest bg-zinc-950 shadow-inner border border-white/5 text-zinc-300">
                                   Oeste - ${zone.price}
                                 </div>
-                                <div className="flex flex-row gap-1.5 md:gap-2">
+                                <div className="flex flex-row gap-2 md:gap-3">
                                   {zone.sortedRowNamesReversed.map((rowName: string) => (
-                                    <div key={rowName} className="flex items-center justify-center gap-1 flex-col">
-                                      <div className="w-5 h-5 flex items-center justify-center font-bold text-zinc-500 text-[9px] md:text-[10px] bg-zinc-900/60 rounded-md shrink-0">{rowName}</div>
-                                      <div className="flex gap-1 flex-col">
+                                    <div key={rowName} className="flex items-center justify-center gap-2 flex-col">
+                                      <div className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 flex items-center justify-center font-bold text-zinc-500 text-[10px] md:text-xs lg:text-sm bg-zinc-900/60 rounded-md lg:rounded-lg shrink-0">{rowName}</div>
+                                      <div className="flex gap-2 flex-col">
                                         {zone.groupedSeats[rowName].map((seat: any) => {
                                           const isSelected = isSeatSelected(seat.id);
                                           return (
@@ -286,13 +289,13 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                                               key={seat.id}
                                               disabled={!seat.is_available}
                                               onClick={() => toggleSeat(seat, zone)}
-                                              className={`w-6 h-6 md:w-8 md:h-8 rounded-md flex items-center justify-center text-[10px] md:text-[11px] font-black transition-all shadow-md shrink-0 ${!seat.is_available ? 'bg-zinc-950 text-zinc-700 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:border-zinc-400 hover:scale-110 z-10'}`}
+                                              className={`w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 rounded-md lg:rounded-lg flex items-center justify-center text-xs md:text-sm lg:text-base font-black transition-all shadow-md shrink-0 ${!seat.is_available ? 'bg-zinc-950 text-zinc-700 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_15px_rgba(239,68,68,0.6)]' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:border-zinc-400 hover:scale-110 z-10 hover:shadow-lg'}`}
                                               title={seat.is_available ? `Fila ${rowName} - Asiento ${seat.seat_number}` : 'Ocupado'}
                                             >{seat.seat_number}</button>
                                           );
                                         })}
                                       </div>
-                                      <div className="w-5 h-5 flex items-center justify-center font-bold text-zinc-500 text-[9px] md:text-[10px] bg-zinc-900/60 rounded-md shrink-0">{rowName}</div>
+                                      <div className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 flex items-center justify-center font-bold text-zinc-500 text-[10px] md:text-xs lg:text-sm bg-zinc-900/60 rounded-md lg:rounded-lg shrink-0">{rowName}</div>
                                     </div>
                                   ))}
                                 </div>
@@ -302,38 +305,38 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                         </div>
 
                         {/* El Ring Central - Diseño Realista */}
-                        <div className="relative w-48 h-48 md:w-64 md:h-64 bg-[#d4d4d8] border-[8px] border-zinc-950 rounded flex items-center justify-center shadow-[0_0_80px_rgba(255,255,255,0.05)] z-10 shrink-0 mx-4">
-                          <div className="absolute inset-1 border-[1.5px] border-red-600/80 rounded-sm"></div>
-                          <div className="absolute inset-2 border-[1.5px] border-zinc-100 rounded-sm"></div>
-                          <div className="absolute inset-3 border-[1.5px] border-red-600/80 rounded-sm"></div>
-                          <div className="absolute -top-2 -left-2 w-5 h-5 bg-red-600 rounded-full shadow-lg border-2 border-black z-20"></div>
-                          <div className="absolute top-2 left-2 w-6 h-6 bg-zinc-900 rotate-45 transform -translate-x-1 -translate-y-1 rounded-sm z-10"></div>
-                          <div className="absolute -top-2 -right-2 w-5 h-5 bg-blue-600 rounded-full shadow-lg border-2 border-black z-20"></div>
-                          <div className="absolute top-2 right-2 w-6 h-6 bg-zinc-900 -rotate-45 transform translate-x-1 -translate-y-1 rounded-sm z-10"></div>
-                          <div className="absolute -bottom-2 -left-2 w-5 h-5 bg-blue-600 rounded-full shadow-lg border-2 border-black z-20"></div>
-                          <div className="absolute bottom-2 left-2 w-6 h-6 bg-zinc-900 -rotate-45 transform -translate-x-1 translate-y-1 rounded-sm z-10"></div>
-                          <div className="absolute -bottom-2 -right-2 w-5 h-5 bg-red-600 rounded-full shadow-lg border-2 border-black z-20"></div>
-                          <div className="absolute bottom-2 right-2 w-6 h-6 bg-zinc-900 rotate-45 transform translate-x-1 translate-y-1 rounded-sm z-10"></div>
-                          <div className="relative flex items-center justify-center w-24 h-24 border-4 border-zinc-400/50 rounded-full">
-                            <span className="text-zinc-400/80 font-black text-4xl tracking-tighter select-none">SCW</span>
+                        <div className="relative w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96 xl:w-[450px] xl:h-[450px] bg-[#d4d4d8] border-[10px] lg:border-[16px] border-zinc-950 rounded flex items-center justify-center shadow-[0_0_100px_rgba(255,255,255,0.08)] z-10 shrink-0 mx-2 md:mx-4 transition-all duration-500 hover:scale-105">
+                          <div className="absolute inset-1 border-[2px] border-red-600/80 rounded-sm"></div>
+                          <div className="absolute inset-3 border-[2px] border-zinc-100 rounded-sm"></div>
+                          <div className="absolute inset-5 border-[2px] border-red-600/80 rounded-sm"></div>
+                          <div className="absolute -top-3 -left-3 w-6 h-6 lg:w-8 lg:h-8 bg-red-600 rounded-full shadow-lg border-2 border-black z-20"></div>
+                          <div className="absolute top-3 left-3 w-8 h-8 lg:w-10 lg:h-10 bg-zinc-900 rotate-45 transform -translate-x-1 -translate-y-1 rounded-sm z-10"></div>
+                          <div className="absolute -top-3 -right-3 w-6 h-6 lg:w-8 lg:h-8 bg-blue-600 rounded-full shadow-lg border-2 border-black z-20"></div>
+                          <div className="absolute top-3 right-3 w-8 h-8 lg:w-10 lg:h-10 bg-zinc-900 -rotate-45 transform translate-x-1 -translate-y-1 rounded-sm z-10"></div>
+                          <div className="absolute -bottom-3 -left-3 w-6 h-6 lg:w-8 lg:h-8 bg-blue-600 rounded-full shadow-lg border-2 border-black z-20"></div>
+                          <div className="absolute bottom-3 left-3 w-8 h-8 lg:w-10 lg:h-10 bg-zinc-900 -rotate-45 transform -translate-x-1 translate-y-1 rounded-sm z-10"></div>
+                          <div className="absolute -bottom-3 -right-3 w-6 h-6 lg:w-8 lg:h-8 bg-red-600 rounded-full shadow-lg border-2 border-black z-20"></div>
+                          <div className="absolute bottom-3 right-3 w-8 h-8 lg:w-10 lg:h-10 bg-zinc-900 rotate-45 transform translate-x-1 translate-y-1 rounded-sm z-10"></div>
+                          <div className="relative flex items-center justify-center w-32 h-32 lg:w-48 lg:h-48 border-[6px] border-zinc-400/50 rounded-full">
+                            <span className="text-zinc-400/80 font-black text-5xl lg:text-7xl tracking-tighter select-none">SCW</span>
                           </div>
                         </div>
 
                         {/* Este */}
-                        <div className="flex-1 flex justify-start pl-4 md:pl-8">
+                        <div className="flex-1 flex justify-start">
                           {(() => {
                             const zone = parsedZones.find(z => z.zone_type === 'ESTE');
                             if (!zone) return null;
                             return (
-                              <div className="bg-zinc-800/90 p-3 md:p-5 rounded-3xl border-[3px] border-zinc-700/60 flex flex-col items-center gap-2 md:gap-4 relative shadow-2xl backdrop-blur-sm">
-                                <div className="px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-zinc-950 shadow-inner border border-white/5 text-zinc-300">
+                              <div className="bg-zinc-800/90 p-4 md:p-6 lg:p-8 rounded-3xl border-[3px] border-zinc-700/60 flex flex-col items-center gap-3 md:gap-4 lg:gap-5 relative shadow-2xl backdrop-blur-sm transition-transform hover:scale-[1.02] duration-300">
+                                <div className="px-6 py-2 rounded-full text-xs md:text-sm font-black uppercase tracking-widest bg-zinc-950 shadow-inner border border-white/5 text-zinc-300">
                                   Este - ${zone.price}
                                 </div>
-                                <div className="flex flex-row gap-1.5 md:gap-2">
+                                <div className="flex flex-row gap-2 md:gap-3">
                                   {zone.sortedRowNames.map((rowName: string) => (
-                                    <div key={rowName} className="flex items-center justify-center gap-1 flex-col">
-                                      <div className="w-5 h-5 flex items-center justify-center font-bold text-zinc-500 text-[9px] md:text-[10px] bg-zinc-900/60 rounded-md shrink-0">{rowName}</div>
-                                      <div className="flex gap-1 flex-col">
+                                    <div key={rowName} className="flex items-center justify-center gap-2 flex-col">
+                                      <div className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 flex items-center justify-center font-bold text-zinc-500 text-[10px] md:text-xs lg:text-sm bg-zinc-900/60 rounded-md lg:rounded-lg shrink-0">{rowName}</div>
+                                      <div className="flex gap-2 flex-col">
                                         {zone.groupedSeats[rowName].map((seat: any) => {
                                           const isSelected = isSeatSelected(seat.id);
                                           return (
@@ -341,13 +344,13 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                                               key={seat.id}
                                               disabled={!seat.is_available}
                                               onClick={() => toggleSeat(seat, zone)}
-                                              className={`w-6 h-6 md:w-8 md:h-8 rounded-md flex items-center justify-center text-[10px] md:text-[11px] font-black transition-all shadow-md shrink-0 ${!seat.is_available ? 'bg-zinc-950 text-zinc-700 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:border-zinc-400 hover:scale-110 z-10'}`}
+                                              className={`w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 rounded-md lg:rounded-lg flex items-center justify-center text-xs md:text-sm lg:text-base font-black transition-all shadow-md shrink-0 ${!seat.is_available ? 'bg-zinc-950 text-zinc-700 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_15px_rgba(239,68,68,0.6)]' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:border-zinc-400 hover:scale-110 z-10 hover:shadow-lg'}`}
                                               title={seat.is_available ? `Fila ${rowName} - Asiento ${seat.seat_number}` : 'Ocupado'}
                                             >{seat.seat_number}</button>
                                           );
                                         })}
                                       </div>
-                                      <div className="w-5 h-5 flex items-center justify-center font-bold text-zinc-500 text-[9px] md:text-[10px] bg-zinc-900/60 rounded-md shrink-0">{rowName}</div>
+                                      <div className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 flex items-center justify-center font-bold text-zinc-500 text-[10px] md:text-xs lg:text-sm bg-zinc-900/60 rounded-md lg:rounded-lg shrink-0">{rowName}</div>
                                     </div>
                                   ))}
                                 </div>
@@ -359,19 +362,19 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
 
                       {/* Sur */}
                       {parsedZones.find(z => z.zone_type === 'SUR') && (
-                        <div className="flex justify-center mt-4 md:mt-8">
+                        <div className="flex justify-center mt-6 md:mt-10 lg:mt-14">
                           {(() => {
                             const zone = parsedZones.find(z => z.zone_type === 'SUR');
                             return (
-                              <div className="bg-zinc-800/90 p-3 md:p-5 rounded-3xl border-[3px] border-zinc-700/60 flex flex-col items-center gap-2 md:gap-4 relative shadow-2xl backdrop-blur-sm">
-                                <div className="px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-zinc-950 shadow-inner border border-white/5 text-zinc-300">
+                              <div className="bg-zinc-800/90 p-4 md:p-6 lg:p-8 rounded-3xl border-[3px] border-zinc-700/60 flex flex-col items-center gap-3 md:gap-4 lg:gap-5 relative shadow-2xl backdrop-blur-sm transition-transform hover:scale-[1.02] duration-300">
+                                <div className="px-6 py-2 rounded-full text-xs md:text-sm font-black uppercase tracking-widest bg-zinc-950 shadow-inner border border-white/5 text-zinc-300">
                                   Sur - ${zone.price}
                                 </div>
-                                <div className="flex flex-col gap-1.5 md:gap-2">
+                                <div className="flex flex-col gap-2 md:gap-3">
                                   {zone.sortedRowNames.map((rowName: string) => (
-                                    <div key={rowName} className="flex items-center justify-center gap-1 flex-row">
-                                      <div className="w-5 h-5 flex items-center justify-center font-bold text-zinc-500 text-[9px] md:text-[10px] bg-zinc-900/60 rounded-md shrink-0">{rowName}</div>
-                                      <div className="flex gap-1 flex-row">
+                                    <div key={rowName} className="flex items-center justify-center gap-2 flex-row">
+                                      <div className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 flex items-center justify-center font-bold text-zinc-500 text-[10px] md:text-xs lg:text-sm bg-zinc-900/60 rounded-md lg:rounded-lg shrink-0">{rowName}</div>
+                                      <div className="flex gap-2 flex-row">
                                         {zone.groupedSeats[rowName].map((seat: any) => {
                                           const isSelected = isSeatSelected(seat.id);
                                           return (
@@ -379,13 +382,13 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                                               key={seat.id}
                                               disabled={!seat.is_available}
                                               onClick={() => toggleSeat(seat, zone)}
-                                              className={`w-6 h-6 md:w-8 md:h-8 rounded-md flex items-center justify-center text-[10px] md:text-[11px] font-black transition-all shadow-md shrink-0 ${!seat.is_available ? 'bg-zinc-950 text-zinc-700 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:border-zinc-400 hover:scale-110 z-10'}`}
+                                              className={`w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 rounded-md lg:rounded-lg flex items-center justify-center text-xs md:text-sm lg:text-base font-black transition-all shadow-md shrink-0 ${!seat.is_available ? 'bg-zinc-950 text-zinc-700 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_15px_rgba(239,68,68,0.6)]' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:border-zinc-400 hover:scale-110 z-10 hover:shadow-lg'}`}
                                               title={seat.is_available ? `Fila ${rowName} - Asiento ${seat.seat_number}` : 'Ocupado'}
                                             >{seat.seat_number}</button>
                                           );
                                         })}
                                       </div>
-                                      <div className="w-5 h-5 flex items-center justify-center font-bold text-zinc-500 text-[9px] md:text-[10px] bg-zinc-900/60 rounded-md shrink-0">{rowName}</div>
+                                      <div className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 flex items-center justify-center font-bold text-zinc-500 text-[10px] md:text-xs lg:text-sm bg-zinc-900/60 rounded-md lg:rounded-lg shrink-0">{rowName}</div>
                                     </div>
                                   ))}
                                 </div>

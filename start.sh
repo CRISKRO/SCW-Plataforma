@@ -21,14 +21,14 @@ echo "Iniciando Frontend de Next.js..."
 cd ../frontend
 FRONTEND_PORT=3000
 if lsof -i tcp:$FRONTEND_PORT -t >/dev/null 2>&1; then
-  echo "⚠️ El puerto $FRONTEND_PORT está ocupado. Buscando un puerto libre..."
+  echo "El puerto $FRONTEND_PORT está ocupado. Buscando un puerto libre..."
   for PORT in 3001 3002 3003 3004; do
     if ! lsof -i tcp:$PORT -t >/dev/null 2>&1; then
       FRONTEND_PORT=$PORT
       break
     fi
   done
-  echo "➡️ Usando puerto $FRONTEND_PORT para el frontend"
+  echo "Usando puerto $FRONTEND_PORT para el frontend"
 fi
 NEXT_PUBLIC_API_URL="http://$LOCAL_IP:8000/api" NEXT_PUBLIC_WHATSAPP_SERVICE="http://$LOCAL_IP:3001" npm run dev -- --hostname 0.0.0.0 --port $FRONTEND_PORT &
 FRONTEND_PID=$!
@@ -39,16 +39,16 @@ node index.js &
 WHATSAPP_PID=$!
 
 echo "========================================================="
-echo "✅ Servidores Iniciados Exitosamente"
-echo "🌐 Frontend (Página Principal): http://localhost:$FRONTEND_PORT"
-echo "⚙️  Backend (API Django):        http://localhost:8000"
+echo "Servidores Iniciados Exitosamente"
+echo "Frontend (Página Principal): http://localhost:$FRONTEND_PORT"
+echo "Backend (API Django):        http://localhost:8000"
 if [ -n "$LOCAL_IP" ]; then
-  echo "📱 Frontend móvil:             http://$LOCAL_IP:$FRONTEND_PORT"
-  echo "📱 Backend móvil (API):         http://$LOCAL_IP:8000"
-  echo "📱 WhatsApp móvil:              http://$LOCAL_IP:3001"
+  echo "Frontend móvil:             http://$LOCAL_IP:$FRONTEND_PORT"
+  echo "Backend móvil (API):         http://$LOCAL_IP:8000"
+  echo "WhatsApp móvil:              http://$LOCAL_IP:3001"
 fi
 echo "========================================================="
-echo "👉 IMPORTANTE: Usa la dirección móvil en el teléfono"
+echo "IMPORTANTE: Usa la dirección móvil en el teléfono"
 echo "   y no http://localhost, porque localhost en el móvil apunta al propio teléfono."
 echo "========================================================="
 echo "Presiona CTRL+C para detener todos los servidores."
