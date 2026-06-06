@@ -26,9 +26,17 @@ api.interceptors.request.use(
     // If sending FormData, let the browser set the Content-Type automatically
     // (it needs to add the multipart boundary). Otherwise use JSON.
     if (config.data instanceof FormData) {
-      delete config.headers['Content-Type'];
+      if (typeof config.headers.delete === 'function') {
+        config.headers.delete('Content-Type');
+      } else {
+        delete config.headers['Content-Type'];
+      }
     } else {
-      config.headers['Content-Type'] = 'application/json';
+      if (typeof config.headers.set === 'function') {
+        config.headers.set('Content-Type', 'application/json');
+      } else {
+        config.headers['Content-Type'] = 'application/json';
+      }
     }
     return config;
   },
