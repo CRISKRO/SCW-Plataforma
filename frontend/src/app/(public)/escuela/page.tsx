@@ -340,8 +340,8 @@ export default function EscuelaPage() {
                         <input required type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full bg-black border border-white/20 rounded-xl p-4 text-white focus:outline-none focus:border-red-500 transition-colors bg-zinc-900/50" readOnly />
                       </div>
                       <div>
-                        <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">WhatsApp ✅ Verificado</label>
-                        <input type="tel" value={formData.phone} readOnly className="w-full bg-zinc-900/50 border border-green-500/30 rounded-xl p-4 text-green-400 font-medium" />
+                        <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">WhatsApp / Teléfono</label>
+                        <input required type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full bg-black border border-white/20 rounded-xl p-4 text-white focus:outline-none focus:border-red-500 transition-colors" placeholder="Tu número de celular" />
                       </div>
                     </div>
 
