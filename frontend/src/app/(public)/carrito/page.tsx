@@ -52,6 +52,12 @@ export default function CartPage() {
   }, [user]);
 
   const handleCheckout = async () => {
+    if (!user) {
+      alert("Por favor inicia sesión o regístrate para poder procesar tu compra.");
+      router.push('/login?redirect=/carrito');
+      return;
+    }
+    
     if (!email) {
       alert("Por favor ingresa tu correo electrónico.");
       return;
