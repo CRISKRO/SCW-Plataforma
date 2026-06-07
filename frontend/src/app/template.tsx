@@ -13,7 +13,7 @@ export default function Template({ children }: { children: ReactNode }) {
         animate={{ 
           opacity: [0, 1, 0.2, 0.9, 0],
         }}
-        transition={{ duration: 0.6, times: [0, 0.05, 0.1, 0.2, 1], ease: "easeOut" }}
+        transition={{ duration: 1.2, times: [0, 0.05, 0.1, 0.2, 1], ease: "easeOut" }}
       >
         <svg viewBox="0 0 500 1000" className="w-full h-full object-cover opacity-90" preserveAspectRatio="xMidYMid slice">
           {/* Main trunk outer glow */}
