@@ -10,7 +10,7 @@ import { paymentService } from '@/services/payments.services';
 import api from '@/services/api';
 
 export default function UserDashboard() {
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated, logout, updateUser } = useAuthStore();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
@@ -21,6 +21,12 @@ export default function UserDashboard() {
   const [tuitionFee, setTuitionFee] = useState<string>('0.00');
   const [payingTuition, setPayingTuition] = useState(false);
 
+  // Profile state
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [updatingProfile, setUpdatingProfile] = useState(false);
+  const [profileMessage, setProfileMessage] = useState({ type: '', text: '' });
+
   useEffect(() => {
     setMounted(true);
     if (!isAuthenticated) {
@@ -28,8 +34,12 @@ export default function UserDashboard() {
     } else {
       fetchOrders();
       fetchStudentData();
+      if (user) {
+        setFirstName(user.first_name || '');
+        setLastName(user.last_name || '');
+      }
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, user]);
 
   const fetchOrders = async () => {
     try {
@@ -73,6 +83,35 @@ export default function UserDashboard() {
   const handleLogout = () => {
     logout();
     router.push('/');
+  };
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUpdatingProfile(true);
+    setProfileMessage({ type: '', text: '' });
+    
+    try {
+      const res = await api.patch('/auth/profile/', {
+        first_name: firstName,
+        last_name: lastName
+      });
+      
+      updateUser({
+        first_name: res.data.first_name,
+        last_name: res.data.last_name
+      });
+      
+      setProfileMessage({ type: 'success', text: 'Datos actualizados correctamente.' });
+      setTimeout(() => setProfileMessage({ type: '', text: '' }), 3000);
+    } catch (error: any) {
+      console.error(error);
+      setProfileMessage({ 
+        type: 'error', 
+        text: error?.response?.data?.error || 'Error al actualizar los datos.' 
+      });
+    } finally {
+      setUpdatingProfile(false);
+    }
   };
 
   if (!mounted || !isAuthenticated) return null;
@@ -212,28 +251,55 @@ export default function UserDashboard() {
         {activeTab === 'settings' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-2xl bg-zinc-900 border border-white/10 rounded-xl p-8">
             <h2 className="text-2xl font-bold uppercase tracking-tight mb-6">Datos Personales</h2>
-            <p className="text-zinc-400 mb-8">Para actualizar tu correo o contraseña, por favor contacta al administrador, ya que estos datos son fundamentales para la seguridad de tu suscripción.</p>
+            <p className="text-zinc-400 mb-8">Para actualizar tu correo o contraseña, por favor contacta al administrador, ya que estos datos son fundamentales para la seguridad de tu cuenta.</p>
             
-            <div className="space-y-6">
+            {profileMessage.text && (
+              <div className={`p-4 rounded-lg mb-6 text-sm font-bold uppercase tracking-widest border ${
+                profileMessage.type === 'success' 
+                  ? 'bg-green-500/10 text-green-500 border-green-500/20' 
+                  : 'bg-red-500/10 text-red-500 border-red-500/20'
+              }`}>
+                {profileMessage.text}
+              </div>
+            )}
+
+            <form onSubmit={handleUpdateProfile} className="space-y-6">
               <div>
                 <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Nombre</label>
-                <input type="text" disabled value={user?.first_name || ''} className="w-full bg-black border border-white/10 rounded-lg px-4 py-3 text-zinc-400 cursor-not-allowed" />
+                <input 
+                  type="text" 
+                  value={firstName} 
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="w-full bg-black border border-white/10 rounded-lg px-4 py-3 text-white focus:border-white/30 focus:outline-none transition-colors" 
+                  required
+                />
               </div>
               <div>
                 <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Apellidos</label>
-                <input type="text" disabled value={user?.last_name || ''} className="w-full bg-black border border-white/10 rounded-lg px-4 py-3 text-zinc-400 cursor-not-allowed" />
+                <input 
+                  type="text" 
+                  value={lastName} 
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="w-full bg-black border border-white/10 rounded-lg px-4 py-3 text-white focus:border-white/30 focus:outline-none transition-colors" 
+                  required
+                />
               </div>
               <div>
-                <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Correo Electrónico</label>
-                <input type="email" disabled value={user?.email || ''} className="w-full bg-black border border-white/10 rounded-lg px-4 py-3 text-zinc-400 cursor-not-allowed" />
+                <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Correo Electrónico (Solo Lectura)</label>
+                <input type="email" disabled value={user?.email || ''} className="w-full bg-black/50 border border-white/5 rounded-lg px-4 py-3 text-zinc-500 cursor-not-allowed" />
               </div>
-            </div>
-            
-            <div className="mt-8 pt-8 border-t border-white/10">
-              <button disabled className="bg-white/10 text-zinc-500 cursor-not-allowed font-bold uppercase tracking-widest px-6 py-3 rounded-lg w-full">
-                Actualizar Datos (Próximamente)
-              </button>
-            </div>
+              
+              <div className="mt-8 pt-8 border-t border-white/10">
+                <button 
+                  type="submit" 
+                  disabled={updatingProfile}
+                  className="bg-white text-black hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-widest px-6 py-3 rounded-lg w-full transition-colors flex justify-center items-center gap-2"
+                >
+                  {updatingProfile && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {updatingProfile ? 'Actualizando...' : 'Actualizar Datos'}
+                </button>
+              </div>
+            </form>
           </motion.div>
         )}
 
