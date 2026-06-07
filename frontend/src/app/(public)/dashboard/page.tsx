@@ -24,6 +24,10 @@ export default function UserDashboard() {
   // Profile state
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [address, setAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [zipcode, setZipcode] = useState('');
   const [updatingProfile, setUpdatingProfile] = useState(false);
   const [profileMessage, setProfileMessage] = useState({ type: '', text: '' });
 
@@ -37,6 +41,10 @@ export default function UserDashboard() {
       if (user) {
         setFirstName(user.first_name || '');
         setLastName(user.last_name || '');
+        setAddress(user.address || '');
+        setCity(user.city || '');
+        setState(user.state || '');
+        setZipcode(user.zipcode || '');
       }
     }
   }, [isAuthenticated, router, user]);
@@ -93,12 +101,20 @@ export default function UserDashboard() {
     try {
       const res = await api.patch('/auth/profile/', {
         first_name: firstName,
-        last_name: lastName
+        last_name: lastName,
+        address,
+        city,
+        state,
+        zipcode
       });
       
       updateUser({
         first_name: res.data.first_name,
-        last_name: res.data.last_name
+        last_name: res.data.last_name,
+        address: res.data.address,
+        city: res.data.city,
+        state: res.data.state,
+        zipcode: res.data.zipcode
       });
       
       setProfileMessage({ type: 'success', text: 'Datos actualizados correctamente.' });
@@ -287,6 +303,51 @@ export default function UserDashboard() {
               <div>
                 <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Correo Electrónico (Solo Lectura)</label>
                 <input type="email" disabled value={user?.email || ''} className="w-full bg-black/50 border border-white/5 rounded-lg px-4 py-3 text-zinc-500 cursor-not-allowed" />
+              </div>
+              
+              <div className="pt-6">
+                <h3 className="text-lg font-bold uppercase tracking-tight mb-4 text-zinc-300">Datos de Envío Predeterminados</h3>
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Dirección (Calle y Número)</label>
+                    <input 
+                      type="text" 
+                      value={address} 
+                      onChange={(e) => setAddress(e.target.value)}
+                      className="w-full bg-black border border-white/10 rounded-lg px-4 py-3 text-white focus:border-white/30 focus:outline-none transition-colors" 
+                      placeholder="Ej. Av. Siempre Viva 123"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Ciudad</label>
+                      <input 
+                        type="text" 
+                        value={city} 
+                        onChange={(e) => setCity(e.target.value)}
+                        className="w-full bg-black border border-white/10 rounded-lg px-4 py-3 text-white focus:border-white/30 focus:outline-none transition-colors" 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Estado</label>
+                      <input 
+                        type="text" 
+                        value={state} 
+                        onChange={(e) => setState(e.target.value)}
+                        className="w-full bg-black border border-white/10 rounded-lg px-4 py-3 text-white focus:border-white/30 focus:outline-none transition-colors" 
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Código Postal</label>
+                    <input 
+                      type="text" 
+                      value={zipcode} 
+                      onChange={(e) => setZipcode(e.target.value)}
+                      className="w-full bg-black border border-white/10 rounded-lg px-4 py-3 text-white focus:border-white/30 focus:outline-none transition-colors" 
+                    />
+                  </div>
+                </div>
               </div>
               
               <div className="mt-8 pt-8 border-t border-white/10">
