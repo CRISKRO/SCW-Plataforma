@@ -138,6 +138,8 @@ class CreateOrderView(APIView):
             try:
                 config = get_active_config()
                 access_token = config.mercadopago_access_token if config.mercadopago_access_token else settings.MERCADOPAGO_ACCESS_TOKEN
+                if not access_token:
+                    raise Exception("No Mercado Pago Access Token configured.")
                 mp = mercadopago.SDK(access_token)
                 frontend_url = request.headers.get('origin', 'http://localhost:3000')
                 backend_url = f"{request.scheme}://{request.get_host()}"
@@ -160,7 +162,7 @@ class CreateOrderView(APIView):
                 preference_response = mp.preference().create(preference_data)
                 preference = preference_response.get("response", {})
                 
-                is_test = access_token.startswith("TEST-") or "test" in data['contact_email'].lower() or "prueba" in data['contact_email'].lower()
+                is_test = (access_token and access_token.startswith("TEST-")) or "test" in data['contact_email'].lower() or "prueba" in data['contact_email'].lower()
                 init_point = preference.get("sandbox_init_point") if is_test else preference.get("init_point")
                 if not init_point:
                     init_point = preference.get("init_point", "")
@@ -280,6 +282,8 @@ class ProcessCardPaymentView(APIView):
         try:
             config = get_active_config()
             access_token = config.mercadopago_access_token if config.mercadopago_access_token else settings.MERCADOPAGO_ACCESS_TOKEN
+            if not access_token:
+                raise Exception("No Mercado Pago Access Token configured.")
             mp = mercadopago.SDK(access_token)
             payment_data = {
                 "transaction_amount": total_amount,
