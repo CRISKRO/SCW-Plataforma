@@ -82,7 +82,7 @@ export default function Home() {
               { label: 'Todos los Eventos', href: '/eventos', primary: false },
             ],
           }));
-          setSlides([...staticSlides, ...eventSlides]);
+          setSlides([...eventSlides, ...staticSlides]);
         }
       } catch (error) {
         console.error("Error loading home data:", error);
@@ -112,13 +112,13 @@ export default function Home() {
       <section className="relative min-h-[110dvh] md:min-h-0 md:h-screen flex items-center justify-center overflow-hidden pb-32 md:pb-0">
 
         {/* Background: full-screen for static slides, dark for event slides */}
-        <AnimatePresence mode="wait">
+        <AnimatePresence>
           <motion.div
             key={currentSlide}
-            initial={{ opacity: 0, scale: 1.06 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 1.4, ease: "easeInOut" }}
+            transition={{ duration: 1, ease: "easeInOut" }}
             className="absolute inset-0 z-0"
           >
             {slide.id ? (
@@ -155,10 +155,10 @@ export default function Home() {
           <AnimatePresence mode="wait">
             <motion.div
               key={`content-${currentSlide}`}
-              initial={{ opacity: 0, y: 40 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.7, ease: "easeOut" }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
               className={`flex flex-col-reverse lg:flex-row items-center gap-6 lg:gap-12 ${slide.id ? 'justify-between' : 'justify-start'}`}
             >
               {/* Left: Text content */}
@@ -226,10 +226,10 @@ export default function Home() {
               {/* Right: Event poster (only for event slides) */}
               {slide.id && slide.image && (
                 <motion.div
-                  initial={{ opacity: 0, x: 60 }}
+                  initial={{ opacity: 0, x: 30 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 60 }}
-                  transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
+                  exit={{ opacity: 0, x: 30 }}
+                  transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
                   className="block flex-shrink-0 relative w-48 sm:w-64 lg:w-96 xl:w-[420px] mx-auto lg:mx-0"
                 >
                   {/* Glow effect behind poster */}
