@@ -2,21 +2,19 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, ShoppingCart, User, Grid } from 'lucide-react';
-import { useAuthStore } from '@/store/authStore';
+import { Home, ShoppingCart, Grid, Image as ImageIcon, Star } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
-  const { isAuthenticated } = useAuthStore();
   const totalItems = useCartStore((state) => state.getTotalItems());
 
   const navItems = [
     { name: 'Inicio', href: '/', icon: Home },
     { name: 'Tienda', href: '/tienda', icon: Grid },
     { name: 'Carrito', href: '/carrito', icon: ShoppingCart, badge: totalItems },
-    { name: 'Videos', href: '/premium', icon: Search },
-    { name: 'Más', href: isAuthenticated ? '/dashboard' : '/login', icon: User },
+    { name: 'Galería', href: '/galeria', icon: ImageIcon },
+    { name: 'Premium', href: '/premium', icon: Star },
   ];
 
   return (
