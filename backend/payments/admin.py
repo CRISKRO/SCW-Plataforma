@@ -13,3 +13,16 @@ class OrderAdmin(admin.ModelAdmin):
     search_fields = ('contact_email', 'mp_payment_id')
     inlines = [OrderItemInline]
     readonly_fields = ('mp_preference_id', 'mp_payment_id')
+
+    def save_model(self, request, obj, form, change):
+        if change:
+            old_obj = Order.objects.get(pk=obj.pk)
+            if old_obj.status != obj.status and obj.status in ['PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']:
+                try:
+                    from .email_orders import send_status_update_email
+                    send_status_update_email(obj)
+                except Exception as e:
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.error(f"Error enviando correo de actualizacion de orden: {str(e)}")
+        super().save_model(request, obj, form, change)

@@ -226,12 +226,19 @@ export default function UserDashboard() {
                       <div>
                         <span className={`px-3 py-1 rounded text-xs font-bold tracking-widest uppercase inline-block ${
                           order.status === 'COMPLETED' ? 'bg-green-500/20 text-green-500 border border-green-500/30' : 
+                          order.status === 'DELIVERED' ? 'bg-green-500/20 text-green-500 border border-green-500/30' : 
                           order.status === 'SHIPPED' ? 'bg-blue-500/20 text-blue-500 border border-blue-500/30' : 
                           order.status === 'PAID' ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/30' : 
                           order.status === 'CANCELLED' ? 'bg-red-500/20 text-red-500 border border-red-500/30' : 
                           'bg-yellow-500/20 text-yellow-500 border border-yellow-500/30'
                         }`}>
-                          {order.status === 'PAID' ? 'PAGADO (BOLETOS ENVIADOS)' : order.status === 'PENDING' ? 'PENDIENTE DE PAGO' : order.status}
+                          {order.status === 'PAID' ? 'PAGADO (BOLETOS ENVIADOS)' : 
+                           order.status === 'PENDING' ? 'PENDIENTE DE PAGO' : 
+                           order.status === 'PROCESSING' ? 'PREPARANDO ENVÍO' :
+                           order.status === 'SHIPPED' ? 'ENVIADO' :
+                           order.status === 'DELIVERED' ? 'ENTREGADO' :
+                           order.status === 'CANCELLED' ? 'CANCELADO' :
+                           order.status === 'COMPLETED' ? 'COMPLETADO' : order.status}
                         </span>
                       </div>
                     </div>
