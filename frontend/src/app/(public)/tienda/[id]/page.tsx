@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ShoppingCart, ShieldCheck, Trophy, Truck, ArrowLeft, Heart } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
+import { useToastStore } from '@/store/toastStore';
+import Image from 'next/image';
 import api from '@/services/api';
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -48,7 +50,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       size: selectedSize || 'N/A',
     });
     
-    // Optional: show toast, but ML usually redirects or opens a drawer. We just stay here.
+    useToastStore.getState().addToast('¡Agregado al carrito!', 'success');
   };
 
   const handleBuyNow = () => {
@@ -103,10 +105,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             {/* Image Area */}
             <div className="relative w-full aspect-square md:aspect-[4/3] bg-white flex items-center justify-center p-8 border-b md:border-b-0 md:border-r border-white/5">
               {product.image_url ? (
-                <img 
+                <Image 
                   src={product.image_url} 
                   alt={product.name} 
-                  className="max-w-full max-h-full object-contain mix-blend-multiply"
+                  fill
+                  className="object-contain mix-blend-multiply p-8"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  priority
                 />
               ) : (
                 <div className="text-zinc-400 font-bold uppercase tracking-widest text-lg">Sin Imagen</div>

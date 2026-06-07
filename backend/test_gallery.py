@@ -3,7 +3,7 @@ import json
 import os
 import sys
 
-def test_api():
+def test_api(): 
     # Attempt to hit the endpoint locally to see if it responds with 401 or 404
     url = "http://localhost:8000/api/gallery/images/"
     try:

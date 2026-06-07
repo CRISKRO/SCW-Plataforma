@@ -15,6 +15,7 @@ export const viewport = {
 };
 
 import AuthProvider from "@/components/AuthProvider";
+import ToastProvider from "@/components/ToastProvider";
 
 export default function RootLayout({
   children,
@@ -26,6 +27,7 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased bg-black text-white`}>
         <AuthProvider>
           {children}
+          <ToastProvider />
         </AuthProvider>
       </body>
     </html>

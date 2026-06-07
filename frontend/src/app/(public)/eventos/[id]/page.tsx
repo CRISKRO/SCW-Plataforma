@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, MapPin, Ticket, ShoppingCart, X, CheckCircle, Minus, Plus as PlusIcon } from 'lucide-react';
 import api from '@/services/api';
 import { useCartStore } from '@/store/cartStore';
+import { useToastStore } from '@/store/toastStore';
 
 interface SelectedSeat {
   seatId: number;
@@ -119,6 +120,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
     });
     setSelectedSeats([]);
     setShowConfirmPanel(false);
+    useToastStore.getState().addToast(`Se agregaron ${selectedSeats.length} boleto(s) al carrito`, 'success');
   };
 
   const totalPrice = selectedSeats.reduce((acc, s) => acc + s.price, 0);

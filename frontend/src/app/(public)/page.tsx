@@ -236,11 +236,13 @@ export default function Home() {
                   <div className="absolute -inset-4 sm:-inset-8 bg-red-600/15 blur-2xl sm:blur-3xl rounded-full" />
                   {/* Poster image */}
                   <div className="relative w-full aspect-[2/3] rounded-xl sm:rounded-2xl overflow-hidden border border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.9)]">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <Image
                       src={slide.image}
                       alt={slide.title}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      priority
                     />
                     {/* Subtle gradient overlay on poster */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
@@ -417,8 +419,8 @@ export default function Home() {
           </Link>
           <div className="text-center">
             <p className="text-xs text-zinc-500 mb-2 uppercase tracking-widest font-semibold">¿Quieres ver más acción?</p>
-            <Link href="/galeria" className="inline-flex items-center text-sm font-bold uppercase tracking-widest text-red-500 hover:text-red-400 transition-colors border-b border-red-500/30 hover:border-red-400 pb-1">
-              Ver Galería
+            <Link href="/premium" className="inline-flex items-center text-sm font-bold uppercase tracking-widest text-red-500 hover:text-red-400 transition-colors border-b border-red-500/30 hover:border-red-400 pb-1">
+              Ver SCW Premium
             </Link>
           </div>
         </div>
