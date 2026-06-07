@@ -47,13 +47,17 @@ export default function AdminEventsPage() {
     },
     { key: 'location', label: 'Ubicación' },
     { 
-      key: 'is_active', 
+      key: 'status', 
       label: 'Estado',
-      render: (val: boolean) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-bold ${val ? 'bg-green-500/20 text-green-500' : 'bg-zinc-500/20 text-zinc-400'}`}>
-          {val ? 'Activo' : 'Inactivo'}
-        </span>
-      )
+      render: (val: string) => {
+        const badges: any = {
+          'DRAFT': <span className="px-2 py-1 bg-zinc-500/20 text-zinc-400 rounded-full text-xs font-bold">Borrador</span>,
+          'SCHEDULED': <span className="px-2 py-1 bg-blue-500/20 text-blue-500 rounded-full text-xs font-bold">Programado</span>,
+          'LIVE': <span className="px-2 py-1 bg-red-500/20 text-red-500 rounded-full text-xs font-bold animate-pulse">En Vivo</span>,
+          'COMPLETED': <span className="px-2 py-1 bg-green-500/20 text-green-500 rounded-full text-xs font-bold">Finalizado</span>
+        };
+        return badges[val] || <span className="px-2 py-1 bg-zinc-500/20 text-zinc-400 rounded-full text-xs font-bold">{val}</span>;
+      }
     }
   ];
 

@@ -51,6 +51,7 @@ let client = null;
     authStrategy: authStrategy,
     puppeteer: {
       headless: true,
+      executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -58,7 +59,6 @@ let client = null;
         '--disable-dev-shm-usage',
         '--no-first-run',
         '--no-zygote',
-        '--single-process',
         '--disable-extensions',
         '--disable-audio-output',
         '--disable-software-rasterizer',

@@ -34,12 +34,32 @@ class DashboardStatsView(APIView):
             created_at__month=now.month
         )
         monthly_sales = current_month_orders.aggregate(total=Sum('total_amount'))['total'] or 0
+        
+        # Órdenes pendientes de envío (PAID o PROCESSING)
+        pending_orders_count = Order.objects.filter(status__in=['PAID', 'PROCESSING']).count()
+        
+        # Datos para la gráfica de ventas (últimos 7 días)
+        from django.db.models.functions import TruncDate
+        seven_days_ago = now - timezone.timedelta(days=7)
+        recent_orders = Order.objects.filter(status='PAID', created_at__gte=seven_days_ago)
+        sales_by_date = recent_orders.annotate(date=TruncDate('created_at')).values('date').annotate(total=Sum('total_amount')).order_by('date')
+        
+        sales_chart_data = []
+        for i in range(7):
+            day = (now - timezone.timedelta(days=6-i)).date()
+            day_total = next((item['total'] for item in sales_by_date if item['date'] == day), 0)
+            sales_chart_data.append({
+                "date": day.strftime('%d/%m'),
+                "total": float(day_total)
+            })
 
         return Response({
             "active_events": active_events,
             "roster_count": roster_count,
             "total_users": total_users,
-            "monthly_sales": float(monthly_sales)
+            "monthly_sales": float(monthly_sales),
+            "pending_orders_count": pending_orders_count,
+            "sales_chart_data": sales_chart_data
         })
 
 class SystemConfigurationView(generics.RetrieveUpdateAPIView):

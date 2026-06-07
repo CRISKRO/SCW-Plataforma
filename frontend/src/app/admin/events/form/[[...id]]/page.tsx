@@ -21,7 +21,7 @@ export default function EventFormPage() {
     date_time: '',
     location: '',
     ticket_link: '',
-    is_active: true
+    status: 'DRAFT'
   });
   
   const [bannerUrl, setBannerUrl] = useState('');
@@ -45,7 +45,7 @@ export default function EventFormPage() {
             date_time: formattedDate,
             location: data.location || '',
             ticket_link: data.ticket_link || '',
-            is_active: data.is_active !== undefined ? data.is_active : true
+            status: data.status || 'DRAFT'
           });
           if (data.banner_url) {
             setBannerUrl(data.banner_url);
@@ -92,7 +92,7 @@ export default function EventFormPage() {
       data.append('date_time', formData.date_time);
       data.append('location', formData.location);
       data.append('ticket_link', formData.ticket_link);
-      data.append('is_active', String(formData.is_active));
+      data.append('status', formData.status);
       
       if (bannerFile) {
         data.append('banner', bannerFile);
@@ -200,18 +200,19 @@ export default function EventFormPage() {
           ></textarea>
         </div>
 
-        <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            name="is_active"
-            id="is_active"
-            checked={formData.is_active}
+        <div className="space-y-2">
+          <label className="text-sm font-bold text-white uppercase tracking-widest">Estado del Evento</label>
+          <select
+            name="status"
+            value={formData.status}
             onChange={handleChange}
-            className="w-5 h-5 accent-red-500"
-          />
-          <label htmlFor="is_active" className="text-white font-medium">
-            Evento Activo (Visible al público)
-          </label>
+            className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors appearance-none"
+          >
+            <option value="DRAFT">Borrador (No visible)</option>
+            <option value="SCHEDULED">Programado (A la venta)</option>
+            <option value="LIVE">En Vivo</option>
+            <option value="COMPLETED">Finalizado</option>
+          </select>
         </div>
 
         <div className="pt-4 border-t border-white/10">
