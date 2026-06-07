@@ -1,5 +1,6 @@
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import MobileBottomNav from '@/components/MobileBottomNav';
 
 export default function PublicLayout({
   children,
@@ -9,10 +10,11 @@ export default function PublicLayout({
   return (
     <>
       <Navbar />
-      <main className="min-h-screen">
+      <main className="min-h-screen pb-16 md:pb-0">
         {children}
       </main>
       <Footer />
+      <MobileBottomNav />
     </>
   );
 }

@@ -74,7 +74,7 @@ export default function StorePage() {
         {loading ? (
           <div className="text-center text-zinc-500 py-12 animate-pulse">Cargando catálogo...</div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {filteredProducts.map((product, i) => (
               <Link href={`/tienda/${product.id}`} key={product.id} className="block">
                 <motion.div 
@@ -92,13 +92,12 @@ export default function StorePage() {
                     )}
                   </div>
 
-                  {/* ML Style Info Area */}
-                  <div className="p-5 flex-1 flex flex-col">
-                    <p className="text-2xl font-medium text-white mb-1">
+                  <div className="p-3 sm:p-5 flex-1 flex flex-col">
+                    <p className="text-xl sm:text-2xl font-medium text-white mb-1">
                       ${parseFloat(product.price).toFixed(2)}
                     </p>
                     
-                    <p className="text-xs font-bold text-green-500 mb-3 flex items-center gap-1">
+                    <p className="text-[10px] sm:text-xs font-bold text-green-500 mb-2 sm:mb-3 flex items-center gap-1">
                       Envío gratis
                     </p>
 
