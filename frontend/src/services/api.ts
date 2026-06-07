@@ -8,7 +8,11 @@ const envApiUrl = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API
   ? process.env.NEXT_PUBLIC_API_URL
   : undefined;
 
-const API_URL = envApiUrl || `${browserOrigin.replace(/:\d+$/, '')}:8000/api`;
+// Si estamos en desarrollo, forzamos la ruta del backend local (así evitamos que apunte a producción por error)
+const isDevelopment = typeof process !== 'undefined' && process.env.NODE_ENV === 'development';
+const API_URL = isDevelopment 
+  ? `${browserOrigin.replace(/:\d+$/, '')}:8000/api` 
+  : (envApiUrl || `${browserOrigin.replace(/:\d+$/, '')}:8000/api`);
 
 const api = axios.create({
   baseURL: API_URL,
