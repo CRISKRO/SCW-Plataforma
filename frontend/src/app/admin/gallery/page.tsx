@@ -58,9 +58,10 @@ export default function AdminGalleryPage() {
       
       // Refresh list
       fetchImages();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating image", error);
-      alert("Hubo un error al subir la imagen");
+      const errMsg = error.response?.data ? JSON.stringify(error.response.data) : error.message;
+      alert(`Hubo un error al subir la imagen: ${errMsg}`);
     } finally {
       setSubmitting(false);
     }
