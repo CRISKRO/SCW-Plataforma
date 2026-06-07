@@ -32,11 +32,6 @@ export default function MobileBottomNav() {
             >
               <div className="relative">
                 <Icon className={`w-6 h-6 ${isActive ? 'fill-current' : ''}`} strokeWidth={isActive ? 2 : 1.5} />
-                {item.badge && item.badge > 0 ? (
-                  <span className="absolute -top-1 -right-2 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                    {item.badge}
-                  </span>
-                ) : null}
               </div>
               <span className="text-[10px] font-medium">{item.name}</span>
             </Link>
