@@ -88,6 +88,8 @@ class CreateOrderView(APIView):
 
             # Create Order
             user = request.user if request.user.is_authenticated else None
+            from decimal import Decimal
+            shipping_cost_val = Decimal(str(data.get('shipping_cost', 0)))
             
             order = Order.objects.create(
                 user=user,
@@ -97,8 +99,8 @@ class CreateOrderView(APIView):
                 shipping_city=data.get('shipping_city', ''),
                 shipping_state=data.get('shipping_state', ''),
                 shipping_zipcode=data.get('shipping_zipcode', ''),
-                shipping_cost=data.get('shipping_cost', 0),
-                total_amount=total_amount + data.get('shipping_cost', 0),
+                shipping_cost=shipping_cost_val,
+                total_amount=Decimal(str(total_amount)) + shipping_cost_val,
                 status=Order.Status.PENDING
             )
 
