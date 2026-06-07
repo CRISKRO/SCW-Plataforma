@@ -12,7 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'first_name', 'last_name', 'phone_number', 'role')
+        fields = ('id', 'email', 'first_name', 'last_name', 'phone_number', 'address', 'city', 'state', 'zipcode', 'role')
         read_only_fields = ('id', 'role', 'email')
 
     def get_role(self, obj):

@@ -88,6 +88,17 @@ class CreateOrderView(APIView):
 
             # Create Order
             user = request.user if request.user.is_authenticated else None
+            
+            if user:
+                if data.get('contact_phone'):
+                    user.phone_number = data['contact_phone']
+                if data.get('shipping_address'):
+                    user.address = data['shipping_address']
+                    user.city = data.get('shipping_city', '')
+                    user.state = data.get('shipping_state', '')
+                    user.zipcode = data.get('shipping_zipcode', '')
+                user.save()
+
             from decimal import Decimal
             shipping_cost_val = Decimal(str(data.get('shipping_cost', 0)))
             

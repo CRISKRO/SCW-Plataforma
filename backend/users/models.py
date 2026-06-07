@@ -18,6 +18,11 @@ class CustomUser(AbstractUser):
     
     # Custom fields requested
     phone_number = models.CharField(_('número de teléfono'), max_length=20, blank=True, null=True)
+    address = models.CharField(_('dirección'), max_length=255, blank=True, null=True)
+    city = models.CharField(_('ciudad'), max_length=100, blank=True, null=True)
+    state = models.CharField(_('estado'), max_length=100, blank=True, null=True)
+    zipcode = models.CharField(_('código postal'), max_length=20, blank=True, null=True)
+    
     role = models.CharField(
         max_length=20,
         choices=Role.choices,

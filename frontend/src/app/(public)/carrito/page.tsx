@@ -32,6 +32,10 @@ export default function CartPage() {
     setMounted(true);
     if (user?.email) setEmail(user.email);
     if (user?.phone_number) setPhone(user.phone_number);
+    if (user?.address) setAddress(user.address);
+    if (user?.city) setCity(user.city);
+    if (user?.state) setState(user.state);
+    if (user?.zipcode) setZipcode(user.zipcode);
     
     // Fetch shipping cost from config
     const fetchConfig = async () => {
