@@ -47,9 +47,14 @@ export default function EscuelaPage() {
   const [idDocument, setIdDocument] = useState<File | null>(null);
   const [medicalCertificate, setMedicalCertificate] = useState<File | null>(null);
 
-  // Pre-fill user data if logged in
+  // Pre-fill user data if logged in or from session
   useEffect(() => {
-    if (user) {
+    const saved = sessionStorage.getItem('dojo_form_data');
+    if (saved) {
+      try {
+        setFormData(prev => ({ ...prev, ...JSON.parse(saved) }));
+      } catch (e) {}
+    } else if (user) {
       setFormData(prev => ({
         ...prev,
         name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
@@ -58,6 +63,18 @@ export default function EscuelaPage() {
       }));
     }
   }, [user]);
+
+  // Save form data to session storage
+  useEffect(() => {
+    sessionStorage.setItem('dojo_form_data', JSON.stringify(formData));
+  }, [formData]);
+
+  // Restore code sent status
+  useEffect(() => {
+    if (sessionStorage.getItem('dojo_code_sent') === 'true') {
+      setCodeSent(true);
+    }
+  }, []);
 
   // Determine starting step
   useEffect(() => {
@@ -75,7 +92,12 @@ export default function EscuelaPage() {
         } catch (e) {
           // not enrolled or error
         }
-        setStep('verify_email');
+        
+        if (sessionStorage.getItem('dojo_email_verified') === 'true') {
+          setStep('form');
+        } else {
+          setStep('verify_email');
+        }
       } else {
         setStep('check');
       }
@@ -90,6 +112,7 @@ export default function EscuelaPage() {
       const res = await api.post('/auth/send-email-otp/');
       if (res.data.error) throw new Error(res.data.error);
       setCodeSent(true);
+      sessionStorage.setItem('dojo_code_sent', 'true');
     } catch (error: any) {
       setVerifyError(error.response?.data?.error || error.message || 'Error al enviar el código al correo.');
     } finally {
@@ -102,6 +125,7 @@ export default function EscuelaPage() {
     try {
       const res = await api.post('/auth/verify-email-otp/', { code: verifyCode });
       if (res.data.error) throw new Error(res.data.error);
+      sessionStorage.setItem('dojo_email_verified', 'true');
       setStep('form');
     } catch (error: any) {
       setVerifyError(error.response?.data?.error || error.message || 'Código incorrecto. Intenta de nuevo.');
@@ -125,6 +149,9 @@ export default function EscuelaPage() {
 
       await api.post('/students/enrollments/', data);
       setStep('success');
+      sessionStorage.removeItem('dojo_email_verified');
+      sessionStorage.removeItem('dojo_code_sent');
+      sessionStorage.removeItem('dojo_form_data');
     } catch (error: any) {
       console.error(error);
       const serverError = error.response?.data;
