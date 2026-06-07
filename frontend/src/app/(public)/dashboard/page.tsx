@@ -340,20 +340,26 @@ export default function UserDashboard() {
                 <div className="flex flex-col items-center gap-2">
                   <span className="text-3xl font-black text-white">${tuitionFee} <span className="text-sm text-zinc-500 font-medium">MXN / mes</span></span>
                   
-                  <button 
-                    onClick={handlePayTuition}
-                    disabled={payingTuition}
-                    className="mt-4 flex items-center justify-center gap-2 w-full max-w-sm bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold uppercase tracking-widest py-3 px-6 rounded-xl transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50"
-                  >
-                    {payingTuition ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <>
-                        <CreditCard className="w-5 h-5" />
-                        Pagar Mensualidad
-                      </>
-                    )}
-                  </button>
+                  {studentData.payment_status !== 'PAID' ? (
+                    <button 
+                      onClick={handlePayTuition}
+                      disabled={payingTuition}
+                      className="mt-4 flex items-center justify-center gap-2 w-full max-w-sm bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold uppercase tracking-widest py-3 px-6 rounded-xl transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50"
+                    >
+                      {payingTuition ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <>
+                          <CreditCard className="w-5 h-5" />
+                          Pagar Mensualidad
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <div className="mt-4 flex items-center justify-center w-full max-w-sm bg-green-500/10 border border-green-500/20 text-green-500 font-bold uppercase tracking-widest py-3 px-6 rounded-xl text-sm">
+                      ¡Pago al corriente!
+                    </div>
+                  )}
                   <p className="text-xs text-zinc-500 mt-3 flex items-center justify-center gap-1">
                     Pago seguro procesado por Mercado Pago
                   </p>
