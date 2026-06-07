@@ -102,7 +102,7 @@ export default function AdminDashboard() {
                       <Tooltip 
                         contentStyle={{ backgroundColor: '#18181b', borderColor: '#333', borderRadius: '8px', color: '#fff' }}
                         itemStyle={{ color: '#ef4444' }}
-                        formatter={(value: number) => [`$${value.toFixed(2)}`, 'Ventas']}
+                        formatter={(value: any) => [`$${Number(value).toFixed(2)}`, 'Ventas']}
                       />
                       <Line type="monotone" dataKey="total" stroke="#ef4444" strokeWidth={3} dot={{ r: 4, fill: '#ef4444', strokeWidth: 0 }} activeDot={{ r: 6 }} />
                     </LineChart>
