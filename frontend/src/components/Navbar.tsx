@@ -11,6 +11,7 @@ import { useCartStore } from '@/store/cartStore';
 const navItems = [
   { name: 'Eventos', href: '/eventos' },
   { name: 'Roster', href: '/roster' },
+  { name: 'Galería', href: '/galeria' },
   { name: 'Premium', href: '/premium' },
   { name: 'Escuela', href: '/escuela' },
   { name: 'Tienda', href: '/tienda' },
