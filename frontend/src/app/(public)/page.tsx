@@ -411,10 +411,16 @@ export default function Home() {
           )}
         </div>
 
-        <div className="mt-12 text-center">
+        <div className="mt-12 flex flex-col items-center gap-6">
           <Link href="/roster" className="inline-flex items-center text-sm font-bold uppercase tracking-widest hover:text-zinc-300 transition-colors border-b border-white pb-1 hover:border-zinc-500">
             Ver Roster Completo
           </Link>
+          <div className="text-center">
+            <p className="text-xs text-zinc-500 mb-2 uppercase tracking-widest font-semibold">¿Quieres ver más acción?</p>
+            <Link href="/galeria" className="inline-flex items-center text-sm font-bold uppercase tracking-widest text-red-500 hover:text-red-400 transition-colors border-b border-red-500/30 hover:border-red-400 pb-1">
+              Ver Galería
+            </Link>
+          </div>
         </div>
       </section>
     </div>
