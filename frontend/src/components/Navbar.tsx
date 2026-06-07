@@ -50,7 +50,7 @@ export default function Navbar() {
       }}
       animate={hidden ? "hidden" : "visible"}
       transition={{ duration: 0.35, ease: "easeInOut" }}
-      className={`fixed top-0 w-full z-50 transition-all duration-300 ${
+      className={`hidden md:block fixed top-0 w-full z-50 transition-all duration-300 ${
         isScrolled ? 'bg-black/70 backdrop-blur-md border-b border-white/10' : 'bg-transparent'
       }`}
     >
