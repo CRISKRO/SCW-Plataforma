@@ -6,45 +6,73 @@ import { ReactNode } from "react";
 export default function Template({ children }: { children: ReactNode }) {
   return (
     <>
-      {/* Lightning flash effect */}
+      {/* Realistic Lightning bolt graphic */}
       <motion.div
-        className="pointer-events-none fixed inset-0 z-[100] bg-white mix-blend-screen"
-        initial={{ opacity: 1 }}
-        animate={{ opacity: [1, 0, 0.8, 0] }}
-        transition={{ duration: 0.5, times: [0, 0.1, 0.15, 1], ease: "easeOut" }}
-      />
-      
-      {/* Lightning bolt graphic */}
-      <motion.div
-        className="pointer-events-none fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[101] text-cyan-400"
-        initial={{ opacity: 1, scale: 2, rotate: -15 }}
+        className="pointer-events-none fixed inset-0 z-[101] flex items-center justify-center mix-blend-screen"
+        initial={{ opacity: 0 }}
         animate={{ 
-          opacity: [1, 0, 1, 0], 
-          scale: [2, 2.2, 2, 2.5],
-          filter: [
-            "brightness(2) blur(0px) drop-shadow(0 0 20px rgba(34,211,238,1))", 
-            "brightness(1) blur(4px) drop-shadow(0 0 10px rgba(34,211,238,0.5))", 
-            "brightness(2) blur(0px) drop-shadow(0 0 30px rgba(34,211,238,1))", 
-            "brightness(1) blur(10px) drop-shadow(0 0 0px rgba(34,211,238,0))"
-          ]
+          opacity: [0, 1, 0.2, 0.9, 0],
         }}
-        transition={{ duration: 0.5, times: [0, 0.1, 0.2, 1], ease: "easeOut" }}
+        transition={{ duration: 0.6, times: [0, 0.05, 0.1, 0.2, 1], ease: "easeOut" }}
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="w-64 h-64"
-        >
-          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+        <svg viewBox="0 0 500 1000" className="w-full h-full object-cover opacity-90" preserveAspectRatio="xMidYMid slice">
+          {/* Main trunk outer glow */}
+          <path
+            d="M250 0 L270 80 L230 160 L300 280 L210 400 L280 550 L200 700 L250 850 L220 1000"
+            fill="none"
+            stroke="rgba(255,255,255,0.3)"
+            strokeWidth="20"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="blur-[8px]"
+          />
+          {/* Main trunk inner glow */}
+          <path
+            d="M250 0 L270 80 L230 160 L300 280 L210 400 L280 550 L200 700 L250 850 L220 1000"
+            fill="none"
+            stroke="rgba(255,255,255,0.6)"
+            strokeWidth="8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="blur-[3px]"
+          />
+          {/* Main trunk core */}
+          <path
+            d="M250 0 L270 80 L230 160 L300 280 L210 400 L280 550 L200 700 L250 850 L220 1000"
+            fill="none"
+            stroke="#ffffff"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          
+          {/* Branches outer glow */}
+          <g stroke="rgba(255,255,255,0.4)" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="8" className="blur-[4px]">
+            <path d="M270 80 L320 130 L310 190 L360 250" />
+            <path d="M230 160 L180 200 L190 250" />
+            <path d="M300 280 L350 310 L330 360" />
+            <path d="M210 400 L150 450 L170 520 L110 580" />
+            <path d="M280 550 L340 600 L320 680 L380 750" />
+            <path d="M200 700 L140 760 L160 830 L100 900" />
+          </g>
+
+          {/* Branches core */}
+          <g stroke="#ffffff" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5">
+            <path d="M270 80 L320 130 L310 190 L360 250" />
+            <path d="M230 160 L180 200 L190 250" />
+            <path d="M300 280 L350 310 L330 360" />
+            <path d="M210 400 L150 450 L170 520 L110 580" />
+            <path d="M280 550 L340 600 L320 680 L380 750" />
+            <path d="M200 700 L140 760 L160 830 L100 900" />
+          </g>
         </svg>
       </motion.div>
 
       {/* Page content wrapper */}
       <motion.div
-        initial={{ opacity: 0, y: 15, filter: "blur(4px)" }}
-        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-        transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
         className="min-h-screen"
       >
         {children}
