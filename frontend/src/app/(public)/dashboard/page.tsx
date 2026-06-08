@@ -145,9 +145,6 @@ export default function UserDashboard() {
             <h1 className="text-3xl font-bold uppercase tracking-tight">{user?.first_name} {user?.last_name}</h1>
             <p className="text-zinc-400 mt-1">{user?.email}</p>
             <div className="mt-4 flex flex-wrap justify-center md:justify-start gap-3">
-              <span className="px-3 py-1 bg-white/10 rounded text-xs font-bold uppercase tracking-widest text-zinc-300">
-                Rol: {user?.role}
-              </span>
             </div>
           </div>
           <div className="flex flex-col gap-3 w-full md:w-auto">

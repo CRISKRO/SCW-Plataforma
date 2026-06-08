@@ -80,6 +80,9 @@ class SubscribeView(APIView):
             config = get_active_config()
             access_token = config.mercadopago_access_token if config.mercadopago_access_token else settings.MERCADOPAGO_ACCESS_TOKEN
             mp = mercadopago.SDK(access_token)
+            frontend_url = request.headers.get('origin', 'http://localhost:3000')
+            backend_url = f"{request.scheme}://{request.get_host()}"
+            
             preference_data = {
                 "items": [
                     {
@@ -93,10 +96,12 @@ class SubscribeView(APIView):
                     "email": request.user.email
                 },
                 "back_urls": {
-                    "success": "http://localhost:3000/premium",
-                    "failure": "http://localhost:3000/premium/checkout",
-                    "pending": "http://localhost:3000/premium"
+                    "success": f"{frontend_url}/premium",
+                    "failure": f"{frontend_url}/premium/checkout",
+                    "pending": f"{frontend_url}/premium"
                 },
+                "auto_return": "approved",
+                "notification_url": f"{backend_url}/api/payments/webhook/",
                 "external_reference": f"SUB_{subscription.id}"
             }
             

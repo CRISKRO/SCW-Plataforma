@@ -384,6 +384,12 @@ class VerifyPaymentView(APIView):
                     if getattr(user, 'role', 'USER') == 'USER':
                         user.role = 'PREMIUM'
                         user.save()
+                        
+                    try:
+                        from premium.email_premium import send_premium_activation_email
+                        send_premium_activation_email(subscription)
+                    except Exception as mail_err:
+                        print("Premium email error from verification:", mail_err)
 
                     return Response({"status": "approved", "subscription_id": subscription.id})
                 else:
@@ -589,6 +595,12 @@ class WebhookView(APIView):
                                     if getattr(user, 'role', 'USER') == 'USER':
                                         user.role = 'PREMIUM'
                                         user.save()
+                                        
+                                    try:
+                                        from premium.email_premium import send_premium_activation_email
+                                        send_premium_activation_email(subscription)
+                                    except Exception as mail_err:
+                                        print("Premium email error from webhook:", mail_err)
                             except UserSubscription.DoesNotExist:
                                 print(f"Subscription {sub_id} not found in webhook")
                         elif str(external_reference).startswith("TUITION_"):
