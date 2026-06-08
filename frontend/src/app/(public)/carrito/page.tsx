@@ -26,7 +26,12 @@ export default function CartPage() {
   const [loading, setLoading] = useState(false);
   const { items, removeItem, updateQuantity, getTotalPrice, getTotalItems, clearCart } = useCartStore();
 
-  const hasMerch = items.some(i => !i.name.includes('Boleto'));
+  const hasMerch = items.some(i => {
+    if (i.requires_shipping !== undefined) {
+      return i.requires_shipping;
+    }
+    return !i.name.toLowerCase().includes('boleto') && !i.name.toLowerCase().includes('entrada');
+  });
 
   useEffect(() => {
     setMounted(true);

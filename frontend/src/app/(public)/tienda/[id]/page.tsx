@@ -48,6 +48,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       quantity: 1,
       image_url: product.image_url || 'bg-zinc-800',
       size: selectedSize || 'N/A',
+      requires_shipping: !product.free_shipping,
     });
     
     useToastStore.getState().addToast('¡Agregado al carrito!', 'success');
