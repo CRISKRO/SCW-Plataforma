@@ -38,6 +38,7 @@ export default function AdminProductsPage() {
   const [prodSizes, setProdSizes] = useState('');
   const [prodCategory, setProdCategory] = useState('');
   const [prodIsActive, setProdIsActive] = useState(true);
+  const [prodFreeShipping, setProdFreeShipping] = useState(false);
   const [prodImageFile, setProdImageFile] = useState<File | null>(null);
   const [prodImagePreview, setProdImagePreview] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
@@ -76,6 +77,7 @@ export default function AdminProductsPage() {
     setProdSizes('S, M, L, XL');
     setProdCategory(categories[0]?.id?.toString() || '');
     setProdIsActive(true);
+    setProdFreeShipping(false);
     setProdImageFile(null);
     setProdImagePreview(null);
     setIsModalOpen(true);
@@ -90,6 +92,7 @@ export default function AdminProductsPage() {
     setProdSizes(product.sizes_available || '');
     setProdCategory(product.category?.toString() || '');
     setProdIsActive(product.is_active);
+    setProdFreeShipping(product.free_shipping || false);
     setProdImageFile(null);
     setProdImagePreview(product.image_url || null);
     setIsModalOpen(true);
@@ -120,6 +123,7 @@ export default function AdminProductsPage() {
       formData.append('sizes_available', prodSizes);
       formData.append('category', prodCategory);
       formData.append('is_active', prodIsActive ? 'true' : 'false');
+      formData.append('free_shipping', prodFreeShipping ? 'true' : 'false');
       
       if (prodImageFile) {
         formData.append('image', prodImageFile);
@@ -523,25 +527,49 @@ export default function AdminProductsPage() {
                 />
               </div>
 
-              {/* Status Toggle */}
-              <div className="flex items-center justify-between p-4 bg-zinc-900 border border-white/5 rounded-xl">
-                <div>
-                  <h4 className="text-sm font-bold text-white">Activo en la Tienda</h4>
-                  <p className="text-xs text-zinc-500">Si lo desactivas, se guardará como borrador y no aparecerá en la web pública.</p>
+              {/* Toggles */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Status Toggle */}
+                <div className="flex items-center justify-between p-4 bg-zinc-900 border border-white/5 rounded-xl">
+                  <div>
+                    <h4 className="text-sm font-bold text-white">Activo</h4>
+                    <p className="text-xs text-zinc-500">Visible en la tienda.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setProdIsActive(!prodIsActive)}
+                    className={`w-14 h-8 rounded-full transition-all duration-300 relative border ${
+                      prodIsActive 
+                        ? 'bg-red-600 border-red-500' 
+                        : 'bg-zinc-800 border-zinc-700'
+                    }`}
+                  >
+                    <span className={`w-6 h-6 bg-white rounded-full absolute top-0.5 transition-all duration-300 ${
+                      prodIsActive ? 'left-[26px]' : 'left-0.5'
+                    }`} />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setProdIsActive(!prodIsActive)}
-                  className={`w-14 h-8 rounded-full transition-all duration-300 relative border ${
-                    prodIsActive 
-                      ? 'bg-red-600 border-red-500' 
-                      : 'bg-zinc-800 border-zinc-700'
-                  }`}
-                >
-                  <span className={`w-6 h-6 bg-white rounded-full absolute top-0.5 transition-all duration-300 ${
-                    prodIsActive ? 'left-[26px]' : 'left-0.5'
-                  }`} />
-                </button>
+
+                {/* Free Shipping Toggle */}
+                <div className="flex items-center justify-between p-4 bg-zinc-900 border border-white/5 rounded-xl">
+                  <div>
+                    <h4 className="text-sm font-bold text-white">Envío Gratis</h4>
+                    <p className="text-xs text-zinc-500">Aplica para todo México.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setProdFreeShipping(!prodFreeShipping)}
+                    className={`w-14 h-8 rounded-full transition-all duration-300 relative border ${
+                      prodFreeShipping 
+                        ? 'bg-green-600 border-green-500' 
+                        : 'bg-zinc-800 border-zinc-700'
+                    }`}
+                  >
+                    <span className={`w-6 h-6 bg-white rounded-full absolute top-0.5 transition-all duration-300 ${
+                      prodFreeShipping ? 'left-[26px]' : 'left-0.5'
+                    }`} />
+                  </button>
+                </div>
               </div>
 
               {/* Action Buttons */}

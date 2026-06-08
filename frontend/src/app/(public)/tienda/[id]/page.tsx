@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ShoppingCart, ShieldCheck, Trophy, Truck, ArrowLeft, Heart } from 'lucide-react';
+import { ShoppingCart, ShieldCheck, Trophy, Truck, ArrowLeft } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useToastStore } from '@/store/toastStore';
 import Image from 'next/image';
@@ -132,9 +132,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             
             <div className="text-sm text-zinc-400 mb-2 flex justify-between items-center">
               <span>Nuevo  |  +100 vendidos</span>
-              <button className="text-[#3483fa] hover:bg-[#3483fa]/10 p-2 rounded-full transition-colors">
-                <Heart className="w-5 h-5" />
-              </button>
             </div>
 
             <h1 className="text-xl md:text-2xl font-semibold text-white leading-tight mb-4">
@@ -147,14 +144,16 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               </span>
             </div>
 
-            <div className="mb-6">
-              <p className="text-green-500 font-semibold flex items-center gap-2 mb-1">
-                <Truck className="w-5 h-5" /> Llega gratis mañana
-              </p>
-              <p className="text-zinc-400 text-sm pl-7">
-                Comprando dentro de las próximas 2 horas.
-              </p>
-            </div>
+            {product.free_shipping && (
+              <div className="mb-6">
+                <p className="text-green-500 font-semibold flex items-center gap-2 mb-1">
+                  <Truck className="w-5 h-5" /> Envío Gratis
+                </p>
+                <p className="text-zinc-400 text-sm pl-7">
+                  Disponible para todo México.
+                </p>
+              </div>
+            )}
 
             {sizes.length > 0 && (
               <div className="mb-8">
@@ -207,13 +206,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 <p className="text-sm text-zinc-400 leading-snug">
                   <span className="text-[#3483fa]">Compra Protegida</span>, recibe el producto que esperabas o te devolvemos tu dinero.
                 </p>
-              </div>
-              <div className="flex gap-3">
-                <Trophy className="w-5 h-5 text-zinc-400 shrink-0" />
-                <p className="text-sm text-zinc-400 leading-snug">
-                  <span className="text-[#3483fa]">Puntos SCW</span>. Sumas 25 puntos con esta compra.
-                </p>
-              </div>
+            </div>
             </div>
 
           </div>

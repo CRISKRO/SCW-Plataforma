@@ -97,9 +97,11 @@ export default function StorePage() {
                       ${parseFloat(product.price).toFixed(2)}
                     </p>
                     
-                    <p className="text-[10px] sm:text-xs font-bold text-green-500 mb-2 sm:mb-3 flex items-center gap-1">
-                      Envío gratis
-                    </p>
+                    {product.free_shipping && (
+                      <p className="text-[10px] sm:text-xs font-bold text-green-500 mb-2 sm:mb-3 flex items-center gap-1">
+                        Envío gratis
+                      </p>
+                    )}
 
                     <h3 className="text-sm text-zinc-300 leading-tight group-hover:text-white transition-colors line-clamp-2 mb-2">
                       {product.name}

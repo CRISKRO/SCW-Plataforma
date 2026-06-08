@@ -23,6 +23,7 @@ class Product(models.Model):
     sizes_available = models.CharField(_('tallas disponibles'), max_length=100, blank=True, help_text="Ej: S, M, L, XL")
     image = models.ImageField(_('imagen del producto'), upload_to='products/', blank=True, null=True)
     is_active = models.BooleanField(_('activo en tienda'), default=True)
+    free_shipping = models.BooleanField(_('envío gratis'), default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
