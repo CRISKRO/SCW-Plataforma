@@ -61,9 +61,9 @@ export default function AdminSchoolPage() {
             if (student) {
               const experienceStr = student.experience === 'BEGINNER' ? 'Principiante' : student.experience === 'INTERMEDIATE' ? 'Intermedio' : 'Avanzado';
               const message = 
-                `🎉 *¡SCW Dojo — Felicitaciones, has sido Admitido!* 🥊\n\n` +
-                `¡Hola *${student.name}*!\n\n` +
-                `Nos complace informarte que tu solicitud de inscripción al SCW Dojo ha sido **APROBADA** por la administración. ¡Ya eres parte oficial del equipo! 🥊⚡\n\n` +
+                `🎉 *¡The Wrestling Factory — Felicitaciones, has sido Admitido!* 🥊\n\n` +
+                `Hola *${student.user.first_name}*,\n\n` +
+                `Nos complace informarte que tu solicitud de inscripción a The Wrestling Factory ha sido **APROBADA** por la administración. ¡Ya eres parte oficial del equipo! 🥊⚡\n\n` +
                 `📍 *Nivel de Experiencia:* ${experienceStr}\n\n` +
                 `Te esperamos en tu primera sesión de entrenamiento. ¡Prepárate para darlo todo en el ring! ⚡🥊\n\n` +
                 `Si tienes alguna duda sobre los horarios, uniformes o mensualidades, no dudes en escribirnos por este medio.`;
@@ -109,11 +109,11 @@ export default function AdminSchoolPage() {
             const dueDateStr = student.payment_due_date ? new Date(student.payment_due_date + 'T12:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
             
             const message = 
-              `🥊 *SCW Dojo — Confirmación de Mensualidad*\n\n` +
-              `¡Hola *${student.name}*!\n\n` +
-              `Te confirmamos que hemos registrado con éxito el pago de tu mensualidad el día *${lastPaymentDateStr}*.\n\n` +
-              `📅 *Próximo Vencimiento:* ${dueDateStr}\n\n` +
-              `¡Muchas gracias por seguir entrenando en el SCW Dojo! ¡A seguir dándolo todo en el ring! 🥊⚡`;
+              `🥊 *The Wrestling Factory — Confirmación de Mensualidad*\n\n` +
+              `Hola *${student.user.first_name}*,\n\n` +
+              `Hemos registrado tu pago de *$${student.payment_amount}* por concepto de mensualidad. Tu próximo pago deberá realizarse el día *${dueDateStr}*.\n\n` +
+              `*Nota adicional:* ${student.payment_notes}\n\n` +
+              `¡Muchas gracias por seguir entrenando en The Wrestling Factory! ¡A seguir dándolo todo en el ring! 🥊⚡`;
 
             const localRes = await fetch('https://scw-whatsapp.onrender.com/send-message', {
               method: 'POST',
@@ -160,16 +160,16 @@ export default function AdminSchoolPage() {
             let message = '';
             if (student.payment_status === 'UNPAID') {
               message = 
-                `🚨 *SCW Dojo — Recordatorio de Pago Vencido*\n\n` +
-                `¡Hola *${student.name}*!\n\n` +
-                `Te recordamos que el pago de tu mensualidad del Dojo se encuentra *VENCIDO* desde el día *${dueDateStr}*.\n\n` +
+                `🚨 *The Wrestling Factory — Recordatorio de Pago Vencido*\n\n` +
+                `Hola *${student.user.first_name}*,\n\n` +
+                `Te recordamos que el pago de tu mensualidad de The Wrestling Factory se encuentra *VENCIDO* desde el día *${dueDateStr}*.\n\n` +
                 `Para mantener tu lugar activo en los entrenamientos, te pedimos realizar tu pago a la brevedad.\n\n` +
                 `¡Te esperamos en el entrenamiento! ¡A seguir preparándote! 🥊`;
             } else {
               message = 
-                `⏰ *SCW Dojo — Recordatorio de Mensualidad Próxima a Vencer*\n\n` +
-                `¡Hola *${student.name}*!\n\n` +
-                `Te recordamos de manera atenta que tu mensualidad del Dojo está próxima a vencer.\n\n` +
+                `⏰ *The Wrestling Factory — Recordatorio de Mensualidad Próxima a Vencer*\n\n` +
+                `Hola *${student.user.first_name}*,\n\n` +
+                `Te recordamos de manera atenta que tu mensualidad de The Wrestling Factory está próxima a vencer.\n\n` +
                 `📅 *Fecha Límite:* ${dueDateStr}\n\n` +
                 `Por favor tómalo en cuenta para realizar tu pago a tiempo y no perder ritmo.\n\n` +
                 `¡Nos vemos en el entrenamiento! 🥊⚡`;
@@ -313,7 +313,7 @@ export default function AdminSchoolPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-4xl font-extrabold tracking-tight text-white bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-500">
-            Dojo SCW (Alumnos)
+            The Wrestling Factory (Alumnos)
           </h1>
           <p className="text-zinc-400 mt-2 text-base">
             Gestiona inscripciones, mensualidades escolares y notificaciones a WhatsApp de la escuela de lucha.
@@ -362,7 +362,7 @@ export default function AdminSchoolPage() {
             </div>
             <div className="mt-3 flex items-center gap-1.5 text-xs text-zinc-500">
               <TrendingUp className="w-3.5 h-3.5 text-green-500" />
-              <span>Confirmados en Dojo</span>
+              <span>Confirmados en Factory</span>
             </div>
           </div>
 
@@ -422,7 +422,7 @@ export default function AdminSchoolPage() {
           <div className="glass-panel p-5 border border-white/5">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Total Solicitudes Dojo</p>
+                <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Total Solicitudes Factory</p>
                 <p className="text-3xl font-black text-white mt-1">{enrollments.length}</p>
               </div>
               <div className="p-3 bg-white/5 rounded-xl">
@@ -459,7 +459,7 @@ export default function AdminSchoolPage() {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 text-zinc-500 gap-3">
           <Loader2 className="w-8 h-8 animate-spin text-red-500" />
-          <p className="text-sm font-medium tracking-wide">Cargando datos del Dojo...</p>
+          <p className="text-sm font-medium tracking-wide">Cargando datos de The Wrestling Factory...</p>
         </div>
       ) : activeTab === 'payments' ? (
         <div className="space-y-4">
@@ -618,7 +618,7 @@ export default function AdminSchoolPage() {
                                 className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-500 text-black hover:bg-green-400 font-bold rounded-lg text-xs transition-all transform active:scale-95 shadow-md shadow-green-950/10"
                                 title="Registrar pago del alumno y enviar confirmación por WhatsApp"
                               >
-                                                        Registrar Pago
+                                Registrar Pago
                               </button>
                               
                               <button
@@ -658,7 +658,7 @@ export default function AdminSchoolPage() {
           <div className="bg-zinc-950/40 border border-white/5 rounded-xl p-12 text-center text-zinc-500">
             <Inbox className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
             <p className="text-sm font-semibold text-zinc-400">No hay ninguna solicitud registrada</p>
-            <p className="text-xs text-zinc-600 mt-1">Los aspirantes al dojo que se registren en la web pública saldrán aquí.</p>
+            <p className="text-xs text-zinc-600 mt-1">Los aspirantes a The Wrestling Factory que se registren en la web pública saldrán aquí.</p>
           </div>
         ) : (
           <AdminTable columns={requestColumns} data={enrollments} />

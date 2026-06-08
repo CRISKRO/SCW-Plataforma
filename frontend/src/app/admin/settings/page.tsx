@@ -258,7 +258,7 @@ export default function AdminSettingsPage() {
                   <div className="pt-4 border-t border-white/10">
                     <label className="block text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5">
                       <DollarSign className="w-4 h-4 text-green-500" />
-                      Costo de Mensualidad del Dojo
+                      Costo de Mensualidad de The Wrestling Factory
                     </label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm font-bold">$</span>

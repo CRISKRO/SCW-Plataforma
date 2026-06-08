@@ -17,7 +17,7 @@ export default function Footer() {
               />
             </Link>
             <p className="mt-4 text-zinc-500 text-sm">
-              Somos la empresa de lucha libre profesional de Morelia, dedicada a crear espectáculos emocionantes y a formar el talento luchístico del futuro a través del SCW Dojo.
+              Somos la empresa de lucha libre profesional de Morelia, dedicada a crear espectáculos emocionantes y a formar el talento luchístico del futuro a través de The Wrestling Factory.
             </p>
           </div>
           
@@ -26,7 +26,7 @@ export default function Footer() {
             <ul className="space-y-3 text-zinc-400 text-sm">
               <li><Link href="/eventos" className="hover:text-white transition-colors">Eventos</Link></li>
               <li><Link href="/roster" className="hover:text-white transition-colors">Luchadores</Link></li>
-              <li><Link href="/escuela" className="hover:text-white transition-colors">SCW Dojo</Link></li>
+              <li><Link href="/escuela" className="hover:text-white transition-colors">The Wrestling Factory</Link></li>
               <li><Link href="/tienda" className="hover:text-white transition-colors">Tienda Oficial</Link></li>
               <li><Link href="/premium" className="hover:text-white transition-colors">SCW Premium</Link></li>
             </ul>
