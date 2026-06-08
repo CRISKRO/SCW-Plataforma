@@ -29,7 +29,7 @@ class EventZoneViewSet(viewsets.ModelViewSet):
         if event_id:
             zones = self.queryset.filter(event_id=event_id).prefetch_related('seats')
             serializer = self.get_serializer(zones, many=True)
-            data = serializer.data
+            data = [dict(zone) for zone in serializer.data]
             
             from api.models import get_active_config
             config = get_active_config()

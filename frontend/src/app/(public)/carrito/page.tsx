@@ -157,11 +157,17 @@ export default function CartPage() {
                     {item.size && <p className="text-zinc-500 text-xs mt-1">{item.size}</p>}
 
                     <div className="flex justify-between items-center mt-3">
-                      <div className="flex items-center gap-3 bg-black border border-white/10 rounded-lg px-2 py-1">
-                        <button onClick={() => updateQuantity(item.id, item.quantity - 1, item.size)} className="text-zinc-400 hover:text-white w-6 text-center font-bold">−</button>
-                        <span className="font-bold w-4 text-center text-sm">{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item.id, item.quantity + 1, item.size)} className="text-zinc-400 hover:text-white w-6 text-center font-bold">+</button>
-                      </div>
+                      {item.seat_id || item.name.includes('Boleto') ? (
+                        <div className="text-sm font-bold text-zinc-500 bg-black border border-white/10 rounded-lg px-3 py-1">
+                          Cantidad: 1
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-3 bg-black border border-white/10 rounded-lg px-2 py-1">
+                          <button onClick={() => updateQuantity(item.id, item.quantity - 1, item.size)} className="text-zinc-400 hover:text-white w-6 text-center font-bold">−</button>
+                          <span className="font-bold w-4 text-center text-sm">{item.quantity}</span>
+                          <button onClick={() => updateQuantity(item.id, item.quantity + 1, item.size)} className="text-zinc-400 hover:text-white w-6 text-center font-bold">+</button>
+                        </div>
+                      )}
                       <button onClick={() => removeItem(item.id, item.size)} className="text-red-500 hover:text-red-400 p-1">
                         <Trash2 className="w-4 h-4" />
                       </button>
