@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Lock, Mail, User, Phone } from 'lucide-react';
 import { authService } from '@/services/auth.services';
+import api from '@/services/api';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import axios from 'axios';
 
 const envWhatsappUrl = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_WHATSAPP_SERVICE
   ? process.env.NEXT_PUBLIC_WHATSAPP_SERVICE
@@ -33,8 +33,7 @@ export default function RegisterPage() {
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
-        const res = await axios.get(`${apiUrl}/payments/public-key/`);
+        const res = await api.get('/payments/public-key/');
         if (res.data && res.data.registration_method) {
           setRegMethod(res.data.registration_method);
         }
@@ -80,8 +79,7 @@ export default function RegisterPage() {
       }
 
       if (regMethod === 'email') {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
-        const res = await axios.post(`${apiUrl}/users/send-register-otp/`, { email: formData.email });
+        await api.post('/users/send-register-otp/', { email: formData.email });
         setStep('verify');
         return;
       }
@@ -109,8 +107,7 @@ export default function RegisterPage() {
     setError('');
     try {
       if (regMethod === 'email') {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
-        await axios.post(`${apiUrl}/users/verify-register-otp/`, { email: formData.email, code: verifyCode });
+        await api.post('/users/verify-register-otp/', { email: formData.email, code: verifyCode });
       } else {
         const verifyRes = await fetch(`${WHATSAPP_SERVICE}/verify-otp`, {
           method: 'POST',
