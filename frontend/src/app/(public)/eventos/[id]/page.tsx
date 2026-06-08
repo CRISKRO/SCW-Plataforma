@@ -121,6 +121,9 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
     setSelectedSeats([]);
     setShowConfirmPanel(false);
     useToastStore.getState().addToast(`Se agregaron ${selectedSeats.length} boleto(s) al carrito`, 'success');
+    
+    // Smoothly scroll to the top since the page height will shrink and leave the user stranded at the bottom
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const totalPrice = selectedSeats.reduce((acc, s) => acc + s.price, 0);

@@ -30,6 +30,7 @@ export default function CartPage() {
 
   useEffect(() => {
     setMounted(true);
+    window.scrollTo(0, 0);
     if (user?.email) setEmail(user.email);
     if (user?.phone_number) setPhone(user.phone_number);
     if (user?.address) setAddress(user.address);
