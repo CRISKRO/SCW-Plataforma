@@ -51,7 +51,7 @@ let client = null;
     authStrategy: authStrategy,
     puppeteer: {
       headless: true,
-      executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+      executablePath: process.env.RENDER || process.platform !== 'win32' ? undefined : 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
