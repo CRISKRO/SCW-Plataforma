@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 export default function AdminSettingsPage() {
-  const [activeTab, setActiveTab] = useState<'mercadopago' | 'email' | 'whatsapp'>('mercadopago');
+  const [activeTab, setActiveTab] = useState<'mercadopago' | 'email' | 'whatsapp' | 'registro'>('mercadopago');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -39,6 +39,7 @@ export default function AdminSettingsPage() {
     whatsapp_service_url: 'https://scw-whatsapp.onrender.com',
     whatsapp_enabled: true,
     tuition_fee: 500.00,
+    registration_method: 'whatsapp',
   });
 
   useEffect(() => {
@@ -59,6 +60,7 @@ export default function AdminSettingsPage() {
             whatsapp_service_url: data.whatsapp_service_url || 'https://scw-whatsapp.onrender.com',
             whatsapp_enabled: data.whatsapp_enabled !== undefined ? Boolean(data.whatsapp_enabled) : true,
             tuition_fee: data.tuition_fee !== undefined ? Number(data.tuition_fee) : 500.00,
+            registration_method: data.registration_method || 'whatsapp',
           });
         }
       } catch (error) {
@@ -187,6 +189,18 @@ export default function AdminSettingsPage() {
           >
             <MessageSquare className="w-5 h-5" />
             WhatsApp
+          </button>
+
+          <button
+            onClick={() => setActiveTab('registro')}
+            className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold uppercase tracking-wider transition-all border ${
+              activeTab === 'registro'
+                ? 'bg-gradient-to-r from-red-600 to-red-700 text-white border-red-500 shadow-lg shadow-red-600/10'
+                : 'bg-zinc-950/40 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-900/60'
+            }`}
+          >
+            <Settings className="w-5 h-5" />
+            Registro
           </button>
         </div>
 
@@ -424,6 +438,40 @@ export default function AdminSettingsPage() {
                       <ToggleLeft className="w-12 h-12 text-zinc-600" />
                     )}
                   </button>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: REGISTRO */}
+            {activeTab === 'registro' && (
+              <div className="space-y-6">
+                <div className="border-b border-white/10 pb-4">
+                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                    <Settings className="text-red-500 w-5 h-5" />
+                    Registro de Nuevos Alumnos
+                  </h3>
+                  <p className="text-zinc-500 text-sm mt-1">
+                    Controla el método de verificación (OTP) que se solicitará a los nuevos usuarios al crear su cuenta en la plataforma.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">Método de Verificación</label>
+                  <select
+                    name="registration_method"
+                    value={formData.registration_method}
+                    onChange={handleInputChange}
+                    className="w-full bg-zinc-900/80 border border-white/10 hover:border-white/20 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none rounded-xl px-4 py-3 text-white transition-all text-sm font-bold"
+                  >
+                    <option value="whatsapp">Código por WhatsApp</option>
+                    <option value="email">Código por Correo Electrónico</option>
+                    <option value="none">Sin Verificación (Directo)</option>
+                  </select>
+                  <p className="text-zinc-500 text-xs mt-2">
+                    - <b>WhatsApp:</b> Se enviará un código de 6 dígitos al celular del alumno.<br/>
+                    - <b>Correo:</b> Se enviará el código mediante el Servidor SMTP configurado.<br/>
+                    - <b>Sin Verificación:</b> La cuenta se creará inmediatamente sin pedir código (Menos seguro).
+                  </p>
                 </div>
               </div>
             )}

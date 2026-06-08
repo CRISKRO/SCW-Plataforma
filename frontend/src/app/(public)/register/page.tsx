@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, Mail, User, Phone, ArrowRight } from 'lucide-react';
+import { Lock, Mail, User, Phone } from 'lucide-react';
 import { authService } from '@/services/auth.services';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import axios from 'axios';
 
 const envWhatsappUrl = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_WHATSAPP_SERVICE
   ? process.env.NEXT_PUBLIC_WHATSAPP_SERVICE
@@ -26,7 +27,23 @@ export default function RegisterPage() {
   const [verifyCode, setVerifyCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [regMethod, setRegMethod] = useState<'whatsapp' | 'email' | 'none'>('whatsapp');
   const router = useRouter();
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+        const res = await axios.get(`${apiUrl}/payments/public-key/`);
+        if (res.data && res.data.registration_method) {
+          setRegMethod(res.data.registration_method);
+        }
+      } catch (err) {
+        console.error("No se pudo cargar la config de registro", err);
+      }
+    };
+    fetchConfig();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -50,6 +67,26 @@ export default function RegisterPage() {
     }
 
     try {
+      if (regMethod === 'none') {
+        // Direct Registration
+        await authService.register(formData);
+        try {
+          await authService.login({ email: formData.email, password: formData.password });
+          window.location.href = '/dashboard';
+        } catch (loginErr: any) {
+          setError("Cuenta creada, pero falló el auto-login: " + (loginErr.response?.data?.detail || loginErr.message));
+        }
+        return;
+      }
+
+      if (regMethod === 'email') {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+        const res = await axios.post(`${apiUrl}/users/send-register-otp/`, { email: formData.email });
+        setStep('verify');
+        return;
+      }
+
+      // Default: WhatsApp
       const res = await fetch(`${WHATSAPP_SERVICE}/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -60,7 +97,7 @@ export default function RegisterPage() {
       
       setStep('verify');
     } catch (err: any) {
-      setError(err.message || 'Error al conectar con WhatsApp.');
+      setError(err.response?.data?.error || err.message || 'Error al procesar la solicitud.');
     } finally {
       setLoading(false);
     }
@@ -71,13 +108,18 @@ export default function RegisterPage() {
     setLoading(true);
     setError('');
     try {
-      const verifyRes = await fetch(`${WHATSAPP_SERVICE}/verify-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: formData.phone_number, code: verifyCode })
-      });
-      const verifyData = await verifyRes.json();
-      if (!verifyRes.ok) throw new Error(verifyData.error || 'Código de WhatsApp incorrecto');
+      if (regMethod === 'email') {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+        await axios.post(`${apiUrl}/users/verify-register-otp/`, { email: formData.email, code: verifyCode });
+      } else {
+        const verifyRes = await fetch(`${WHATSAPP_SERVICE}/verify-otp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: formData.phone_number, code: verifyCode })
+        });
+        const verifyData = await verifyRes.json();
+        if (!verifyRes.ok) throw new Error(verifyData.error || 'Código de WhatsApp incorrecto');
+      }
 
       await authService.register(formData);
       try {
@@ -87,7 +129,7 @@ export default function RegisterPage() {
         setError("Cuenta creada exitosamente, pero falló el auto-login: " + (loginErr.response?.data?.detail || loginErr.message));
       }
     } catch(err: any) {
-      setError("Error al registrar: " + (err.response?.data?.email?.[0] || err.message));
+      setError("Error al registrar: " + (err.response?.data?.error || err.response?.data?.email?.[0] || err.message));
     } finally {
       setLoading(false);
     }
@@ -208,9 +250,19 @@ export default function RegisterPage() {
           <form className="mt-6 space-y-5" onSubmit={handleVerify}>
             <div className="text-center mb-6">
               <p className="text-zinc-300 text-sm">
-                Hemos enviado un código de verificación por WhatsApp al número:
-                <br />
-                <span className="font-bold text-white">{formData.phone_number}</span>
+                {regMethod === 'email' ? (
+                  <>
+                    Hemos enviado un código de verificación al correo:
+                    <br />
+                    <span className="font-bold text-white">{formData.email}</span>
+                  </>
+                ) : (
+                  <>
+                    Hemos enviado un código de verificación por WhatsApp al número:
+                    <br />
+                    <span className="font-bold text-white">{formData.phone_number}</span>
+                  </>
+                )}
               </p>
             </div>
             

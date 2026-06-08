@@ -92,6 +92,15 @@ class SystemConfiguration(models.Model):
         verbose_name=_("Costo de Envío de Mercancía"),
         help_text=_("Costo fijo de envío que se agregará a compras que incluyan productos físicos (mercancía)")
     )
+    
+    # Registration Settings
+    registration_method = models.CharField(
+        max_length=10,
+        choices=[('whatsapp', 'WhatsApp'), ('email', 'Correo Electrónico'), ('none', 'Ninguna')],
+        default='whatsapp',
+        verbose_name=_("Método de Verificación de Registro"),
+        help_text=_("Método utilizado para verificar a los nuevos usuarios al crear su cuenta")
+    )
 
     class Meta:
         verbose_name = _("Configuración del Sistema")

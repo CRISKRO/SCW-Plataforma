@@ -173,3 +173,70 @@ class ResetPasswordWithOTPView(APIView):
             
         except Exception:
             return Response({"error": "Código incorrecto o expirado."}, status=status.HTTP_400_BAD_REQUEST)
+
+class SendRegisterEmailOTPView(APIView):
+    permission_classes = (AllowAny,)
+    
+    def post(self, request):
+        email = request.data.get('email')
+        if not email:
+            return Response({"error": "El email es requerido."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        # Check if email is already taken
+        if User.objects.filter(email=email).exists():
+            return Response({"error": "Este correo ya está registrado."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        import random
+        from django.core.mail import EmailMultiAlternatives, get_connection
+        from django.core.cache import cache
+        from api.models import get_active_config
+        
+        code = f"{random.randint(100000, 999999)}"
+        # Store in cache for 10 minutes
+        cache.set(f"register_otp_{email}", code, timeout=600)
+        
+        config = get_active_config()
+        from_email = config.default_from_email if config.default_from_email else 'SCW Boletos <boletos.scw@gmail.com>'
+        
+        connection = None
+        if config and config.email_host_user and config.email_host_password:
+            connection = get_connection(
+                host=config.email_host,
+                port=config.email_port,
+                username=config.email_host_user,
+                password=config.email_host_password,
+                use_tls=config.email_use_tls,
+            )
+        
+        try:
+            email_msg = EmailMultiAlternatives(
+                subject='Código de Verificación - Registro SCW',
+                body=f'Hola,\n\nTu código de verificación para completar tu registro es: {code}\n\nIngresa este código en la página para crear tu cuenta.\n\nSaludos,\nThe Wrestling Factory',
+                from_email=from_email,
+                to=[email]
+            )
+            email_msg.connection = connection
+            email_msg.send(fail_silently=False)
+            return Response({"message": "Código enviado correctamente."}, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(f"Error enviando correo OTP de registro: {str(e)}. Código: {code}")
+            return Response({"error": f"El servidor bloqueó el envío de correos. Para pruebas, tu código es: {code}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class VerifyRegisterEmailOTPView(APIView):
+    permission_classes = (AllowAny,)
+    
+    def post(self, request):
+        email = request.data.get('email')
+        code = request.data.get('code')
+        
+        if not email or not code:
+            return Response({"error": "Email y código son requeridos."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        from django.core.cache import cache
+        cached_code = cache.get(f"register_otp_{email}")
+        
+        if cached_code and cached_code == code:
+            cache.delete(f"register_otp_{email}")
+            return Response({"message": "Código verificado correctamente."}, status=status.HTTP_200_OK)
+            
+        return Response({"error": "Código incorrecto o expirado."}, status=status.HTTP_400_BAD_REQUEST)

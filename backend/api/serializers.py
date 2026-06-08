@@ -18,6 +18,7 @@ class SystemConfigurationSerializer(serializers.ModelSerializer):
             'whatsapp_service_url',
             'whatsapp_enabled',
             'tuition_fee',
+            'registration_method',
         ]
         # In a real-world app we might obfuscate or write-only the password/token fields
         # if other roles had access. Since this API is strictly staff/admin only, we can

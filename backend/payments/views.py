@@ -16,7 +16,8 @@ class MPPublicKeyView(APIView):
         public_key = config.mercadopago_public_key if config.mercadopago_public_key else settings.MERCADOPAGO_PUBLIC_KEY
         return Response({
             "public_key": public_key,
-            "shipping_cost": config.shipping_cost
+            "shipping_cost": config.shipping_cost,
+            "registration_method": config.registration_method
         })
 
 class OrderItemInputSerializer(serializers.Serializer):
