@@ -98,7 +98,7 @@ export default function Home() {
     if (slides.length <= 1) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 6000);
+    }, 25000);
     return () => clearInterval(timer);
   }, [slides.length]);
 

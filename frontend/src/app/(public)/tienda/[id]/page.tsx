@@ -103,13 +103,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           <div className="w-full md:w-[65%] flex flex-col">
             
             {/* Image Area */}
-            <div className="relative w-full aspect-square md:aspect-[4/3] bg-white flex items-center justify-center p-8 border-b md:border-b-0 md:border-r border-white/5">
+            <div className="relative w-full aspect-square md:aspect-[4/3] bg-white flex items-center justify-center border-b md:border-b-0 md:border-r border-white/5 overflow-hidden">
               {product.image_url ? (
                 <Image 
                   src={product.image_url} 
                   alt={product.name} 
                   fill
-                  className="object-contain mix-blend-multiply p-8"
+                  className="object-cover md:object-contain mix-blend-multiply p-0 md:p-8"
                   sizes="(max-width: 768px) 100vw, 50vw"
                   priority
                 />

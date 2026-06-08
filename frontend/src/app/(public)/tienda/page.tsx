@@ -84,9 +84,9 @@ export default function StorePage() {
                   className="bg-zinc-900/80 hover:bg-zinc-900 border border-white/5 hover:border-white/20 rounded-lg overflow-hidden group transition-all h-full flex flex-col hover:shadow-2xl hover:shadow-white/5"
                 >
                   {/* Image Area - White background like ML to make product pop, even in dark mode */}
-                  <div className="relative aspect-square bg-white flex items-center justify-center p-4">
+                  <div className="relative aspect-square bg-white flex items-center justify-center overflow-hidden">
                     {product.image_url ? (
-                      <img src={product.image_url} alt={product.name} className="max-w-full max-h-full object-contain transition-transform duration-500 group-hover:scale-105" />
+                      <img src={product.image_url} alt={product.name} className="w-full h-full object-cover mix-blend-multiply transition-transform duration-500 group-hover:scale-105" />
                     ) : (
                       <div className="text-zinc-300 font-bold uppercase tracking-widest text-xs">Sin Imagen</div>
                     )}
