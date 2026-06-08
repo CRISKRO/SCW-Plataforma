@@ -79,7 +79,7 @@ export default function RegisterPage() {
       }
 
       if (regMethod === 'email') {
-        await api.post('/users/send-register-otp/', { email: formData.email });
+        await api.post('/auth/send-register-otp/', { email: formData.email });
         setStep('verify');
         return;
       }
@@ -107,7 +107,7 @@ export default function RegisterPage() {
     setError('');
     try {
       if (regMethod === 'email') {
-        await api.post('/users/verify-register-otp/', { email: formData.email, code: verifyCode });
+        await api.post('/auth/verify-register-otp/', { email: formData.email, code: verifyCode });
       } else {
         const verifyRes = await fetch(`${WHATSAPP_SERVICE}/verify-otp`, {
           method: 'POST',
