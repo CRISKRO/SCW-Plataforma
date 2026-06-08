@@ -107,7 +107,7 @@ export const adminService = {
   
   // System Configurations
   getSettings: async () => {
-    const response = await api.get('/settings/');
+    const response = await api.get(`/settings/?t=${new Date().getTime()}`);
     return response.data;
   },
   updateSettings: async (data: any) => {

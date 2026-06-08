@@ -157,9 +157,9 @@ export default function CartPage() {
                     {item.size && <p className="text-zinc-500 text-xs mt-1">{item.size}</p>}
 
                     <div className="flex justify-between items-center mt-3">
-                      {item.seat_id || item.name.includes('Boleto') ? (
+                      {item.seat_id || item.name.toLowerCase().includes('boleto') || item.name.toLowerCase().includes('entrada') ? (
                         <div className="text-sm font-bold text-zinc-500 bg-black border border-white/10 rounded-lg px-3 py-1">
-                          Cantidad: 1
+                          Cantidad: {item.quantity}
                         </div>
                       ) : (
                         <div className="flex items-center gap-3 bg-black border border-white/10 rounded-lg px-2 py-1">
