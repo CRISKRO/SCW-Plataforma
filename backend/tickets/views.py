@@ -29,7 +29,16 @@ class EventZoneViewSet(viewsets.ModelViewSet):
         if event_id:
             zones = self.queryset.filter(event_id=event_id).prefetch_related('seats')
             serializer = self.get_serializer(zones, many=True)
-            return Response(serializer.data)
+            data = serializer.data
+            
+            from api.models import get_active_config
+            config = get_active_config()
+            commission = float(config.mercadopago_commission_rate)
+            
+            for zone in data:
+                zone['price'] = str(round(float(zone['price']) * (1 + commission), 2))
+                
+            return Response(data)
         return Response([])
 
 class SeatViewSet(viewsets.ModelViewSet):

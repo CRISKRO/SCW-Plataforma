@@ -130,7 +130,13 @@ class CreateOrderView(APIView):
                 
                 config = get_active_config()
                 commission = float(config.mercadopago_commission_rate)
-                price_with_commission = round(float(item_data['price']) * (1 + commission), 2)
+                
+                # Merch products need commission added at checkout. Tickets already include it.
+                if item_data.get('product'):
+                    price_with_commission = round(float(item_data['price']) * (1 + commission), 2)
+                else:
+                    price_with_commission = float(item_data['price'])
+                
                 size_str = f"({item_data['size']})" if item_data['size'] else ""
                 mp_items.append({
                     "title": f"{item_data['product_name']} {size_str}".strip(),
