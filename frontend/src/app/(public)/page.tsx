@@ -183,16 +183,18 @@ export default function Home() {
                   </div>
                 )}
 
-                <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter uppercase leading-none mb-4 md:mb-6">
-                  {slide.title.split(' ').map((word: string, i: number) => (
-                    <span key={i}>
-                      {i === slide.title.split(' ').length - 1
-                        ? <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-zinc-500">{word}</span>
-                        : <span>{word} </span>
-                      }
-                    </span>
-                  ))}
-                </h1>
+                {!slide.id && (
+                  <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter uppercase leading-none mb-4 md:mb-6">
+                    {slide.title.split(' ').map((word: string, i: number) => (
+                      <span key={i}>
+                        {i === slide.title.split(' ').length - 1
+                          ? <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-zinc-500">{word}</span>
+                          : <span>{word} </span>
+                        }
+                      </span>
+                    ))}
+                  </h1>
+                )}
 
                 <p className="text-sm sm:text-base md:text-xl text-zinc-300 font-light max-w-xl mb-6 md:mb-10 line-clamp-none">
                   {slide.subtitle}
