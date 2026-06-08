@@ -72,3 +72,15 @@ class SystemConfigurationView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return get_active_config()
+
+    def update(self, request, *args, **kwargs):
+        response = super().update(request, *args, **kwargs)
+        
+        # Force explicitly updating registration_method to fix frontend state issue
+        if 'registration_method' in request.data:
+            instance = self.get_object()
+            instance.registration_method = request.data['registration_method']
+            instance.save(update_fields=['registration_method'])
+            response.data['registration_method'] = instance.registration_method
+            
+        return response

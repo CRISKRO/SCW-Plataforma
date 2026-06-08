@@ -448,7 +448,7 @@ export default function AdminSettingsPage() {
                 <div className="border-b border-white/10 pb-4">
                   <h3 className="text-xl font-bold text-white flex items-center gap-2">
                     <Settings className="text-red-500 w-5 h-5" />
-                    Registro de Nuevos Alumnos
+                    Registro de Usuarios
                   </h3>
                   <p className="text-zinc-500 text-sm mt-1">
                     Controla el método de verificación (OTP) que se solicitará a los nuevos usuarios al crear su cuenta en la plataforma.
