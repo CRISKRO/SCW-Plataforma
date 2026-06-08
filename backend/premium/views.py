@@ -119,3 +119,38 @@ class SubscribeView(APIView):
         except Exception as e:
             print("Error con Mercado Pago:", e)
             return Response({"error": "Error de pasarela de pagos"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class MySubscriptionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            subscription = UserSubscription.objects.get(user=request.user, is_active=True)
+            return Response({
+                "is_active": True,
+                "plan_name": subscription.plan.name,
+                "end_date": subscription.end_date
+            })
+        except UserSubscription.DoesNotExist:
+            return Response({
+                "is_active": False
+            })
+
+class CancelSubscriptionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            subscription = UserSubscription.objects.get(user=request.user, is_active=True)
+            subscription.is_active = False
+            subscription.save()
+            
+            user = request.user
+            if getattr(user, 'role', None) == 'PREMIUM':
+                user.role = 'USER'
+                user.save()
+                
+            return Response({"message": "Suscripción cancelada exitosamente."})
+        except UserSubscription.DoesNotExist:
+            return Response({"error": "No tienes una suscripción activa."}, status=status.HTTP_404_NOT_FOUND)
+

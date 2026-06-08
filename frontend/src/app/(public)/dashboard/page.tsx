@@ -20,6 +20,8 @@ export default function UserDashboard() {
   const [studentData, setStudentData] = useState<any>(null);
   const [tuitionFee, setTuitionFee] = useState<string>('0.00');
   const [payingTuition, setPayingTuition] = useState(false);
+  const [subscription, setSubscription] = useState<any>(null);
+  const [cancellingSub, setCancellingSub] = useState(false);
 
   // Profile state
   const [firstName, setFirstName] = useState('');
@@ -38,6 +40,7 @@ export default function UserDashboard() {
     } else {
       fetchOrders();
       fetchStudentData();
+      fetchSubscription();
       if (user) {
         setFirstName(user.first_name || '');
         setLastName(user.last_name || '');
@@ -70,6 +73,36 @@ export default function UserDashboard() {
       }
     } catch (error) {
       // 404 means not a student, ignore.
+    }
+  };
+
+  const fetchSubscription = async () => {
+    try {
+      const res = await api.get('/premium/me/');
+      if (res.data && res.data.is_active) {
+        setSubscription(res.data);
+      } else {
+        setSubscription(null);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!confirm('¿Estás seguro de que deseas cancelar tu membresía Premium? Perderás acceso a todo el contenido exclusivo.')) return;
+    setCancellingSub(true);
+    try {
+      await api.post('/premium/cancel/');
+      setSubscription(null);
+      alert('Suscripción cancelada exitosamente.');
+      if (user) {
+        updateUser({ ...user, role: 'USER' });
+      }
+    } catch (error: any) {
+      alert(error?.response?.data?.error || 'Error al cancelar la suscripción.');
+    } finally {
+      setCancellingSub(false);
     }
   };
 
@@ -282,6 +315,50 @@ export default function UserDashboard() {
                 {profileMessage.text}
               </div>
             )}
+
+            {/* Premium Subscription Info */}
+            <div className="bg-black/50 border border-white/5 rounded-xl p-6 mb-8">
+              <h3 className="text-lg font-bold uppercase tracking-tight mb-4 text-zinc-300 flex items-center gap-2">
+                Estado de Suscripción Premium
+              </h3>
+              {subscription ? (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center flex-wrap gap-4">
+                    <div>
+                      <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Plan Actual</p>
+                      <p className="text-white font-bold">{subscription.plan_name}</p>
+                    </div>
+                    <div>
+                      <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Válida hasta</p>
+                      <p className="text-white font-bold">
+                        {subscription.end_date ? new Date(subscription.end_date).toLocaleDateString('es-MX', {day: '2-digit', month: 'short', year: 'numeric'}) : 'N/A'}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="px-3 py-1 bg-green-500/20 text-green-500 border border-green-500/30 rounded text-xs font-bold tracking-widest uppercase">
+                        ACTIVA
+                      </span>
+                    </div>
+                  </div>
+                  <div className="pt-4 border-t border-white/5 text-right">
+                    <button
+                      onClick={handleCancelSubscription}
+                      disabled={cancellingSub}
+                      className="text-red-500 hover:text-red-400 font-bold uppercase text-xs tracking-widest px-4 py-2 rounded-lg hover:bg-red-500/10 transition-colors border border-red-500/20 disabled:opacity-50"
+                    >
+                      {cancellingSub ? 'Cancelando...' : 'Cancelar Suscripción'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-zinc-400 text-sm">
+                  <p className="mb-4">No tienes una suscripción Premium activa en este momento.</p>
+                  <Link href="/premium" className="bg-e50914 hover:bg-red-700 text-white font-bold uppercase tracking-widest px-6 py-2 rounded transition-colors text-xs inline-block">
+                    Obtener Premium
+                  </Link>
+                </div>
+              )}
+            </div>
 
             <form onSubmit={handleUpdateProfile} className="space-y-6">
               <div>
