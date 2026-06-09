@@ -19,13 +19,14 @@ def get_status_display_text(status_code):
 
 def send_order_receipt_email(order):
     """
-    Send a purchase receipt for merch (physical items). No QR codes.
+    Send a purchase receipt for merch (physical items) and summarize the whole order.
     """
-    from django.db.models import Q
-    items = order.items.filter(Q(product__isnull=False) | Q(product__isnull=True, seat__isnull=True)).exclude(product_name__icontains='Boleto')
+    items = order.items.all()
     
     if not items.exists():
         return False
+        
+    has_tickets = items.filter(product_name__icontains='Boleto').exists() or items.filter(product_name__icontains='Entrada').exists()
         
     items_html = ""
     for item in items:
@@ -33,7 +34,7 @@ def send_order_receipt_email(order):
         <div style="background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:20px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
           <div>
               <h3 style="color:#fff;margin:0 0 4px;font-size:16px;">{item.quantity}x {item.product_name}</h3>
-              {'<p style="color:#888;font-size:13px;margin:0;">Talla: ' + item.size + '</p>' if item.size else ''}
+              {'<p style="color:#888;font-size:13px;margin:0;">Talla/Asiento: ' + item.size + '</p>' if item.size else ''}
           </div>
           <p style="color:#fff;font-size:16px;font-weight:bold;margin:0;">${float(item.price * item.quantity):.2f}</p>
         </div>
@@ -49,7 +50,7 @@ def send_order_receipt_email(order):
         <!-- Header -->
         <div style="text-align:center;margin-bottom:40px;">
           <h1 style="color:#fff;font-size:32px;font-weight:900;letter-spacing:-1px;margin:0;text-transform:uppercase;">SCW</h1>
-          <p style="color:#e00;font-size:11px;letter-spacing:4px;text-transform:uppercase;margin:4px 0 0;">Tienda Oficial</p>
+          <p style="color:#e00;font-size:11px;letter-spacing:4px;text-transform:uppercase;margin:4px 0 0;">Recibo de Compra</p>
         </div>
 
         <!-- Confirmation Banner -->
@@ -61,8 +62,9 @@ def send_order_receipt_email(order):
 
         <div style="background:#111;border:1px solid #222;border-radius:12px;padding:20px;margin-bottom:24px;">
           <p style="color:#aaa;font-size:14px;line-height:1.6;margin:0;">
-            Hemos recibido tu pago exitosamente. Ya estamos procesando tu pedido y te notificaremos en cuanto haya actualizaciones sobre el envío.
+            Hemos recibido tu pago exitosamente. Ya estamos procesando tu pedido y te notificaremos en cuanto haya actualizaciones.
           </p>
+          {f'<p style="color:#10b981;font-size:14px;font-weight:bold;line-height:1.6;margin:12px 0 0;">🎟️ Si compraste boletos, estos se enviaron en un correo por separado con sus códigos QR.</p>' if has_tickets else ''}
         </div>
 
         <!-- Items -->
