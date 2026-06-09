@@ -26,18 +26,27 @@ def send_order_receipt_email(order):
     if not items.exists():
         return False
         
-    has_tickets = items.filter(product_name__icontains='Boleto').exists() or items.filter(product_name__icontains='Entrada').exists()
+    try:
+        has_tickets = items.filter(product_name__icontains='Boleto').exists() or items.filter(product_name__icontains='Entrada').exists()
+    except Exception:
+        has_tickets = False
         
     items_html = ""
     for item in items:
-        size_html = f'<p style="color:#888;font-size:13px;margin:0;">Talla/Asiento: {item.size}</p>' if item.size else ""
+        size_str = item.size if item.size else ""
+        size_html = f'<p style="color:#888;font-size:13px;margin:0;">Talla/Asiento: {size_str}</p>' if size_str else ""
+        
+        price_val = float(item.price or 0)
+        qty_val = float(item.quantity or 1)
+        total_item_price = price_val * qty_val
+        
         items_html += f"""
         <div style="background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:20px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
           <div>
-              <h3 style="color:#fff;margin:0 0 4px;font-size:16px;">{item.quantity}x {item.product_name}</h3>
+              <h3 style="color:#fff;margin:0 0 4px;font-size:16px;">{int(qty_val)}x {item.product_name}</h3>
               {size_html}
           </div>
-          <p style="color:#fff;font-size:16px;font-weight:bold;margin:0;">${float(item.price * item.quantity):.2f}</p>
+          <p style="color:#fff;font-size:16px;font-weight:bold;margin:0;">${total_item_price:.2f}</p>
         </div>
         """
 
@@ -76,11 +85,11 @@ def send_order_receipt_email(order):
         
         <div style="display:flex;justify-content:space-between;border-top:1px solid #333;padding-top:16px;margin-top:8px;">
             <span style="color:#aaa;font-weight:bold;text-transform:uppercase;">Envío</span>
-            <span style="color:#fff;font-weight:bold;font-size:16px;">${float(order.shipping_cost):.2f} MXN</span>
+            <span style="color:#fff;font-weight:bold;font-size:16px;">${float(order.shipping_cost or 0):.2f} MXN</span>
         </div>
         <div style="display:flex;justify-content:space-between;border-top:1px solid #333;padding-top:16px;margin-top:8px;">
             <span style="color:#aaa;font-weight:bold;text-transform:uppercase;">Total</span>
-            <span style="color:#fff;font-weight:bold;font-size:18px;">${float(order.total_amount):.2f} MXN</span>
+            <span style="color:#fff;font-weight:bold;font-size:18px;">${float(order.total_amount or 0):.2f} MXN</span>
         </div>
 
         <!-- Footer -->
