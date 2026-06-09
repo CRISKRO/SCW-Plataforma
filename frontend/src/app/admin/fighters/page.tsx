@@ -40,17 +40,7 @@ export default function AdminFightersPage() {
   const columns = [
     { key: 'id', label: 'ID' },
     { key: 'name', label: 'Nombre' },
-    { 
-      key: 'alignment', 
-      label: 'Bando',
-      render: (val: string) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase tracking-widest ${
-          val === 'RUDO' ? 'bg-red-500/20 text-red-500' : 'bg-blue-500/20 text-blue-500'
-        }`}>
-          {val}
-        </span>
-      )
-    },
+    { key: 'social_network', label: 'Red Social' },
     { key: 'style', label: 'Estilo' },
     { 
       key: 'is_champion', 

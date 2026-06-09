@@ -3,9 +3,9 @@ from .models import Fighter, Event, Match
 
 @admin.register(Fighter)
 class FighterAdmin(admin.ModelAdmin):
-    list_display = ('name', 'real_name', 'alignment', 'is_active')
-    list_filter = ('alignment', 'is_active')
-    search_fields = ('name', 'real_name')
+    list_display = ('name', 'nickname', 'social_network', 'is_active')
+    list_filter = ('is_active',)
+    search_fields = ('name', 'nickname')
 
 class MatchInline(admin.TabularInline):
     model = Match

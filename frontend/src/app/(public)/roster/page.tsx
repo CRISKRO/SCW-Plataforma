@@ -33,7 +33,7 @@ export default function RosterPage() {
           >
             Roster <span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-400 to-zinc-600">Oficial</span>
           </motion.h1>
-          <p className="mt-4 text-zinc-400 max-w-2xl mx-auto">Técnicos. Rudos. Leyendas. Conoce a los protagonistas de nuestras batallas.</p>
+          <p className="mt-4 text-zinc-400 max-w-2xl mx-auto">Conoce a los protagonistas de nuestras batallas.</p>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -54,13 +54,11 @@ export default function RosterPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>
                 
                 <div className="absolute bottom-0 left-0 p-5 w-full transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                  <span className={`text-xs font-bold uppercase tracking-widest px-2 py-1 rounded inline-block mb-2 ${
-                    fighter.alignment === 'RUDO' ? 'bg-red-900/80 text-red-100' : 
-                    fighter.alignment === 'TECNICO' ? 'bg-blue-900/80 text-blue-100' : 
-                    'bg-zinc-800 text-zinc-300'
-                  }`}>
-                    {fighter.alignment}
-                  </span>
+                  {fighter.social_network && (
+                    <span className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded inline-block mb-2 bg-zinc-800 text-zinc-300">
+                      {fighter.social_network}
+                    </span>
+                  )}
                   <h3 className="text-2xl font-black uppercase tracking-tighter leading-none mb-1">
                     {fighter.name}
                   </h3>

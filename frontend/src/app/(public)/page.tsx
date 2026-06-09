@@ -415,9 +415,11 @@ export default function Home() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 
                 <div className="absolute bottom-0 left-0 p-4 w-full transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                  <span className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-1 block">
-                    {fighter.alignment}
-                  </span>
+                  {fighter.social_network && (
+                    <span className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-1 block">
+                      {fighter.social_network}
+                    </span>
+                  )}
                   <h3 className="text-xl font-black uppercase tracking-tighter">
                     {fighter.name}
                   </h3>

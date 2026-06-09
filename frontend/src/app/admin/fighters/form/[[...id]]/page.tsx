@@ -17,11 +17,11 @@ export default function FighterFormPage() {
   
   const [formData, setFormData] = useState({
     name: '',
-    real_name: '',
+    nickname: '',
     bio: '',
-    alignment: 'RUDO',
+    social_network: '',
     signature_move: '',
-    championships: '',
+    achievements: '',
     weight_kg: '',
     height_cm: '',
     is_active: true,
@@ -37,11 +37,11 @@ export default function FighterFormPage() {
           const data = await eventsService.getFighterDetails(Number(id));
           setFormData({
             name: data.name || '',
-            real_name: data.real_name || '',
+            nickname: data.nickname || '',
             bio: data.bio || '',
-            alignment: data.alignment || 'RUDO',
+            social_network: data.social_network || '',
             signature_move: data.signature_move || '',
-            championships: data.championships || '',
+            achievements: data.achievements || '',
             weight_kg: data.weight_kg || '',
             height_cm: data.height_cm || '',
             is_active: data.is_active !== undefined ? data.is_active : true,
@@ -87,11 +87,11 @@ export default function FighterFormPage() {
     try {
       const data = new FormData();
       data.append('name', formData.name);
-      data.append('real_name', formData.real_name);
+      data.append('nickname', formData.nickname);
       data.append('bio', formData.bio);
-      data.append('alignment', formData.alignment);
+      data.append('social_network', formData.social_network);
       data.append('signature_move', formData.signature_move);
-      data.append('championships', formData.championships);
+      data.append('achievements', formData.achievements);
       if (formData.weight_kg) data.append('weight_kg', formData.weight_kg);
       if (formData.height_cm) data.append('height_cm', formData.height_cm);
       data.append('is_active', String(formData.is_active));
@@ -148,31 +148,29 @@ export default function FighterFormPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-bold text-white uppercase tracking-widest">Nombre Real (Opcional)</label>
+            <label className="text-sm font-bold text-white uppercase tracking-widest">Apodo (Opcional)</label>
             <input
               type="text"
-              name="real_name"
-              value={formData.real_name}
+              name="nickname"
+              value={formData.nickname}
               onChange={handleChange}
               className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
-              placeholder="Nombre real del atleta"
+              placeholder="Ej. El ídolo de los niños"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <label className="text-sm font-bold text-white uppercase tracking-widest">Bando</label>
-            <select
-              name="alignment"
-              value={formData.alignment}
+            <label className="text-sm font-bold text-white uppercase tracking-widest">Red Social</label>
+            <input
+              type="text"
+              name="social_network"
+              value={formData.social_network}
               onChange={handleChange}
               className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
-            >
-              <option value="RUDO">Rudo</option>
-              <option value="TECNICO">Técnico</option>
-              <option value="NEUTRAL">Neutral</option>
-            </select>
+              placeholder="Ej. @luchador_scw"
+            />
           </div>
 
           <div className="space-y-2">
@@ -215,14 +213,14 @@ export default function FighterFormPage() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-bold text-white uppercase tracking-widest">Campeonatos Actuales</label>
+          <label className="text-sm font-bold text-white uppercase tracking-widest">Logros</label>
           <input
             type="text"
-            name="championships"
-            value={formData.championships}
+            name="achievements"
+            value={formData.achievements}
             onChange={handleChange}
             className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
-            placeholder="Ej. Campeonato Nacional SCW"
+            placeholder="Ej. Ganador de Royal Rumble 2024"
           />
         </div>
 

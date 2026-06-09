@@ -3,19 +3,14 @@ from django.utils.translation import gettext_lazy as _
 
 
 class Fighter(models.Model):
-    class Alignment(models.TextChoices):
-        TECNICO = 'TECNICO', _('Técnico')
-        RUDO = 'RUDO', _('Rudo')
-        NEUTRAL = 'NEUTRAL', _('Neutral')
-
     name = models.CharField(_('nombre de ring'), max_length=100)
-    real_name = models.CharField(_('nombre real'), max_length=100, blank=True)
+    nickname = models.CharField(_('apodo'), max_length=100, blank=True)
     bio = models.TextField(_('biografía'), blank=True)
     weight_kg = models.DecimalField(_('peso (kg)'), max_digits=5, decimal_places=2, null=True, blank=True)
     height_cm = models.IntegerField(_('estatura (cm)'), null=True, blank=True)
-    alignment = models.CharField(_('bando'), max_length=10, choices=Alignment.choices, default=Alignment.TECNICO)
+    social_network = models.CharField(_('red social'), max_length=100, blank=True)
     signature_move = models.CharField(_('movimiento especial'), max_length=100, blank=True)
-    championships = models.CharField(_('campeonatos actuales'), max_length=200, blank=True)
+    achievements = models.CharField(_('logros'), max_length=200, blank=True)
     image = models.ImageField(_('foto del luchador'), upload_to='fighters/', blank=True, null=True)
     is_active = models.BooleanField(_('activo'), default=True)
 
