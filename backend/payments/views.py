@@ -678,3 +678,53 @@ class MyOrdersView(APIView):
         orders = Order.objects.filter(user=request.user).order_by('-created_at')
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data, status=200)
+class TestEmailView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        try:
+            from django.core.mail import EmailMultiAlternatives, get_connection
+            from django.conf import settings
+            from api.models import get_active_config
+
+            config = get_active_config()
+            from_email = config.default_from_email if config.default_from_email else settings.DEFAULT_FROM_EMAIL
+            
+            # Use provided email or fallback to from_email
+            test_target = request.query_params.get('email', from_email)
+
+            connection = None
+            if config.email_host_user and config.email_host_password:
+                connection = get_connection(
+                    host=config.email_host,
+                    port=config.email_port,
+                    username=config.email_host_user,
+                    password=config.email_host_password,
+                    use_tls=config.email_use_tls,
+                )
+
+            email = EmailMultiAlternatives(
+                subject="Test SCW",
+                body="Testing SMTP configuration.",
+                from_email=from_email,
+                to=[test_target]
+            )
+            email.connection = connection
+            email.send(fail_silently=False)
+
+            return Response({
+                "status": "success",
+                "message": f"Test email sent successfully to {test_target}",
+                "config_used": {
+                    "host": config.email_host,
+                    "user": config.email_host_user,
+                    "from_email": from_email
+                }
+            })
+        except Exception as e:
+            import traceback
+            return Response({
+                "status": "error",
+                "error": str(e),
+                "traceback": traceback.format_exc()
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
