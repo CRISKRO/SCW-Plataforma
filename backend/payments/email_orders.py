@@ -30,15 +30,18 @@ def send_order_receipt_email(order):
         
     items_html = ""
     for item in items:
+        size_html = f'<p style="color:#888;font-size:13px;margin:0;">Talla/Asiento: {item.size}</p>' if item.size else ""
         items_html += f"""
         <div style="background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:20px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
           <div>
               <h3 style="color:#fff;margin:0 0 4px;font-size:16px;">{item.quantity}x {item.product_name}</h3>
-              {'<p style="color:#888;font-size:13px;margin:0;">Talla/Asiento: ' + item.size + '</p>' if item.size else ''}
+              {size_html}
           </div>
           <p style="color:#fff;font-size:16px;font-weight:bold;margin:0;">${float(item.price * item.quantity):.2f}</p>
         </div>
         """
+
+    tickets_note = '<p style="color:#10b981;font-size:14px;font-weight:bold;line-height:1.6;margin:12px 0 0;">🎟️ Si compraste boletos, estos se enviaron en un correo por separado con sus códigos QR.</p>' if has_tickets else ""
 
     html_body = f"""
     <!DOCTYPE html>
@@ -64,7 +67,7 @@ def send_order_receipt_email(order):
           <p style="color:#aaa;font-size:14px;line-height:1.6;margin:0;">
             Hemos recibido tu pago exitosamente. Ya estamos procesando tu pedido y te notificaremos en cuanto haya actualizaciones.
           </p>
-          {f'<p style="color:#10b981;font-size:14px;font-weight:bold;line-height:1.6;margin:12px 0 0;">🎟️ Si compraste boletos, estos se enviaron en un correo por separado con sus códigos QR.</p>' if has_tickets else ''}
+          {tickets_note}
         </div>
 
         <!-- Items -->
