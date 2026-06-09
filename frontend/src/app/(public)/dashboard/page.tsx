@@ -242,7 +242,10 @@ export default function UserDashboard() {
               </div>
             ) : (
               <div className="space-y-4">
-                {orders.map((order) => (
+                {orders.map((order) => {
+                  const hasTickets = order.items?.some((item: any) => item.product_name?.toLowerCase().includes('boleto') || item.product_name?.toLowerCase().includes('entrada'));
+                  
+                  return (
                   <div key={order.id} className="bg-zinc-900 border border-white/10 rounded-xl overflow-hidden">
                     <div className="bg-black/50 p-4 border-b border-white/5 flex flex-wrap justify-between items-center gap-4">
                       <div>
@@ -262,7 +265,7 @@ export default function UserDashboard() {
                           order.status === 'CANCELLED' ? 'bg-red-500/20 text-red-500 border border-red-500/30' : 
                           'bg-yellow-500/20 text-yellow-500 border border-yellow-500/30'
                         }`}>
-                          {order.status === 'PAID' ? 'PAGADO (BOLETOS ENVIADOS)' : 
+                          {order.status === 'PAID' ? (hasTickets ? 'PAGADO (BOLETOS ENVIADOS)' : 'PAGADO') : 
                            order.status === 'PENDING' ? 'PENDIENTE DE PAGO' : 
                            order.status === 'PROCESSING' ? 'PREPARANDO ENVÍO' :
                            order.status === 'SHIPPED' ? 'ENVIADO' :
@@ -287,15 +290,21 @@ export default function UserDashboard() {
                         ))}
                       </div>
                       
-                      {order.status === 'PAID' && (
+                      {order.status === 'PAID' && hasTickets && (
                         <div className="mt-4 pt-4 border-t border-white/5 text-sm text-zinc-400">
                           <Ticket className="w-4 h-4 inline mr-2 text-emerald-500" />
                           Tus códigos QR han sido enviados a <strong className="text-white">{order.contact_email}</strong>. Muéstralos en la entrada.
                         </div>
                       )}
+                      
+                      {order.status === 'PAID' && !hasTickets && (
+                        <div className="mt-4 pt-4 border-t border-white/5 text-sm text-zinc-400">
+                          Tu pedido está siendo procesado y pronto será preparado para envío.
+                        </div>
+                      )}
                     </div>
                   </div>
-                ))}
+                )})}
               </div>
             )}
           </motion.div>
