@@ -131,18 +131,27 @@ export default function Home() {
               // Static slide: full bleed background image (separated for mobile and desktop)
               <>
                 {/* Desktop Background */}
-                <div
-                  className="hidden md:block absolute inset-0 bg-cover bg-center bg-no-repeat"
-                  style={{ backgroundImage: `url(${slide.image})`, filter: 'brightness(0.35)' }}
-                />
+                <div className="hidden md:block absolute inset-0">
+                  <Image 
+                    src={slide.image} 
+                    alt={slide.title} 
+                    fill 
+                    priority={currentSlide === 0} 
+                    className="object-cover" 
+                    style={{ filter: 'brightness(0.35)' }} 
+                  />
+                </div>
                 {/* Mobile Background */}
-                <div
-                  className="block md:hidden absolute inset-0 bg-cover bg-center bg-no-repeat"
-                  style={{ 
-                    backgroundImage: `url(${slide.mobileImage || slide.image})`, 
-                    filter: 'brightness(0.35)' 
-                  }}
-                />
+                <div className="block md:hidden absolute inset-0">
+                  <Image 
+                    src={slide.mobileImage || slide.image} 
+                    alt={slide.title} 
+                    fill 
+                    priority={currentSlide === 0} 
+                    className="object-cover" 
+                    style={{ filter: 'brightness(0.35)' }} 
+                  />
+                </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/60" />
               </>
@@ -294,10 +303,9 @@ export default function Home() {
                       : 'w-10 md:w-16 h-16 md:h-20 opacity-40 hover:opacity-70 border border-white/20'
                   }`}
                 >
-                  <div
-                    className="absolute inset-0 bg-cover bg-center"
-                    style={{ backgroundImage: `url(${s.image})`, filter: 'brightness(0.6)' }}
-                  />
+                  <div className="absolute inset-0">
+                    <Image src={s.image} alt={s.title} fill className="object-cover" style={{ filter: 'brightness(0.6)' }} sizes="160px" />
+                  </div>
                   {currentSlide === index && (
                     <div className="absolute inset-0 flex items-end p-2">
                       <span className="text-[10px] font-bold text-white uppercase tracking-wider leading-tight line-clamp-2">{s.title}</span>
@@ -348,7 +356,9 @@ export default function Home() {
                     transition={{ delay: i * 0.1 }}
                     className="group relative h-96 bg-zinc-900 overflow-hidden cursor-pointer"
                   >
-                    <div className="absolute inset-0 bg-zinc-800 transition-transform duration-700 group-hover:scale-105" style={{ backgroundImage: `url(${event.banner_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                    <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-105">
+                      <Image src={event.banner_url || '/images/logoring.png'} alt={event.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 33vw" />
+                    </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-black/20" />
 
                     <div className="absolute bottom-0 left-0 p-6 w-full">
@@ -399,7 +409,9 @@ export default function Home() {
                 transition={{ delay: i * 0.1 }}
                 className="group relative aspect-[3/4] bg-zinc-900 overflow-hidden cursor-pointer grayscale hover:grayscale-0 transition-all duration-500"
               >
-                <div className="absolute inset-0 bg-zinc-800" style={{ backgroundImage: `url(${fighter.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                <div className="absolute inset-0 bg-zinc-800">
+                  <Image src={fighter.image_url || '/images/logoring.png'} alt={fighter.name} fill className="object-cover" sizes="(max-width: 768px) 50vw, 25vw" />
+                </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 
                 <div className="absolute bottom-0 left-0 p-4 w-full transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">

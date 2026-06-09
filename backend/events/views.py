@@ -20,7 +20,7 @@ class FighterViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
 
 class EventViewSet(viewsets.ModelViewSet):
-    queryset = Event.objects.all()
+    queryset = Event.objects.prefetch_related('matches__fighters').all()
     serializer_class = EventSerializer
     permission_classes = [IsAdminOrReadOnly]
 

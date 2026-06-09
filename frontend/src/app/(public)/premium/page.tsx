@@ -139,10 +139,9 @@ export default function PremiumPage() {
                     transition={{ delay: i * 0.08 }}
                     className="group relative bg-zinc-950 border border-white/10 rounded-2xl overflow-hidden hover:border-red-500/50 transition-all"
                   >
-                    {/* Thumbnail */}
                     <div className="relative aspect-video bg-zinc-900">
                       {thumb ? (
-                        <Image src={thumb} alt={video.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
+                        <Image src={thumb} alt={video.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" priority={i < 4} />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center">
                           <Video className="w-14 h-14 text-zinc-700" />
