@@ -241,12 +241,12 @@ export default function Home() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 30 }}
                   transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
-                  className="block flex-shrink-0 relative w-64 sm:w-80 lg:w-[400px] xl:w-[560px] mx-auto lg:mx-0"
+                  className="block flex-shrink-0 relative mx-auto lg:mx-0 h-[50vh] sm:h-[60vh] lg:h-[70vh] xl:h-[75vh] max-h-[750px] aspect-[2/3]"
                 >
                   {/* Glow effect behind poster */}
                   <div className="absolute -inset-4 sm:-inset-8 bg-red-600/15 blur-2xl sm:blur-3xl rounded-full" />
                   {/* Poster image */}
-                  <div className="relative w-full aspect-[2/3] rounded-xl sm:rounded-2xl overflow-hidden border border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.9)]">
+                  <div className="relative w-full h-full rounded-xl sm:rounded-2xl overflow-hidden border border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.9)]">
                     <Image
                       src={slide.image}
                       alt={slide.title}
