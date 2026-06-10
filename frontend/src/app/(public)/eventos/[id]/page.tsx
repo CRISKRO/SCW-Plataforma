@@ -49,9 +49,13 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
         if (!groupedSeats[seat.row_name]) groupedSeats[seat.row_name] = [];
         groupedSeats[seat.row_name].push(seat);
       });
-      // Sort seats once
+      // Sort seats once depending on zone type
       Object.keys(groupedSeats).forEach(row => {
-        groupedSeats[row].sort((a, b) => a.seat_number - b.seat_number);
+        if (zone.zone_type === 'SUR' || zone.zone_type === 'OESTE') {
+          groupedSeats[row].sort((a, b) => b.seat_number - a.seat_number);
+        } else {
+          groupedSeats[row].sort((a, b) => a.seat_number - b.seat_number);
+        }
       });
       return {
         ...zone,
@@ -271,7 +275,9 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
 
                       <div className="flex items-center justify-center w-full gap-4 md:gap-8 lg:gap-12">
                         {/* Oeste */}
-                        <div className="flex-1 flex justify-end">
+                        <div className="flex-1 flex justify-end relative">
+                          {/* Rotated text for GENERAL on the far left */}
+                          <div className="absolute left-[-110px] md:left-[-140px] top-1/2 -translate-y-1/2 -rotate-90 text-zinc-500 font-black text-4xl md:text-5xl lg:text-6xl tracking-widest opacity-20 pointer-events-none">GENERAL</div>
                           {(() => {
                             const zone = parsedZones.find(z => z.zone_type === 'OESTE');
                             if (!zone) return null;
@@ -288,13 +294,14 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                                         {zone.groupedSeats[rowName].map((seat: any) => {
                                           const isSelected = isSeatSelected(seat.id);
                                           return (
-                                            <button
-                                              key={seat.id}
-                                              disabled={!seat.is_available}
-                                              onClick={() => toggleSeat(seat, zone)}
-                                              className={`w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 rounded-md lg:rounded-lg flex items-center justify-center text-xs md:text-sm lg:text-base font-black transition-all shadow-md shrink-0 ${!seat.is_available ? 'bg-zinc-950 text-zinc-700 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_15px_rgba(239,68,68,0.6)]' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:border-zinc-400 hover:scale-110 z-10 hover:shadow-lg'}`}
-                                              title={seat.is_available ? `Fila ${rowName} - Asiento ${seat.seat_number}` : 'Ocupado'}
-                                            >{seat.seat_number}</button>
+                                            <div key={seat.id} className="contents">
+                                              <button
+                                                disabled={!seat.is_available}
+                                                onClick={() => toggleSeat(seat, zone)}
+                                                className={`w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 rounded-md lg:rounded-lg flex items-center justify-center text-xs md:text-sm lg:text-base font-black transition-all shadow-md shrink-0 ${!seat.is_available ? 'bg-zinc-950 text-zinc-700 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_15px_rgba(239,68,68,0.6)]' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:border-zinc-400 hover:scale-110 z-10 hover:shadow-lg'}`}
+                                                title={seat.is_available ? `Fila ${rowName} - Asiento ${seat.seat_number}` : 'Ocupado'}
+                                              >{seat.seat_number}</button>
+                                            </div>
                                           );
                                         })}
                                       </div>
@@ -326,7 +333,9 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                         </div>
 
                         {/* Este */}
-                        <div className="flex-1 flex justify-start">
+                        <div className="flex-1 flex justify-start relative">
+                          <div className="absolute right-[-110px] md:right-[-140px] top-1/2 -translate-y-1/2 rotate-90 text-zinc-500 font-black text-4xl md:text-5xl lg:text-6xl tracking-widest opacity-20 pointer-events-none">GENERAL</div>
+                          <div className="absolute right-[-240px] md:right-[-320px] top-1/2 -translate-y-1/2 rotate-90 text-zinc-500 font-black text-5xl md:text-6xl lg:text-7xl tracking-widest opacity-30 pointer-events-none">ESCENARIO</div>
                           {(() => {
                             const zone = parsedZones.find(z => z.zone_type === 'ESTE');
                             if (!zone) return null;
@@ -343,13 +352,15 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                                         {zone.groupedSeats[rowName].map((seat: any) => {
                                           const isSelected = isSeatSelected(seat.id);
                                           return (
-                                            <button
-                                              key={seat.id}
-                                              disabled={!seat.is_available}
-                                              onClick={() => toggleSeat(seat, zone)}
-                                              className={`w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 rounded-md lg:rounded-lg flex items-center justify-center text-xs md:text-sm lg:text-base font-black transition-all shadow-md shrink-0 ${!seat.is_available ? 'bg-zinc-950 text-zinc-700 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_15px_rgba(239,68,68,0.6)]' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:border-zinc-400 hover:scale-110 z-10 hover:shadow-lg'}`}
-                                              title={seat.is_available ? `Fila ${rowName} - Asiento ${seat.seat_number}` : 'Ocupado'}
-                                            >{seat.seat_number}</button>
+                                            <div key={seat.id} className="contents">
+                                              <button
+                                                disabled={!seat.is_available}
+                                                onClick={() => toggleSeat(seat, zone)}
+                                                className={`w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 rounded-md lg:rounded-lg flex items-center justify-center text-xs md:text-sm lg:text-base font-black transition-all shadow-md shrink-0 ${!seat.is_available ? 'bg-zinc-950 text-zinc-700 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_15px_rgba(239,68,68,0.6)]' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:border-zinc-400 hover:scale-110 z-10 hover:shadow-lg'}`}
+                                                title={seat.is_available ? `Fila ${rowName} - Asiento ${seat.seat_number}` : 'Ocupado'}
+                                              >{seat.seat_number}</button>
+                                              {seat.seat_number === 22 && <div className="h-6 md:h-10 lg:h-12" />}
+                                            </div>
                                           );
                                         })}
                                       </div>

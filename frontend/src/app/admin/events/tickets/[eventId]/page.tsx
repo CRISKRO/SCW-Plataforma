@@ -166,19 +166,26 @@ export default function EventTicketsPage() {
             <div key={rowName} className={`flex items-center justify-center gap-1 ${isVertical ? 'flex-col' : 'flex-row'}`}>
               <div className="w-5 h-5 flex items-center justify-center font-bold text-zinc-500 text-[10px] bg-zinc-900/60 rounded-md">{rowName}</div>
               <div className={`flex gap-1 ${isVertical ? 'flex-col' : 'flex-row'}`}>
-                {groupedSeats[rowName].sort((a, b) => a.seat_number - b.seat_number).map(seat => (
-                  <button
-                    key={seat.id}
-                    onClick={() => handleToggleSeat(zone.id, seat.id, seat.is_available)}
-                    className={`w-6 h-6 md:w-8 md:h-8 rounded-md flex items-center justify-center text-[11px] font-black transition-all shadow-md ${
-                      seat.is_available 
-                        ? 'bg-red-600/90 text-white border border-red-500 hover:bg-red-500 hover:scale-110 z-10' 
-                        : 'bg-zinc-950 text-zinc-700 border border-zinc-800 hover:bg-zinc-900 opacity-50 hover:opacity-100'
-                    }`}
-                    title={`Fila ${rowName} - Asiento ${seat.seat_number} (${ZONE_TYPES.find(zt => zt.value === zone.zone_type)?.label})`}
-                  >
-                    {seat.seat_number}
-                  </button>
+                {groupedSeats[rowName].sort((a, b) => {
+                  if (zone.zone_type === 'SUR' || zone.zone_type === 'OESTE') {
+                    return b.seat_number - a.seat_number;
+                  }
+                  return a.seat_number - b.seat_number;
+                }).map(seat => (
+                  <div key={seat.id} className="contents">
+                    <button
+                      onClick={() => handleToggleSeat(zone.id, seat.id, seat.is_available)}
+                      className={`w-6 h-6 md:w-8 md:h-8 rounded-md flex items-center justify-center text-[11px] font-black transition-all shadow-md ${
+                        seat.is_available 
+                          ? 'bg-red-600/90 text-white border border-red-500 hover:bg-red-500 hover:scale-110 z-10' 
+                          : 'bg-zinc-950 text-zinc-700 border border-zinc-800 hover:bg-zinc-900 opacity-50 hover:opacity-100'
+                      }`}
+                      title={`Fila ${rowName} - Asiento ${seat.seat_number} (${ZONE_TYPES.find(zt => zt.value === zone.zone_type)?.label})`}
+                    >
+                      {seat.seat_number}
+                    </button>
+                    {zone.zone_type === 'ESTE' && seat.seat_number === 22 && <div className="h-4 md:h-6" />}
+                  </div>
                 ))}
               </div>
               <div className="w-5 h-5 flex items-center justify-center font-bold text-zinc-500 text-[10px] bg-zinc-900/60 rounded-md">{rowName}</div>
@@ -375,7 +382,8 @@ export default function EventTicketsPage() {
 
                 <div className="flex items-center justify-center w-full">
                   {/* Oeste */}
-                  <div className="flex-1 flex justify-end pr-8">
+                  <div className="flex-1 flex justify-end pr-8 relative">
+                    <div className="absolute left-[-20px] top-1/2 -translate-y-1/2 -rotate-90 text-zinc-500 font-black text-3xl tracking-widest opacity-20 pointer-events-none">GENERAL</div>
                     {renderZone(zoneOeste, 'left')}
                   </div>
 
@@ -410,7 +418,9 @@ export default function EventTicketsPage() {
                   </div>
 
                   {/* Este */}
-                  <div className="flex-1 flex justify-start pl-8">
+                  <div className="flex-1 flex justify-start pl-8 relative">
+                    <div className="absolute right-[-20px] top-1/2 -translate-y-1/2 rotate-90 text-zinc-500 font-black text-3xl tracking-widest opacity-20 pointer-events-none">GENERAL</div>
+                    <div className="absolute right-[-80px] top-1/2 -translate-y-1/2 rotate-90 text-zinc-500 font-black text-4xl tracking-widest opacity-30 pointer-events-none">ESCENARIO</div>
                     {renderZone(zoneEste, 'right')}
                   </div>
                 </div>
