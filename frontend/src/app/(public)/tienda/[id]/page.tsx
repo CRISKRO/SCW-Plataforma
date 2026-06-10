@@ -25,7 +25,12 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         const res = await api.get(`/merch/products/${productId}/`);
         setProduct(res.data);
         
-        if (res.data.sizes_available) {
+        if (res.data.is_clothing) {
+          const sizeObj = res.data.stock_by_size || {};
+          const availableSizes = Object.keys(sizeObj);
+          const firstAvailable = availableSizes.find(s => sizeObj[s] > 0);
+          setSelectedSize(firstAvailable || availableSizes[0] || '');
+        } else if (res.data.sizes_available) {
           const sizes = res.data.sizes_available.split(',').map((s: string) => s.trim()).filter(Boolean);
           setSelectedSize(sizes.length > 0 ? sizes[0] : '');
         }
@@ -77,9 +82,11 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     );
   }
 
-  const sizes = product.sizes_available 
-    ? product.sizes_available.split(',').map((s: string) => s.trim()).filter(Boolean) 
-    : [];
+  const sizes = product.is_clothing 
+    ? Object.keys(product.stock_by_size || {}) 
+    : (product.sizes_available 
+      ? product.sizes_available.split(',').map((s: string) => s.trim()).filter(Boolean) 
+      : []);
 
   return (
     <div className="bg-black min-h-screen text-white pt-24 pb-12">
@@ -160,38 +167,52 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               <div className="mb-8">
                 <p className="text-sm font-semibold mb-3">Talla: <span className="font-normal text-zinc-300">{selectedSize}</span></p>
                 <div className="flex flex-wrap gap-2">
-                  {sizes.map((size: string) => (
-                    <button
-                      key={size}
-                      onClick={() => setSelectedSize(size)}
-                      className={`h-12 min-w-[3rem] px-4 rounded-md border font-medium text-sm transition-all ${
-                        selectedSize === size 
-                          ? 'border-[#3483fa] text-[#3483fa] bg-[#3483fa]/10 ring-1 ring-[#3483fa]' 
-                          : 'border-white/20 text-zinc-300 hover:border-white/50 hover:bg-zinc-800'
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
+                  {sizes.map((size: string) => {
+                    const isOutOfStock = product.is_clothing && (product.stock_by_size?.[size] || 0) === 0;
+                    return (
+                      <button
+                        key={size}
+                        disabled={isOutOfStock}
+                        onClick={() => setSelectedSize(size)}
+                        className={`h-12 min-w-[3rem] px-4 rounded-md border font-medium text-sm transition-all ${
+                          isOutOfStock 
+                            ? 'border-white/5 text-zinc-600 bg-zinc-900 cursor-not-allowed opacity-50 relative overflow-hidden before:absolute before:content-[""] before:w-[150%] before:h-px before:bg-zinc-600 before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:-rotate-12' 
+                            : selectedSize === size 
+                            ? 'border-[#3483fa] text-[#3483fa] bg-[#3483fa]/10 ring-1 ring-[#3483fa]' 
+                            : 'border-white/20 text-zinc-300 hover:border-white/50 hover:bg-zinc-800'
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
 
             <div className="mb-8">
               <p className="text-sm font-semibold mb-2">Stock disponible</p>
-              {product.stock > 0 ? (
-                <p className="text-sm text-zinc-300">Cantidad: <span className="font-semibold text-white">1 unidad</span> <span className="text-zinc-500">({product.stock} disponibles)</span></p>
+              {product.is_clothing ? (
+                (product.stock_by_size?.[selectedSize] || 0) > 0 ? (
+                  <p className="text-sm text-zinc-300">Cantidad: <span className="font-semibold text-white">1 unidad</span> <span className="text-zinc-500">({product.stock_by_size[selectedSize]} disponibles en esta talla)</span></p>
+                ) : (
+                  <p className="text-sm font-semibold text-red-500">Talla agotada</p>
+                )
               ) : (
-                <p className="text-sm font-semibold text-red-500">Agotado temporalmente</p>
+                product.stock > 0 ? (
+                  <p className="text-sm text-zinc-300">Cantidad: <span className="font-semibold text-white">1 unidad</span> <span className="text-zinc-500">({product.stock} disponibles)</span></p>
+                ) : (
+                  <p className="text-sm font-semibold text-red-500">Agotado temporalmente</p>
+                )
               )}
             </div>
 
             <div className="flex flex-col gap-3 mt-auto">
               <button
                 onClick={handleAddToCart}
-                disabled={product.stock === 0}
+                disabled={product.is_clothing ? (product.stock_by_size?.[selectedSize] || 0) === 0 : product.stock === 0}
                 className={`w-full py-4 rounded-md font-semibold text-base transition-colors ${
-                  product.stock === 0
+                  (product.is_clothing ? (product.stock_by_size?.[selectedSize] || 0) === 0 : product.stock === 0)
                     ? 'bg-zinc-900 text-zinc-600 cursor-not-allowed border border-white/5'
                     : 'bg-[#4189e6]/10 hover:bg-[#4189e6]/20 text-[#3483fa]'
                 }`}

@@ -39,6 +39,8 @@ export default function AdminProductsPage() {
   const [prodCategory, setProdCategory] = useState('');
   const [prodIsActive, setProdIsActive] = useState(true);
   const [prodFreeShipping, setProdFreeShipping] = useState(false);
+  const [prodIsClothing, setProdIsClothing] = useState(false);
+  const [prodStockBySize, setProdStockBySize] = useState<Record<string, number>>({});
   const [prodImageFile, setProdImageFile] = useState<File | null>(null);
   const [prodImagePreview, setProdImagePreview] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
@@ -78,6 +80,8 @@ export default function AdminProductsPage() {
     setProdCategory(categories[0]?.id?.toString() || '');
     setProdIsActive(true);
     setProdFreeShipping(false);
+    setProdIsClothing(false);
+    setProdStockBySize({});
     setProdImageFile(null);
     setProdImagePreview(null);
     setIsModalOpen(true);
@@ -93,6 +97,8 @@ export default function AdminProductsPage() {
     setProdCategory(product.category?.toString() || '');
     setProdIsActive(product.is_active);
     setProdFreeShipping(product.free_shipping || false);
+    setProdIsClothing(product.is_clothing || false);
+    setProdStockBySize(product.stock_by_size || {});
     setProdImageFile(null);
     setProdImagePreview(product.image_url || null);
     setIsModalOpen(true);
@@ -124,6 +130,8 @@ export default function AdminProductsPage() {
       formData.append('category', prodCategory);
       formData.append('is_active', prodIsActive ? 'true' : 'false');
       formData.append('free_shipping', prodFreeShipping ? 'true' : 'false');
+      formData.append('is_clothing', prodIsClothing ? 'true' : 'false');
+      formData.append('stock_by_size', JSON.stringify(prodStockBySize));
       
       if (prodImageFile) {
         formData.append('image', prodImageFile);
@@ -330,13 +338,13 @@ export default function AdminProductsPage() {
                     <td className="px-6 py-4 font-bold text-white">${parseFloat(prod.price).toFixed(2)}</td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                        prod.stock === 0 
+                        (prod.is_clothing ? Object.values(prod.stock_by_size || {}).reduce((a:any,b:any)=>a+b, 0) : prod.stock) === 0 
                           ? 'bg-red-500/10 text-red-500 border border-red-500/20' 
-                          : prod.stock <= 5 
+                          : (prod.is_clothing ? Object.values(prod.stock_by_size || {}).reduce((a:any,b:any)=>a+b, 0) : prod.stock) <= 5 
                           ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' 
                           : 'bg-zinc-900 text-zinc-300'
                       }`}>
-                        {prod.stock} pzas
+                        {prod.is_clothing ? Object.values(prod.stock_by_size || {}).reduce((a:any,b:any)=>a+b, 0) : prod.stock} pzas
                       </span>
                     </td>
                     <td className="px-6 py-4 text-zinc-500 font-mono text-xs">{prod.sizes_available || 'N/A'}</td>
@@ -489,29 +497,67 @@ export default function AdminProductsPage() {
                     <div className="space-y-1.5">
                       <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500">Stock Inicial *</label>
                       <input 
-                        required 
+                        required={!prodIsClothing}
+                        disabled={prodIsClothing}
                         type="number" 
                         min="0" 
                         value={prodStock} 
                         onChange={(e) => setProdStock(e.target.value)} 
-                        className="w-full bg-black border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-red-500/50 transition-all placeholder-zinc-700" 
-                        placeholder="10"
+                        className={`w-full bg-black border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-red-500/50 transition-all placeholder-zinc-700 ${prodIsClothing ? 'opacity-50 cursor-not-allowed' : ''}`} 
+                        placeholder={prodIsClothing ? "Manejado por talla" : "10"}
                       />
                     </div>
                   </div>
 
                   {/* Sizes */}
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500">Tallas Disponibles</label>
-                    <input 
-                      type="text" 
-                      value={prodSizes} 
-                      onChange={(e) => setProdSizes(e.target.value)} 
-                      className="w-full bg-black border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-red-500/50 transition-all placeholder-zinc-700 font-mono text-sm" 
-                      placeholder="S, M, L, XL"
-                    />
-                    <span className="text-[10px] text-zinc-600 block leading-normal">Separa las tallas por comas o déjalo vacío si no aplica.</span>
-                  </div>
+                  {prodIsClothing ? (
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500">Inventario por Talla</label>
+                      <div className="bg-black border border-white/10 rounded-lg p-3 space-y-3">
+                        {Object.entries(prodStockBySize).map(([size, stock]) => (
+                          <div key={size} className="flex gap-2 items-center">
+                            <span className="font-mono text-sm w-12 text-zinc-300">{size}</span>
+                            <input 
+                              type="number" 
+                              min="0" 
+                              value={stock} 
+                              onChange={(e) => setProdStockBySize({...prodStockBySize, [size]: parseInt(e.target.value) || 0})}
+                              className="w-24 bg-zinc-900 border border-white/10 rounded p-1.5 text-white text-sm focus:outline-none focus:border-red-500/50"
+                            />
+                            <button type="button" onClick={() => {
+                              const newStock = {...prodStockBySize};
+                              delete newStock[size];
+                              setProdStockBySize(newStock);
+                            }} className="text-red-500 p-1 hover:bg-white/5 rounded transition-colors">
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                        <div className="flex gap-2">
+                          <input type="text" id="newSizeInput" placeholder="S, M, G..." className="w-20 bg-zinc-900 border border-white/10 rounded p-1.5 text-white text-sm uppercase focus:outline-none focus:border-red-500/50" />
+                          <button type="button" onClick={() => {
+                            const input = document.getElementById('newSizeInput') as HTMLInputElement;
+                            if (input && input.value) {
+                              setProdStockBySize({...prodStockBySize, [input.value.toUpperCase()]: 0});
+                              input.value = '';
+                            }
+                          }} className="bg-zinc-800 text-xs px-3 py-1.5 rounded font-bold hover:bg-zinc-700 transition-colors">Añadir Talla</button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500">Tallas Disponibles</label>
+                      <input 
+                        type="text" 
+                        value={prodSizes} 
+                        onChange={(e) => setProdSizes(e.target.value)} 
+                        className="w-full bg-black border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-red-500/50 transition-all placeholder-zinc-700 font-mono text-sm" 
+                        placeholder="S, M, L, XL"
+                      />
+                      <span className="text-[10px] text-zinc-600 block leading-normal">Separa las tallas por comas o déjalo vacío si no aplica.</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -528,7 +574,7 @@ export default function AdminProductsPage() {
               </div>
 
               {/* Toggles */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Status Toggle */}
                 <div className="flex items-center justify-between p-4 bg-zinc-900 border border-white/5 rounded-xl">
                   <div>
@@ -567,6 +613,27 @@ export default function AdminProductsPage() {
                   >
                     <span className={`w-6 h-6 bg-white rounded-full absolute top-0.5 transition-all duration-300 ${
                       prodFreeShipping ? 'left-[26px]' : 'left-0.5'
+                    }`} />
+                  </button>
+                </div>
+
+                {/* Is Clothing Toggle */}
+                <div className="flex items-center justify-between p-4 bg-zinc-900 border border-white/5 rounded-xl">
+                  <div>
+                    <h4 className="text-sm font-bold text-white">Es Ropa</h4>
+                    <p className="text-xs text-zinc-500">Stock por talla</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setProdIsClothing(!prodIsClothing)}
+                    className={`w-14 h-8 rounded-full transition-all duration-300 relative border ${
+                      prodIsClothing 
+                        ? 'bg-blue-600 border-blue-500' 
+                        : 'bg-zinc-800 border-zinc-700'
+                    }`}
+                  >
+                    <span className={`w-6 h-6 bg-white rounded-full absolute top-0.5 transition-all duration-300 ${
+                      prodIsClothing ? 'left-[26px]' : 'left-0.5'
                     }`} />
                   </button>
                 </div>

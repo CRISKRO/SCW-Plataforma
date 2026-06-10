@@ -328,6 +328,16 @@ class ProcessCardPaymentView(APIView):
                     if getattr(item, 'seat', None) and item.seat.is_available:
                         item.seat.is_available = False
                         item.seat.save()
+                    if item.product:
+                        product = item.product
+                        if product.is_clothing:
+                            size = item.size
+                            if size and isinstance(product.stock_by_size, dict) and size in product.stock_by_size:
+                                product.stock_by_size[size] = max(0, product.stock_by_size[size] - item.quantity)
+                                product.save(update_fields=['stock_by_size'])
+                        else:
+                            product.stock = max(0, product.stock - item.quantity)
+                            product.save(update_fields=['stock'])
             order.save()
 
             return Response({
@@ -479,11 +489,21 @@ class VerifyPaymentView(APIView):
                 order.status = Order.Status.PAID
                 order.save()
 
-                # Bloquear asientos
+                # Bloquear asientos y descontar inventario
                 for item in order.items.all():
                     if getattr(item, 'seat', None) and item.seat.is_available:
                         item.seat.is_available = False
                         item.seat.save()
+                    if item.product:
+                        product = item.product
+                        if product.is_clothing:
+                            size = item.size
+                            if size and isinstance(product.stock_by_size, dict) and size in product.stock_by_size:
+                                product.stock_by_size[size] = max(0, product.stock_by_size[size] - item.quantity)
+                                product.save(update_fields=['stock_by_size'])
+                        else:
+                            product.stock = max(0, product.stock - item.quantity)
+                            product.save(update_fields=['stock'])
 
                 # Send ticket/merch email
                 try:
@@ -644,11 +664,21 @@ class WebhookView(APIView):
                                 order.status = Order.Status.PAID
                                 order.save()
 
-                                # Bloquear asientos
+                                # Bloquear asientos y descontar inventario
                                 for item in order.items.all():
                                     if getattr(item, 'seat', None) and item.seat.is_available:
                                         item.seat.is_available = False
                                         item.seat.save()
+                                    if item.product:
+                                        product = item.product
+                                        if product.is_clothing:
+                                            size = item.size
+                                            if size and isinstance(product.stock_by_size, dict) and size in product.stock_by_size:
+                                                product.stock_by_size[size] = max(0, product.stock_by_size[size] - item.quantity)
+                                                product.save(update_fields=['stock_by_size'])
+                                        else:
+                                            product.stock = max(0, product.stock - item.quantity)
+                                            product.save(update_fields=['stock'])
 
                                 try:
                                     has_tickets = order.items.filter(seat__isnull=False).exists() or order.items.filter(product__isnull=True, product_name__icontains='Boleto').exists()

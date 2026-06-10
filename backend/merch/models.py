@@ -21,6 +21,8 @@ class Product(models.Model):
     price = models.DecimalField(_('precio (MXN)'), max_digits=8, decimal_places=2)
     stock = models.PositiveIntegerField(_('stock disponible'), default=0)
     sizes_available = models.CharField(_('tallas disponibles'), max_length=100, blank=True, help_text="Ej: S, M, L, XL")
+    is_clothing = models.BooleanField(_('es ropa (stock por talla)'), default=False)
+    stock_by_size = models.JSONField(_('stock detallado por talla'), default=dict, blank=True)
     image = models.ImageField(_('imagen del producto'), upload_to='products/', blank=True, null=True)
     is_active = models.BooleanField(_('activo en tienda'), default=True)
     free_shipping = models.BooleanField(_('envío gratis'), default=False)
