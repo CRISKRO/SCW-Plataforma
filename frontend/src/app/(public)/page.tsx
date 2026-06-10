@@ -241,7 +241,7 @@ export default function Home() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 30 }}
                   transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
-                  className="block flex-shrink-0 relative w-48 sm:w-64 lg:w-96 xl:w-[420px] mx-auto lg:mx-0"
+                  className="block flex-shrink-0 relative w-64 sm:w-80 lg:w-[400px] xl:w-[560px] mx-auto lg:mx-0"
                 >
                   {/* Glow effect behind poster */}
                   <div className="absolute -inset-4 sm:-inset-8 bg-red-600/15 blur-2xl sm:blur-3xl rounded-full" />
@@ -255,15 +255,8 @@ export default function Home() {
                       sizes="(max-width: 768px) 100vw, 50vw"
                       priority
                     />
-                    {/* Subtle gradient overlay on poster */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                     {/* Red accent line */}
                     <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-red-600" />
-                    {/* Event title at bottom of poster */}
-                    <div className="absolute bottom-0 left-0 right-0 p-5">
-                      <p className="text-xs font-black uppercase tracking-widest text-red-400 mb-1">Próximo Evento</p>
-                      <p className="text-white font-black text-xl uppercase tracking-tight leading-tight">{slide.title}</p>
-                    </div>
                   </div>
                 </motion.div>
               )}
