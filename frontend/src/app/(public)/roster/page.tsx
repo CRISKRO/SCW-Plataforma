@@ -82,7 +82,7 @@ export default function RosterPage() {
         </div>
 
         {/* ALUMNOS SECTION */}
-        {!loading && studentFighters.length > 0 && (
+        {!loading && (
           <>
             <div className="text-center mb-16 mt-12 border-t border-zinc-800 pt-16">
               <motion.h2 
@@ -95,40 +95,44 @@ export default function RosterPage() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {studentFighters.map((fighter, i) => (
-                <motion.div 
-                  key={fighter.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.05 }}
-                  className="group relative aspect-[3/4] bg-zinc-900 overflow-hidden rounded-xl border border-white/5 hover:border-zinc-500 transition-all duration-300"
-                >
-                  <div className="absolute inset-0 bg-cover bg-center grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105" style={{ backgroundImage: `url(${fighter.image_url})` }}></div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>
-                  
-                  <div className="absolute bottom-0 left-0 p-5 w-full transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                    {fighter.social_network && (
-                      <span className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded inline-block mb-2 bg-zinc-800 text-zinc-300">
-                        {fighter.social_network}
-                      </span>
-                    )}
-                    <h3 className="text-2xl font-black uppercase tracking-tighter leading-none mb-1">
-                      {fighter.name}
-                    </h3>
-                    {fighter.weight_kg && fighter.height_cm && (
-                      <p className="text-zinc-400 text-xs mt-2 uppercase tracking-widest">
-                        {fighter.height_cm} cm | {fighter.weight_kg} kg
-                      </p>
-                    )}
-                    {fighter.signature_move && (
-                      <p className="text-zinc-300 text-sm mt-1 truncate">
-                        Movimiento: <span className="italic">{fighter.signature_move}</span>
-                      </p>
-                    )}
-                  </div>
-                </motion.div>
-              ))}
+              {studentFighters.length === 0 ? (
+                <div className="col-span-4 text-center text-zinc-500 py-12">No hay estudiantes registrados.</div>
+              ) : (
+                studentFighters.map((fighter, i) => (
+                  <motion.div 
+                    key={fighter.id}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.05 }}
+                    className="group relative aspect-[3/4] bg-zinc-900 overflow-hidden rounded-xl border border-white/5 hover:border-zinc-500 transition-all duration-300"
+                  >
+                    <div className="absolute inset-0 bg-cover bg-center grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105" style={{ backgroundImage: `url(${fighter.image_url})` }}></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>
+                    
+                    <div className="absolute bottom-0 left-0 p-5 w-full transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                      {fighter.social_network && (
+                        <span className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded inline-block mb-2 bg-zinc-800 text-zinc-300">
+                          {fighter.social_network}
+                        </span>
+                      )}
+                      <h3 className="text-2xl font-black uppercase tracking-tighter leading-none mb-1">
+                        {fighter.name}
+                      </h3>
+                      {fighter.weight_kg && fighter.height_cm && (
+                        <p className="text-zinc-400 text-xs mt-2 uppercase tracking-widest">
+                          {fighter.height_cm} cm | {fighter.weight_kg} kg
+                        </p>
+                      )}
+                      {fighter.signature_move && (
+                        <p className="text-zinc-300 text-sm mt-1 truncate">
+                          Movimiento: <span className="italic">{fighter.signature_move}</span>
+                        </p>
+                      )}
+                    </div>
+                  </motion.div>
+                ))
+              )}
             </div>
           </>
         )}
