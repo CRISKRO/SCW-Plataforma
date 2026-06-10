@@ -87,9 +87,9 @@ export default function RosterPage() {
             <div className="text-center mb-16 mt-12 border-t border-zinc-800 pt-16">
               <motion.h2 
                 initial={{ opacity: 0, y: -20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-                className="text-4xl md:text-5xl font-black uppercase tracking-tight"
+                className="text-5xl md:text-7xl font-black uppercase tracking-tight"
               >
-                Nuestros <span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-400 to-zinc-600">Alumnos</span>
+                Estudiantes <span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-400 to-zinc-600">SCW</span>
               </motion.h2>
               <p className="mt-4 text-zinc-400 max-w-2xl mx-auto">El futuro de SCW. Conoce a los talentos en formación de nuestra escuela.</p>
             </div>
