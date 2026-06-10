@@ -109,7 +109,7 @@ export default function Home() {
     <div className="bg-black text-white selection:bg-zinc-500 selection:text-white">
 
       {/* Hero Section Carousel */}
-      <section className="relative min-h-[130dvh] sm:min-h-[120dvh] md:min-h-0 md:h-screen flex items-start md:items-center justify-center overflow-hidden pt-28 pb-56 md:pt-0 md:pb-0">
+      <section className="relative min-h-[100svh] flex items-start md:items-center justify-center overflow-hidden pt-28 pb-48 md:pt-0 md:pb-0">
 
         {/* Background: full-screen for static slides, dark for event slides */}
         <AnimatePresence>
@@ -310,15 +310,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Scroll indicator */}
-        <motion.div
-          animate={{ y: [0, 10, 0] }}
-          transition={{ repeat: Infinity, duration: 2 }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center text-zinc-500"
-        >
-          <span className="text-xs uppercase tracking-widest mb-2 font-bold">Descubre Más</span>
-          <div className="w-[1px] h-10 bg-gradient-to-b from-zinc-500 to-transparent" />
-        </motion.div>
+
       </section>
 
       {/* Upcoming Events Section */}
