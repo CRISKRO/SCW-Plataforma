@@ -33,7 +33,7 @@ export default function EventTicketsPage() {
   const [newZone, setNewZone] = useState({
     zone_type: 'NORTE',
     price: '',
-    rows: 3,
+    rows: 2,
     seats_per_row: 10,
   });
 
@@ -89,7 +89,7 @@ export default function EventTicketsPage() {
       setNewZone({ 
         zone_type: newAvailable.length > 0 ? newAvailable[0].value : 'NORTE', 
         price: '', 
-        rows: 3, 
+        rows: 2, 
         seats_per_row: 10 
       });
     } catch (error: any) {
