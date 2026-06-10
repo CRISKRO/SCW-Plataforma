@@ -41,12 +41,20 @@ export default function AdminFightersPage() {
     { key: 'id', label: 'ID' },
     { key: 'name', label: 'Nombre' },
     { key: 'social_network', label: 'Red Social' },
-    { key: 'style', label: 'Estilo' },
     { 
-      key: 'is_champion', 
-      label: 'Campeón',
+      key: 'is_student', 
+      label: 'Alumno',
       render: (val: boolean) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-bold ${val ? 'bg-yellow-500/20 text-yellow-500' : 'text-zinc-500'}`}>
+        <span className={`px-2 py-1 rounded-full text-xs font-bold ${val ? 'bg-blue-500/20 text-blue-500' : 'text-zinc-500'}`}>
+          {val ? 'Sí' : 'No'}
+        </span>
+      )
+    },
+    { 
+      key: 'is_active', 
+      label: 'Activo',
+      render: (val: boolean) => (
+        <span className={`px-2 py-1 rounded-full text-xs font-bold ${val ? 'bg-green-500/20 text-green-500' : 'text-red-500/50'}`}>
           {val ? 'Sí' : 'No'}
         </span>
       )

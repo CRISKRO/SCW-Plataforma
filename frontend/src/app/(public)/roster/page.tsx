@@ -22,6 +22,9 @@ export default function RosterPage() {
     fetchFighters();
   }, []);
 
+  const regularFighters = fighters.filter(f => !f.is_student);
+  const studentFighters = fighters.filter(f => f.is_student);
+
   return (
     <div className="bg-black min-h-screen text-white pt-24 pb-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -36,13 +39,13 @@ export default function RosterPage() {
           <p className="mt-4 text-zinc-400 max-w-2xl mx-auto">Conoce a los protagonistas de nuestras batallas.</p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-24">
           {loading ? (
             <div className="col-span-4 text-center text-zinc-500 py-12">Cargando luchadores...</div>
-          ) : fighters.length === 0 ? (
-            <div className="col-span-4 text-center text-zinc-500 py-12">No hay luchadores registrados.</div>
+          ) : regularFighters.length === 0 ? (
+            <div className="col-span-4 text-center text-zinc-500 py-12">No hay luchadores registrados en el roster principal.</div>
           ) : (
-            fighters.map((fighter, i) => (
+            regularFighters.map((fighter, i) => (
               <motion.div 
                 key={fighter.id}
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -77,6 +80,51 @@ export default function RosterPage() {
             ))
           )}
         </div>
+
+        {/* ALUMNOS SECTION */}
+        {!loading && studentFighters.length > 0 && (
+          <>
+            <div className="text-center mb-16 mt-12 border-t border-zinc-800 pt-16">
+              <motion.h2 
+                initial={{ opacity: 0, y: -20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                className="text-4xl md:text-5xl font-black uppercase tracking-tight"
+              >
+                Nuestros <span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-400 to-zinc-600">Alumnos</span>
+              </motion.h2>
+              <p className="mt-4 text-zinc-400 max-w-2xl mx-auto">El futuro de SCW. Conoce a los talentos en formación de nuestra escuela.</p>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {studentFighters.map((fighter, i) => (
+                <motion.div 
+                  key={fighter.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.05 }}
+                  className="group relative aspect-[3/4] bg-zinc-900 overflow-hidden rounded-xl border border-white/5 hover:border-zinc-500 transition-all duration-300"
+                >
+                  <div className="absolute inset-0 bg-cover bg-center grayscale opacity-80 group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105" style={{ backgroundImage: `url(${fighter.image_url})` }}></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent opacity-90 group-hover:opacity-100 transition-opacity"></div>
+                  
+                  <div className="absolute bottom-0 left-0 p-5 w-full transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                    <span className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded inline-block mb-2 bg-blue-900/50 text-blue-300 border border-blue-800">
+                      Alumno
+                    </span>
+                    <h3 className="text-xl font-black uppercase tracking-tighter leading-none mb-1">
+                      {fighter.name}
+                    </h3>
+                    {fighter.social_network && (
+                      <p className="text-zinc-400 text-xs mt-2 uppercase tracking-widest">
+                        {fighter.social_network}
+                      </p>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </>
+        )}
 
       </div>
     </div>

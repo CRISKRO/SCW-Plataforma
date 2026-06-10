@@ -9,8 +9,8 @@ class FighterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Fighter
-        fields = ['id', 'name', 'real_name', 'bio', 'weight_kg', 'height_cm',
-                  'alignment', 'signature_move', 'championships', 'image', 'is_active', 'image_url']
+        fields = ['id', 'name', 'nickname', 'bio', 'weight_kg', 'height_cm',
+                  'social_network', 'signature_move', 'achievements', 'image', 'is_active', 'is_student', 'image_url']
         extra_kwargs = {
             'image': {'write_only': True, 'required': False, 'allow_null': True},
         }

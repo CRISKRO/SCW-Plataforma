@@ -25,6 +25,7 @@ export default function FighterFormPage() {
     weight_kg: '',
     height_cm: '',
     is_active: true,
+    is_student: false,
   });
   
   const [imageUrl, setImageUrl] = useState('');
@@ -45,6 +46,7 @@ export default function FighterFormPage() {
             weight_kg: data.weight_kg || '',
             height_cm: data.height_cm || '',
             is_active: data.is_active !== undefined ? data.is_active : true,
+            is_student: data.is_student !== undefined ? data.is_student : false,
           });
           if (data.image_url) {
             setImageUrl(data.image_url);
@@ -95,6 +97,7 @@ export default function FighterFormPage() {
       if (formData.weight_kg) data.append('weight_kg', formData.weight_kg);
       if (formData.height_cm) data.append('height_cm', formData.height_cm);
       data.append('is_active', String(formData.is_active));
+      data.append('is_student', String(formData.is_student));
       
       if (imageFile) {
         data.append('image', imageFile);
@@ -253,18 +256,34 @@ export default function FighterFormPage() {
           ></textarea>
         </div>
 
-        <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            name="is_active"
-            id="is_active"
-            checked={formData.is_active}
-            onChange={handleChange}
-            className="w-5 h-5 accent-red-500"
-          />
-          <label htmlFor="is_active" className="text-white font-medium">
-            Activo en el Roster
-          </label>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              name="is_active"
+              id="is_active"
+              checked={formData.is_active}
+              onChange={handleChange}
+              className="w-5 h-5 accent-red-500"
+            />
+            <label htmlFor="is_active" className="text-white font-medium">
+              Activo en el Roster
+            </label>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              name="is_student"
+              id="is_student"
+              checked={formData.is_student}
+              onChange={handleChange}
+              className="w-5 h-5 accent-blue-500"
+            />
+            <label htmlFor="is_student" className="text-white font-medium">
+              Es Alumno (Se mostrará en la sección de alumnos)
+            </label>
+          </div>
         </div>
 
         <div className="pt-4 border-t border-white/10">

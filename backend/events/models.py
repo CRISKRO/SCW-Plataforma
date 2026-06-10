@@ -13,6 +13,7 @@ class Fighter(models.Model):
     achievements = models.CharField(_('logros'), max_length=200, blank=True)
     image = models.ImageField(_('foto del luchador'), upload_to='fighters/', blank=True, null=True)
     is_active = models.BooleanField(_('activo'), default=True)
+    is_student = models.BooleanField(_('es alumno'), default=False)
 
     class Meta:
         verbose_name = 'Luchador'
