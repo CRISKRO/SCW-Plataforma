@@ -480,20 +480,19 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
 
                       {/* Norte */}
                       {parsedZones.find(z => z.zone_type === 'NORTE') && (
-                        <div className="flex justify-center mb-12 md:mb-20">
+                        <div className="flex justify-center mb-2 md:mb-4">
                           {renderPublicZone(parsedZones.find(z => z.zone_type === 'NORTE'), 'top')}
                         </div>
                       )}
 
                       <div className="flex items-center justify-center w-full">
                         {/* Oeste */}
-                        <div className="flex-1 flex justify-end pr-12 md:pr-24 relative">
-                          <div className="absolute left-[-20px] top-1/2 -translate-y-1/2 -rotate-90 text-zinc-500 font-black text-3xl md:text-4xl tracking-widest opacity-20 pointer-events-none">GENERAL</div>
+                        <div className="flex-1 flex justify-end pr-2 md:pr-4 relative">
                           {renderPublicZone(parsedZones.find(z => z.zone_type === 'OESTE'), 'left')}
                         </div>
 
                         {/* El Ring Central - Diseño Realista */}
-                        <div className="relative w-48 h-48 md:w-64 md:h-64 bg-[#d4d4d8] border-[8px] border-zinc-950 rounded flex items-center justify-center shadow-[0_0_80px_rgba(255,255,255,0.05)] z-10 shrink-0 mx-8 md:mx-16 lg:mx-24">
+                        <div className="relative w-48 h-48 md:w-64 md:h-64 bg-[#d4d4d8] border-[8px] border-zinc-950 rounded flex items-center justify-center shadow-[0_0_80px_rgba(255,255,255,0.05)] z-10 shrink-0 mx-6 md:mx-10 lg:mx-16">
                           <div className="absolute inset-1 border-[1.5px] border-red-600/80 rounded-sm"></div>
                           <div className="absolute inset-2 border-[1.5px] border-zinc-100 rounded-sm"></div>
                           <div className="absolute inset-3 border-[1.5px] border-red-600/80 rounded-sm"></div>
@@ -511,15 +510,14 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                         </div>
 
                         {/* Este */}
-                        <div className="flex-1 flex justify-start pl-12 md:pl-24 relative">
-                          <div className="absolute right-[-40px] top-1/2 -translate-y-1/2 rotate-90 text-zinc-500 font-black text-4xl tracking-widest opacity-30 pointer-events-none">ESCENARIO</div>
+                        <div className="flex-1 flex justify-start pl-2 md:pl-4 relative">
                           {renderPublicZone(parsedZones.find(z => z.zone_type === 'ESTE'), 'right')}
                         </div>
                       </div>
 
                       {/* Sur */}
                       {parsedZones.find(z => z.zone_type === 'SUR') && (
-                        <div className="flex justify-center mt-12 md:mt-20">
+                        <div className="flex justify-center mt-2 md:mt-4">
                           {renderPublicZone(parsedZones.find(z => z.zone_type === 'SUR'), 'bottom')}
                         </div>
                       )}
