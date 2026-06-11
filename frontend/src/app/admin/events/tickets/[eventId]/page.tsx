@@ -123,13 +123,28 @@ export default function EventTicketsPage() {
   useEffect(() => {
     const el = mapContainerRef.current;
     if (!el) return;
+    
     const preventNativeZoom = (e: TouchEvent) => {
-      if (e.touches.length === 2) {
+      if (e.touches.length >= 2) {
         e.preventDefault();
       }
     };
+    
+    const preventGesture = (e: Event) => {
+      e.preventDefault();
+    };
+
     el.addEventListener('touchmove', preventNativeZoom, { passive: false });
-    return () => el.removeEventListener('touchmove', preventNativeZoom);
+    el.addEventListener('gesturestart', preventGesture);
+    el.addEventListener('gesturechange', preventGesture);
+    el.addEventListener('gestureend', preventGesture);
+
+    return () => {
+      el.removeEventListener('touchmove', preventNativeZoom);
+      el.removeEventListener('gesturestart', preventGesture);
+      el.removeEventListener('gesturechange', preventGesture);
+      el.removeEventListener('gestureend', preventGesture);
+    };
   }, []);
 
   useEffect(() => {
@@ -557,7 +572,7 @@ export default function EventTicketsPage() {
           </p>
 
           <div 
-            className={`w-full h-[50vh] min-h-[400px] max-h-[600px] bg-zinc-900/20 border border-white/5 rounded-2xl overflow-hidden relative ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+            className={`w-full h-[50vh] min-h-[400px] max-h-[600px] bg-zinc-900/20 border border-white/5 rounded-2xl overflow-hidden relative touch-pan-x touch-pan-y ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
             ref={mapContainerRef}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}

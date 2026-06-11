@@ -177,13 +177,28 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
   useEffect(() => {
     const el = mapContainerRef.current;
     if (!el) return;
+    
     const preventNativeZoom = (e: TouchEvent) => {
-      if (e.touches.length === 2) {
+      if (e.touches.length >= 2) {
         e.preventDefault();
       }
     };
+    
+    const preventGesture = (e: Event) => {
+      e.preventDefault();
+    };
+
     el.addEventListener('touchmove', preventNativeZoom, { passive: false });
-    return () => el.removeEventListener('touchmove', preventNativeZoom);
+    el.addEventListener('gesturestart', preventGesture);
+    el.addEventListener('gesturechange', preventGesture);
+    el.addEventListener('gestureend', preventGesture);
+
+    return () => {
+      el.removeEventListener('touchmove', preventNativeZoom);
+      el.removeEventListener('gesturestart', preventGesture);
+      el.removeEventListener('gesturechange', preventGesture);
+      el.removeEventListener('gestureend', preventGesture);
+    };
   }, []);
 
   const isSeatSelected = (seatId: number) =>
@@ -346,7 +361,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
               Usa dos dedos para mover y hacer zoom
             </div>
             <div 
-              className={`bg-zinc-950 border border-white/10 rounded-3xl h-[50vh] min-h-[400px] max-h-[600px] shadow-2xl relative overflow-hidden flex items-center justify-center w-full ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+              className={`bg-zinc-950 border border-white/10 rounded-3xl h-[50vh] min-h-[400px] max-h-[600px] shadow-2xl relative overflow-hidden flex items-center justify-center w-full touch-pan-x touch-pan-y ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
               ref={mapContainerRef}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
