@@ -292,13 +292,4 @@ def send_transfer_admin_email(order, request):
     except Exception as e:
         print("CRITICAL ERROR sending transfer admin email:", e)
         return False
-            host=config.email_host,
-            port=config.email_port,
-            username=config.email_host_user,
-            password=config.email_host_password,
-            use_tls=config.email_use_tls,
-        )
 
-    email.connection = connection
-    email.send(fail_silently=False)
-    return True
