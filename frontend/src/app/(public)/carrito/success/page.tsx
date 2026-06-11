@@ -10,7 +10,7 @@ import api from '@/services/api';
 function SuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [state, setState] = useState<'loading' | 'approved' | 'pending' | 'failed' | 'transfer'>('loading');
+  const [state, setState] = useState<'loading' | 'approved' | 'pending' | 'failed'>('loading');
   const [orderId, setOrderId] = useState<string | null>(null);
   const [alreadyProcessed, setAlreadyProcessed] = useState(false);
   const [hasTickets, setHasTickets] = useState(true); // Default true for direct access without data
@@ -20,15 +20,6 @@ function SuccessContent() {
     const payment_id = searchParams.get('payment_id');
     const external_reference = searchParams.get('external_reference');
     const status = searchParams.get('status');
-
-    const method = searchParams.get('method');
-    
-    if (method === 'transfer') {
-      const urlOrderId = searchParams.get('order_id');
-      if (urlOrderId) setOrderId(urlOrderId);
-      setState('transfer');
-      return;
-    }
 
     // If no payment_id in URL, it's a direct access (no MP payment made yet)
     if (!payment_id || !external_reference) {
@@ -109,25 +100,6 @@ function SuccessContent() {
           <p className="text-zinc-400 mb-3">Tu pago está siendo verificado. Una vez confirmado recibirás tus boletos por correo.</p>
           <p className="text-zinc-500 text-sm mb-8">Orden #{orderId}</p>
           <Link href="/" className="text-[#009EE3] hover:underline">Volver al inicio</Link>
-        </motion.div>
-      </div>
-    );
-  }
-
-  if (state === 'transfer') {
-    return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center max-w-md">
-          <div className="w-24 h-24 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Clock className="w-12 h-12 text-blue-500" />
-          </div>
-          <h1 className="text-3xl font-black uppercase mb-3">En Revisión</h1>
-          <p className="text-zinc-400 mb-3">Hemos recibido tu comprobante de transferencia y está siendo revisado manualmente.</p>
-          <p className="text-zinc-400 mb-3">Una vez aprobado, recibirás un correo electrónico de confirmación con tus boletos y/o recibo de envío.</p>
-          {orderId && <p className="text-zinc-500 text-sm mb-8">Orden #{orderId}</p>}
-          <Link href="/" className="bg-white text-black px-8 py-3 font-bold uppercase tracking-widest hover:bg-zinc-200 transition-colors inline-flex items-center gap-2 rounded-xl">
-            Volver al inicio
-          </Link>
         </motion.div>
       </div>
     );

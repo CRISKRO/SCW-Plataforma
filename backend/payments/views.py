@@ -4,85 +4,10 @@ from rest_framework import serializers, status, viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAdminUser
-from django.core.signing import Signer, BadSignature
-from django.http import HttpResponse
 from .models import Order, OrderItem
 from merch.models import Product
 from .serializers import OrderSerializer
 from api.models import get_active_config
-
-class ApproveTransferView(APIView):
-    """Allows admins to approve transfer orders directly via a secure email link."""
-    permission_classes = [AllowAny]
-
-    def get(self, request, token):
-        signer = Signer()
-        try:
-            order_id = signer.unsign(token)
-            order = Order.objects.get(id=int(order_id))
-        except (BadSignature, Order.DoesNotExist, ValueError):
-            return HttpResponse("Enlace inválido o expirado.", status=400)
-
-        if order.status == Order.Status.PAID:
-            html = f"""
-            <!DOCTYPE html>
-            <html>
-            <head><meta charset="UTF-8"><title>Transferencia Aprobada</title></head>
-            <body style="background:#000;color:#fff;font-family:sans-serif;text-align:center;padding:50px;">
-                <h1 style="color:#16a34a;">✅ Orden #{order.id} ya estaba aprobada.</h1>
-            </body>
-            </html>
-            """
-            return HttpResponse(html)
-
-        if order.payment_method != 'TRANSFER':
-            return HttpResponse("Esta orden no es de transferencia.")
-
-        # Approve order
-        order.status = Order.Status.PAID
-        order.save()
-
-        # Deduct seats and stock
-        for item in order.items.all():
-            if getattr(item, 'seat', None) and item.seat.is_available:
-                item.seat.is_available = False
-                item.seat.save()
-            if item.product:
-                product = item.product
-                if product.is_clothing:
-                    size = item.size
-                    if size and isinstance(product.stock_by_size, dict) and size in product.stock_by_size:
-                        product.stock_by_size[size] = max(0, product.stock_by_size[size] - item.quantity)
-                        product.save(update_fields=['stock_by_size'])
-                else:
-                    product.stock = max(0, product.stock - item.quantity)
-                    product.save(update_fields=['stock'])
-
-        # Send emails
-        try:
-            has_tickets = order.items.filter(seat__isnull=False).exists() or order.items.filter(product__isnull=True, product_name__icontains='Boleto').exists()
-            has_merch = order.items.filter(product__isnull=False).exists() or order.items.filter(product__isnull=True).exclude(product_name__icontains='Boleto').exists()
-            
-            if has_tickets:
-                from .email_tickets import send_ticket_email
-                send_ticket_email(order)
-            if has_merch:
-                from .email_orders import send_order_receipt_email
-                send_order_receipt_email(order)
-        except Exception as mail_err:
-            print("Email error from approve transfer:", mail_err)
-
-        html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head><meta charset="UTF-8"><title>Transferencia Aprobada</title></head>
-        <body style="background:#000;color:#fff;font-family:sans-serif;text-align:center;padding:50px;">
-            <h1 style="color:#16a34a;">✅ Orden #{order.id} Aprobada Exitosamente</h1>
-            <p>Se ha confirmado el pago y se han enviado los boletos o recibos correspondientes al usuario.</p>
-        </body>
-        </html>
-        """
-        return HttpResponse(html)
 
 class MPPublicKeyView(APIView):
     permission_classes = [AllowAny]

@@ -43,20 +43,22 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
   const [sessionId] = useState(() => Math.random().toString(36).substring(2, 15));
 
   const [scale, setScale] = useState(1);
-  const [minScale, setMinScale] = useState(0.5);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const initialPinchDist = useRef<number | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const innerContainerRef = useRef<HTMLDivElement>(null);
 
-  const MAX_SCALE = 2;
-  const handleZoomIn = () => setScale(s => Math.min(s + 0.2, MAX_SCALE));
-  const handleZoomOut = () => setScale(s => Math.max(s - 0.2, minScale));
-  const handleResetZoom = () => { 
-    setScale(minScale); 
-    setPosition({ x: 0, y: 0 }); 
+  const handleZoomIn = () => setScale(s => Math.min(s + 0.2, 3));
+  const handleZoomOut = () => setScale(s => Math.max(s - 0.2, 0.6));
+  const handleResetZoom = () => {
+    if (mapContainerRef.current) {
+      const containerWidth = mapContainerRef.current.clientWidth;
+      setScale(containerWidth < 900 ? containerWidth / 900 : 1);
+    } else {
+      setScale(1);
+    }
+    setPosition({ x: 0, y: 0 });
   };
 
   const onPointerDown = (e: React.PointerEvent) => {
@@ -95,7 +97,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
       const touch2 = e.touches[1];
       const dist = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
       initialPinchDist.current = dist;
-      
+
       const midX = (touch1.clientX + touch2.clientX) / 2;
       const midY = (touch1.clientY + touch2.clientY) / 2;
       setDragStart({ x: midX - position.x, y: midY - position.y });
@@ -114,11 +116,11 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
     } else if (e.touches.length === 2 && initialPinchDist.current !== null) {
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
-      
+
       // Pinch zoom
       const dist = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
       const ratio = dist / initialPinchDist.current;
-      setScale(s => Math.min(Math.max(s * ratio, minScale), MAX_SCALE));
+      setScale(s => Math.min(Math.max(s * ratio, 0.6), 3));
       initialPinchDist.current = dist;
 
       // 2-finger pan
@@ -191,19 +193,11 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
   }, [eventId]);
 
   useEffect(() => {
-    if (mapContainerRef.current && innerContainerRef.current && parsedZones.length > 0) {
-      // Use a short timeout to let the DOM render the inner content width properly
-      setTimeout(() => {
-        if (!mapContainerRef.current || !innerContainerRef.current) return;
-        const containerWidth = mapContainerRef.current.clientWidth;
-        const innerWidth = innerContainerRef.current.clientWidth;
-        
-        // Fit with an 8% margin so it's not touching the absolute edges
-        const calculatedMinScale = containerWidth < innerWidth ? (containerWidth / innerWidth) * 0.92 : 1;
-        setMinScale(calculatedMinScale);
-        setScale(calculatedMinScale);
-        setPosition({ x: 0, y: 0 });
-      }, 50);
+    if (mapContainerRef.current && parsedZones.length > 0) {
+      const containerWidth = mapContainerRef.current.clientWidth;
+      if (containerWidth < 900) {
+        setScale(containerWidth / 900);
+      }
     }
   }, [parsedZones]);
 
@@ -211,13 +205,13 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
   useEffect(() => {
     const el = mapContainerRef.current;
     if (!el) return;
-    
+
     const preventNativeZoom = (e: TouchEvent) => {
       if (e.touches.length >= 2) {
         e.preventDefault();
       }
     };
-    
+
     const preventGesture = (e: Event) => {
       e.preventDefault();
     };
@@ -275,7 +269,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
       setLoading(true);
       const seatIds = selectedSeats.map(s => s.seatId);
       await api.post('/tickets/seats/lock_seats/', { seat_ids: seatIds, session_id: sessionId });
-      
+
       selectedSeats.forEach(seat => {
         addItem({
           id: parseInt(`999${seat.seatId}`),
@@ -290,7 +284,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
       setSelectedSeats([]);
       setShowConfirmPanel(false);
       useToastStore.getState().addToast(`Se agregaron ${selectedSeats.length} boleto(s) al carrito y se reservaron por 10 min`, 'success');
-      
+
       // Smoothly scroll to the top since the page height will shrink and leave the user stranded at the bottom
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error: any) {
@@ -308,7 +302,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
 
   const totalPrice = selectedSeats.reduce((acc, s) => acc + s.price, 0);
 
-  const renderPublicZone = (zone: any, position: 'top'|'bottom'|'left'|'right' = 'top') => {
+  const renderPublicZone = (zone: any, position: 'top' | 'bottom' | 'left' | 'right' = 'top') => {
     if (!zone) return null;
     const isVertical = position === 'left' || position === 'right';
     const rowNames = position === 'top' || position === 'left' ? zone.sortedRowNamesReversed : zone.sortedRowNames;
@@ -451,7 +445,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
             <div className="md:hidden text-center text-zinc-500 text-xs mb-2 uppercase tracking-widest">
               Usa un dedo para mover el mapa, dos para hacer zoom
             </div>
-            <div 
+            <div
               className={`bg-zinc-950 border border-white/10 rounded-3xl h-[50vh] min-h-[400px] max-h-[600px] shadow-2xl relative overflow-hidden flex items-center justify-center w-full touch-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
               ref={mapContainerRef}
               onPointerDown={onPointerDown}
@@ -468,25 +462,25 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                 </div>
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <div 
-                    ref={innerContainerRef}
+                  <div
                     style={{
                       transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
                       transition: isDragging ? 'none' : 'transform 0.1s ease-out'
                     }}
                   >
-                    <div className="bg-zinc-900/60 shadow-2xl rounded-[2rem] p-3 md:p-6 flex flex-col items-center justify-center border border-white/10 relative w-max backdrop-blur-md">
-                        
-                        {/* Norte */}
-                        {parsedZones.find(z => z.zone_type === 'NORTE') && (
-                          <div className="flex justify-center mb-12 md:mb-20">
-                            {renderPublicZone(parsedZones.find(z => z.zone_type === 'NORTE'), 'top')}
-                          </div>
-                        )}
+                    <div className="bg-zinc-900/60 shadow-2xl rounded-[3rem] p-4 md:p-8 flex flex-col items-center justify-center border border-white/10 relative min-w-[700px] backdrop-blur-md">
+
+                      {/* Norte */}
+                      {parsedZones.find(z => z.zone_type === 'NORTE') && (
+                        <div className="flex justify-center mb-2 md:mb-4">
+                          {renderPublicZone(parsedZones.find(z => z.zone_type === 'NORTE'), 'top')}
+                        </div>
+                      )}
 
                       <div className="flex items-center justify-center w-full">
                         {/* Oeste */}
-                        <div className="flex-1 flex justify-end pr-12 md:pr-24 relative">
+                        <div className="flex-1 flex justify-end pr-2 md:pr-4 relative">
+                          <div className="absolute left-[-20px] top-1/2 -translate-y-1/2 -rotate-90 text-zinc-500 font-black text-3xl md:text-4xl tracking-widest opacity-20 pointer-events-none">GENERAL</div>
                           {renderPublicZone(parsedZones.find(z => z.zone_type === 'OESTE'), 'left')}
                         </div>
 
@@ -509,14 +503,15 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                         </div>
 
                         {/* Este */}
-                        <div className="flex-1 flex justify-start pl-12 md:pl-24 relative">
+                        <div className="flex-1 flex justify-start pl-2 md:pl-4 relative">
+                          <div className="absolute right-[-40px] top-1/2 -translate-y-1/2 rotate-90 text-zinc-500 font-black text-4xl tracking-widest opacity-30 pointer-events-none">ESCENARIO</div>
                           {renderPublicZone(parsedZones.find(z => z.zone_type === 'ESTE'), 'right')}
                         </div>
                       </div>
 
                       {/* Sur */}
                       {parsedZones.find(z => z.zone_type === 'SUR') && (
-                        <div className="flex justify-center mt-12 md:mt-20">
+                        <div className="flex justify-center mt-2 md:mt-4">
                           {renderPublicZone(parsedZones.find(z => z.zone_type === 'SUR'), 'bottom')}
                         </div>
                       )}
@@ -614,5 +609,11 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
         )}
       </AnimatePresence>
     </div>
+  );
+}
+          </>
+        )}
+      </AnimatePresence >
+    </div >
   );
 }

@@ -15,7 +15,7 @@ export default function CartPage() {
   const [mounted, setMounted] = useState(false);
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  
+
   // Shipping states
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
@@ -45,7 +45,7 @@ export default function CartPage() {
     if (user?.city) setCity(user.city);
     if (user?.state) setState(user.state);
     if (user?.zipcode) setZipcode(user.zipcode);
-    
+
     // Fetch shipping cost from config
     const fetchConfig = async () => {
       try {
@@ -66,7 +66,7 @@ export default function CartPage() {
       router.push('/login?redirect=/carrito');
       return;
     }
-    
+
     if (!email) {
       alert("Por favor ingresa tu correo electrónico.");
       return;
@@ -75,12 +75,12 @@ export default function CartPage() {
       alert("Por favor completa todos los datos de envío y teléfono de contacto.");
       return;
     }
-    
+
     if (paymentMethod === 'TRANSFER' && !receiptFile) {
       alert("Por favor sube tu comprobante de pago para la transferencia.");
       return;
     }
-    
+
     setLoading(true);
     try {
       const orderItems = items.map(item => ({
@@ -125,7 +125,7 @@ export default function CartPage() {
         window.location.href = response.data.init_point;
       } else {
         clearCart();
-        router.push(`/carrito/success?method=transfer&order_id=${response.data.order_id}`);
+        router.push('/carrito/success');
       }
     } catch (error) {
       console.error("Error:", error);
@@ -205,7 +205,7 @@ export default function CartPage() {
             {/* Panel de Pago */}
             <div className="lg:w-2/5">
               <div className="bg-zinc-950 border border-white/10 rounded-2xl p-6 sticky top-28 space-y-6">
-                
+
                 {/* Resumen */}
                 <div>
                   <h2 className="text-xl font-bold uppercase mb-4">Resumen</h2>
@@ -244,7 +244,7 @@ export default function CartPage() {
                 {hasMerch && (
                   <div className="space-y-4 pt-4 border-t border-white/10">
                     <h3 className="font-bold uppercase text-sm">Datos de Envío</h3>
-                    
+
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase tracking-widest text-zinc-500">Teléfono de contacto</label>
                       <input type="tel" placeholder="10 dígitos" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-black border border-white/20 p-3 rounded-xl text-white focus:outline-none focus:border-[#009EE3] transition-colors text-sm" />
@@ -276,7 +276,7 @@ export default function CartPage() {
                 {/* Opciones de pago */}
                 <div className="space-y-4 pt-4 border-t border-white/10">
                   <h3 className="font-bold uppercase text-sm">Método de Pago</h3>
-                  
+
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       onClick={() => setPaymentMethod('MERCADOPAGO')}
@@ -293,16 +293,16 @@ export default function CartPage() {
                       <span className="text-xs font-bold uppercase text-center">Transferencia</span>
                     </button>
                   </div>
-                  
+
                   {paymentMethod === 'TRANSFER' && (
                     <div className="p-4 bg-zinc-900 border border-zinc-700 rounded-xl space-y-4">
                       <p className="text-sm text-zinc-300">
                         Realiza la transferencia a la siguiente cuenta y sube tu comprobante. Tu pedido será aprobado manualmente en breve.
                       </p>
                       <div className="bg-black p-3 rounded border border-white/10 font-mono text-sm text-white">
-                        Banco: BBVA<br/>
-                        Cuenta: 1234567890<br/>
-                        CLABE: 012345678901234567<br/>
+                        Banco: BBVA<br />
+                        Cuenta: 1234567890<br />
+                        CLABE: 012345678901234567<br />
                         Nombre: SCW Pro Wrestling
                       </div>
                       <div className="space-y-2">
