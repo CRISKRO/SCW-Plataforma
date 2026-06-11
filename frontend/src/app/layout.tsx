@@ -17,6 +17,8 @@ export const viewport = {
 import AuthProvider from "@/components/AuthProvider";
 import ToastProvider from "@/components/ToastProvider";
 
+import GoogleProvider from "@/components/GoogleProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -25,10 +27,12 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={`${inter.variable} font-sans antialiased bg-black text-white`}>
-        <AuthProvider>
-          {children}
-          <ToastProvider />
-        </AuthProvider>
+        <GoogleProvider>
+          <AuthProvider>
+            {children}
+            <ToastProvider />
+          </AuthProvider>
+        </GoogleProvider>
       </body>
     </html>
   );

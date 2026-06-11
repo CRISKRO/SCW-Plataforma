@@ -4,7 +4,8 @@ from .views import (
     RegisterView, UserProfileView, UserViewSet, 
     SendEmailOTPView, VerifyEmailOTPView,
     SendPasswordResetOTPView, ResetPasswordWithOTPView,
-    SendRegisterEmailOTPView, VerifyRegisterEmailOTPView
+    SendRegisterEmailOTPView, VerifyRegisterEmailOTPView,
+    GoogleLoginView
 )
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
@@ -21,6 +22,7 @@ urlpatterns = [
     path('password-reset-confirm/', ResetPasswordWithOTPView.as_view(), name='reset_password_with_otp'),
     path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('login/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('login/google/', GoogleLoginView.as_view(), name='google_login'),
     path('profile/', UserProfileView.as_view(), name='auth_profile'),
     path('', include(router.urls)),
 ]

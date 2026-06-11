@@ -252,3 +252,72 @@ class VerifyRegisterEmailOTPView(APIView):
             return Response({"message": "Código verificado correctamente."}, status=status.HTTP_200_OK)
             
         return Response({"error": "Código incorrecto o expirado."}, status=status.HTTP_400_BAD_REQUEST)
+
+class GoogleLoginView(APIView):
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        token = request.data.get('token')
+        if not token:
+            return Response({"error": "No se proporcionó el token de Google."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            from google.oauth2 import id_token
+            from google.auth.transport import requests as google_requests
+            from django.conf import settings
+            import os
+
+            # Verify the token
+            # If NEXT_PUBLIC_GOOGLE_CLIENT_ID is not configured, we'll try to get it from settings/env
+            # To allow testing, if no CLIENT_ID is found, we can pass audience=None, but it's not secure.
+            # Ideally the client id is in the backend settings.
+            client_id = os.getenv('GOOGLE_CLIENT_ID', os.getenv('NEXT_PUBLIC_GOOGLE_CLIENT_ID', ''))
+            
+            try:
+                # We skip audience validation here if client_id is not set, 
+                # but it's highly recommended to configure it for production.
+                idinfo = id_token.verify_oauth2_token(
+                    token, 
+                    google_requests.Request(), 
+                    client_id if client_id else None
+                )
+            except ValueError as e:
+                # Invalid token
+                return Response({"error": f"Token de Google inválido: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+            email = idinfo.get('email')
+            first_name = idinfo.get('given_name', '')
+            last_name = idinfo.get('family_name', '')
+
+            if not email:
+                return Response({"error": "El token de Google no contiene un email."}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Try to get the user
+            user = User.objects.filter(email=email).first()
+            
+            if not user:
+                # Create a new user
+                import secrets
+                import string
+                alphabet = string.ascii_letters + string.digits
+                password = ''.join(secrets.choice(alphabet) for i in range(20))
+
+                user = User.objects.create_user(
+                    email=email,
+                    password=password,
+                    first_name=first_name,
+                    last_name=last_name
+                )
+
+            # Generate tokens
+            from rest_framework_simplejwt.tokens import RefreshToken
+            refresh = RefreshToken.for_user(user)
+
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'message': 'Login con Google exitoso'
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": f"Error al procesar el login con Google: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
