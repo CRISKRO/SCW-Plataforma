@@ -234,8 +234,12 @@ def send_transfer_admin_email(order, request):
     config = get_active_config()
     from_email = config.default_from_email if config.default_from_email else settings.DEFAULT_FROM_EMAIL
     
-    frontend_url = request.headers.get('origin', 'http://localhost:3000')
-    approve_link = f"{frontend_url}/admin/ventas?approve={order.id}"
+    from django.core.signing import Signer
+    signer = Signer()
+    token = signer.sign(str(order.id))
+    
+    # Use request to build absolute URI to the API
+    approve_link = request.build_absolute_uri(f"/api/payments/approve-transfer/{token}/")
     
     html_body = f"""
     <!DOCTYPE html>
@@ -245,9 +249,9 @@ def send_transfer_admin_email(order, request):
       <div style="max-width:600px;margin:0 auto;padding:40px 20px;">
         <h1 style="color:#fff;">Nueva Orden por Transferencia: #{order.id}</h1>
         <p style="color:#ccc;">El cliente <b>{order.contact_email}</b> ha subido un comprobante de pago por <b>${order.total_amount}</b>.</p>
-        <p style="color:#ccc;">Por favor verifica en tu cuenta bancaria y aprueba la orden haciendo clic en el siguiente enlace:</p>
-        <br/>
-        <a href="{approve_link}" style="background:#16a34a;color:#fff;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold;">Ir al Panel de Administración</a>
+        <p style="color:#ccc;">Por favor verifica en tu cuenta bancaria y aprueba la orden haciendo clic en el siguiente enlace. <b>Al aprobar, se enviarán automáticamente los códigos QR o el recibo al cliente.</b></p>
+        <br/><br/>
+        <a href="{approve_link}" style="background:#16a34a;color:#fff;padding:16px 32px;text-decoration:none;border-radius:8px;font-weight:bold;display:inline-block;font-size:18px;">Aprobar Transferencia y Enviar QR</a>
       </div>
     </body>
     </html>
