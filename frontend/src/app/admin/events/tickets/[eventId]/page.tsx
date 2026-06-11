@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, Plus, Trash2, Ticket } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Ticket, Minus } from 'lucide-react';
 import Link from 'next/link';
 import { eventsService } from '@/services/events.services';
 import { adminService } from '@/services/admin.services';
@@ -45,6 +45,34 @@ export default function EventTicketsPage() {
     rows: 2,
     seats_per_row: 17,
   });
+
+  // Zoom and Pan state
+  const [scale, setScale] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
+  const handleZoomIn = () => setScale(s => Math.min(s + 0.2, 3));
+  const handleZoomOut = () => setScale(s => Math.max(s - 0.2, 0.4));
+  const handleResetZoom = () => { setScale(1); setPosition({ x: 0, y: 0 }); };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Prevent dragging if clicking on a button (seat)
+    if ((e.target as HTMLElement).closest('button')) return;
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging) {
+      setPosition({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      });
+    }
+  };
+
+  const handleMouseUp = () => setIsDragging(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -446,17 +474,45 @@ export default function EventTicketsPage() {
       {/* Interactive Seat Map */}
       {zones.length > 0 && (
         <div className="bg-zinc-950 border border-white/10 rounded-xl p-6 mt-8">
-          <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <Ticket className="w-5 h-5 text-red-500" />
-            Mapa Interactivo de Asientos
-          </h2>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <Ticket className="w-5 h-5 text-red-500" />
+              Mapa Interactivo de Asientos
+            </h2>
+            
+            {/* Controles de Zoom */}
+            <div className="flex items-center gap-1 bg-zinc-900 border border-white/10 rounded-lg p-1">
+              <button onClick={handleZoomOut} className="p-2 hover:bg-zinc-800 rounded text-white transition-colors" title="Alejar">
+                <Minus className="w-4 h-4" />
+              </button>
+              <button onClick={handleResetZoom} className="px-3 py-1 hover:bg-zinc-800 rounded text-xs font-bold text-white transition-colors min-w-[60px]" title="Restablecer vista">
+                {Math.round(scale * 100)}%
+              </button>
+              <button onClick={handleZoomIn} className="p-2 hover:bg-zinc-800 rounded text-white transition-colors" title="Acercar">
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
           <p className="text-zinc-400 text-sm mb-6">
-            Haz clic en los asientos para deshabilitarlos o habilitarlos. Los asientos deshabilitados (oscuros) no aparecerán en el plano de compra, lo que te permite diseñar pasillos o esculpir formas reales en las gradas.
+            Haz clic y arrastra el fondo para mover el mapa. Usa los controles para acercar o alejar. Haz clic en los asientos para habilitarlos o deshabilitarlos.
           </p>
 
-          <div className="overflow-x-auto pb-12">
-            <div className="inline-block min-w-full text-center">
-              <div className="bg-zinc-900/40 rounded-3xl p-10 inline-flex flex-col items-center justify-center border border-white/5 relative min-w-[800px]">
+          <div 
+            className={`w-full h-[600px] bg-zinc-900/20 border border-white/5 rounded-2xl overflow-hidden relative ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+          >
+            <div className="w-full h-full flex items-center justify-center">
+              <div 
+                style={{
+                  transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+                  transition: isDragging ? 'none' : 'transform 0.1s ease-out'
+                }}
+              >
+                <div className="bg-zinc-900/60 shadow-2xl rounded-3xl p-10 flex flex-col items-center justify-center border border-white/10 relative min-w-[800px] backdrop-blur-md">
                 
                 {/* Norte */}
                 {zoneNorte && (
@@ -517,6 +573,7 @@ export default function EventTicketsPage() {
                   </div>
                 )}
 
+                </div>
               </div>
             </div>
           </div>
