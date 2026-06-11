@@ -9,6 +9,91 @@ from merch.models import Product
 from .serializers import OrderSerializer
 from api.models import get_active_config
 
+def send_order_emails_safely(order):
+    has_tickets = order.items.filter(seat__isnull=False).exists() or order.items.filter(product__isnull=True, product_name__icontains='Boleto').exists()
+    has_merch = order.items.filter(product__isnull=False).exists() or order.items.filter(product__isnull=True).exclude(product_name__icontains='Boleto').exists()
+    
+    if has_tickets:
+        try:
+            from .email_tickets import send_ticket_email
+            send_ticket_email(order)
+        except Exception as e:
+            print("Email error (tickets):", e)
+            
+    if has_merch:
+        try:
+            if has_tickets:
+                import time
+                time.sleep(2) # Prevenir bloqueo del SMTP por enviar 2 correos seguidos muy rapido
+            from .email_orders import send_order_receipt_email
+            send_order_receipt_email(order)
+        except Exception as e:
+            print("Email error (merch):", e)
+
+class ApproveTransferView(APIView):
+    """Allows admins to approve transfer orders directly via a secure email link."""
+    permission_classes = [AllowAny]
+
+    def get(self, request, token):
+        from django.core.signing import Signer, BadSignature
+        from django.http import HttpResponse
+        signer = Signer()
+        try:
+            order_id = signer.unsign(token)
+            order = Order.objects.get(id=int(order_id))
+        except (BadSignature, Order.DoesNotExist, ValueError):
+            return HttpResponse("Enlace inválido o expirado.", status=400)
+
+        if order.status == Order.Status.PAID:
+            html = f"""
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="UTF-8"><title>Transferencia Aprobada</title></head>
+            <body style="background:#000;color:#fff;font-family:sans-serif;text-align:center;padding:50px;">
+                <h1 style="color:#16a34a;">✅ Orden #{order.id} ya estaba aprobada.</h1>
+            </body>
+            </html>
+            """
+            return HttpResponse(html)
+
+        if order.payment_method != 'TRANSFER':
+            return HttpResponse("Esta orden no es de transferencia.")
+
+        # Approve order
+        order.status = Order.Status.PAID
+        order.save()
+
+        # Deduct seats and stock
+        for item in order.items.all():
+            if getattr(item, 'seat', None) and item.seat.is_available:
+                item.seat.is_available = False
+                item.seat.save()
+            if item.product:
+                product = item.product
+                if product.is_clothing:
+                    size = item.size
+                    if size and isinstance(product.stock_by_size, dict) and size in product.stock_by_size:
+                        product.stock_by_size[size] = max(0, product.stock_by_size[size] - item.quantity)
+                        product.save(update_fields=['stock_by_size'])
+                else:
+                    product.stock = max(0, product.stock - item.quantity)
+                    product.save(update_fields=['stock'])
+
+        send_order_emails_safely(order)
+
+        html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head><meta charset="UTF-8"><title>Transferencia Aprobada</title></head>
+        <body style="background:#000;color:#fff;font-family:sans-serif;text-align:center;padding:50px;">
+            <h1 style="color:#16a34a;">✅ Orden #{order.id} Aprobada Exitosamente</h1>
+            <p>Se ha confirmado el pago y se han enviado los boletos o recibos correspondientes al usuario.</p>
+        </body>
+        </html>
+        """
+        return HttpResponse(html)
+
+
 class MPPublicKeyView(APIView):
     permission_classes = [AllowAny]
     def get(self, request):
@@ -264,17 +349,7 @@ class OrderViewSet(viewsets.ModelViewSet):
                                 product.stock = max(0, product.stock - item.quantity)
                                 product.save(update_fields=['stock'])
 
-                    has_tickets = instance.items.filter(seat__isnull=False).exists() or instance.items.filter(product__isnull=True).exists()
-                    has_merch = instance.items.filter(product__isnull=False).exists()
-                    
-                    if has_tickets:
-                        from .email_tickets import send_ticket_email
-                        send_ticket_email(instance)
-                    if has_merch:
-                        from .email_orders import send_order_receipt_email
-                        send_order_receipt_email(instance)
-                except Exception as mail_err:
-                    print("Email error simulating PAID status:", mail_err)
+                    send_order_emails_safely(instance)
             elif instance.status in ['PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']:
                 try:
                     from .email_orders import send_status_update_email
@@ -557,18 +632,7 @@ class VerifyPaymentView(APIView):
                             product.save(update_fields=['stock'])
 
                 # Send ticket/merch email
-                try:
-                    has_tickets = order.items.filter(seat__isnull=False).exists() or order.items.filter(product__isnull=True).exists()
-                    has_merch = order.items.filter(product__isnull=False).exists()
-                    
-                    if has_tickets:
-                        from .email_tickets import send_ticket_email
-                        send_ticket_email(order)
-                    if has_merch:
-                        from .email_orders import send_order_receipt_email
-                        send_order_receipt_email(order)
-                except Exception as mail_err:
-                    print("Email error:", mail_err)
+                send_order_emails_safely(order)
 
                 return Response({"status": "approved", "order_id": order.id})
             else:
@@ -731,18 +795,7 @@ class WebhookView(APIView):
                                             product.stock = max(0, product.stock - item.quantity)
                                             product.save(update_fields=['stock'])
 
-                                try:
-                                    has_tickets = order.items.filter(seat__isnull=False).exists() or order.items.filter(product__isnull=True, product_name__icontains='Boleto').exists()
-                                    has_merch = order.items.filter(product__isnull=False).exists() or order.items.filter(product__isnull=True).exclude(product_name__icontains='Boleto').exists()
-                                    
-                                    if has_tickets:
-                                        from .email_tickets import send_ticket_email
-                                        send_ticket_email(order)
-                                    if has_merch:
-                                        from .email_orders import send_order_receipt_email
-                                        send_order_receipt_email(order)
-                                except Exception as mail_err:
-                                    print("Email error from webhook:", mail_err)
+                                send_order_emails_safely(order)
                 except Exception as e:
                     print("Webhook error:", e)
         
