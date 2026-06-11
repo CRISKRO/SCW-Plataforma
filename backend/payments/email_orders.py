@@ -254,11 +254,17 @@ def send_transfer_admin_email(order, request):
     </html>
     """
 
+    admin_email = config.email_host_user if config.email_host_user else settings.EMAIL_HOST_USER
+    if not admin_email:
+        import re
+        match = re.search(r'<(.*?)>', from_email)
+        admin_email = match.group(1) if match else from_email
+
     email = EmailMultiAlternatives(
         subject=f"⚠️ Comprobante Recibido - Orden #{order.id}",
         body=f"Revisa el comprobante de la orden #{order.id}.",
         from_email=from_email,
-        to=[from_email]  # send to admin
+        to=[admin_email]  # send to admin
     )
     email.attach_alternative(html_body, "text/html")
     
