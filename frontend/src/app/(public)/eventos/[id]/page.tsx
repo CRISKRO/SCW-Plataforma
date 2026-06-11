@@ -422,14 +422,15 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                                         <div className="flex gap-2 flex-row">
                                           {zone.groupedSeats[rowName].map((seat: any) => {
                                             const isSelected = isSeatSelected(seat.id);
+                                            const displayNumber = getDisplayNumber(zone.zone_type, seat.seat_number);
                                             return (
                                               <button
                                                 key={seat.id}
                                                 disabled={!seat.is_available}
-                                                onClick={() => toggleSeat(seat, zone)}
+                                                onClick={() => toggleSeat(seat, zone, displayNumber)}
                                                 className={`w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 rounded-md lg:rounded-lg flex items-center justify-center text-xs md:text-sm lg:text-base font-black transition-all shadow-md shrink-0 ${!seat.is_available ? 'bg-zinc-950 text-zinc-700 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_15px_rgba(239,68,68,0.6)]' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:border-zinc-400 hover:scale-110 z-10 hover:shadow-lg'}`}
-                                                title={seat.is_available ? `Fila ${rowName} - Asiento ${seat.seat_number}` : 'Ocupado'}
-                                              >{seat.seat_number}</button>
+                                                title={seat.is_available ? `Fila ${rowName} - Asiento ${displayNumber}` : 'Ocupado'}
+                                              >{displayNumber}</button>
                                             );
                                           })}
                                         </div>
