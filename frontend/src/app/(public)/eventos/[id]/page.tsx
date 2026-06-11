@@ -43,21 +43,18 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
   const [sessionId] = useState(() => Math.random().toString(36).substring(2, 15));
 
   const [scale, setScale] = useState(1);
+  const [minScale, setMinScale] = useState(0.5);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const initialPinchDist = useRef<number | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
 
-  const handleZoomIn = () => setScale(s => Math.min(s + 0.2, 3));
-  const handleZoomOut = () => setScale(s => Math.max(s - 0.2, 0.6));
+  const MAX_SCALE = 2;
+  const handleZoomIn = () => setScale(s => Math.min(s + 0.2, MAX_SCALE));
+  const handleZoomOut = () => setScale(s => Math.max(s - 0.2, minScale));
   const handleResetZoom = () => { 
-    if (mapContainerRef.current) {
-      const containerWidth = mapContainerRef.current.clientWidth;
-      setScale(containerWidth < 900 ? containerWidth / 900 : 1);
-    } else {
-      setScale(1); 
-    }
+    setScale(minScale); 
     setPosition({ x: 0, y: 0 }); 
   };
 
@@ -120,7 +117,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
       // Pinch zoom
       const dist = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
       const ratio = dist / initialPinchDist.current;
-      setScale(s => Math.min(Math.max(s * ratio, 0.6), 3));
+      setScale(s => Math.min(Math.max(s * ratio, minScale), MAX_SCALE));
       initialPinchDist.current = dist;
 
       // 2-finger pan
@@ -195,9 +192,11 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
   useEffect(() => {
     if (mapContainerRef.current && parsedZones.length > 0) {
       const containerWidth = mapContainerRef.current.clientWidth;
-      if (containerWidth < 900) {
-        setScale(containerWidth / 900);
-      }
+      // The seat grid is around 750px wide. We fit it precisely to the screen.
+      const calculatedMinScale = containerWidth < 800 ? containerWidth / 800 : 0.8;
+      setMinScale(calculatedMinScale);
+      setScale(calculatedMinScale);
+      setPosition({ x: 0, y: 0 });
     }
   }, [parsedZones]);
 

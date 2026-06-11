@@ -245,6 +245,7 @@ def send_transfer_admin_email(order, request):
       <div style="max-width:600px;margin:0 auto;padding:40px 20px;">
         <h1 style="color:#fff;">Nueva Orden por Transferencia: #{order.id}</h1>
         <p style="color:#ccc;">El cliente <b>{order.contact_email}</b> ha subido un comprobante de pago por <b>${order.total_amount}</b>.</p>
+        {f'<p style="color:#ccc;"><b><a href="{request.build_absolute_uri(order.transfer_receipt.url)}" style="color:#3b82f6;">Ver comprobante de pago</a></b></p>' if order.transfer_receipt else ''}
         <p style="color:#ccc;">Por favor verifica en tu cuenta bancaria y aprueba la orden haciendo clic en el siguiente enlace:</p>
         <br/>
         <a href="{approve_link}" style="background:#16a34a;color:#fff;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold;">Ir al Panel de Administración</a>
