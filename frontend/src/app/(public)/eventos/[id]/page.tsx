@@ -49,6 +49,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const initialPinchDist = useRef<number | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const innerContainerRef = useRef<HTMLDivElement>(null);
 
   const MAX_SCALE = 2;
   const handleZoomIn = () => setScale(s => Math.min(s + 0.2, MAX_SCALE));
@@ -190,14 +191,19 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
   }, [eventId]);
 
   useEffect(() => {
-    if (mapContainerRef.current && parsedZones.length > 0) {
-      const containerWidth = mapContainerRef.current.clientWidth;
-      // The seat grid is exactly 700px wide (min-w-[700px]). 
-      // We fit it perfectly to the screen width by dividing by 700.
-      const calculatedMinScale = containerWidth < 700 ? containerWidth / 700 : 1;
-      setMinScale(calculatedMinScale);
-      setScale(calculatedMinScale);
-      setPosition({ x: 0, y: 0 });
+    if (mapContainerRef.current && innerContainerRef.current && parsedZones.length > 0) {
+      // Use a short timeout to let the DOM render the inner content width properly
+      setTimeout(() => {
+        if (!mapContainerRef.current || !innerContainerRef.current) return;
+        const containerWidth = mapContainerRef.current.clientWidth;
+        const innerWidth = innerContainerRef.current.clientWidth;
+        
+        // Fit perfectly if the content is wider than the screen
+        const calculatedMinScale = containerWidth < innerWidth ? containerWidth / innerWidth : 1;
+        setMinScale(calculatedMinScale);
+        setScale(calculatedMinScale);
+        setPosition({ x: 0, y: 0 });
+      }, 50);
     }
   }, [parsedZones]);
 
@@ -463,12 +469,13 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <div 
+                    ref={innerContainerRef}
                     style={{
                       transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
                       transition: isDragging ? 'none' : 'transform 0.1s ease-out'
                     }}
                   >
-                    <div className="bg-zinc-900/60 shadow-2xl rounded-[3rem] p-4 md:p-8 flex flex-col items-center justify-center border border-white/10 relative min-w-[700px] backdrop-blur-md">
+                    <div className="bg-zinc-900/60 shadow-2xl rounded-[2rem] p-3 md:p-6 flex flex-col items-center justify-center border border-white/10 relative w-max backdrop-blur-md">
                         
                         {/* Norte */}
                         {parsedZones.find(z => z.zone_type === 'NORTE') && (
@@ -480,7 +487,6 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                       <div className="flex items-center justify-center w-full">
                         {/* Oeste */}
                         <div className="flex-1 flex justify-end pr-2 md:pr-4 relative">
-                          <div className="absolute left-[-20px] top-1/2 -translate-y-1/2 -rotate-90 text-zinc-500 font-black text-3xl md:text-4xl tracking-widest opacity-20 pointer-events-none">GENERAL</div>
                           {renderPublicZone(parsedZones.find(z => z.zone_type === 'OESTE'), 'left')}
                         </div>
 
@@ -504,7 +510,6 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
 
                         {/* Este */}
                         <div className="flex-1 flex justify-start pl-2 md:pl-4 relative">
-                          <div className="absolute right-[-40px] top-1/2 -translate-y-1/2 rotate-90 text-zinc-500 font-black text-4xl tracking-widest opacity-30 pointer-events-none">ESCENARIO</div>
                           {renderPublicZone(parsedZones.find(z => z.zone_type === 'ESTE'), 'right')}
                         </div>
                       </div>
