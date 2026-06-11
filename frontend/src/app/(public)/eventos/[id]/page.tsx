@@ -57,7 +57,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
     if (mapContainerRef.current && innerContainerRef.current) {
       const containerWidth = mapContainerRef.current.clientWidth;
       const innerWidth = innerContainerRef.current.clientWidth;
-      const calculatedMinScale = containerWidth < innerWidth ? containerWidth / innerWidth : 1;
+      const calculatedMinScale = containerWidth < innerWidth ? (containerWidth / innerWidth) * 0.88 : 1;
       setScale(calculatedMinScale);
     } else {
       setScale(1);
@@ -204,8 +204,8 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
         const containerWidth = mapContainerRef.current.clientWidth;
         const innerWidth = innerContainerRef.current.clientWidth;
         
-        // Fit perfectly if the content is wider than the screen
-        const calculatedMinScale = containerWidth < innerWidth ? containerWidth / innerWidth : 1;
+        // Fit with some margin so it doesn't feel too close to the edges
+        const calculatedMinScale = containerWidth < innerWidth ? (containerWidth / innerWidth) * 0.88 : 1;
         setMinScale(calculatedMinScale);
         setScale(calculatedMinScale);
         setPosition({ x: 0, y: 0 });
@@ -481,7 +481,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                       transition: isDragging ? 'none' : 'transform 0.1s ease-out'
                     }}
                   >
-                    <div className="bg-zinc-900/60 shadow-2xl rounded-[2rem] p-3 md:p-6 flex flex-col items-center justify-center border border-white/10 relative w-max backdrop-blur-md">
+                    <div className="bg-zinc-900/60 shadow-2xl rounded-[1.5rem] p-1.5 md:p-3 flex flex-col items-center justify-center border border-white/10 relative w-max backdrop-blur-md">
 
                       {/* Norte */}
                       {parsedZones.find(z => z.zone_type === 'NORTE') && (
