@@ -179,7 +179,7 @@ export default function EscuelaPage() {
             The Wrestling <span className="text-red-600">Factory</span>
           </h1>
           <p className="text-xl md:text-2xl text-zinc-400 font-light max-w-4xl mx-auto">
-            The Wrestling Factory es el centro de entrenamiento de SCW. Nacimos con el objetivo de crear un espacio serio y profesional donde cualquier persona apasionada por la lucha libre pueda desarrollar su talento.
+            SCW DOJO es el centro de entrenamiento de SCW. Nacimos con el objetivo de crear un espacio serio y profesional donde cualquier persona apasionada por la lucha libre pueda desarrollar su talento.
           </p>
         </motion.div>
       </section>
@@ -251,7 +251,7 @@ export default function EscuelaPage() {
                   </div>
                   <h3 className="text-2xl font-bold text-white mb-4">Ya estás inscrito</h3>
                   <p className="text-zinc-400">
-                    Ya hemos recibido tu solicitud o ya formas parte de The Wrestling Factory. Puedes ver el estado de tu suscripción en tu panel de alumno.
+                    Ya hemos recibido tu solicitud o ya formas parte de SCW DOJO. Puedes ver el estado de tu suscripción en tu panel de alumno.
                   </p>
                   <Link href="/dashboard">
                     <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="px-8 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold uppercase tracking-widest transition-colors">
@@ -266,7 +266,7 @@ export default function EscuelaPage() {
                 <motion.div key="check" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="text-center space-y-6">
                   <Lock className="w-16 h-16 text-red-500 mx-auto" />
                   <h2 className="text-2xl font-black uppercase tracking-tight">Acceso Requerido</h2>
-                  <p className="text-zinc-400">Para postularte a The Wrestling Factory necesitas una cuenta registrada. Esto nos permite verificar tu identidad y darte seguimiento a tu solicitud.</p>
+                  <p className="text-zinc-400">Para postularte a SCW DOJO necesitas una cuenta registrada. Esto nos permite verificar tu identidad y darte seguimiento a tu solicitud.</p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
                     <Link href="/login" className="flex-1 bg-white text-black py-3 px-6 font-bold uppercase tracking-widest rounded-xl hover:bg-zinc-200 transition-colors text-center">
                       Iniciar Sesión
@@ -399,7 +399,7 @@ export default function EscuelaPage() {
 
                     <button disabled={formStatus === 'loading'} type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white p-5 font-black uppercase tracking-widest text-lg transition-colors rounded-xl flex items-center justify-center gap-2 disabled:opacity-50">
                       <span className="relative z-10 flex items-center justify-center gap-2">
-                      {formStatus === 'loading' ? 'Enviando...' : 'Aplicar a The Wrestling Factory'}
+                      {formStatus === 'loading' ? 'Enviando...' : 'Aplicar a SCW DOJO'}
                       </span>
                     </button>
                     {formStatus === 'error' && <p className="text-red-500 text-center mt-4">Hubo un error. Intenta de nuevo.</p>}

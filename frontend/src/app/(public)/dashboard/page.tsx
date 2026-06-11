@@ -219,7 +219,7 @@ export default function UserDashboard() {
               onClick={() => setActiveTab('dojo')}
               className={`flex items-center gap-2 px-4 py-2 font-bold uppercase tracking-widest text-sm transition-colors whitespace-nowrap ${activeTab === 'dojo' ? 'text-red-500 border-b-2 border-red-500' : 'text-zinc-500 hover:text-zinc-300'}`}
             >
-              <Swords className="w-4 h-4" /> The Wrestling Factory
+              <Swords className="w-4 h-4" /> SCW DOJO
             </button>
           )}
         </div>
@@ -460,7 +460,7 @@ export default function UserDashboard() {
               <Swords className="w-8 h-8 text-red-500" />
               <div>
                 <h2 className="text-2xl font-bold uppercase tracking-tight">Portal del Alumno</h2>
-                <p className="text-zinc-400 text-sm">Gestiona tu colegiatura y estado en The Wrestling Factory.</p>
+                <p className="text-zinc-400 text-sm">Gestiona tu colegiatura y estado en SCW DOJO.</p>
               </div>
             </div>
             

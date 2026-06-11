@@ -36,13 +36,13 @@ const staticSlides = [
   },
   {
     id: null,
-    title: "The Wrestling Factory",
+    title: "SCW DOJO",
     subtitle: "Únete a nuestro centro de entrenamiento oficial. Aprende de los profesionales y conviértete en la próxima estrella.",
     image: "/images/logoring2.png",
     date: null,
     location: null,
     cta: [
-      { label: "Unirse a The Wrestling Factory", href: "/escuela", primary: true },
+      { label: "Unirse a SCW DOJO", href: "/escuela", primary: true },
       { label: "Saber Más", href: "/escuela", primary: false },
     ],
   },

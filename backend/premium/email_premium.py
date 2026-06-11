@@ -38,7 +38,7 @@ def send_premium_activation_email(subscription):
             </div>
         </div>
         <div style="background-color: #000; padding: 20px; text-align: center; border-top: 1px solid #222;">
-            <p style="margin: 0; color: #666; font-size: 12px;">SCW - The Wrestling Factory<br>Este es un correo automático, por favor no respondas.</p>
+            <p style="margin: 0; color: #666; font-size: 12px;">SCW - SCW DOJO<br>Este es un correo automático, por favor no respondas.</p>
         </div>
     </div>
     """
@@ -62,10 +62,14 @@ def send_premium_activation_email(subscription):
             use_tls=config.email_use_tls
         )
         
+        import re
+        match = re.search(r'<([^>]+)>', default_from_email)
+        from_email_clean = match.group(1).strip() if match else default_from_email.strip()
+
         msg = EmailMultiAlternatives(
             subject,
             text_content,
-            default_from_email,
+            from_email_clean,
             [user.email],
             connection=connection
         )

@@ -62,11 +62,15 @@ class SendEmailOTPView(APIView):
                 use_tls=config.email_use_tls,
             )
         
+        import re
+        match = re.search(r'<([^>]+)>', from_email)
+        from_email_clean = match.group(1).strip() if match else from_email.strip()
+
         try:
             email_msg = EmailMultiAlternatives(
                 subject='Código de Verificación - SCW',
-                body=f'Hola {user.first_name},\n\nTu código de verificación es: {code}\n\nIngresa este código en la página para continuar tu registro en la Escuela SCW.\n\nSaludos,\nSCW Dojo',
-                from_email=from_email,
+                body=f'Hola {user.first_name},\n\nTu código de verificación es: {code}\n\nIngresa este código en la página para continuar tu registro en la Escuela SCW.\n\nSaludos,\nSCW DOJO',
+                from_email=from_email_clean,
                 to=[user.email]
             )
             email_msg.connection = connection
@@ -134,11 +138,15 @@ class SendPasswordResetOTPView(APIView):
                 use_tls=config.email_use_tls,
             )
         
+        import re
+        match = re.search(r'<([^>]+)>', from_email)
+        from_email_clean = match.group(1).strip() if match else from_email.strip()
+
         try:
             email_msg = EmailMultiAlternatives(
                 subject='Recuperación de Contraseña - SCW',
-                body=f'Hola {user.first_name},\n\nTu código para recuperar tu contraseña es: {code}\n\nIngresa este código en la página para establecer tu nueva contraseña.\n\nSaludos,\nSCW Dojo',
-                from_email=from_email,
+                body=f'Hola {user.first_name},\n\nTu código para recuperar tu contraseña es: {code}\n\nIngresa este código en la página para establecer tu nueva contraseña.\n\nSaludos,\nSCW DOJO',
+                from_email=from_email_clean,
                 to=[user.email]
             )
             email_msg.connection = connection
@@ -208,11 +216,15 @@ class SendRegisterEmailOTPView(APIView):
                 use_tls=config.email_use_tls,
             )
         
+        import re
+        match = re.search(r'<([^>]+)>', from_email)
+        from_email_clean = match.group(1).strip() if match else from_email.strip()
+
         try:
             email_msg = EmailMultiAlternatives(
                 subject='Código de Verificación - Registro SCW',
-                body=f'Hola,\n\nTu código de verificación para completar tu registro es: {code}\n\nIngresa este código en la página para crear tu cuenta.\n\nSaludos,\nThe Wrestling Factory',
-                from_email=from_email,
+                body=f'Hola,\n\nTu código de verificación para completar tu registro es: {code}\n\nIngresa este código en la página para crear tu cuenta.\n\nSaludos,\nSCW DOJO',
+                from_email=from_email_clean,
                 to=[email]
             )
             email_msg.connection = connection
