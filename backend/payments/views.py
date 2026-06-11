@@ -49,7 +49,12 @@ class CreateOrderView(APIView):
 
     def post(self, request):
         # Handle multipart/form-data JSON strings for items
-        data = request.data.copy()
+        # Convert QueryDict to a regular dict to safely assign a list
+        if hasattr(request.data, 'dict'):
+            data = {k: request.data.get(k) for k in request.data.keys()}
+        else:
+            data = request.data.copy()
+            
         if isinstance(data.get('items'), str):
             import json
             try:
