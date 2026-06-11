@@ -176,7 +176,7 @@ export default function EscuelaPage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20 text-center">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-5xl md:text-8xl font-black uppercase tracking-tighter mb-6">
-            The Wrestling <span className="text-red-600">Factory</span>
+            SCW <span className="text-red-600">DOJO</span>
           </h1>
           <p className="text-xl md:text-2xl text-zinc-400 font-light max-w-4xl mx-auto">
             SCW DOJO es el centro de entrenamiento de SCW. Nacimos con el objetivo de crear un espacio serio y profesional donde cualquier persona apasionada por la lucha libre pueda desarrollar su talento.
