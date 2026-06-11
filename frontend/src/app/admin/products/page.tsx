@@ -41,6 +41,8 @@ export default function AdminProductsPage() {
   const [prodFreeShipping, setProdFreeShipping] = useState(false);
   const [prodIsClothing, setProdIsClothing] = useState(false);
   const [prodStockBySize, setProdStockBySize] = useState<Record<string, number>>({});
+  const [newSizeName, setNewSizeName] = useState('');
+  const [newSizeQty, setNewSizeQty] = useState('');
   const [prodImageFile, setProdImageFile] = useState<File | null>(null);
   const [prodImagePreview, setProdImagePreview] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
@@ -82,6 +84,8 @@ export default function AdminProductsPage() {
     setProdFreeShipping(false);
     setProdIsClothing(false);
     setProdStockBySize({});
+    setNewSizeName('');
+    setNewSizeQty('');
     setProdImageFile(null);
     setProdImagePreview(null);
     setIsModalOpen(true);
@@ -99,6 +103,8 @@ export default function AdminProductsPage() {
     setProdFreeShipping(product.free_shipping || false);
     setProdIsClothing(product.is_clothing || false);
     setProdStockBySize(product.stock_by_size || {});
+    setNewSizeName('');
+    setNewSizeQty('');
     setProdImageFile(null);
     setProdImagePreview(product.image_url || null);
     setIsModalOpen(true);
@@ -511,37 +517,91 @@ export default function AdminProductsPage() {
 
                   {/* Sizes */}
                   {prodIsClothing ? (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500">Inventario por Talla</label>
-                      <div className="bg-black border border-white/10 rounded-lg p-3 space-y-3">
-                        {Object.entries(prodStockBySize).map(([size, stock]) => (
-                          <div key={size} className="flex gap-2 items-center">
-                            <span className="font-mono text-sm w-12 text-zinc-300">{size}</span>
+                      <div className="bg-black border border-white/10 rounded-lg p-4 space-y-4">
+                        
+                        {/* List of current sizes */}
+                        {Object.keys(prodStockBySize).length > 0 ? (
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            {Object.entries(prodStockBySize).map(([size, stock]) => (
+                              <div key={size} className="flex flex-col bg-zinc-900 border border-white/5 rounded-lg p-2.5 relative group">
+                                <span className="font-bold text-zinc-400 text-xs mb-1.5">Talla <span className="text-white text-sm">{size}</span></span>
+                                <input 
+                                  type="number" 
+                                  min="0" 
+                                  value={stock} 
+                                  onChange={(e) => setProdStockBySize({...prodStockBySize, [size]: parseInt(e.target.value) || 0})}
+                                  className="w-full bg-black border border-white/10 rounded p-2 text-white text-sm focus:outline-none focus:border-red-500/50"
+                                />
+                                <button 
+                                  type="button" 
+                                  onClick={() => {
+                                    const newStock = {...prodStockBySize};
+                                    delete newStock[size];
+                                    setProdStockBySize(newStock);
+                                  }} 
+                                  className="absolute top-1.5 right-1.5 text-zinc-500 hover:text-red-500 p-1 bg-black rounded opacity-0 group-hover:opacity-100 transition-all"
+                                  title="Eliminar talla"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-zinc-600 italic">No hay tallas agregadas. Agrega una abajo.</p>
+                        )}
+                        
+                        <div className="h-px w-full bg-white/10"></div>
+
+                        {/* Add new size form */}
+                        <div className="flex gap-3 items-end">
+                          <div className="space-y-1.5 flex-1">
+                            <label className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold block">Nueva Talla</label>
+                            <input 
+                              type="text" 
+                              value={newSizeName}
+                              onChange={(e) => setNewSizeName(e.target.value.toUpperCase())}
+                              placeholder="Ej. S, M, L..." 
+                              className="w-full bg-zinc-900 border border-white/10 rounded-lg p-2.5 text-white text-sm uppercase focus:outline-none focus:border-red-500/50" 
+                              onKeyDown={(e) => { if(e.key === 'Enter') e.preventDefault(); }}
+                            />
+                          </div>
+                          <div className="space-y-1.5 w-24 shrink-0">
+                            <label className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold block">Stock</label>
                             <input 
                               type="number" 
-                              min="0" 
-                              value={stock} 
-                              onChange={(e) => setProdStockBySize({...prodStockBySize, [size]: parseInt(e.target.value) || 0})}
-                              className="w-24 bg-zinc-900 border border-white/10 rounded p-1.5 text-white text-sm focus:outline-none focus:border-red-500/50"
+                              min="0"
+                              value={newSizeQty}
+                              onChange={(e) => setNewSizeQty(e.target.value)}
+                              placeholder="0" 
+                              className="w-full bg-zinc-900 border border-white/10 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:border-red-500/50" 
+                              onKeyDown={(e) => { 
+                                if(e.key === 'Enter') { 
+                                  e.preventDefault(); 
+                                  if (newSizeName) {
+                                    setProdStockBySize({...prodStockBySize, [newSizeName]: parseInt(newSizeQty) || 0});
+                                    setNewSizeName('');
+                                    setNewSizeQty('');
+                                  }
+                                } 
+                              }}
                             />
-                            <button type="button" onClick={() => {
-                              const newStock = {...prodStockBySize};
-                              delete newStock[size];
-                              setProdStockBySize(newStock);
-                            }} className="text-red-500 p-1 hover:bg-white/5 rounded transition-colors">
-                              <X className="w-4 h-4" />
-                            </button>
                           </div>
-                        ))}
-                        <div className="flex gap-2">
-                          <input type="text" id="newSizeInput" placeholder="S, M, G..." className="w-20 bg-zinc-900 border border-white/10 rounded p-1.5 text-white text-sm uppercase focus:outline-none focus:border-red-500/50" />
-                          <button type="button" onClick={() => {
-                            const input = document.getElementById('newSizeInput') as HTMLInputElement;
-                            if (input && input.value) {
-                              setProdStockBySize({...prodStockBySize, [input.value.toUpperCase()]: 0});
-                              input.value = '';
-                            }
-                          }} className="bg-zinc-800 text-xs px-3 py-1.5 rounded font-bold hover:bg-zinc-700 transition-colors">Añadir Talla</button>
+                          <button 
+                            type="button" 
+                            onClick={() => {
+                              if (newSizeName) {
+                                setProdStockBySize({...prodStockBySize, [newSizeName]: parseInt(newSizeQty) || 0});
+                                setNewSizeName('');
+                                setNewSizeQty('');
+                              }
+                            }} 
+                            className="bg-zinc-800 hover:bg-zinc-700 text-white h-[42px] px-4 rounded-lg text-sm font-bold transition-colors"
+                          >
+                            Agregar
+                          </button>
                         </div>
                       </div>
                     </div>
