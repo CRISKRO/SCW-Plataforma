@@ -57,7 +57,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
     if (mapContainerRef.current && innerContainerRef.current) {
       const containerWidth = mapContainerRef.current.clientWidth;
       const innerWidth = innerContainerRef.current.clientWidth;
-      const calculatedMinScale = containerWidth < innerWidth ? (containerWidth / innerWidth) * 0.92 : 1;
+      const calculatedMinScale = containerWidth < innerWidth ? containerWidth / innerWidth : 1;
       setScale(calculatedMinScale);
     } else {
       setScale(1);
@@ -198,13 +198,18 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
 
   useEffect(() => {
     if (mapContainerRef.current && innerContainerRef.current && parsedZones.length > 0) {
-      const containerWidth = mapContainerRef.current.clientWidth;
-      const innerWidth = innerContainerRef.current.clientWidth;
-      
-      // Fit with an 8% margin so it's not touching the absolute edges
-      const calculatedMinScale = containerWidth < innerWidth ? (containerWidth / innerWidth) * 0.92 : 1;
-      setMinScale(calculatedMinScale);
-      setScale(calculatedMinScale);
+      // Use a short timeout to let the DOM render the inner content width properly
+      setTimeout(() => {
+        if (!mapContainerRef.current || !innerContainerRef.current) return;
+        const containerWidth = mapContainerRef.current.clientWidth;
+        const innerWidth = innerContainerRef.current.clientWidth;
+        
+        // Fit perfectly if the content is wider than the screen
+        const calculatedMinScale = containerWidth < innerWidth ? containerWidth / innerWidth : 1;
+        setMinScale(calculatedMinScale);
+        setScale(calculatedMinScale);
+        setPosition({ x: 0, y: 0 });
+      }, 50);
     }
   }, [parsedZones]);
 
@@ -476,7 +481,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                       transition: isDragging ? 'none' : 'transform 0.1s ease-out'
                     }}
                   >
-                    <div className="bg-zinc-900/60 shadow-2xl rounded-[3rem] p-4 md:p-8 flex flex-col items-center justify-center border border-white/10 relative min-w-[700px] backdrop-blur-md">
+                    <div className="bg-zinc-900/60 shadow-2xl rounded-[2rem] p-3 md:p-6 flex flex-col items-center justify-center border border-white/10 relative w-max backdrop-blur-md">
 
                       {/* Norte */}
                       {parsedZones.find(z => z.zone_type === 'NORTE') && (
