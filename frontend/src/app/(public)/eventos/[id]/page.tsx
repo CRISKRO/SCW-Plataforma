@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use, useMemo } from 'react';
+import { useEffect, useState, use, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, MapPin, Ticket, ShoppingCart, X, CheckCircle, Minus, Plus as PlusIcon } from 'lucide-react';
 import api from '@/services/api';
@@ -40,6 +40,70 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
   const [showConfirmPanel, setShowConfirmPanel] = useState(false);
   const [loading, setLoading] = useState(true);
   const addItem = useCartStore((state) => state.addItem);
+
+  const [scale, setScale] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const initialPinchDist = useRef<number | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleZoomIn = () => setScale(s => Math.min(s + 0.2, 3));
+  const handleZoomOut = () => setScale(s => Math.max(s - 0.2, 0.3));
+  const handleResetZoom = () => { 
+    if (mapContainerRef.current) {
+      const containerWidth = mapContainerRef.current.clientWidth;
+      setScale(containerWidth < 900 ? containerWidth / 900 : 1);
+    } else {
+      setScale(1); 
+    }
+    setPosition({ x: 0, y: 0 }); 
+  };
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    if ((e.target as HTMLElement).closest('button')) return;
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (isDragging) {
+      setPosition({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      });
+    }
+  };
+
+  const onPointerUp = () => setIsDragging(false);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      initialPinchDist.current = dist;
+    }
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && initialPinchDist.current !== null) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const ratio = dist / initialPinchDist.current;
+      setScale(s => Math.min(Math.max(s * ratio, 0.3), 3));
+      initialPinchDist.current = dist;
+    }
+  };
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (e.touches.length < 2) {
+      initialPinchDist.current = null;
+    }
+  };
 
   // Memoize grouped seats to prevent lag on every re-render (click)
   const parsedZones = useMemo(() => {
@@ -82,6 +146,15 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
     };
     fetchEventData();
   }, [eventId]);
+
+  useEffect(() => {
+    if (mapContainerRef.current && parsedZones.length > 0) {
+      const containerWidth = mapContainerRef.current.clientWidth;
+      if (containerWidth < 900) {
+        setScale(containerWidth / 900);
+      }
+    }
+  }, [parsedZones]);
 
   const isSeatSelected = (seatId: number) =>
     selectedSeats.some(s => s.seatId === seatId);
@@ -216,24 +289,52 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
 
           {/* --- RIGHT: Seat map --- */}
           <div className={`w-full ${selectedSeats.length > 0 ? 'lg:w-2/3' : 'lg:w-full'} transition-all duration-500`}>
-            <h2 className="text-xl md:text-3xl font-black uppercase mb-6 tracking-tight flex items-center justify-between">
-              <span>Selecciona tus Asientos</span>
-              {selectedSeats.length === 0 && <span className="text-sm font-medium text-zinc-500 tracking-normal hidden md:inline-block">Haz clic en un asiento para comenzar</span>}
-            </h2>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+              <h2 className="text-xl md:text-3xl font-black uppercase tracking-tight flex items-center justify-between">
+                <span>Selecciona tus Asientos</span>
+                {selectedSeats.length === 0 && <span className="text-sm font-medium text-zinc-500 tracking-normal hidden md:inline-block ml-4">Haz clic en un asiento para comenzar</span>}
+              </h2>
 
-            <div className="bg-zinc-950 border border-white/10 rounded-3xl p-4 md:p-8 lg:p-12 min-h-[500px] shadow-2xl relative overflow-hidden flex items-center justify-center w-full">
+              {/* Controles de Zoom */}
+              {parsedZones.length > 0 && (
+                <div className="flex items-center gap-1 bg-zinc-900 border border-white/10 rounded-lg p-1">
+                  <button onClick={handleZoomOut} className="p-2 hover:bg-zinc-800 rounded text-white transition-colors" title="Alejar">
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <button onClick={handleResetZoom} className="px-3 py-1 hover:bg-zinc-800 rounded text-xs font-bold text-white transition-colors min-w-[60px]" title="Restablecer vista">
+                    {Math.round(scale * 100)}%
+                  </button>
+                  <button onClick={handleZoomIn} className="p-2 hover:bg-zinc-800 rounded text-white transition-colors" title="Acercar">
+                    <PlusIcon className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div 
+              className={`bg-zinc-950 border border-white/10 rounded-3xl min-h-[600px] shadow-2xl relative overflow-hidden flex items-center justify-center w-full touch-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+              ref={mapContainerRef}
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onPointerLeave={onPointerUp}
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+            >
               {parsedZones.length === 0 ? (
-                <div className="flex items-center justify-center h-64 text-zinc-500 text-center">
+                <div className="flex items-center justify-center h-64 text-zinc-500 text-center cursor-default">
                   El mapa de asientos aún no está disponible para este evento.
                 </div>
               ) : (
-                <div className="w-full relative">
-                  <div className="absolute top-0 right-0 z-20 md:hidden bg-zinc-900/80 text-zinc-400 text-[10px] px-3 py-1 rounded-full uppercase tracking-widest border border-white/10 backdrop-blur-sm pointer-events-none">
-                    ↔ Desliza el mapa
-                  </div>
-                  <div className="overflow-x-auto pb-12 pt-4 custom-scrollbar touch-pan-x touch-pan-y w-full">
-                    <div className="inline-block min-w-max w-full text-center">
-                      <div className="bg-zinc-900/40 rounded-[3rem] p-6 md:p-12 lg:p-16 inline-flex flex-col items-center justify-center border border-white/5 relative shadow-inner">
+                <div className="w-full h-full flex items-center justify-center">
+                  <div 
+                    style={{
+                      transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+                      transition: isDragging ? 'none' : 'transform 0.1s ease-out'
+                    }}
+                  >
+                    <div className="bg-zinc-900/40 rounded-[3rem] p-6 md:p-12 lg:p-16 flex flex-col items-center justify-center border border-white/5 relative shadow-inner min-w-[800px]">
                         
                         {/* Norte */}
                         {parsedZones.find(z => z.zone_type === 'NORTE') && (
@@ -413,7 +514,6 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                       )}
                     </div>
                   </div>
-                </div>
                 </div>
               )}
             </div>
