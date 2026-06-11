@@ -43,18 +43,22 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
   const [sessionId] = useState(() => Math.random().toString(36).substring(2, 15));
 
   const [scale, setScale] = useState(1);
+  const [minScale, setMinScale] = useState(0.6);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const initialPinchDist = useRef<number | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const innerContainerRef = useRef<HTMLDivElement>(null);
 
   const handleZoomIn = () => setScale(s => Math.min(s + 0.2, 3));
-  const handleZoomOut = () => setScale(s => Math.max(s - 0.2, 0.6));
+  const handleZoomOut = () => setScale(s => Math.max(s - 0.2, minScale));
   const handleResetZoom = () => {
-    if (mapContainerRef.current) {
+    if (mapContainerRef.current && innerContainerRef.current) {
       const containerWidth = mapContainerRef.current.clientWidth;
-      setScale(containerWidth < 900 ? containerWidth / 900 : 1);
+      const innerWidth = innerContainerRef.current.clientWidth;
+      const calculatedMinScale = containerWidth < innerWidth ? (containerWidth / innerWidth) * 0.92 : 1;
+      setScale(calculatedMinScale);
     } else {
       setScale(1);
     }
@@ -193,11 +197,14 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
   }, [eventId]);
 
   useEffect(() => {
-    if (mapContainerRef.current && parsedZones.length > 0) {
+    if (mapContainerRef.current && innerContainerRef.current && parsedZones.length > 0) {
       const containerWidth = mapContainerRef.current.clientWidth;
-      if (containerWidth < 900) {
-        setScale(containerWidth / 900);
-      }
+      const innerWidth = innerContainerRef.current.clientWidth;
+      
+      // Fit with an 8% margin so it's not touching the absolute edges
+      const calculatedMinScale = containerWidth < innerWidth ? (containerWidth / innerWidth) * 0.92 : 1;
+      setMinScale(calculatedMinScale);
+      setScale(calculatedMinScale);
     }
   }, [parsedZones]);
 
@@ -463,6 +470,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <div
+                    ref={innerContainerRef}
                     style={{
                       transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
                       transition: isDragging ? 'none' : 'transform 0.1s ease-out'
@@ -472,14 +480,14 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
 
                       {/* Norte */}
                       {parsedZones.find(z => z.zone_type === 'NORTE') && (
-                        <div className="flex justify-center mb-2 md:mb-4">
+                        <div className="flex justify-center mb-12 md:mb-20">
                           {renderPublicZone(parsedZones.find(z => z.zone_type === 'NORTE'), 'top')}
                         </div>
                       )}
 
                       <div className="flex items-center justify-center w-full">
                         {/* Oeste */}
-                        <div className="flex-1 flex justify-end pr-2 md:pr-4 relative">
+                        <div className="flex-1 flex justify-end pr-12 md:pr-24 relative">
                           <div className="absolute left-[-20px] top-1/2 -translate-y-1/2 -rotate-90 text-zinc-500 font-black text-3xl md:text-4xl tracking-widest opacity-20 pointer-events-none">GENERAL</div>
                           {renderPublicZone(parsedZones.find(z => z.zone_type === 'OESTE'), 'left')}
                         </div>
@@ -503,7 +511,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                         </div>
 
                         {/* Este */}
-                        <div className="flex-1 flex justify-start pl-2 md:pl-4 relative">
+                        <div className="flex-1 flex justify-start pl-12 md:pl-24 relative">
                           <div className="absolute right-[-40px] top-1/2 -translate-y-1/2 rotate-90 text-zinc-500 font-black text-4xl tracking-widest opacity-30 pointer-events-none">ESCENARIO</div>
                           {renderPublicZone(parsedZones.find(z => z.zone_type === 'ESTE'), 'right')}
                         </div>
@@ -511,7 +519,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
 
                       {/* Sur */}
                       {parsedZones.find(z => z.zone_type === 'SUR') && (
-                        <div className="flex justify-center mt-2 md:mt-4">
+                        <div className="flex justify-center mt-12 md:mt-20">
                           {renderPublicZone(parsedZones.find(z => z.zone_type === 'SUR'), 'bottom')}
                         </div>
                       )}
