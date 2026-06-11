@@ -56,7 +56,7 @@ export default function EventTicketsPage() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
 
   const handleZoomIn = () => setScale(s => Math.min(s + 0.2, 3));
-  const handleZoomOut = () => setScale(s => Math.max(s - 0.2, 0.4));
+  const handleZoomOut = () => setScale(s => Math.max(s - 0.2, 0.6));
   const handleResetZoom = () => { setScale(1); setPosition({ x: 0, y: 0 }); };
 
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -66,7 +66,7 @@ export default function EventTicketsPage() {
     setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
   };
 
-  const PAN_LIMIT = 500;
+  const PAN_LIMIT = 200;
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (e.pointerType !== 'mouse') return;
@@ -103,7 +103,7 @@ export default function EventTicketsPage() {
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    const PAN_LIMIT = 500;
+    const PAN_LIMIT = 200;
     if (e.touches.length === 1 && isDragging) {
       const newX = e.touches[0].clientX - dragStart.x;
       const newY = e.touches[0].clientY - dragStart.y;
@@ -117,7 +117,7 @@ export default function EventTicketsPage() {
       
       const dist = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
       const ratio = dist / initialPinchDist.current;
-      setScale(s => Math.min(Math.max(s * ratio, 0.3), 3));
+      setScale(s => Math.min(Math.max(s * ratio, 0.6), 3));
       initialPinchDist.current = dist;
 
       const midX = (touch1.clientX + touch2.clientX) / 2;
@@ -325,11 +325,7 @@ export default function EventTicketsPage() {
                   <div key={seat.id} className="contents">
                     <button
                       onClick={() => handleToggleSeat(zone.id, seat.id, seat.is_available)}
-                      className={`w-5 h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 rounded-sm flex items-center justify-center text-[9px] md:text-[10px] font-bold transition-all shadow-sm ${
-                        seat.is_available 
-                          ? 'bg-zinc-100 text-zinc-900 border border-zinc-400 hover:bg-white hover:scale-110 z-10' 
-                          : 'bg-zinc-900 text-zinc-600 border border-zinc-800 hover:bg-zinc-800 opacity-50 hover:opacity-100'
-                      }`}
+                      className={`w-5 h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 rounded-sm flex items-center justify-center text-[9px] md:text-[10px] font-bold transition-all shadow-sm ${!seat.is_available ? 'bg-zinc-900 text-zinc-600 border border-zinc-800 opacity-50 cursor-not-allowed' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:scale-110 z-10 hover:shadow-lg'}`}
                       title={`Fila ${rowName} - Asiento ${displayNumber} (${ZONE_TYPES.find(zt => zt.value === zone.zone_type)?.label})`}
                     >
                       {displayNumber}
@@ -622,7 +618,7 @@ export default function EventTicketsPage() {
                   </div>
 
                   {/* El Ring Central - Diseño Realista */}
-                  <div className="relative w-48 h-48 md:w-64 md:h-64 bg-[#d4d4d8] border-[8px] border-zinc-950 rounded flex items-center justify-center shadow-[0_0_80px_rgba(255,255,255,0.05)] z-10 shrink-0 mx-4">
+                  <div className="relative w-48 h-48 md:w-64 md:h-64 bg-[#d4d4d8] border-[8px] border-zinc-950 rounded flex items-center justify-center shadow-[0_0_80px_rgba(255,255,255,0.05)] z-10 shrink-0 mx-8 md:mx-16 lg:mx-24">
                     {/* Cuerdas */}
                     <div className="absolute inset-1 border-[1.5px] border-red-600/80 rounded-sm"></div>
                     <div className="absolute inset-2 border-[1.5px] border-zinc-100 rounded-sm"></div>
