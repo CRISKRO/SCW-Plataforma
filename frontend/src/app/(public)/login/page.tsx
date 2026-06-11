@@ -51,7 +51,11 @@ export default function LoginPage() {
       await authService.sendPasswordResetOTP(forgotEmail);
       setForgotStep(2);
     } catch (err: any) {
-      setForgotError('Error al enviar el correo. Intenta de nuevo.');
+      const errorMsg = err.response?.data?.error || 'Error al enviar el correo. Intenta de nuevo.';
+      setForgotError(errorMsg);
+      if (errorMsg.includes('Para pruebas')) {
+        setForgotStep(2);
+      }
     } finally {
       setForgotLoading(false);
     }

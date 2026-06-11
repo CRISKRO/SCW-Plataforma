@@ -95,7 +95,11 @@ export default function RegisterPage() {
       
       setStep('verify');
     } catch (err: any) {
-      setError(err.response?.data?.error || err.message || 'Error al procesar la solicitud.');
+      const errorMsg = err.response?.data?.error || err.message || 'Error al procesar la solicitud.';
+      setError(errorMsg);
+      if (errorMsg.includes('Para pruebas')) {
+        setStep('verify');
+      }
     } finally {
       setLoading(false);
     }

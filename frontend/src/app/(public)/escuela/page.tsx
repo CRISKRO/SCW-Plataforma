@@ -114,7 +114,12 @@ export default function EscuelaPage() {
       setCodeSent(true);
       sessionStorage.setItem('dojo_code_sent', 'true');
     } catch (error: any) {
-      setVerifyError(error.response?.data?.error || error.message || 'Error al enviar el código al correo.');
+      const errorMsg = error.response?.data?.error || error.message || 'Error al enviar el código al correo.';
+      setVerifyError(errorMsg);
+      if (errorMsg.includes('Para pruebas')) {
+        setCodeSent(true);
+        sessionStorage.setItem('dojo_code_sent', 'true');
+      }
     } finally {
       setSendingCode(false);
     }
