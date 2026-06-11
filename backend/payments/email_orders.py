@@ -257,11 +257,15 @@ def send_transfer_admin_email(order, request):
     </html>
     """
 
+    import re
+    match = re.search(r'<([^>]+)>', from_email)
+    to_email = match.group(1).strip() if match else from_email.strip()
+
     email = EmailMultiAlternatives(
         subject=f"⚠️ Comprobante Recibido - Orden #{order.id}",
         body=f"Revisa el comprobante de la orden #{order.id}.",
         from_email=from_email,
-        to=[from_email]  # send to admin
+        to=[to_email]  # send to raw admin email
     )
     email.attach_alternative(html_body, "text/html")
     
@@ -271,19 +275,23 @@ def send_transfer_admin_email(order, request):
         except Exception as e:
             print("Error attaching receipt:", e)
 
-    connection = None
-    if config.email_host_user and config.email_host_password:
-        connection = get_connection(
-            host=config.email_host,
-            port=config.email_port,
-            username=config.email_host_user,
-            password=config.email_host_password,
-            use_tls=config.email_use_tls,
-        )
+    try:
+        connection = None
+        if config.email_host_user and config.email_host_password:
+            connection = get_connection(
+                host=config.email_host,
+                port=config.email_port,
+                username=config.email_host_user,
+                password=config.email_host_password,
+                use_tls=config.email_use_tls,
+            )
 
-    email.connection = connection
-    email.send(fail_silently=False)
-    return True
+        email.connection = connection
+        email.send(fail_silently=False)
+        return True
+    except Exception as e:
+        print("CRITICAL ERROR sending transfer admin email:", e)
+        return False
             host=config.email_host,
             port=config.email_port,
             username=config.email_host_user,
