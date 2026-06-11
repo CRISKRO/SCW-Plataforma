@@ -229,13 +229,16 @@ def send_transfer_admin_email(order, request):
     """
     from django.core.mail import EmailMultiAlternatives, get_connection
     from django.conf import settings
+    from django.core.signing import Signer
     from api.models import get_active_config
 
     config = get_active_config()
     from_email = config.default_from_email if config.default_from_email else settings.DEFAULT_FROM_EMAIL
     
-    frontend_url = request.headers.get('origin', 'http://localhost:3000')
-    approve_link = f"{frontend_url}/admin/orders?approve={order.id}"
+    signer = Signer()
+    token = signer.sign(str(order.id))
+    backend_url = f"{request.scheme}://{request.get_host()}"
+    approve_link = f"{backend_url}/api/payments/approve-transfer/{token}/"
     
     html_body = f"""
     <!DOCTYPE html>
@@ -248,7 +251,7 @@ def send_transfer_admin_email(order, request):
         {f'<p style="color:#ccc;"><b><a href="{request.build_absolute_uri(order.transfer_receipt.url)}" style="color:#3b82f6;">Ver comprobante de pago</a></b></p>' if order.transfer_receipt else ''}
         <p style="color:#ccc;">Por favor verifica en tu cuenta bancaria y aprueba la orden haciendo clic en el siguiente enlace:</p>
         <br/>
-        <a href="{approve_link}" style="background:#16a34a;color:#fff;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold;">Ir al Panel de Administración</a>
+        <a href="{approve_link}" style="background:#16a34a;color:#fff;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold;">Aprobar Transferencia</a>
       </div>
     </body>
     </html>
