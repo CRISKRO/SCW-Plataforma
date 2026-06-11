@@ -45,3 +45,35 @@ class SeatViewSet(viewsets.ModelViewSet):
     queryset = Seat.objects.all()
     serializer_class = SeatSerializer
     permission_classes = [IsAdminOrReadOnly]
+
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
+    def lock_seats(self, request):
+        seat_ids = request.data.get('seat_ids', [])
+        session_id = request.data.get('session_id')
+        
+        if not seat_ids or not session_id:
+            return Response({"error": "seat_ids y session_id son requeridos"}, status=400)
+            
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        # Verify no seat is already locked by someone else or sold
+        seats = Seat.objects.filter(id__in=seat_ids)
+        if len(seats) != len(seat_ids):
+            return Response({"error": "Algunos asientos no existen"}, status=404)
+            
+        for seat in seats:
+            if not seat.is_available:
+                return Response({"error": f"El asiento {seat.seat_number} ya fue vendido."}, status=400)
+            if seat.locked_at and seat.locked_by_session != session_id:
+                if timezone.now() < seat.locked_at + timedelta(minutes=10):
+                    return Response({"error": f"El asiento {seat.seat_number} de la fila {seat.row_name} está reservado temporalmente por otro usuario."}, status=400)
+                    
+        # Lock them
+        now = timezone.now()
+        for seat in seats:
+            seat.locked_at = now
+            seat.locked_by_session = session_id
+            seat.save()
+            
+        return Response({"status": "locked"})

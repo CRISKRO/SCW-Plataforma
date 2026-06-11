@@ -53,8 +53,9 @@ class Seat(models.Model):
     seat_number = models.PositiveIntegerField(_('número'))
     is_available = models.BooleanField(default=True)
     
-    # Optional relation to an order item in the future
-    # order_item = models.OneToOneField('payments.OrderItem', null=True, blank=True)
+    # Concurrency locking
+    locked_at = models.DateTimeField(null=True, blank=True)
+    locked_by_session = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         unique_together = ('zone', 'row_name', 'seat_number')

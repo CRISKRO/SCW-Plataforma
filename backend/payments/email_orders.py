@@ -222,3 +222,61 @@ def send_status_update_email(order):
     email.connection = connection
     email.send(fail_silently=False)
     return True
+
+def send_transfer_admin_email(order, request):
+    """
+    Send an email to the admin with the transfer receipt to approve.
+    """
+    from django.core.mail import EmailMultiAlternatives, get_connection
+    from django.conf import settings
+    from api.models import get_active_config
+
+    config = get_active_config()
+    from_email = config.default_from_email if config.default_from_email else settings.DEFAULT_FROM_EMAIL
+    
+    frontend_url = request.headers.get('origin', 'http://localhost:3000')
+    approve_link = f"{frontend_url}/admin/ventas?approve={order.id}"
+    
+    html_body = f"""
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="UTF-8"></head>
+    <body style="margin:0;padding:0;background:#000;font-family:'Helvetica Neue',Arial,sans-serif;">
+      <div style="max-width:600px;margin:0 auto;padding:40px 20px;">
+        <h1 style="color:#fff;">Nueva Orden por Transferencia: #{order.id}</h1>
+        <p style="color:#ccc;">El cliente <b>{order.contact_email}</b> ha subido un comprobante de pago por <b>${order.total_amount}</b>.</p>
+        <p style="color:#ccc;">Por favor verifica en tu cuenta bancaria y aprueba la orden haciendo clic en el siguiente enlace:</p>
+        <br/>
+        <a href="{approve_link}" style="background:#16a34a;color:#fff;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold;">Ir al Panel de Administración</a>
+      </div>
+    </body>
+    </html>
+    """
+
+    email = EmailMultiAlternatives(
+        subject=f"⚠️ Comprobante Recibido - Orden #{order.id}",
+        body=f"Revisa el comprobante de la orden #{order.id}.",
+        from_email=from_email,
+        to=[from_email]  # send to admin
+    )
+    email.attach_alternative(html_body, "text/html")
+    
+    if order.transfer_receipt:
+        try:
+            email.attach_file(order.transfer_receipt.path)
+        except Exception as e:
+            print("Error attaching receipt:", e)
+
+    connection = None
+    if config.email_host_user and config.email_host_password:
+        connection = get_connection(
+            host=config.email_host,
+            port=config.email_port,
+            username=config.email_host_user,
+            password=config.email_host_password,
+            use_tls=config.email_use_tls,
+        )
+
+    email.connection = connection
+    email.send(fail_silently=False)
+    return True

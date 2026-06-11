@@ -39,21 +39,36 @@ class CreateOrderSerializer(serializers.Serializer):
     shipping_zipcode = serializers.CharField(max_length=20, allow_blank=True, required=False)
     shipping_cost = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, default=0.00)
     
-    items = OrderItemInputSerializer(many=True)
+    payment_method = serializers.CharField(max_length=20, required=False, default='MERCADOPAGO')
+    transfer_receipt = serializers.ImageField(required=False, allow_null=True)
+    
+    items = serializers.JSONField(required=False) # Fallback handling in view
 
 class CreateOrderView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        serializer = CreateOrderSerializer(data=request.data)
+        # Handle multipart/form-data JSON strings for items
+        data = request.data.copy()
+        if isinstance(data.get('items'), str):
+            import json
+            try:
+                data['items'] = json.loads(data['items'])
+            except json.JSONDecodeError:
+                pass
+                
+        serializer = CreateOrderSerializer(data=data)
         if serializer.is_valid():
             data = serializer.validated_data
+            
+            # Use standard parser for items
+            items_data = data.get('items', [])
             
             # Calculate total and validate products
             total_amount = 0
             order_items_data = []
 
-            for item in data['items']:
+            for item in items_data:
                 product = None
                 seat = None
                 price = item.get('price', 0)
@@ -105,7 +120,7 @@ class CreateOrderView(APIView):
             
             order = Order.objects.create(
                 user=user,
-                contact_email=data['contact_email'],
+                contact_email=data.get('contact_email', ''),
                 contact_phone=data.get('contact_phone', ''),
                 shipping_address=data.get('shipping_address', ''),
                 shipping_city=data.get('shipping_city', ''),
@@ -113,7 +128,9 @@ class CreateOrderView(APIView):
                 shipping_zipcode=data.get('shipping_zipcode', ''),
                 shipping_cost=shipping_cost_val,
                 total_amount=Decimal(str(total_amount)) + shipping_cost_val,
-                status=Order.Status.PENDING
+                status=Order.Status.PENDING,
+                payment_method=data.get('payment_method', 'MERCADOPAGO'),
+                transfer_receipt=data.get('transfer_receipt')
             )
 
             mp_items = []
@@ -153,6 +170,20 @@ class CreateOrderView(APIView):
                     "currency_id": "MXN",
                     "unit_price": float(shipping_cost) * (1 + commission)
                 })
+
+            if order.payment_method == 'TRANSFER':
+                try:
+                    from .email_orders import send_transfer_admin_email
+                    send_transfer_admin_email(order, request)
+                except Exception as mail_err:
+                    print("Error sending admin transfer email:", mail_err)
+                    
+                return Response({
+                    "order_id": order.id,
+                    "total_amount": total_amount,
+                    "payment_method": "TRANSFER",
+                    "init_point": None
+                }, status=status.HTTP_201_CREATED)
 
             # Integrate with MercadoPago SDK to generate a real preference_id
             try:
@@ -211,8 +242,23 @@ class OrderViewSet(viewsets.ModelViewSet):
         instance = serializer.save()
         if old_status != instance.status:
             if instance.status == 'PAID':
-                # Simular lógica de webhook: enviar recibo/boleto
+                # Simular lógica de webhook: enviar recibo/boleto y descontar asientos
                 try:
+                    for item in instance.items.all():
+                        if getattr(item, 'seat', None) and item.seat.is_available:
+                            item.seat.is_available = False
+                            item.seat.save()
+                        if item.product:
+                            product = item.product
+                            if product.is_clothing:
+                                size = item.size
+                                if size and isinstance(product.stock_by_size, dict) and size in product.stock_by_size:
+                                    product.stock_by_size[size] = max(0, product.stock_by_size[size] - item.quantity)
+                                    product.save(update_fields=['stock_by_size'])
+                            else:
+                                product.stock = max(0, product.stock - item.quantity)
+                                product.save(update_fields=['stock'])
+
                     has_tickets = instance.items.filter(seat__isnull=False).exists() or instance.items.filter(product__isnull=True).exists()
                     has_merch = instance.items.filter(product__isnull=False).exists()
                     

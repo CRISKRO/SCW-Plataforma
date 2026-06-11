@@ -40,6 +40,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
   const [showConfirmPanel, setShowConfirmPanel] = useState(false);
   const [loading, setLoading] = useState(true);
   const addItem = useCartStore((state) => state.addItem);
+  const [sessionId] = useState(() => Math.random().toString(36).substring(2, 15));
 
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -169,20 +170,26 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
   }, [zones]);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchEventData = async () => {
       try {
         const eventRes = await api.get(`/events/events/${eventId}/`);
-        setEvent(eventRes.data);
+        if (isMounted) setEvent(eventRes.data);
 
         const zonesRes = await api.get(`/tickets/zones/by_event/?event_id=${eventId}`);
-        setZones(zonesRes.data);
+        if (isMounted) setZones(zonesRes.data);
       } catch (error) {
         console.error("Error loading event data", error);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
     fetchEventData();
+    const interval = setInterval(fetchEventData, 15000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, [eventId]);
 
   useEffect(() => {
@@ -234,7 +241,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
     selectedSeats.some(s => s.seatId === seatId);
 
   const toggleSeat = (seat: any, zone: any, displayNumber: number) => {
-    if (!seat.is_available) return;
+    if (!seat.is_available || seat.is_locked) return;
 
     if (isSeatSelected(seat.id)) {
       setSelectedSeats(prev => prev.filter(s => s.seatId !== seat.id));
@@ -257,24 +264,40 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
     setSelectedSeats(prev => prev.filter(s => s.seatId !== seatId));
   };
 
-  const handleConfirm = () => {
-    selectedSeats.forEach(seat => {
-      addItem({
-        id: parseInt(`999${seat.seatId}`),
-        name: `Boleto: ${event.title}`,
-        price: seat.price,
-        quantity: 1,
-        image_url: event.banner_url || '',
-        size: `${ZONE_LABELS[seat.zoneType] || seat.zoneType} · Fila ${seat.rowName} - Asiento ${seat.seatNumber}`,
-        seat_id: seat.seatId,
+  const handleConfirm = async () => {
+    try {
+      setLoading(true);
+      const seatIds = selectedSeats.map(s => s.seatId);
+      await api.post('/tickets/seats/lock_seats/', { seat_ids: seatIds, session_id: sessionId });
+      
+      selectedSeats.forEach(seat => {
+        addItem({
+          id: parseInt(`999${seat.seatId}`),
+          name: `Boleto: ${event.title}`,
+          price: seat.price,
+          quantity: 1,
+          image_url: event.banner_url || '',
+          size: `${ZONE_LABELS[seat.zoneType] || seat.zoneType} · Fila ${seat.rowName} - Asiento ${seat.seatNumber}`,
+          seat_id: seat.seatId,
+        });
       });
-    });
-    setSelectedSeats([]);
-    setShowConfirmPanel(false);
-    useToastStore.getState().addToast(`Se agregaron ${selectedSeats.length} boleto(s) al carrito`, 'success');
-    
-    // Smoothly scroll to the top since the page height will shrink and leave the user stranded at the bottom
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+      setSelectedSeats([]);
+      setShowConfirmPanel(false);
+      useToastStore.getState().addToast(`Se agregaron ${selectedSeats.length} boleto(s) al carrito y se reservaron por 10 min`, 'success');
+      
+      // Smoothly scroll to the top since the page height will shrink and leave the user stranded at the bottom
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (error: any) {
+      useToastStore.getState().addToast(error.response?.data?.error || "Error al reservar asientos.", "error");
+      // Refetch to get current state
+      const zonesRes = await api.get(`/tickets/zones/by_event/?event_id=${eventId}`);
+      setZones(zonesRes.data);
+      // Remove locked ones from selected
+      const currentAvailable = zonesRes.data.flatMap((z: any) => z.seats).filter((s: any) => s.is_available && !s.is_locked).map((s: any) => s.id);
+      setSelectedSeats(prev => prev.filter(s => currentAvailable.includes(s.seatId)));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const totalPrice = selectedSeats.reduce((acc, s) => acc + s.price, 0);
@@ -295,10 +318,10 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                   return (
                     <div key={seat.id} className="contents">
                       <button
-                        disabled={!seat.is_available}
+                        disabled={!seat.is_available || seat.is_locked}
                         onClick={() => toggleSeat(seat, zone, displayNumber)}
-                        className={`w-5 h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 rounded-sm flex items-center justify-center text-[9px] md:text-[10px] font-bold transition-all shadow-sm ${!seat.is_available ? 'bg-zinc-900 text-zinc-600 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_15px_rgba(239,68,68,0.6)]' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:scale-110 z-10 hover:shadow-lg'}`}
-                        title={seat.is_available ? `Fila ${rowName} - Asiento ${displayNumber}` : 'Ocupado'}
+                        className={`w-5 h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 rounded-sm flex items-center justify-center text-[9px] md:text-[10px] font-bold transition-all shadow-sm ${(!seat.is_available || seat.is_locked) ? 'bg-zinc-900 text-zinc-600 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_15px_rgba(239,68,68,0.6)]' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:scale-110 z-10 hover:shadow-lg'}`}
+                        title={(!seat.is_available || seat.is_locked) ? 'Ocupado' : `Fila ${rowName} - Asiento ${displayNumber}`}
                       >{displayNumber}</button>
                       {zone.zone_type === 'ESTE' && displayNumber === 22 && <div className={`${isVertical ? 'h-4 md:h-6' : 'w-4 md:w-6'}`} />}
                     </div>

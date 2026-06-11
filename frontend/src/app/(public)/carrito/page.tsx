@@ -23,6 +23,9 @@ export default function CartPage() {
   const [zipcode, setZipcode] = useState('');
   const [shippingCost, setShippingCost] = useState(0);
 
+  const [paymentMethod, setPaymentMethod] = useState<'MERCADOPAGO' | 'TRANSFER'>('MERCADOPAGO');
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+
   const [loading, setLoading] = useState(false);
   const { items, removeItem, updateQuantity, getTotalPrice, getTotalItems, clearCart } = useCartStore();
 
@@ -73,6 +76,11 @@ export default function CartPage() {
       return;
     }
     
+    if (paymentMethod === 'TRANSFER' && !receiptFile) {
+      alert("Por favor sube tu comprobante de pago para la transferencia.");
+      return;
+    }
+    
     setLoading(true);
     try {
       const orderItems = items.map(item => ({
@@ -87,7 +95,8 @@ export default function CartPage() {
       const payload: any = {
         contact_email: email,
         contact_phone: phone,
-        items: orderItems
+        items: JSON.stringify(orderItems),
+        payment_method: paymentMethod
       };
 
       if (hasMerch) {
@@ -95,12 +104,23 @@ export default function CartPage() {
         payload.shipping_city = city;
         payload.shipping_state = state;
         payload.shipping_zipcode = zipcode;
-        payload.shipping_cost = shippingCost;
+        payload.shipping_cost = shippingCost.toString();
       }
 
-      const response = await api.post('/payments/create-order/', payload);
+      const formData = new FormData();
+      Object.entries(payload).forEach(([key, value]) => {
+        formData.append(key, value as string);
+      });
 
-      if (response.data.init_point) {
+      if (paymentMethod === 'TRANSFER' && receiptFile) {
+        formData.append('transfer_receipt', receiptFile);
+      }
+
+      const response = await api.post('/payments/create-order/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      if (response.data.init_point && paymentMethod === 'MERCADOPAGO') {
         clearCart();
         window.location.href = response.data.init_point;
       } else {
@@ -253,22 +273,67 @@ export default function CartPage() {
                   </div>
                 )}
 
+                {/* Opciones de pago */}
+                <div className="space-y-4 pt-4 border-t border-white/10">
+                  <h3 className="font-bold uppercase text-sm">Método de Pago</h3>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => setPaymentMethod('MERCADOPAGO')}
+                      className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${paymentMethod === 'MERCADOPAGO' ? 'bg-[#009EE3]/10 border-[#009EE3] text-[#009EE3]' : 'bg-black border-white/20 text-zinc-400 hover:border-white/40'}`}
+                    >
+                      <CreditCard className="w-6 h-6" />
+                      <span className="text-xs font-bold uppercase text-center">Mercado Pago</span>
+                    </button>
+                    <button
+                      onClick={() => setPaymentMethod('TRANSFER')}
+                      className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${paymentMethod === 'TRANSFER' ? 'bg-zinc-800 border-white text-white' : 'bg-black border-white/20 text-zinc-400 hover:border-white/40'}`}
+                    >
+                      <ShoppingBag className="w-6 h-6" />
+                      <span className="text-xs font-bold uppercase text-center">Transferencia</span>
+                    </button>
+                  </div>
+                  
+                  {paymentMethod === 'TRANSFER' && (
+                    <div className="p-4 bg-zinc-900 border border-zinc-700 rounded-xl space-y-4">
+                      <p className="text-sm text-zinc-300">
+                        Realiza la transferencia a la siguiente cuenta y sube tu comprobante. Tu pedido será aprobado manualmente en breve.
+                      </p>
+                      <div className="bg-black p-3 rounded border border-white/10 font-mono text-sm text-white">
+                        Banco: BBVA<br/>
+                        Cuenta: 1234567890<br/>
+                        CLABE: 012345678901234567<br/>
+                        Nombre: SCW Pro Wrestling
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-widest text-zinc-500">Comprobante de Pago</label>
+                        <input
+                          type="file"
+                          accept="image/*,.pdf"
+                          onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
+                          className="w-full text-sm text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 {/* Botón de Pago */}
-                <div className="space-y-3">
+                <div className="space-y-3 pt-2">
                   <button
                     onClick={handleCheckout}
-                    disabled={loading || !email}
-                    className="w-full bg-[#009EE3] hover:bg-[#0088cc] disabled:bg-zinc-800 disabled:text-zinc-500 text-white py-4 rounded-xl font-bold text-base flex items-center justify-center gap-3 transition-all"
+                    disabled={loading || !email || (paymentMethod === 'TRANSFER' && !receiptFile)}
+                    className={`w-full ${paymentMethod === 'TRANSFER' ? 'bg-white hover:bg-zinc-200 text-black' : 'bg-[#009EE3] hover:bg-[#0088cc] text-white'} disabled:bg-zinc-800 disabled:text-zinc-500 py-4 rounded-xl font-bold text-base flex items-center justify-center gap-3 transition-all`}
                   >
                     {loading ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        Conectando con Mercado Pago...
+                        Procesando...
                       </>
                     ) : (
                       <>
-                        <CreditCard className="w-5 h-5" />
-                        Pagar ${(getTotalPrice() + (hasMerch ? shippingCost : 0)).toFixed(2)} con Mercado Pago
+                        {paymentMethod === 'TRANSFER' ? <ShoppingBag className="w-5 h-5" /> : <CreditCard className="w-5 h-5" />}
+                        {paymentMethod === 'TRANSFER' ? 'Enviar Comprobante' : `Pagar $${(getTotalPrice() + (hasMerch ? shippingCost : 0)).toFixed(2)} con Mercado Pago`}
                       </>
                     )}
                   </button>

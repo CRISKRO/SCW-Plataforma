@@ -49,6 +49,11 @@ export default function AdminOrdersPage() {
 
   useEffect(() => {
     fetchOrders();
+    const params = new URLSearchParams(window.location.search);
+    const approveId = params.get('approve');
+    if (approveId) {
+      setSearchQuery(approveId);
+    }
   }, []);
 
   const handleUpdateStatus = async (orderId: number, newStatus: string) => {
@@ -278,6 +283,7 @@ export default function AdminOrdersPage() {
                       <td className="px-6 py-4">
                         <div className="text-sm text-white font-medium">{order.contact_email}</div>
                         {order.contact_phone && <div className="text-xs text-zinc-500">{order.contact_phone}</div>}
+                        {order.payment_method === 'TRANSFER' && <span className="text-[10px] bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded font-bold uppercase mt-1 inline-block">Transferencia</span>}
                       </td>
                       <td className="px-6 py-4">
                         <div className="space-y-1">
@@ -382,6 +388,30 @@ export default function AdminOrdersPage() {
                         <p className="text-sm text-zinc-400">{selectedOrder.shipping_city}, {selectedOrder.shipping_state}</p>
                         <p className="text-sm text-zinc-400">C.P. {selectedOrder.shipping_zipcode}</p>
                       </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Payment Info */}
+                {selectedOrder.payment_method === 'TRANSFER' && (
+                  <div>
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-zinc-500 mb-4 border-b border-white/10 pb-2">
+                      Información de Pago
+                    </h3>
+                    <div className="bg-zinc-900 border border-white/5 rounded-xl p-4">
+                      <p className="text-sm font-bold text-white mb-2">Pago por Transferencia Bancaria</p>
+                      {selectedOrder.transfer_receipt ? (
+                        <a 
+                          href={selectedOrder.transfer_receipt} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-bold transition-colors mt-2"
+                        >
+                          Ver Comprobante
+                        </a>
+                      ) : (
+                        <p className="text-sm text-red-400">No se subió comprobante.</p>
+                      )}
                     </div>
                   </div>
                 )}
