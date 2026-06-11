@@ -22,6 +22,12 @@ class Enrollment(models.Model):
     experience = models.CharField(_('nivel de experiencia'), max_length=20, choices=ExperienceLevel.choices, default=ExperienceLevel.NONE)
     message = models.TextField(_('mensaje adicional'), blank=True)
     
+    birth_date = models.DateField(_('fecha de nacimiento'), null=True, blank=True)
+    address = models.TextField(_('domicilio'), blank=True)
+    emergency_contact = models.CharField(_('contacto de emergencia (Nombre y teléfono)'), max_length=200, blank=True)
+    medical_conditions = models.TextField(_('padecimientos médicos o lesiones relevantes'), blank=True)
+    accepted_rules = models.BooleanField(_('aceptó el reglamento'), default=False)
+    
     id_document = models.FileField(_('identificación oficial'), upload_to='enrollments/documents/', blank=True, null=True)
     medical_certificate = models.FileField(_('certificado médico'), upload_to='enrollments/documents/', blank=True, null=True)
     

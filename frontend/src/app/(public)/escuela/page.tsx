@@ -42,6 +42,11 @@ export default function EscuelaPage() {
     phone: '',
     experience: 'NONE',
     message: '',
+    birth_date: '',
+    address: '',
+    emergency_contact: '',
+    medical_conditions: '',
+    accepted_rules: false,
   });
 
   const [idDocument, setIdDocument] = useState<File | null>(null);
@@ -364,6 +369,10 @@ export default function EscuelaPage() {
                         <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Edad</label>
                         <input required type="number" min="12" value={formData.age} onChange={(e) => setFormData({ ...formData, age: e.target.value })} className="w-full bg-black border border-white/20 rounded-xl p-4 text-white focus:outline-none focus:border-red-500 transition-colors" placeholder="18" />
                       </div>
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Fecha de Nacimiento</label>
+                        <input required type="date" value={formData.birth_date} onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })} className="w-full bg-black border border-white/20 rounded-xl p-4 text-white focus:outline-none focus:border-red-500 transition-colors" style={{ colorScheme: 'dark' }} />
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -378,6 +387,21 @@ export default function EscuelaPage() {
                     </div>
 
                     <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Domicilio</label>
+                      <input required type="text" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} className="w-full bg-black border border-white/20 rounded-xl p-4 text-white focus:outline-none focus:border-red-500 transition-colors" placeholder="Calle, Número, Colonia, Ciudad..." />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Contacto de Emergencia (Nombre y Teléfono)</label>
+                      <input required type="text" value={formData.emergency_contact} onChange={(e) => setFormData({ ...formData, emergency_contact: e.target.value })} className="w-full bg-black border border-white/20 rounded-xl p-4 text-white focus:outline-none focus:border-red-500 transition-colors" placeholder="Ej. Juan Pérez (Papá) - 555-1234" />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Padecimientos médicos o lesiones relevantes</label>
+                      <textarea rows={2} required value={formData.medical_conditions} onChange={(e) => setFormData({ ...formData, medical_conditions: e.target.value })} className="w-full bg-black border border-white/20 rounded-xl p-4 text-white focus:outline-none focus:border-red-500 transition-colors resize-none" placeholder="Indica si tienes alguna lesión, asma, alergias, etc. Si no, pon 'Ninguno'." />
+                    </div>
+
+                    <div>
                       <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Experiencia Previa</label>
                       <select value={formData.experience} onChange={(e) => setFormData({ ...formData, experience: e.target.value })} className="w-full bg-black border border-white/20 rounded-xl p-4 text-white focus:outline-none focus:border-red-500 transition-colors">
                         {Object.entries(EXPERIENCE_LABELS).map(([v, l]) => (
@@ -388,7 +412,103 @@ export default function EscuelaPage() {
 
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Mensaje (Opcional)</label>
-                      <textarea rows={4} value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} className="w-full bg-black border border-white/20 rounded-xl p-4 text-white focus:outline-none focus:border-red-500 transition-colors resize-none" placeholder="Cuéntanos por qué quieres ser luchador..." />
+                      <textarea rows={3} value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} className="w-full bg-black border border-white/20 rounded-xl p-4 text-white focus:outline-none focus:border-red-500 transition-colors resize-none" placeholder="Cuéntanos por qué quieres ser luchador..." />
+                    </div>
+
+                    {/* REGLAMENTO DOJO */}
+                    <div className="border border-white/10 rounded-xl p-6 bg-zinc-900/50">
+                      <h3 className="text-xl font-black uppercase mb-4 text-red-500">Reglamento del SCW Dojo</h3>
+                      <div className="h-48 overflow-y-auto pr-2 space-y-4 text-sm text-zinc-300 mb-6 custom-scrollbar">
+                        <p>El presente reglamento tiene el objetivo de garantizar un ambiente de respeto, seguridad, profesionalismo y compañerismo dentro de nuestras instalaciones.</p>
+                        
+                        <div>
+                          <p className="font-bold text-white">1. Pagos de mensualidad</p>
+                          <ul className="list-disc pl-5 space-y-1">
+                            <li>La mensualidad deberá ser pagada durante los primeros 5 días naturales de cada mes.</li>
+                            <li>En caso de pago tardío, se aplicará un recargo del 10% por cada semana de retraso.</li>
+                          </ul>
+                        </div>
+                        
+                        <div>
+                          <p className="font-bold text-white">2. Higiene personal y vestimenta</p>
+                          <ul className="list-disc pl-5 space-y-1">
+                            <li>Todos los alumnos deberán presentarse aseados por respeto a los compañeros.</li>
+                            <li>Es obligatorio llevar toalla personal para secarse el sudor.</li>
+                            <li>Si sudas en exceso, se recomienda llevar playera de cambio.</li>
+                            <li>El uso del tatami será exclusivo con calcetines limpios o tenis especiales para lucha olímpica. Se deberá mantener especial cuidado en la higiene de los pies.</li>
+                          </ul>
+                        </div>
+
+                        <div>
+                          <p className="font-bold text-white">3. Uso y limpieza del área de entrenamiento</p>
+                          <ul className="list-disc pl-5 space-y-1">
+                            <li>Al finalizar cada clase, los alumnos deberán colaborar en la limpieza del área de entrenamiento, incluyendo ring y tatami.</li>
+                          </ul>
+                        </div>
+
+                        <div>
+                          <p className="font-bold text-white">4. Conducta y respeto</p>
+                          <ul className="list-disc pl-5 space-y-1">
+                            <li>Está prohibido cualquier tipo de: Bullying, Violencia física, Violencia psicológica, Burlas o humillaciones hacia compañeros o instructores.</li>
+                            <li>Quien infrinja este punto será expulsado inmediatamente sin derecho a reembolso.</li>
+                          </ul>
+                        </div>
+
+                        <div>
+                          <p className="font-bold text-white">5. Objetos personales</p>
+                          <ul className="list-disc pl-5 space-y-1">
+                            <li>El dojo no se hace responsable por objetos personales, prendas o dispositivos olvidados o extraviados dentro de las instalaciones.</li>
+                          </ul>
+                        </div>
+
+                        <div>
+                          <p className="font-bold text-white">6. Puntualidad y compromiso</p>
+                          <ul className="list-disc pl-5 space-y-1">
+                            <li>Se solicita puntualidad en la asistencia a las clases.</li>
+                            <li>En caso de no poder asistir, se recomienda avisar previamente al instructor.</li>
+                          </ul>
+                        </div>
+
+                        <div>
+                          <p className="font-bold text-white">7. Uso adecuado de las instalaciones</p>
+                          <ul className="list-disc pl-5 space-y-1">
+                            <li>Las instalaciones deben ser tratadas con respeto.</li>
+                            <li>Cualquier daño ocasionado por mal uso deberá ser cubierto por el responsable.</li>
+                          </ul>
+                        </div>
+
+                        <div>
+                          <p className="font-bold text-white">8. Seguridad</p>
+                          <ul className="list-disc pl-5 space-y-1">
+                            <li>Los alumnos deberán seguir las indicaciones del instructor para prevenir lesiones.</li>
+                            <li>No se permite realizar movimientos avanzados sin supervisión.</li>
+                          </ul>
+                        </div>
+
+                        <div>
+                          <p className="font-bold text-white">9. Consumo de sustancias prohibidas</p>
+                          <ul className="list-disc pl-5 space-y-1">
+                            <li>Está prohibido ingresar bajo los efectos de alcohol o drogas.</li>
+                            <li>Quien incumpla este punto será expulsado.</li>
+                          </ul>
+                        </div>
+                      </div>
+
+                      <label className="flex items-start gap-3 cursor-pointer group">
+                        <div className="relative flex items-center justify-center mt-1">
+                          <input 
+                            type="checkbox" 
+                            required
+                            checked={formData.accepted_rules} 
+                            onChange={(e) => setFormData({ ...formData, accepted_rules: e.target.checked })}
+                            className="w-5 h-5 appearance-none border-2 border-zinc-600 rounded checked:bg-red-600 checked:border-red-600 focus:outline-none transition-colors cursor-pointer"
+                          />
+                          <CheckCircle className={`absolute w-3.5 h-3.5 text-white pointer-events-none transition-opacity ${formData.accepted_rules ? 'opacity-100' : 'opacity-0'}`} />
+                        </div>
+                        <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">
+                          He leído, comprendo y acepto el Reglamento del SCW Dojo.
+                        </span>
+                      </label>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 border border-red-500/30 rounded-xl bg-red-500/5">
