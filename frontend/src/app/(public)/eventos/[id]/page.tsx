@@ -61,12 +61,14 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
   };
 
   const onPointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType !== 'mouse') return;
     if ((e.target as HTMLElement).closest('button')) return;
     setIsDragging(true);
     setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
+    if (e.pointerType !== 'mouse') return;
     if (isDragging) {
       setPosition({
         x: e.clientX - dragStart.x,
@@ -75,27 +77,42 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
     }
   };
 
-  const onPointerUp = () => setIsDragging(false);
+  const onPointerUp = (e: React.PointerEvent) => {
+    if (e.pointerType !== 'mouse') return;
+    setIsDragging(false);
+  };
 
   const onTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
-      const dist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const dist = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
       initialPinchDist.current = dist;
+      
+      const midX = (touch1.clientX + touch2.clientX) / 2;
+      const midY = (touch1.clientY + touch2.clientY) / 2;
+      setDragStart({ x: midX - position.x, y: midY - position.y });
     }
   };
 
   const onTouchMove = (e: React.TouchEvent) => {
     if (e.touches.length === 2 && initialPinchDist.current !== null) {
-      const dist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      
+      // Pinch zoom
+      const dist = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
       const ratio = dist / initialPinchDist.current;
       setScale(s => Math.min(Math.max(s * ratio, 0.3), 3));
       initialPinchDist.current = dist;
+
+      // 2-finger pan
+      const midX = (touch1.clientX + touch2.clientX) / 2;
+      const midY = (touch1.clientY + touch2.clientY) / 2;
+      setPosition({
+        x: midX - dragStart.x,
+        y: midY - dragStart.y
+      });
     }
   };
 
@@ -311,8 +328,12 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
               )}
             </div>
 
+            {/* Show overlay hint on mobile */}
+            <div className="md:hidden text-center text-zinc-500 text-xs mb-2 uppercase tracking-widest">
+              Usa dos dedos para mover y hacer zoom
+            </div>
             <div 
-              className={`bg-zinc-950 border border-white/10 rounded-3xl min-h-[600px] shadow-2xl relative overflow-hidden flex items-center justify-center w-full touch-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+              className={`bg-zinc-950 border border-white/10 rounded-3xl h-[50vh] min-h-[400px] max-h-[600px] shadow-2xl relative overflow-hidden flex items-center justify-center w-full ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
               ref={mapContainerRef}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}

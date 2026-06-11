@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { ArrowLeft, Plus, Trash2, Ticket, Minus } from 'lucide-react';
 import Link from 'next/link';
@@ -52,18 +52,21 @@ export default function EventTicketsPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
+  const initialPinchDist = useRef<number | null>(null);
+
   const handleZoomIn = () => setScale(s => Math.min(s + 0.2, 3));
   const handleZoomOut = () => setScale(s => Math.max(s - 0.2, 0.4));
   const handleResetZoom = () => { setScale(1); setPosition({ x: 0, y: 0 }); };
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    // Prevent dragging if clicking on a button (seat)
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType !== 'mouse') return;
     if ((e.target as HTMLElement).closest('button')) return;
     setIsDragging(true);
     setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (e.pointerType !== 'mouse') return;
     if (isDragging) {
       setPosition({
         x: e.clientX - dragStart.x,
@@ -72,7 +75,48 @@ export default function EventTicketsPage() {
     }
   };
 
-  const handleMouseUp = () => setIsDragging(false);
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (e.pointerType !== 'mouse') return;
+    setIsDragging(false);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const dist = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
+      initialPinchDist.current = dist;
+      
+      const midX = (touch1.clientX + touch2.clientX) / 2;
+      const midY = (touch1.clientY + touch2.clientY) / 2;
+      setDragStart({ x: midX - position.x, y: midY - position.y });
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && initialPinchDist.current !== null) {
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      
+      const dist = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
+      const ratio = dist / initialPinchDist.current;
+      setScale(s => Math.min(Math.max(s * ratio, 0.3), 3));
+      initialPinchDist.current = dist;
+
+      const midX = (touch1.clientX + touch2.clientX) / 2;
+      const midY = (touch1.clientY + touch2.clientY) / 2;
+      setPosition({
+        x: midX - dragStart.x,
+        y: midY - dragStart.y
+      });
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (e.touches.length < 2) {
+      initialPinchDist.current = null;
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -495,15 +539,18 @@ export default function EventTicketsPage() {
           </div>
 
           <p className="text-zinc-400 text-sm mb-6">
-            Haz clic y arrastra el fondo para mover el mapa. Usa los controles para acercar o alejar. Haz clic en los asientos para habilitarlos o deshabilitarlos.
+            Haz clic y arrastra el fondo para mover el mapa (en móviles usa dos dedos). Usa los controles para acercar o alejar. Haz clic en los asientos para habilitarlos o deshabilitarlos.
           </p>
 
           <div 
-            className={`w-full h-[600px] bg-zinc-900/20 border border-white/5 rounded-2xl overflow-hidden relative ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
+            className={`w-full h-[50vh] min-h-[400px] max-h-[600px] bg-zinc-900/20 border border-white/5 rounded-2xl overflow-hidden relative ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerUp}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
             <div className="w-full h-full flex items-center justify-center">
               <div 
