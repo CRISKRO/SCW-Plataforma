@@ -173,6 +173,19 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
     }
   }, [parsedZones]);
 
+  // Prevent native browser pinch-zoom over the map
+  useEffect(() => {
+    const el = mapContainerRef.current;
+    if (!el) return;
+    const preventNativeZoom = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+      }
+    };
+    el.addEventListener('touchmove', preventNativeZoom, { passive: false });
+    return () => el.removeEventListener('touchmove', preventNativeZoom);
+  }, []);
+
   const isSeatSelected = (seatId: number) =>
     selectedSeats.some(s => s.seatId === seatId);
 

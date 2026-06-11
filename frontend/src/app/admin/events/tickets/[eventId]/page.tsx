@@ -53,6 +53,7 @@ export default function EventTicketsPage() {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   const initialPinchDist = useRef<number | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
 
   const handleZoomIn = () => setScale(s => Math.min(s + 0.2, 3));
   const handleZoomOut = () => setScale(s => Math.max(s - 0.2, 0.4));
@@ -117,6 +118,19 @@ export default function EventTicketsPage() {
       initialPinchDist.current = null;
     }
   };
+
+  // Prevent native browser pinch-zoom over the map
+  useEffect(() => {
+    const el = mapContainerRef.current;
+    if (!el) return;
+    const preventNativeZoom = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+      }
+    };
+    el.addEventListener('touchmove', preventNativeZoom, { passive: false });
+    return () => el.removeEventListener('touchmove', preventNativeZoom);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -544,6 +558,7 @@ export default function EventTicketsPage() {
 
           <div 
             className={`w-full h-[50vh] min-h-[400px] max-h-[600px] bg-zinc-900/20 border border-white/5 rounded-2xl overflow-hidden relative ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+            ref={mapContainerRef}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
