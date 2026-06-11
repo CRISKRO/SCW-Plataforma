@@ -192,8 +192,9 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
   useEffect(() => {
     if (mapContainerRef.current && parsedZones.length > 0) {
       const containerWidth = mapContainerRef.current.clientWidth;
-      // The seat grid is around 750px wide. We fit it precisely to the screen.
-      const calculatedMinScale = containerWidth < 800 ? containerWidth / 800 : 0.8;
+      // The seat grid is exactly 700px wide (min-w-[700px]). 
+      // We fit it perfectly to the screen width by dividing by 700.
+      const calculatedMinScale = containerWidth < 700 ? containerWidth / 700 : 1;
       setMinScale(calculatedMinScale);
       setScale(calculatedMinScale);
       setPosition({ x: 0, y: 0 });
