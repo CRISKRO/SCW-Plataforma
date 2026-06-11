@@ -83,7 +83,11 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
   };
 
   const onTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 2) {
+    if ((e.target as HTMLElement).closest('button')) return;
+    if (e.touches.length === 1) {
+      setIsDragging(true);
+      setDragStart({ x: e.touches[0].clientX - position.x, y: e.touches[0].clientY - position.y });
+    } else if (e.touches.length === 2) {
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
       const dist = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
@@ -96,7 +100,12 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
   };
 
   const onTouchMove = (e: React.TouchEvent) => {
-    if (e.touches.length === 2 && initialPinchDist.current !== null) {
+    if (e.touches.length === 1 && isDragging) {
+      setPosition({
+        x: e.touches[0].clientX - dragStart.x,
+        y: e.touches[0].clientY - dragStart.y
+      });
+    } else if (e.touches.length === 2 && initialPinchDist.current !== null) {
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
       
@@ -117,6 +126,9 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
   };
 
   const onTouchEnd = (e: React.TouchEvent) => {
+    if (e.touches.length === 0) {
+      setIsDragging(false);
+    }
     if (e.touches.length < 2) {
       initialPinchDist.current = null;
     }
@@ -201,10 +213,18 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
     };
   }, []);
 
+  const getDisplayNumber = (zoneType: string, seatNumber: number) => {
+    if (zoneType === 'NORTE') return seatNumber;
+    if (zoneType === 'ESTE') return seatNumber + 17;
+    if (zoneType === 'SUR') return seatNumber + 27;
+    if (zoneType === 'OESTE') return seatNumber + 44;
+    return seatNumber;
+  };
+
   const isSeatSelected = (seatId: number) =>
     selectedSeats.some(s => s.seatId === seatId);
 
-  const toggleSeat = (seat: any, zone: any) => {
+  const toggleSeat = (seat: any, zone: any, displayNumber: number) => {
     if (!seat.is_available) return;
 
     if (isSeatSelected(seat.id)) {
@@ -215,7 +235,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
         {
           seatId: seat.id,
           rowName: seat.row_name,
-          seatNumber: seat.seat_number,
+          seatNumber: displayNumber,
           zoneType: zone.zone_type,
           price: parseFloat(zone.price),
           zoneId: zone.id,
@@ -358,10 +378,10 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
 
             {/* Show overlay hint on mobile */}
             <div className="md:hidden text-center text-zinc-500 text-xs mb-2 uppercase tracking-widest">
-              Usa dos dedos para mover y hacer zoom
+              Usa un dedo para mover el mapa, dos para hacer zoom
             </div>
             <div 
-              className={`bg-zinc-950 border border-white/10 rounded-3xl h-[50vh] min-h-[400px] max-h-[600px] shadow-2xl relative overflow-hidden flex items-center justify-center w-full touch-pan-x touch-pan-y ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+              className={`bg-zinc-950 border border-white/10 rounded-3xl h-[50vh] min-h-[400px] max-h-[600px] shadow-2xl relative overflow-hidden flex items-center justify-center w-full touch-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
               ref={mapContainerRef}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
@@ -443,14 +463,15 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                                       <div className="flex gap-2 flex-col">
                                         {zone.groupedSeats[rowName].map((seat: any) => {
                                           const isSelected = isSeatSelected(seat.id);
+                                          const displayNumber = getDisplayNumber(zone.zone_type, seat.seat_number);
                                           return (
                                             <div key={seat.id} className="contents">
                                               <button
                                                 disabled={!seat.is_available}
-                                                onClick={() => toggleSeat(seat, zone)}
+                                                onClick={() => toggleSeat(seat, zone, displayNumber)}
                                                 className={`w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 rounded-md lg:rounded-lg flex items-center justify-center text-xs md:text-sm lg:text-base font-black transition-all shadow-md shrink-0 ${!seat.is_available ? 'bg-zinc-950 text-zinc-700 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_15px_rgba(239,68,68,0.6)]' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:border-zinc-400 hover:scale-110 z-10 hover:shadow-lg'}`}
-                                                title={seat.is_available ? `Fila ${rowName} - Asiento ${seat.seat_number}` : 'Ocupado'}
-                                              >{seat.seat_number}</button>
+                                                title={seat.is_available ? `Fila ${rowName} - Asiento ${displayNumber}` : 'Ocupado'}
+                                              >{displayNumber}</button>
                                             </div>
                                           );
                                         })}
@@ -501,15 +522,16 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                                       <div className="flex gap-2 flex-col">
                                         {zone.groupedSeats[rowName].map((seat: any) => {
                                           const isSelected = isSeatSelected(seat.id);
+                                          const displayNumber = getDisplayNumber(zone.zone_type, seat.seat_number);
                                           return (
                                             <div key={seat.id} className="contents">
                                               <button
                                                 disabled={!seat.is_available}
-                                                onClick={() => toggleSeat(seat, zone)}
+                                                onClick={() => toggleSeat(seat, zone, displayNumber)}
                                                 className={`w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 rounded-md lg:rounded-lg flex items-center justify-center text-xs md:text-sm lg:text-base font-black transition-all shadow-md shrink-0 ${!seat.is_available ? 'bg-zinc-950 text-zinc-700 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_15px_rgba(239,68,68,0.6)]' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:border-zinc-400 hover:scale-110 z-10 hover:shadow-lg'}`}
-                                                title={seat.is_available ? `Fila ${rowName} - Asiento ${seat.seat_number}` : 'Ocupado'}
-                                              >{seat.seat_number}</button>
-                                              {seat.seat_number === 22 && <div className="h-6 md:h-10 lg:h-12" />}
+                                                title={seat.is_available ? `Fila ${rowName} - Asiento ${displayNumber}` : 'Ocupado'}
+                                              >{displayNumber}</button>
+                                              {displayNumber === 22 && <div className="h-6 md:h-10 lg:h-12" />}
                                             </div>
                                           );
                                         })}
@@ -541,14 +563,15 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                                       <div className="flex gap-2 flex-row">
                                         {zone.groupedSeats[rowName].map((seat: any) => {
                                           const isSelected = isSeatSelected(seat.id);
+                                          const displayNumber = getDisplayNumber(zone.zone_type, seat.seat_number);
                                           return (
                                             <button
                                               key={seat.id}
                                               disabled={!seat.is_available}
-                                              onClick={() => toggleSeat(seat, zone)}
+                                              onClick={() => toggleSeat(seat, zone, displayNumber)}
                                               className={`w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 rounded-md lg:rounded-lg flex items-center justify-center text-xs md:text-sm lg:text-base font-black transition-all shadow-md shrink-0 ${!seat.is_available ? 'bg-zinc-950 text-zinc-700 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_15px_rgba(239,68,68,0.6)]' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:border-zinc-400 hover:scale-110 z-10 hover:shadow-lg'}`}
-                                              title={seat.is_available ? `Fila ${rowName} - Asiento ${seat.seat_number}` : 'Ocupado'}
-                                            >{seat.seat_number}</button>
+                                              title={seat.is_available ? `Fila ${rowName} - Asiento ${displayNumber}` : 'Ocupado'}
+                                            >{displayNumber}</button>
                                           );
                                         })}
                                       </div>

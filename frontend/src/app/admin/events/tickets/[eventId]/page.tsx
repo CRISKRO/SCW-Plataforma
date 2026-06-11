@@ -82,7 +82,11 @@ export default function EventTicketsPage() {
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 2) {
+    if ((e.target as HTMLElement).closest('button')) return;
+    if (e.touches.length === 1) {
+      setIsDragging(true);
+      setDragStart({ x: e.touches[0].clientX - position.x, y: e.touches[0].clientY - position.y });
+    } else if (e.touches.length === 2) {
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
       const dist = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
@@ -95,7 +99,12 @@ export default function EventTicketsPage() {
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (e.touches.length === 2 && initialPinchDist.current !== null) {
+    if (e.touches.length === 1 && isDragging) {
+      setPosition({
+        x: e.touches[0].clientX - dragStart.x,
+        y: e.touches[0].clientY - dragStart.y
+      });
+    } else if (e.touches.length === 2 && initialPinchDist.current !== null) {
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
       
@@ -114,6 +123,9 @@ export default function EventTicketsPage() {
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
+    if (e.touches.length === 0) {
+      setIsDragging(false);
+    }
     if (e.touches.length < 2) {
       initialPinchDist.current = null;
     }
@@ -568,11 +580,11 @@ export default function EventTicketsPage() {
           </div>
 
           <p className="text-zinc-400 text-sm mb-6">
-            Haz clic y arrastra el fondo para mover el mapa (en móviles usa dos dedos). Usa los controles para acercar o alejar. Haz clic en los asientos para habilitarlos o deshabilitarlos.
+            Haz clic y arrastra el fondo para mover el mapa (en móviles usa un dedo). Usa los controles para acercar o alejar. Haz clic en los asientos para habilitarlos o deshabilitarlos.
           </p>
 
           <div 
-            className={`w-full h-[50vh] min-h-[400px] max-h-[600px] bg-zinc-900/20 border border-white/5 rounded-2xl overflow-hidden relative touch-pan-x touch-pan-y ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+            className={`w-full h-[50vh] min-h-[400px] max-h-[600px] bg-zinc-900/20 border border-white/5 rounded-2xl overflow-hidden relative touch-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
             ref={mapContainerRef}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
