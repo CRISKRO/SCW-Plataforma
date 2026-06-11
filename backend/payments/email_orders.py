@@ -235,7 +235,7 @@ def send_transfer_admin_email(order, request):
     from_email = config.default_from_email if config.default_from_email else settings.DEFAULT_FROM_EMAIL
     
     frontend_url = request.headers.get('origin', 'http://localhost:3000')
-    approve_link = f"{frontend_url}/admin/ventas?approve={order.id}"
+    approve_link = f"{frontend_url}/admin/orders?approve={order.id}"
     
     html_body = f"""
     <!DOCTYPE html>

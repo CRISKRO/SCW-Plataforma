@@ -125,7 +125,7 @@ export default function CartPage() {
         window.location.href = response.data.init_point;
       } else {
         clearCart();
-        router.push('/carrito/success');
+        router.push(`/carrito/success?method=transfer&order_id=${response.data.order_id}`);
       }
     } catch (error) {
       console.error("Error:", error);
