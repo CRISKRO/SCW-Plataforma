@@ -7,6 +7,7 @@ import { authService } from '@/services/auth.services';
 import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { GoogleLogin } from '@react-oauth/google';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -38,6 +39,23 @@ export default function LoginPage() {
       router.push('/dashboard'); // Default redirect
     } catch (err: any) {
       setError('Credenciales inválidas. Intenta de nuevo.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    setLoading(true);
+    setError('');
+    try {
+      if (credentialResponse.credential) {
+        const data = await authService.googleLogin(credentialResponse.credential, rememberMe);
+        const profile = await authService.getProfile();
+        setAuth(profile, data.access, rememberMe);
+        router.push('/dashboard');
+      }
+    } catch (err: any) {
+      setError('Error al autenticar con Google. ' + (err.response?.data?.error || ''));
     } finally {
       setLoading(false);
     }
@@ -193,6 +211,29 @@ export default function LoginPage() {
                 </span>
               )}
             </motion.button>
+          </div>
+
+          <div className="mt-4">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-zinc-700" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-black text-zinc-400">O continuar con</span>
+              </div>
+            </div>
+
+            <div className="mt-4 flex justify-center" style={{ colorScheme: 'light' }}>
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => {
+                  setError('Error al iniciar sesión con Google.');
+                }}
+                theme="filled_black"
+                shape="rectangular"
+                width="340"
+              />
+            </div>
           </div>
           
           <div className="text-center text-sm text-zinc-400 mt-4">

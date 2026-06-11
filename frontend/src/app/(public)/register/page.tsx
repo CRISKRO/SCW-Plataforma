@@ -7,6 +7,8 @@ import { authService } from '@/services/auth.services';
 import api from '@/services/api';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useAuthStore } from '@/store/authStore';
+import { GoogleLogin } from '@react-oauth/google';
 
 const envWhatsappUrl = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_WHATSAPP_SERVICE
   ? process.env.NEXT_PUBLIC_WHATSAPP_SERVICE
@@ -29,6 +31,7 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [regMethod, setRegMethod] = useState<'whatsapp' | 'email' | 'none'>('whatsapp');
   const router = useRouter();
+  const setAuth = useAuthStore(state => state.setAuth);
 
   useEffect(() => {
     const fetchConfig = async () => {
@@ -100,6 +103,23 @@ export default function RegisterPage() {
       if (errorMsg.includes('Para pruebas')) {
         setStep('verify');
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    setLoading(true);
+    setError('');
+    try {
+      if (credentialResponse.credential) {
+        const data = await authService.googleLogin(credentialResponse.credential, true);
+        const profile = await authService.getProfile();
+        setAuth(profile, data.access, true);
+        window.location.href = '/dashboard';
+      }
+    } catch (err: any) {
+      setError('Error al autenticar con Google. ' + (err.response?.data?.error || ''));
     } finally {
       setLoading(false);
     }
@@ -238,6 +258,29 @@ export default function RegisterPage() {
               >
                 {loading ? 'Procesando...' : 'Crear Cuenta'}
               </motion.button>
+            </div>
+
+            <div className="mt-4">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-zinc-700" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-black text-zinc-400">O registrarse con</span>
+                </div>
+              </div>
+
+              <div className="mt-4 flex justify-center" style={{ colorScheme: 'light' }}>
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => {
+                    setError('Error al iniciar sesión con Google.');
+                  }}
+                  theme="filled_black"
+                  shape="rectangular"
+                  width="340"
+                />
+              </div>
             </div>
             
             <div className="text-center text-sm text-zinc-400 mt-4">
