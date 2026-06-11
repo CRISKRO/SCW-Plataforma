@@ -480,19 +480,19 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
 
                       {/* Norte */}
                       {parsedZones.find(z => z.zone_type === 'NORTE') && (
-                        <div className="flex justify-center mb-2 md:mb-4">
+                        <div className="flex justify-center mb-6 md:mb-10">
                           {renderPublicZone(parsedZones.find(z => z.zone_type === 'NORTE'), 'top')}
                         </div>
                       )}
 
                       <div className="flex items-center justify-center w-full">
                         {/* Oeste */}
-                        <div className="flex-1 flex justify-end pr-2 md:pr-4 relative">
+                        <div className="flex-1 flex justify-end pr-6 md:pr-10 relative">
                           {renderPublicZone(parsedZones.find(z => z.zone_type === 'OESTE'), 'left')}
                         </div>
 
                         {/* El Ring Central - Diseño Realista */}
-                        <div className="relative w-48 h-48 md:w-64 md:h-64 bg-[#d4d4d8] border-[8px] border-zinc-950 rounded flex items-center justify-center shadow-[0_0_80px_rgba(255,255,255,0.05)] z-10 shrink-0 mx-6 md:mx-10 lg:mx-16">
+                        <div className="relative w-48 h-48 md:w-64 md:h-64 bg-[#d4d4d8] border-[8px] border-zinc-950 rounded flex items-center justify-center shadow-[0_0_80px_rgba(255,255,255,0.05)] z-10 shrink-0 mx-8 md:mx-12 lg:mx-16">
                           <div className="absolute inset-1 border-[1.5px] border-red-600/80 rounded-sm"></div>
                           <div className="absolute inset-2 border-[1.5px] border-zinc-100 rounded-sm"></div>
                           <div className="absolute inset-3 border-[1.5px] border-red-600/80 rounded-sm"></div>
@@ -510,14 +510,14 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                         </div>
 
                         {/* Este */}
-                        <div className="flex-1 flex justify-start pl-2 md:pl-4 relative">
+                        <div className="flex-1 flex justify-start pl-6 md:pl-10 relative">
                           {renderPublicZone(parsedZones.find(z => z.zone_type === 'ESTE'), 'right')}
                         </div>
                       </div>
 
                       {/* Sur */}
                       {parsedZones.find(z => z.zone_type === 'SUR') && (
-                        <div className="flex justify-center mt-2 md:mt-4">
+                        <div className="flex justify-center mt-6 md:mt-10">
                           {renderPublicZone(parsedZones.find(z => z.zone_type === 'SUR'), 'bottom')}
                         </div>
                       )}
