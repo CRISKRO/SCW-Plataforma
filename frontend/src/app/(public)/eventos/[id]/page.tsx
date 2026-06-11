@@ -67,12 +67,16 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
     setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
   };
 
+  const PAN_LIMIT = 500;
+
   const onPointerMove = (e: React.PointerEvent) => {
     if (e.pointerType !== 'mouse') return;
     if (isDragging) {
+      const newX = e.clientX - dragStart.x;
+      const newY = e.clientY - dragStart.y;
       setPosition({
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y
+        x: Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, newX)),
+        y: Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, newY))
       });
     }
   };
@@ -100,10 +104,13 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
   };
 
   const onTouchMove = (e: React.TouchEvent) => {
+    const PAN_LIMIT = 500;
     if (e.touches.length === 1 && isDragging) {
+      const newX = e.touches[0].clientX - dragStart.x;
+      const newY = e.touches[0].clientY - dragStart.y;
       setPosition({
-        x: e.touches[0].clientX - dragStart.x,
-        y: e.touches[0].clientY - dragStart.y
+        x: Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, newX)),
+        y: Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, newY))
       });
     } else if (e.touches.length === 2 && initialPinchDist.current !== null) {
       const touch1 = e.touches[0];
@@ -118,9 +125,11 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
       // 2-finger pan
       const midX = (touch1.clientX + touch2.clientX) / 2;
       const midY = (touch1.clientY + touch2.clientY) / 2;
+      const newX = midX - dragStart.x;
+      const newY = midY - dragStart.y;
       setPosition({
-        x: midX - dragStart.x,
-        y: midY - dragStart.y
+        x: Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, newX)),
+        y: Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, newY))
       });
     }
   };
@@ -270,6 +279,39 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
 
   const totalPrice = selectedSeats.reduce((acc, s) => acc + s.price, 0);
 
+  const renderPublicZone = (zone: any, position: 'top'|'bottom'|'left'|'right' = 'top') => {
+    if (!zone) return null;
+    const isVertical = position === 'left' || position === 'right';
+    const rowNames = position === 'top' || position === 'left' ? zone.sortedRowNamesReversed : zone.sortedRowNames;
+    return (
+      <div className="flex flex-col items-center relative">
+        <div className={`flex gap-0.5 ${isVertical ? 'flex-row' : 'flex-col'}`}>
+          {rowNames.map((rowName: string) => (
+            <div key={rowName} className={`flex items-center justify-center gap-0.5 ${isVertical ? 'flex-col' : 'flex-row'}`}>
+              <div className={`flex gap-0.5 ${isVertical ? 'flex-col' : 'flex-row'}`}>
+                {zone.groupedSeats[rowName].map((seat: any) => {
+                  const isSelected = isSeatSelected(seat.id);
+                  const displayNumber = getDisplayNumber(zone.zone_type, seat.seat_number);
+                  return (
+                    <div key={seat.id} className="contents">
+                      <button
+                        disabled={!seat.is_available}
+                        onClick={() => toggleSeat(seat, zone, displayNumber)}
+                        className={`w-5 h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 rounded-sm flex items-center justify-center text-[9px] md:text-[10px] font-bold transition-all shadow-sm ${!seat.is_available ? 'bg-zinc-900 text-zinc-600 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_15px_rgba(239,68,68,0.6)]' : 'bg-zinc-100 text-zinc-900 border border-zinc-400 hover:bg-white hover:scale-110 z-10 hover:shadow-lg'}`}
+                        title={seat.is_available ? `Fila ${rowName} - Asiento ${displayNumber}` : 'Ocupado'}
+                      >{displayNumber}</button>
+                      {zone.zone_type === 'ESTE' && displayNumber === 22 && <div className={`${isVertical ? 'h-4 md:h-6' : 'w-4 md:w-6'}`} />}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   if (loading) return (
     <div className="min-h-screen bg-black flex justify-center items-center">
       <div className="w-10 h-10 border-t-2 border-red-500 rounded-full animate-spin" />
@@ -403,186 +445,51 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                       transition: isDragging ? 'none' : 'transform 0.1s ease-out'
                     }}
                   >
-                    <div className="bg-zinc-900/40 rounded-[3rem] p-6 md:p-12 lg:p-16 flex flex-col items-center justify-center border border-white/5 relative shadow-inner min-w-[800px]">
+                    <div className="bg-zinc-900/60 shadow-2xl rounded-[3rem] p-4 md:p-8 flex flex-col items-center justify-center border border-white/10 relative min-w-[700px] backdrop-blur-md">
                         
                         {/* Norte */}
                         {parsedZones.find(z => z.zone_type === 'NORTE') && (
-                          <div className="flex justify-center mb-6 md:mb-10 lg:mb-14">
-                            {(() => {
-                              const zone = parsedZones.find(z => z.zone_type === 'NORTE');
-                              return (
-                                <div className="bg-zinc-800/90 p-4 md:p-6 lg:p-8 rounded-3xl border-[3px] border-zinc-700/60 flex flex-col items-center gap-3 md:gap-4 lg:gap-5 relative shadow-2xl backdrop-blur-sm transition-transform hover:scale-[1.02] duration-300">
-                                  <div className="px-6 py-2 rounded-full text-xs md:text-sm font-black uppercase tracking-widest bg-zinc-950 shadow-inner border border-white/5 text-zinc-300">
-                                    Norte - ${zone.price}
-                                  </div>
-                                  <div className="flex flex-col gap-2 md:gap-3">
-                                    {zone.sortedRowNamesReversed.map((rowName: string) => (
-                                      <div key={rowName} className="flex items-center justify-center gap-2 flex-row">
-                                        <div className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 flex items-center justify-center font-bold text-zinc-500 text-[10px] md:text-xs lg:text-sm bg-zinc-900/60 rounded-md lg:rounded-lg shrink-0">{rowName}</div>
-                                        <div className="flex gap-2 flex-row">
-                                          {zone.groupedSeats[rowName].map((seat: any) => {
-                                            const isSelected = isSeatSelected(seat.id);
-                                            const displayNumber = getDisplayNumber(zone.zone_type, seat.seat_number);
-                                            return (
-                                              <button
-                                                key={seat.id}
-                                                disabled={!seat.is_available}
-                                                onClick={() => toggleSeat(seat, zone, displayNumber)}
-                                                className={`w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 rounded-md lg:rounded-lg flex items-center justify-center text-xs md:text-sm lg:text-base font-black transition-all shadow-md shrink-0 ${!seat.is_available ? 'bg-zinc-950 text-zinc-700 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_15px_rgba(239,68,68,0.6)]' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:border-zinc-400 hover:scale-110 z-10 hover:shadow-lg'}`}
-                                                title={seat.is_available ? `Fila ${rowName} - Asiento ${displayNumber}` : 'Ocupado'}
-                                              >{displayNumber}</button>
-                                            );
-                                          })}
-                                        </div>
-                                        <div className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 flex items-center justify-center font-bold text-zinc-500 text-[10px] md:text-xs lg:text-sm bg-zinc-900/60 rounded-md lg:rounded-lg shrink-0">{rowName}</div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              );
-                            })()}
+                          <div className="flex justify-center mb-2 md:mb-4">
+                            {renderPublicZone(parsedZones.find(z => z.zone_type === 'NORTE'), 'top')}
                           </div>
                         )}
 
-                      <div className="flex items-center justify-center w-full gap-4 md:gap-8 lg:gap-12">
+                      <div className="flex items-center justify-center w-full">
                         {/* Oeste */}
-                        <div className="flex-1 flex justify-end relative">
-                          {/* Rotated text for GENERAL on the far left */}
-                          <div className="absolute left-[-110px] md:left-[-140px] top-1/2 -translate-y-1/2 -rotate-90 text-zinc-500 font-black text-4xl md:text-5xl lg:text-6xl tracking-widest opacity-20 pointer-events-none">GENERAL</div>
-                          {(() => {
-                            const zone = parsedZones.find(z => z.zone_type === 'OESTE');
-                            if (!zone) return null;
-                            return (
-                              <div className="bg-zinc-800/90 p-4 md:p-6 lg:p-8 rounded-3xl border-[3px] border-zinc-700/60 flex flex-col items-center gap-3 md:gap-4 lg:gap-5 relative shadow-2xl backdrop-blur-sm transition-transform hover:scale-[1.02] duration-300">
-                                <div className="px-6 py-2 rounded-full text-xs md:text-sm font-black uppercase tracking-widest bg-zinc-950 shadow-inner border border-white/5 text-zinc-300">
-                                  Oeste - ${zone.price}
-                                </div>
-                                <div className="flex flex-row gap-2 md:gap-3">
-                                  {zone.sortedRowNamesReversed.map((rowName: string) => (
-                                    <div key={rowName} className="flex items-center justify-center gap-2 flex-col">
-                                      <div className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 flex items-center justify-center font-bold text-zinc-500 text-[10px] md:text-xs lg:text-sm bg-zinc-900/60 rounded-md lg:rounded-lg shrink-0">{rowName}</div>
-                                      <div className="flex gap-2 flex-col">
-                                        {zone.groupedSeats[rowName].map((seat: any) => {
-                                          const isSelected = isSeatSelected(seat.id);
-                                          const displayNumber = getDisplayNumber(zone.zone_type, seat.seat_number);
-                                          return (
-                                            <div key={seat.id} className="contents">
-                                              <button
-                                                disabled={!seat.is_available}
-                                                onClick={() => toggleSeat(seat, zone, displayNumber)}
-                                                className={`w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 rounded-md lg:rounded-lg flex items-center justify-center text-xs md:text-sm lg:text-base font-black transition-all shadow-md shrink-0 ${!seat.is_available ? 'bg-zinc-950 text-zinc-700 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_15px_rgba(239,68,68,0.6)]' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:border-zinc-400 hover:scale-110 z-10 hover:shadow-lg'}`}
-                                                title={seat.is_available ? `Fila ${rowName} - Asiento ${displayNumber}` : 'Ocupado'}
-                                              >{displayNumber}</button>
-                                            </div>
-                                          );
-                                        })}
-                                      </div>
-                                      <div className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 flex items-center justify-center font-bold text-zinc-500 text-[10px] md:text-xs lg:text-sm bg-zinc-900/60 rounded-md lg:rounded-lg shrink-0">{rowName}</div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            );
-                          })()}
+                        <div className="flex-1 flex justify-end pr-2 md:pr-4 relative">
+                          <div className="absolute left-[-20px] top-1/2 -translate-y-1/2 -rotate-90 text-zinc-500 font-black text-3xl md:text-4xl tracking-widest opacity-20 pointer-events-none">GENERAL</div>
+                          {renderPublicZone(parsedZones.find(z => z.zone_type === 'OESTE'), 'left')}
                         </div>
 
                         {/* El Ring Central - Diseño Realista */}
-                        <div className="relative w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96 xl:w-[450px] xl:h-[450px] bg-[#d4d4d8] border-[10px] lg:border-[16px] border-zinc-950 rounded flex items-center justify-center shadow-[0_0_100px_rgba(255,255,255,0.08)] z-10 shrink-0 mx-2 md:mx-4 transition-all duration-500 hover:scale-105">
-                          <div className="absolute inset-1 border-[2px] border-red-600/80 rounded-sm"></div>
-                          <div className="absolute inset-3 border-[2px] border-zinc-100 rounded-sm"></div>
-                          <div className="absolute inset-5 border-[2px] border-red-600/80 rounded-sm"></div>
-                          <div className="absolute -top-3 -left-3 w-6 h-6 lg:w-8 lg:h-8 bg-red-600 rounded-full shadow-lg border-2 border-black z-20"></div>
-                          <div className="absolute top-3 left-3 w-8 h-8 lg:w-10 lg:h-10 bg-zinc-900 rotate-45 transform -translate-x-1 -translate-y-1 rounded-sm z-10"></div>
-                          <div className="absolute -top-3 -right-3 w-6 h-6 lg:w-8 lg:h-8 bg-blue-600 rounded-full shadow-lg border-2 border-black z-20"></div>
-                          <div className="absolute top-3 right-3 w-8 h-8 lg:w-10 lg:h-10 bg-zinc-900 -rotate-45 transform translate-x-1 -translate-y-1 rounded-sm z-10"></div>
-                          <div className="absolute -bottom-3 -left-3 w-6 h-6 lg:w-8 lg:h-8 bg-blue-600 rounded-full shadow-lg border-2 border-black z-20"></div>
-                          <div className="absolute bottom-3 left-3 w-8 h-8 lg:w-10 lg:h-10 bg-zinc-900 -rotate-45 transform -translate-x-1 translate-y-1 rounded-sm z-10"></div>
-                          <div className="absolute -bottom-3 -right-3 w-6 h-6 lg:w-8 lg:h-8 bg-red-600 rounded-full shadow-lg border-2 border-black z-20"></div>
-                          <div className="absolute bottom-3 right-3 w-8 h-8 lg:w-10 lg:h-10 bg-zinc-900 rotate-45 transform translate-x-1 translate-y-1 rounded-sm z-10"></div>
-                          <div className="relative flex items-center justify-center w-32 h-32 lg:w-48 lg:h-48 border-[6px] border-zinc-400/50 rounded-full">
-                            <span className="text-zinc-400/80 font-black text-5xl lg:text-7xl tracking-tighter select-none">SCW</span>
+                        <div className="relative w-48 h-48 md:w-64 md:h-64 bg-[#d4d4d8] border-[8px] border-zinc-950 rounded flex items-center justify-center shadow-[0_0_80px_rgba(255,255,255,0.05)] z-10 shrink-0 mx-4">
+                          <div className="absolute inset-1 border-[1.5px] border-red-600/80 rounded-sm"></div>
+                          <div className="absolute inset-2 border-[1.5px] border-zinc-100 rounded-sm"></div>
+                          <div className="absolute inset-3 border-[1.5px] border-red-600/80 rounded-sm"></div>
+                          <div className="absolute -top-2 -left-2 w-5 h-5 bg-red-600 rounded-full shadow-lg border-2 border-black z-20"></div>
+                          <div className="absolute top-2 left-2 w-6 h-6 bg-zinc-900 rotate-45 transform -translate-x-1 -translate-y-1 rounded-sm z-10"></div>
+                          <div className="absolute -top-2 -right-2 w-5 h-5 bg-blue-600 rounded-full shadow-lg border-2 border-black z-20"></div>
+                          <div className="absolute top-2 right-2 w-6 h-6 bg-zinc-900 -rotate-45 transform translate-x-1 -translate-y-1 rounded-sm z-10"></div>
+                          <div className="absolute -bottom-2 -left-2 w-5 h-5 bg-blue-600 rounded-full shadow-lg border-2 border-black z-20"></div>
+                          <div className="absolute bottom-2 left-2 w-6 h-6 bg-zinc-900 -rotate-45 transform -translate-x-1 translate-y-1 rounded-sm z-10"></div>
+                          <div className="absolute -bottom-2 -right-2 w-5 h-5 bg-red-600 rounded-full shadow-lg border-2 border-black z-20"></div>
+                          <div className="absolute bottom-2 right-2 w-6 h-6 bg-zinc-900 -rotate-45 transform translate-x-1 translate-y-1 rounded-sm z-10"></div>
+                          <div className="relative flex items-center justify-center w-24 h-24 border-4 border-zinc-400/50 rounded-full">
+                            <span className="text-zinc-400/80 font-black text-4xl tracking-tighter select-none">SCW</span>
                           </div>
                         </div>
 
                         {/* Este */}
-                        <div className="flex-1 flex justify-start relative">
-                          <div className="absolute right-[-110px] md:right-[-140px] top-1/2 -translate-y-1/2 rotate-90 text-zinc-500 font-black text-4xl md:text-5xl lg:text-6xl tracking-widest opacity-20 pointer-events-none">GENERAL</div>
-                          <div className="absolute right-[-240px] md:right-[-320px] top-1/2 -translate-y-1/2 rotate-90 text-zinc-500 font-black text-5xl md:text-6xl lg:text-7xl tracking-widest opacity-30 pointer-events-none">ESCENARIO</div>
-                          {(() => {
-                            const zone = parsedZones.find(z => z.zone_type === 'ESTE');
-                            if (!zone) return null;
-                            return (
-                              <div className="bg-zinc-800/90 p-4 md:p-6 lg:p-8 rounded-3xl border-[3px] border-zinc-700/60 flex flex-col items-center gap-3 md:gap-4 lg:gap-5 relative shadow-2xl backdrop-blur-sm transition-transform hover:scale-[1.02] duration-300">
-                                <div className="px-6 py-2 rounded-full text-xs md:text-sm font-black uppercase tracking-widest bg-zinc-950 shadow-inner border border-white/5 text-zinc-300">
-                                  Este - ${zone.price}
-                                </div>
-                                <div className="flex flex-row gap-2 md:gap-3">
-                                  {zone.sortedRowNames.map((rowName: string) => (
-                                    <div key={rowName} className="flex items-center justify-center gap-2 flex-col">
-                                      <div className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 flex items-center justify-center font-bold text-zinc-500 text-[10px] md:text-xs lg:text-sm bg-zinc-900/60 rounded-md lg:rounded-lg shrink-0">{rowName}</div>
-                                      <div className="flex gap-2 flex-col">
-                                        {zone.groupedSeats[rowName].map((seat: any) => {
-                                          const isSelected = isSeatSelected(seat.id);
-                                          const displayNumber = getDisplayNumber(zone.zone_type, seat.seat_number);
-                                          return (
-                                            <div key={seat.id} className="contents">
-                                              <button
-                                                disabled={!seat.is_available}
-                                                onClick={() => toggleSeat(seat, zone, displayNumber)}
-                                                className={`w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 rounded-md lg:rounded-lg flex items-center justify-center text-xs md:text-sm lg:text-base font-black transition-all shadow-md shrink-0 ${!seat.is_available ? 'bg-zinc-950 text-zinc-700 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_15px_rgba(239,68,68,0.6)]' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:border-zinc-400 hover:scale-110 z-10 hover:shadow-lg'}`}
-                                                title={seat.is_available ? `Fila ${rowName} - Asiento ${displayNumber}` : 'Ocupado'}
-                                              >{displayNumber}</button>
-                                              {displayNumber === 22 && <div className="h-6 md:h-10 lg:h-12" />}
-                                            </div>
-                                          );
-                                        })}
-                                      </div>
-                                      <div className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 flex items-center justify-center font-bold text-zinc-500 text-[10px] md:text-xs lg:text-sm bg-zinc-900/60 rounded-md lg:rounded-lg shrink-0">{rowName}</div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            );
-                          })()}
+                        <div className="flex-1 flex justify-start pl-2 md:pl-4 relative">
+                          <div className="absolute right-[-40px] top-1/2 -translate-y-1/2 rotate-90 text-zinc-500 font-black text-4xl tracking-widest opacity-30 pointer-events-none">ESCENARIO</div>
+                          {renderPublicZone(parsedZones.find(z => z.zone_type === 'ESTE'), 'right')}
                         </div>
                       </div>
 
                       {/* Sur */}
                       {parsedZones.find(z => z.zone_type === 'SUR') && (
-                        <div className="flex justify-center mt-6 md:mt-10 lg:mt-14">
-                          {(() => {
-                            const zone = parsedZones.find(z => z.zone_type === 'SUR');
-                            return (
-                              <div className="bg-zinc-800/90 p-4 md:p-6 lg:p-8 rounded-3xl border-[3px] border-zinc-700/60 flex flex-col items-center gap-3 md:gap-4 lg:gap-5 relative shadow-2xl backdrop-blur-sm transition-transform hover:scale-[1.02] duration-300">
-                                <div className="px-6 py-2 rounded-full text-xs md:text-sm font-black uppercase tracking-widest bg-zinc-950 shadow-inner border border-white/5 text-zinc-300">
-                                  Sur - ${zone.price}
-                                </div>
-                                <div className="flex flex-col gap-2 md:gap-3">
-                                  {zone.sortedRowNames.map((rowName: string) => (
-                                    <div key={rowName} className="flex items-center justify-center gap-2 flex-row">
-                                      <div className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 flex items-center justify-center font-bold text-zinc-500 text-[10px] md:text-xs lg:text-sm bg-zinc-900/60 rounded-md lg:rounded-lg shrink-0">{rowName}</div>
-                                      <div className="flex gap-2 flex-row">
-                                        {zone.groupedSeats[rowName].map((seat: any) => {
-                                          const isSelected = isSeatSelected(seat.id);
-                                          const displayNumber = getDisplayNumber(zone.zone_type, seat.seat_number);
-                                          return (
-                                            <button
-                                              key={seat.id}
-                                              disabled={!seat.is_available}
-                                              onClick={() => toggleSeat(seat, zone, displayNumber)}
-                                              className={`w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 rounded-md lg:rounded-lg flex items-center justify-center text-xs md:text-sm lg:text-base font-black transition-all shadow-md shrink-0 ${!seat.is_available ? 'bg-zinc-950 text-zinc-700 border border-zinc-800 opacity-50 cursor-not-allowed' : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_15px_rgba(239,68,68,0.6)]' : 'bg-zinc-800 text-zinc-300 border border-zinc-600 hover:bg-zinc-700 hover:border-zinc-400 hover:scale-110 z-10 hover:shadow-lg'}`}
-                                              title={seat.is_available ? `Fila ${rowName} - Asiento ${displayNumber}` : 'Ocupado'}
-                                            >{displayNumber}</button>
-                                          );
-                                        })}
-                                      </div>
-                                      <div className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 flex items-center justify-center font-bold text-zinc-500 text-[10px] md:text-xs lg:text-sm bg-zinc-900/60 rounded-md lg:rounded-lg shrink-0">{rowName}</div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            );
-                          })()}
+                        <div className="flex justify-center mt-2 md:mt-4">
+                          {renderPublicZone(parsedZones.find(z => z.zone_type === 'SUR'), 'bottom')}
                         </div>
                       )}
                     </div>
