@@ -350,6 +350,8 @@ class OrderViewSet(viewsets.ModelViewSet):
                                 product.save(update_fields=['stock'])
 
                     send_order_emails_safely(instance)
+                except Exception as mail_err:
+                    print("Email error simulating PAID status:", mail_err)
             elif instance.status in ['PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']:
                 try:
                     from .email_orders import send_status_update_email
