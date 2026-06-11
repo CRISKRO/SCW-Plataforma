@@ -30,11 +30,20 @@ export default function EventTicketsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  const [editingZone, setEditingZone] = useState<number | null>(null);
+  const [editPrice, setEditPrice] = useState('');
+
+  const getDefaultSeats = (type: string) => {
+    if (type === 'NORTE' || type === 'SUR') return 17;
+    if (type === 'OESTE') return 16;
+    return 10;
+  };
+
   const [newZone, setNewZone] = useState({
     zone_type: 'NORTE',
     price: '',
     rows: 2,
-    seats_per_row: 10,
+    seats_per_row: 17,
   });
 
   useEffect(() => {
@@ -50,7 +59,7 @@ export default function EventTicketsPage() {
         const existing = zonesData.map((z: any) => z.zone_type);
         const available = ZONE_TYPES.filter(zt => !existing.includes(zt.value));
         if (available.length > 0) {
-          setNewZone(prev => ({ ...prev, zone_type: available[0].value }));
+          setNewZone(prev => ({ ...prev, zone_type: available[0].value, seats_per_row: getDefaultSeats(available[0].value) }));
         }
       } catch (error) {
         console.error("Error loading data:", error);
@@ -90,11 +99,24 @@ export default function EventTicketsPage() {
         zone_type: newAvailable.length > 0 ? newAvailable[0].value : 'NORTE', 
         price: '', 
         rows: 2, 
-        seats_per_row: 10 
+        seats_per_row: newAvailable.length > 0 ? getDefaultSeats(newAvailable[0].value) : 17 
       });
     } catch (error: any) {
       const msg = error?.response?.data?.non_field_errors?.[0] || "Error al crear la zona.";
       alert(msg.includes('unique_together') ? 'Esta zona ya existe para este evento.' : msg);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleUpdateZone = async (zoneId: number) => {
+    try {
+      setSaving(true);
+      const updated = await adminService.updateZone(zoneId, { price: editPrice });
+      setZones(zones.map(z => z.id === zoneId ? { ...z, price: updated.price } : z));
+      setEditingZone(null);
+    } catch (error) {
+      alert("Error al actualizar la zona.");
     } finally {
       setSaving(false);
     }
@@ -255,22 +277,71 @@ export default function EventTicketsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {zones.map(zone => (
               <div key={zone.id} className={`border rounded-xl p-6 flex justify-between items-start ${ZONE_COLORS[zone.zone_type] || 'bg-zinc-900 border-white/10 text-white'}`}>
-                <div>
-                  <p className="font-black text-lg uppercase tracking-widest">
-                    {ZONE_TYPES.find(zt => zt.value === zone.zone_type)?.label}
-                  </p>
-                  <p className="text-2xl font-bold mt-1">${zone.price} <span className="text-sm font-normal opacity-70">MXN</span></p>
-                  <p className="text-sm mt-2 opacity-70">
-                    {zone.rows} filas × {zone.seats_per_row} asientos = <strong>{zone.rows * zone.seats_per_row} lugares</strong>
-                  </p>
-                </div>
-                <button
-                  onClick={() => handleDeleteZone(zone.id)}
-                  className="text-current opacity-50 hover:opacity-100 transition-opacity"
-                  title="Eliminar zona"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
+                {editingZone === zone.id ? (
+                  <div className="flex-1 mr-4 space-y-3">
+                    <p className="font-black text-lg uppercase tracking-widest">
+                      {ZONE_TYPES.find(zt => zt.value === zone.zone_type)?.label}
+                    </p>
+                    <div>
+                      <label className="text-xs uppercase tracking-widest font-bold opacity-70 mb-1 block">Nuevo Precio (MXN)</label>
+                      <input 
+                        type="number" 
+                        step="0.01" 
+                        value={editPrice}
+                        onChange={e => setEditPrice(e.target.value)}
+                        className="w-full bg-zinc-950 border border-white/20 rounded px-3 py-2 text-white focus:outline-none focus:border-red-500"
+                      />
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      <button 
+                        onClick={() => handleUpdateZone(zone.id)}
+                        disabled={saving}
+                        className="bg-white text-black text-xs font-bold px-3 py-1.5 rounded uppercase tracking-widest hover:bg-zinc-200"
+                      >
+                        {saving ? 'Guardando...' : 'Guardar'}
+                      </button>
+                      <button 
+                        onClick={() => setEditingZone(null)}
+                        disabled={saving}
+                        className="bg-zinc-800 text-white text-xs font-bold px-3 py-1.5 rounded uppercase tracking-widest hover:bg-zinc-700"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="font-black text-lg uppercase tracking-widest">
+                      {ZONE_TYPES.find(zt => zt.value === zone.zone_type)?.label}
+                    </p>
+                    <p className="text-2xl font-bold mt-1">${zone.price} <span className="text-sm font-normal opacity-70">MXN</span></p>
+                    <p className="text-sm mt-2 opacity-70">
+                      {zone.rows} filas × {zone.seats_per_row} asientos = <strong>{zone.rows * zone.seats_per_row} lugares</strong>
+                    </p>
+                  </div>
+                )}
+                
+                {!editingZone && (
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => {
+                        setEditingZone(zone.id);
+                        setEditPrice(zone.price);
+                      }}
+                      className="text-current opacity-50 hover:opacity-100 transition-opacity"
+                      title="Editar precio"
+                    >
+                      <span className="text-sm uppercase font-bold tracking-widest">Editar</span>
+                    </button>
+                    <button
+                      onClick={() => handleDeleteZone(zone.id)}
+                      className="text-current opacity-50 hover:opacity-100 transition-opacity"
+                      title="Eliminar zona"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -295,7 +366,10 @@ export default function EventTicketsPage() {
                 <label className="text-sm font-bold text-white uppercase tracking-widest">Tipo de Zona</label>
                 <select
                   value={newZone.zone_type}
-                  onChange={e => setNewZone({ ...newZone, zone_type: e.target.value })}
+                  onChange={e => {
+                    const val = e.target.value;
+                    setNewZone({ ...newZone, zone_type: val, seats_per_row: getDefaultSeats(val) });
+                  }}
                   className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
                 >
                   {availableZoneTypes.map(zt => (

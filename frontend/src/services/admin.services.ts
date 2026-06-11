@@ -74,6 +74,10 @@ export const adminService = {
     const response = await api.delete(`/tickets/zones/${id}/`);
     return response.data;
   },
+  updateZone: async (id: number, data: any) => {
+    const response = await api.patch(`/tickets/zones/${id}/`, data);
+    return response.data;
+  },
   updateSeat: async (id: number, data: { is_available: boolean }) => {
     const response = await api.patch(`/tickets/seats/${id}/`, data);
     return response.data;
