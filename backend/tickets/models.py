@@ -30,17 +30,9 @@ class EventZone(models.Model):
         if is_new:
             # Generate seats
             letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-            zone_ranges = {
-                'NORTE': (1, 17),
-                'ESTE': (18, 27),
-                'SUR': (28, 44),
-                'OESTE': (45, 60),
-            }
-            start_seat, end_seat = zone_ranges.get(self.zone_type, (1, self.seats_per_row))
-            
             for r in range(self.rows):
                 row_name = letters[r] if r < len(letters) else str(r+1)
-                for s in range(start_seat, end_seat + 1):
+                for s in range(1, self.seats_per_row + 1):
                     Seat.objects.create(
                         zone=self,
                         row_name=row_name,
