@@ -141,6 +141,14 @@ export default function EventTicketsPage() {
   const existingZoneTypes = zones.map(z => z.zone_type);
   const availableZoneTypes = ZONE_TYPES.filter(zt => !existingZoneTypes.includes(zt.value));
 
+  const getDisplayNumber = (zoneType: string, seatNumber: number) => {
+    if (zoneType === 'NORTE') return seatNumber;
+    if (zoneType === 'ESTE') return seatNumber + 17;
+    if (zoneType === 'SUR') return seatNumber + 27;
+    if (zoneType === 'OESTE') return seatNumber + 44;
+    return seatNumber;
+  };
+
   const renderZone = (zone: any, position: 'top'|'bottom'|'left'|'right'|'default' = 'default') => {
     if (!zone) return null;
     const groupedSeats: Record<string, any[]> = {};
@@ -171,7 +179,9 @@ export default function EventTicketsPage() {
                     return b.seat_number - a.seat_number;
                   }
                   return a.seat_number - b.seat_number;
-                }).map(seat => (
+                }).map(seat => {
+                  const displayNumber = getDisplayNumber(zone.zone_type, seat.seat_number);
+                  return (
                   <div key={seat.id} className="contents">
                     <button
                       onClick={() => handleToggleSeat(zone.id, seat.id, seat.is_available)}
@@ -180,13 +190,14 @@ export default function EventTicketsPage() {
                           ? 'bg-red-600/90 text-white border border-red-500 hover:bg-red-500 hover:scale-110 z-10' 
                           : 'bg-zinc-950 text-zinc-700 border border-zinc-800 hover:bg-zinc-900 opacity-50 hover:opacity-100'
                       }`}
-                      title={`Fila ${rowName} - Asiento ${seat.seat_number} (${ZONE_TYPES.find(zt => zt.value === zone.zone_type)?.label})`}
+                      title={`Fila ${rowName} - Asiento ${displayNumber} (${ZONE_TYPES.find(zt => zt.value === zone.zone_type)?.label})`}
                     >
-                      {seat.seat_number}
+                      {displayNumber}
                     </button>
-                    {zone.zone_type === 'ESTE' && seat.seat_number === 22 && <div className="h-4 md:h-6" />}
+                    {zone.zone_type === 'ESTE' && displayNumber === 22 && <div className="h-4 md:h-6" />}
                   </div>
-                ))}
+                  );
+                })}
               </div>
               <div className="w-5 h-5 flex items-center justify-center font-bold text-zinc-500 text-[10px] bg-zinc-900/60 rounded-md">{rowName}</div>
             </div>
