@@ -124,7 +124,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
       // Pinch zoom
       const dist = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
       const ratio = dist / initialPinchDist.current;
-      setScale(s => Math.min(Math.max(s * ratio, 0.6), 3));
+      setScale(s => Math.min(Math.max(s * ratio, minScale), 3));
       initialPinchDist.current = dist;
 
       // 2-finger pan
