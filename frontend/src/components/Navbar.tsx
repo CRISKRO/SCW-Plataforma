@@ -12,7 +12,7 @@ const navItems = [
   { name: 'Eventos', href: '/eventos' },
   { name: 'Roster', href: '/roster' },
   { name: 'Videos', href: '/premium' },
-  { name: 'Escuela', href: '/escuela' },
+  { name: 'Dojo', href: '/escuela' },
   { name: 'Tienda', href: '/tienda' },
 ];
 

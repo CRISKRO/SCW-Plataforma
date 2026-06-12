@@ -112,7 +112,7 @@ export default function PremiumPage() {
                       initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
                       className="group relative aspect-video bg-zinc-900 rounded-2xl overflow-hidden cursor-pointer border border-white/5"
                     >
-                      {thumb && <Image src={thumb} alt={video.title} fill className="object-cover transition-transform duration-500 filter blur-[2px] opacity-60 group-hover:scale-105" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />}
+                      {thumb && <Image src={thumb} alt={video.title} fill className="object-cover transition-transform duration-500 group-hover:scale-105" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />}
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[1px] group-hover:bg-black/20 transition-colors">
                         <PlayCircle className="w-12 h-12 text-white/50 group-hover:text-white transition-colors shadow-lg" />
                       </div>

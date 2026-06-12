@@ -3,6 +3,7 @@ from django.db import models
 class GalleryImage(models.Model):
     title = models.CharField(max_length=255)
     category = models.CharField(max_length=100, blank=True, null=True)
+    description = models.TextField(blank=True, null=True, help_text="Descripción del luchador o imagen para mostrar en el Roster")
     image = models.ImageField(upload_to='gallery/')
     col_span = models.CharField(max_length=50, default='md:col-span-1', help_text="Tailwind class for grid column span (e.g. md:col-span-2)")
     row_span = models.CharField(max_length=50, default='md:row-span-1', help_text="Tailwind class for grid row span (e.g. md:row-span-2)")

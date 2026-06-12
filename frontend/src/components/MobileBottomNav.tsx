@@ -10,8 +10,8 @@ export default function MobileBottomNav() {
   const navItems = [
     { name: 'Inicio', href: '/', icon: Home },
     { name: 'Tienda', href: '/tienda', icon: Grid },
-    { name: 'Escuela', href: '/escuela', icon: Target },
-    { name: 'Galería', href: '/galeria', icon: ImageIcon },
+    { name: 'Dojo', href: '/escuela', icon: Target },
+    { name: 'Roster', href: '/roster', icon: ImageIcon },
     { name: 'Premium', href: '/premium', icon: Star },
   ];
 
