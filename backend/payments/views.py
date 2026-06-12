@@ -864,3 +864,103 @@ class TestEmailView(APIView):
                 "error": str(e),
                 "traceback": traceback.format_exc()
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class BoxOfficeEventsView(APIView):
+    """Devuelve eventos y zonas con asientos disponibles para la app de escáner en modo Taquilla."""
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        scanner_token = request.headers.get('X-Scanner-Token')
+        expected_token = getattr(settings, 'SCANNER_TOKEN', 'scw-default-secret-token')
+        if not (request.user.is_staff or scanner_token == expected_token):
+            return Response({"error": "No autorizado."}, status=403)
+
+        from events.models import Event
+        from tickets.models import EventZone
+        from django.utils import timezone
+        
+        events = Event.objects.filter(date_time__gte=timezone.now(), status__in=['SCHEDULED', 'LIVE'])
+        data = []
+        for event in events:
+            zones_data = []
+            for zone in event.zones.all():
+                available_seats = zone.seats.filter(is_available=True).count()
+                if available_seats > 0:
+                    zones_data.append({
+                        "id": zone.id,
+                        "name": zone.get_zone_type_display(),
+                        "price": str(zone.price),
+                        "available_seats": available_seats
+                    })
+            if zones_data:
+                data.append({
+                    "id": event.id,
+                    "title": event.title,
+                    "date": event.date_time.strftime('%Y-%m-%d %H:%M'),
+                    "zones": zones_data
+                })
+        return Response(data)
+
+class BoxOfficeSellView(APIView):
+    """Vende el primer asiento disponible en la zona seleccionada (pago en efectivo) y genera el QR."""
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        scanner_token = request.headers.get('X-Scanner-Token')
+        expected_token = getattr(settings, 'SCANNER_TOKEN', 'scw-default-secret-token')
+        if not (request.user.is_staff or scanner_token == expected_token):
+            return Response({"error": "No autorizado."}, status=403)
+
+        event_id = request.data.get('event_id')
+        zone_id = request.data.get('zone_id')
+
+        from tickets.models import EventZone
+        from payments.models import Order, OrderItem
+        from payments.qr import get_ticket_hash
+        from django.db import transaction
+
+        try:
+            with transaction.atomic():
+                zone = EventZone.objects.select_for_update().get(id=zone_id, event_id=event_id)
+                seat = zone.seats.filter(is_available=True).first()
+                if not seat:
+                    return Response({"error": "No hay asientos disponibles en esta zona."}, status=400)
+                
+                # Bloquear asiento
+                seat.is_available = False
+                seat.save()
+
+                # Crear orden de venta en efectivo
+                order = Order.objects.create(
+                    user=request.user if request.user.is_authenticated else None,
+                    contact_email="taquilla@scw.com",
+                    total_amount=zone.price,
+                    status=Order.Status.PAID,
+                    payment_method='TRANSFER'
+                )
+                
+                item = OrderItem.objects.create(
+                    order=order,
+                    product_name=f"Boleto Taquilla - {seat}",
+                    quantity=1,
+                    price=zone.price,
+                    event=zone.event,
+                    seat=seat
+                )
+
+            code = get_ticket_hash(order.id, item.id)
+
+            return Response({
+                "success": True,
+                "order_id": order.id,
+                "item_id": item.id,
+                "code": code,
+                "seat_info": f"{zone.get_zone_type_display()} - Fila {seat.row_name} Asiento {seat.seat_number}",
+                "price": str(zone.price),
+                "event_title": zone.event.title
+            })
+
+        except EventZone.DoesNotExist:
+            return Response({"error": "Zona o evento inválido."}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)

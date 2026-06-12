@@ -4,6 +4,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.GET
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -22,12 +23,54 @@ data class ValidationResponse(
     val size: String? = null
 )
 
+// Box Office Models
+data class BoxOfficeZone(
+    val id: Int,
+    val name: String,
+    val price: String,
+    val available_seats: Int
+)
+
+data class BoxOfficeEvent(
+    val id: Int,
+    val title: String,
+    val date: String,
+    val zones: List<BoxOfficeZone>
+)
+
+data class SellRequest(
+    val event_id: Int,
+    val zone_id: Int
+)
+
+data class SellResponse(
+    val success: Boolean,
+    val order_id: Int?,
+    val item_id: Int?,
+    val code: String?,
+    val seat_info: String?,
+    val price: String?,
+    val event_title: String?,
+    val error: String?
+)
+
 interface ApiService {
     @POST("api/payments/validate-ticket/")
     suspend fun validateTicket(
         @Header("X-Scanner-Token") token: String,
         @Body request: ValidationRequest
     ): Response<ValidationResponse>
+
+    @GET("api/payments/box-office-events/")
+    suspend fun getBoxOfficeEvents(
+        @Header("X-Scanner-Token") token: String
+    ): Response<List<BoxOfficeEvent>>
+
+    @POST("api/payments/box-office-sell/")
+    suspend fun sellBoxOfficeTicket(
+        @Header("X-Scanner-Token") token: String,
+        @Body request: SellRequest
+    ): Response<SellResponse>
 }
 
 object ApiClient {
