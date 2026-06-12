@@ -113,8 +113,8 @@ export default function PremiumPage() {
                       className="group relative aspect-video bg-zinc-900 rounded-2xl overflow-hidden cursor-pointer border border-white/5"
                     >
                       {thumb && <Image src={thumb} alt={video.title} fill className="object-cover transition-transform duration-500 group-hover:scale-105" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />}
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[1px] group-hover:bg-black/20 transition-colors">
-                        <PlayCircle className="w-12 h-12 text-white/50 group-hover:text-white transition-colors shadow-lg" />
+                      <div className="absolute inset-0 flex items-center justify-center transition-colors">
+                        <PlayCircle className="w-12 h-12 text-white/70 group-hover:text-white transition-colors drop-shadow-lg" />
                       </div>
                       <div className="absolute bottom-0 left-0 p-5 w-full bg-gradient-to-t from-black to-transparent">
                         <h3 className="text-sm font-bold text-white line-clamp-1">{video.title}</h3>
@@ -147,7 +147,6 @@ export default function PremiumPage() {
                           <Video className="w-14 h-14 text-zinc-700" />
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors" />
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="w-14 h-14 rounded-full bg-red-600/90 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
                           <PlayCircle className="w-8 h-8 text-white" />
