@@ -268,6 +268,8 @@ fun ScannerTab(baseUrl: String, token: String) {
 fun BoxOfficeTab(baseUrl: String, token: String) {
     var events by remember { mutableStateOf<List<BoxOfficeEvent>>(emptyList()) }
     var selectedEvent by remember { mutableStateOf<BoxOfficeEvent?>(null) }
+    var selectedZone by remember { mutableStateOf<BoxOfficeZone?>(null) }
+    var seatToSell by remember { mutableStateOf<BoxOfficeSeat?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMsg by remember { mutableStateOf("") }
     
@@ -277,21 +279,27 @@ fun BoxOfficeTab(baseUrl: String, token: String) {
 
     val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
+    fun loadEvents() {
         isLoading = true
-        try {
-            val api = ApiClient.getService(baseUrl)
-            val response = api.getBoxOfficeEvents(token)
-            if (response.isSuccessful && response.body() != null) {
-                events = response.body()!!
-            } else {
-                errorMsg = "Error al cargar eventos: ${response.code()}"
+        coroutineScope.launch {
+            try {
+                val api = ApiClient.getService(baseUrl)
+                val response = api.getBoxOfficeEvents(token)
+                if (response.isSuccessful && response.body() != null) {
+                    events = response.body()!!
+                } else {
+                    errorMsg = "Error al cargar eventos: ${response.code()}"
+                }
+            } catch (e: Exception) {
+                errorMsg = "Error de red: ${e.message}"
+            } finally {
+                isLoading = false
             }
-        } catch (e: Exception) {
-            errorMsg = "Error de red: ${e.message}"
-        } finally {
-            isLoading = false
         }
+    }
+
+    LaunchedEffect(Unit) {
+        loadEvents()
     }
 
     if (qrBitmap != null) {
@@ -326,8 +334,9 @@ fun BoxOfficeTab(baseUrl: String, token: String) {
             Button(
                 onClick = { 
                     qrBitmap = null
-                    selectedEvent = null 
-                    // Reload events optionally
+                    selectedEvent = null
+                    selectedZone = null
+                    loadEvents() // Recargar para actualizar los asientos disponibles
                 },
                 modifier = Modifier.fillMaxWidth().height(50.dp)
             ) {
@@ -335,6 +344,51 @@ fun BoxOfficeTab(baseUrl: String, token: String) {
             }
         }
         return
+    }
+
+    if (seatToSell != null) {
+        AlertDialog(
+            onDismissRequest = { seatToSell = null },
+            title = { Text("Confirmar Venta") },
+            text = { Text("¿Deseas vender el asiento Fila ${seatToSell!!.row} - ${seatToSell!!.number} por $${selectedZone!!.price} MXN?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    val seatId = seatToSell!!.id
+                    seatToSell = null
+                    isLoading = true
+                    coroutineScope.launch {
+                        try {
+                            val api = ApiClient.getService(baseUrl)
+                            val res = api.sellBoxOfficeTicket(token, SellRequest(selectedEvent!!.id, seatId))
+                            if (res.isSuccessful && res.body() != null) {
+                                val body = res.body()!!
+                                if (body.success) {
+                                    val qrContent = "{\"scw\":true,\"order\":${body.order_id},\"item\":${body.item_id},\"code\":\"${body.code}\"}"
+                                    try {
+                                        val encoder = BarcodeEncoder()
+                                        qrBitmap = encoder.encodeBitmap(qrContent, BarcodeFormat.QR_CODE, 600, 600)
+                                        sellResultText = "${body.event_title}\n${body.seat_info}\nTotal: $${body.price}"
+                                    } catch (e: Exception) {
+                                        errorMsg = "Error generando QR"
+                                    }
+                                } else {
+                                    errorMsg = body.error ?: "Error desconocido"
+                                }
+                            } else {
+                                errorMsg = "Error al vender: ${res.code()}"
+                            }
+                        } catch (e: Exception) {
+                            errorMsg = "Error de red: ${e.message}"
+                        } finally {
+                            isLoading = false
+                        }
+                    }
+                }) { Text("Confirmar y Cobrar", color = Color(0xFF4CAF50)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { seatToSell = null }) { Text("Cancelar") }
+            }
+        )
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
@@ -348,7 +402,7 @@ fun BoxOfficeTab(baseUrl: String, token: String) {
         } else if (events.isEmpty()) {
             Text("No hay eventos disponibles con lugares.")
         } else {
-            LazyColumn {
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
                 if (selectedEvent == null) {
                     items(events) { event ->
                         Card(
@@ -365,7 +419,7 @@ fun BoxOfficeTab(baseUrl: String, token: String) {
                             }
                         }
                     }
-                } else {
+                } else if (selectedZone == null) {
                     item {
                         Button(onClick = { selectedEvent = null }) {
                             Text("← Volver a Eventos")
@@ -379,7 +433,8 @@ fun BoxOfficeTab(baseUrl: String, token: String) {
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 8.dp),
+                                .padding(vertical = 8.dp)
+                                .clickable { selectedZone = zone },
                             elevation = CardDefaults.cardElevation(2.dp)
                         ) {
                             Row(
@@ -392,41 +447,46 @@ fun BoxOfficeTab(baseUrl: String, token: String) {
                                     Text("$${zone.price} MXN", color = Color(0xFF4CAF50))
                                     Text("${zone.available_seats} disponibles", fontSize = 12.sp, color = Color.Gray)
                                 }
-                                
-                                Button(
-                                    onClick = {
-                                        isLoading = true
-                                        coroutineScope.launch {
-                                            try {
-                                                val api = ApiClient.getService(baseUrl)
-                                                val res = api.sellBoxOfficeTicket(token, SellRequest(selectedEvent!!.id, zone.id))
-                                                if (res.isSuccessful && res.body() != null) {
-                                                    val body = res.body()!!
-                                                    if (body.success) {
-                                                        // Generate QR content
-                                                        val qrContent = "{\"scw\":true,\"order\":${body.order_id},\"item\":${body.item_id},\"code\":\"${body.code}\"}"
-                                                        try {
-                                                            val encoder = BarcodeEncoder()
-                                                            qrBitmap = encoder.encodeBitmap(qrContent, BarcodeFormat.QR_CODE, 600, 600)
-                                                            sellResultText = "${body.event_title}\n${body.seat_info}\nTotal: $${body.price}"
-                                                        } catch (e: Exception) {
-                                                            errorMsg = "Error generando QR"
-                                                        }
-                                                    } else {
-                                                        errorMsg = body.error ?: "Error desconocido"
-                                                    }
-                                                } else {
-                                                    errorMsg = "Error al vender: ${res.code()}"
-                                                }
-                                            } catch (e: Exception) {
-                                                errorMsg = "Error de conexión: ${e.message}"
-                                            } finally {
-                                                isLoading = false
-                                            }
+                                Icon(Icons.Default.ShoppingCart, contentDescription = "Seleccionar", tint = Color.Gray)
+                            }
+                        }
+                    }
+                } else {
+                    item {
+                        Button(onClick = { selectedZone = null }) {
+                            Text("← Volver a Zonas")
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("Zona: ${selectedZone!!.name}", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                        Text("Selecciona un asiento libre para vender", color = Color.Gray)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        val seatsByRow = selectedZone!!.seats.groupBy { it.row }
+                        
+                        Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                            seatsByRow.forEach { (rowName, seatsInRow) ->
+                                Row(
+                                    modifier = Modifier.padding(vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Text(rowName, fontWeight = FontWeight.Bold, modifier = Modifier.width(24.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    seatsInRow.forEach { seat ->
+                                        Box(
+                                            modifier = Modifier
+                                                .size(36.dp)
+                                                .padding(2.dp)
+                                                .background(
+                                                    if (seat.is_available) Color(0xFF4CAF50) else Color(0xFFE0E0E0),
+                                                    RoundedCornerShape(4.dp)
+                                                )
+                                                .clickable(enabled = seat.is_available) { seatToSell = seat },
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(seat.number.toString(), color = if (seat.is_available) Color.White else Color.Gray, fontSize = 12.sp)
                                         }
                                     }
-                                ) {
-                                    Text("Vender")
                                 }
                             }
                         }

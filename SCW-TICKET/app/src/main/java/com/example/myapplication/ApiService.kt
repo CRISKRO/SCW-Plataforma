@@ -24,11 +24,19 @@ data class ValidationResponse(
 )
 
 // Box Office Models
+data class BoxOfficeSeat(
+    val id: Int,
+    val row: String,
+    val number: Int,
+    val is_available: Boolean
+)
+
 data class BoxOfficeZone(
     val id: Int,
     val name: String,
     val price: String,
-    val available_seats: Int
+    val available_seats: Int,
+    val seats: List<BoxOfficeSeat>
 )
 
 data class BoxOfficeEvent(
@@ -40,7 +48,7 @@ data class BoxOfficeEvent(
 
 data class SellRequest(
     val event_id: Int,
-    val zone_id: Int
+    val seat_id: Int
 )
 
 data class SellResponse(

@@ -884,13 +884,25 @@ class BoxOfficeEventsView(APIView):
         for event in events:
             zones_data = []
             for zone in event.zones.all():
-                available_seats = zone.seats.filter(is_available=True).count()
+                seats = zone.seats.all()
+                available_seats = seats.filter(is_available=True).count()
+                
+                seats_data = []
+                for s in seats:
+                    seats_data.append({
+                        "id": s.id,
+                        "row": s.row_name,
+                        "number": s.seat_number,
+                        "is_available": s.is_available
+                    })
+
                 if available_seats > 0:
                     zones_data.append({
                         "id": zone.id,
                         "name": zone.get_zone_type_display(),
                         "price": str(zone.price),
-                        "available_seats": available_seats
+                        "available_seats": available_seats,
+                        "seats": seats_data
                     })
             if zones_data:
                 data.append({
@@ -902,7 +914,7 @@ class BoxOfficeEventsView(APIView):
         return Response(data)
 
 class BoxOfficeSellView(APIView):
-    """Vende el primer asiento disponible en la zona seleccionada (pago en efectivo) y genera el QR."""
+    """Vende un asiento específico en taquilla (pago en efectivo) y genera el QR."""
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -912,19 +924,23 @@ class BoxOfficeSellView(APIView):
             return Response({"error": "No autorizado."}, status=403)
 
         event_id = request.data.get('event_id')
-        zone_id = request.data.get('zone_id')
+        seat_id = request.data.get('seat_id')
 
-        from tickets.models import EventZone
+        if not event_id or not seat_id:
+            return Response({"error": "Faltan datos de asiento o evento."}, status=400)
+
+        from tickets.models import Seat
         from payments.models import Order, OrderItem
         from payments.qr import get_ticket_hash
         from django.db import transaction
 
         try:
             with transaction.atomic():
-                zone = EventZone.objects.select_for_update().get(id=zone_id, event_id=event_id)
-                seat = zone.seats.filter(is_available=True).first()
-                if not seat:
-                    return Response({"error": "No hay asientos disponibles en esta zona."}, status=400)
+                seat = Seat.objects.select_for_update().get(id=seat_id, zone__event_id=event_id)
+                if not seat.is_available:
+                    return Response({"error": "Este asiento ya no está disponible."}, status=400)
+                
+                zone = seat.zone
                 
                 # Bloquear asiento
                 seat.is_available = False
@@ -960,7 +976,7 @@ class BoxOfficeSellView(APIView):
                 "event_title": zone.event.title
             })
 
-        except EventZone.DoesNotExist:
-            return Response({"error": "Zona o evento inválido."}, status=404)
+        except Seat.DoesNotExist:
+            return Response({"error": "Asiento inválido."}, status=404)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
