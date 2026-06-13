@@ -21,7 +21,7 @@ export default function FloatingLogo() {
       <div className="md:hidden fixed top-4 left-4 z-50">
         <Link href="/">
           <Image 
-            src="/images/logo-scw.jpg" 
+            src="/images/logo-scw.png" 
             alt="SCW Logo" 
             width={48} 
             height={48} 

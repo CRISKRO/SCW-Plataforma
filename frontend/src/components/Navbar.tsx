@@ -60,7 +60,7 @@ export default function Navbar() {
           <div className="flex-shrink-0 flex items-center h-full py-2">
             <Link href="/" className="flex items-center h-full">
               <Image 
-                src="/images/logo-scw.jpg" 
+                src="/images/logo-scw.png" 
                 alt="SCW Logo" 
                 width={64} 
                 height={64} 
