@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], variable: '--font-sans' });
 
 export const metadata: Metadata = {
-  title: "SCW-LUCHA",
+  title: "SCW LUCHA",
   description: "Plataforma profesional de Lucha Libre. Eventos, Boletos, Merch y Academia.",
 };
 
