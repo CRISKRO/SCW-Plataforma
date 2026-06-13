@@ -461,30 +461,37 @@ fun BoxOfficeTab(baseUrl: String, token: String) {
                         Text("Selecciona un asiento libre para vender", color = Color.Gray)
                         Spacer(modifier = Modifier.height(16.dp))
                         
-                        val seatsByRow = selectedZone!!.seats.groupBy { it.row }
+                        val seatsList = selectedZone!!.seats ?: emptyList()
                         
-                        Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                            seatsByRow.forEach { (rowName, seatsInRow) ->
-                                Row(
-                                    modifier = Modifier.padding(vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    Text(rowName, fontWeight = FontWeight.Bold, modifier = Modifier.width(24.dp))
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    seatsInRow.forEach { seat ->
-                                        Box(
-                                            modifier = Modifier
-                                                .size(36.dp)
-                                                .padding(2.dp)
-                                                .background(
-                                                    if (seat.is_available) Color(0xFF4CAF50) else Color(0xFFE0E0E0),
-                                                    RoundedCornerShape(4.dp)
-                                                )
-                                                .clickable(enabled = seat.is_available) { seatToSell = seat },
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text(seat.number.toString(), color = if (seat.is_available) Color.White else Color.Gray, fontSize = 12.sp)
+                        if (seatsList.isEmpty()) {
+                            Text("⚠️ No hay información de asientos.", color = Color.Red, fontWeight = FontWeight.Bold)
+                            Text("Asegúrate de haber hecho 'git pull' en PythonAnywhere y recargado la web.", color = Color.Red, textAlign = TextAlign.Center)
+                        } else {
+                            val seatsByRow = seatsList.groupBy { it.row ?: "?" }
+                            
+                            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                                seatsByRow.forEach { (rowName, seatsInRow) ->
+                                    Row(
+                                        modifier = Modifier.padding(vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        Text(rowName, fontWeight = FontWeight.Bold, modifier = Modifier.width(24.dp))
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        seatsInRow.forEach { seat ->
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(36.dp)
+                                                    .padding(2.dp)
+                                                    .background(
+                                                        if (seat.is_available) Color(0xFF4CAF50) else Color(0xFFE0E0E0),
+                                                        RoundedCornerShape(4.dp)
+                                                    )
+                                                    .clickable(enabled = seat.is_available) { seatToSell = seat },
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(seat.number.toString(), color = if (seat.is_available) Color.White else Color.Gray, fontSize = 12.sp)
+                                            }
                                         }
                                     }
                                 }
