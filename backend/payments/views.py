@@ -616,12 +616,24 @@ class VerifyPaymentView(APIView):
         if order.status == Order.Status.PAID:
             has_tickets = order.items.filter(seat__isnull=False).exists() or order.items.filter(product__isnull=True, product_name__icontains='Boleto').exists()
             has_merch = order.items.filter(product__isnull=False).exists() or order.items.filter(product__isnull=True).exclude(product_name__icontains='Boleto').exists()
+            tickets_data = []
+            for item in order.items.all():
+                if item.ticket_hash:
+                    tickets_data.append({
+                        "id": item.id,
+                        "ticket_hash": item.ticket_hash,
+                        "event_name": item.seat.event.title if getattr(item, 'seat', None) and getattr(item.seat, 'event', None) else item.product_name,
+                        "seat_name": item.seat.name if getattr(item, 'seat', None) else None,
+                        "price": str(item.price),
+                        "buyer_name": item.buyer_name or order.user.get_full_name() or order.user.email
+                    })
             return Response({
                 "status": "approved", 
                 "already_processed": True, 
                 "order_id": order.id,
                 "has_tickets": has_tickets,
-                "has_merch": has_merch
+                "has_merch": has_merch,
+                "tickets": tickets_data
             })
 
         # Verify with MP API
@@ -657,7 +669,27 @@ class VerifyPaymentView(APIView):
                 # Send ticket/merch email
                 send_order_emails_safely(order)
 
-                return Response({"status": "approved", "order_id": order.id})
+                has_tickets = order.items.filter(seat__isnull=False).exists() or order.items.filter(product__isnull=True, product_name__icontains='Boleto').exists()
+                has_merch = order.items.filter(product__isnull=False).exists() or order.items.filter(product__isnull=True).exclude(product_name__icontains='Boleto').exists()
+                tickets_data = []
+                for item in order.items.all():
+                    if item.ticket_hash:
+                        tickets_data.append({
+                            "id": item.id,
+                            "ticket_hash": item.ticket_hash,
+                            "event_name": item.seat.event.title if getattr(item, 'seat', None) and getattr(item.seat, 'event', None) else item.product_name,
+                            "seat_name": item.seat.name if getattr(item, 'seat', None) else None,
+                            "price": str(item.price),
+                            "buyer_name": item.buyer_name or order.user.get_full_name() or order.user.email
+                        })
+
+                return Response({
+                    "status": "approved", 
+                    "order_id": order.id,
+                    "has_tickets": has_tickets,
+                    "has_merch": has_merch,
+                    "tickets": tickets_data
+                })
             else:
                 return Response({"status": verified_status, "order_id": order.id})
 

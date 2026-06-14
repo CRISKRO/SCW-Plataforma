@@ -3,9 +3,10 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { CheckCircle2, XCircle, Clock, Mail, Ticket, ArrowLeft, Loader2 } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, Mail, Ticket, ArrowLeft, Loader2, Share2 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/services/api';
+import { QRCodeSVG } from 'qrcode.react';
 
 function SuccessContent() {
   const searchParams = useSearchParams();
@@ -15,6 +16,7 @@ function SuccessContent() {
   const [alreadyProcessed, setAlreadyProcessed] = useState(false);
   const [hasTickets, setHasTickets] = useState(true); // Default true for direct access without data
   const [hasMerch, setHasMerch] = useState(false);
+  const [tickets, setTickets] = useState<any[]>([]);
 
   useEffect(() => {
     const payment_id = searchParams.get('payment_id');
@@ -55,6 +57,9 @@ function SuccessContent() {
           if (res.data.has_merch !== undefined) {
             setHasMerch(res.data.has_merch);
           }
+          if (res.data.tickets) {
+            setTickets(res.data.tickets);
+          }
         } else if (res.data.status === 'in_process' || res.data.status === 'pending') {
           setState('pending');
         } else {
@@ -67,6 +72,64 @@ function SuccessContent() {
 
     verify();
   }, [searchParams]);
+
+  const shareQRImage = async (item: any) => {
+    try {
+      const svg = document.getElementById(`qr-${item.id}`);
+      if (!svg) return;
+      
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const img = new Image();
+      
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
+      });
+      
+      // Añadir margen blanco alrededor del QR
+      canvas.width = img.width + 40;
+      canvas.height = img.height + 40;
+      
+      if (ctx) {
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 20, 20);
+      }
+      
+      const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, "image/png"));
+      if (!blob) return;
+      
+      const file = new File([blob], `Boleto-SCW-${item.id}.png`, { type: "image/png" });
+      
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: `Boleto SCW - ${item.event_name}`,
+          text: `¡Aquí está mi boleto de SCW para ${item.event_name}! Este código es mi acceso al evento.`,
+          files: [file]
+        });
+      } else {
+        // Fallback: Descargar la imagen
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = file.name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        // Intentar abrir Whatsapp de todos modos sin la imagen
+        const textToShare = encodeURIComponent(`¡Aquí está mi boleto de SCW para ${item.event_name}! Acabo de descargar la imagen en mi dispositivo para enviarla.`);
+        window.open(`https://wa.me/?text=${textToShare}`, '_blank');
+      }
+    } catch (error) {
+      console.error("Error sharing QR:", error);
+      alert("Hubo un error al intentar compartir la imagen. Asegúrate de darle permisos a tu navegador.");
+    }
+  };
 
   if (state === 'loading') {
     return (
@@ -151,7 +214,49 @@ function SuccessContent() {
           className="space-y-4"
         >
           {/* Ticket Notice */}
-          {hasTickets && (
+          {hasTickets && tickets.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold uppercase tracking-widest mb-6">Tus Códigos de Acceso</h2>
+              
+              <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 flex items-start gap-4 text-left mb-6">
+                <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Mail className="w-6 h-6 text-green-400" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg mb-1">¡Aquí están tus boletos!</h3>
+                  <p className="text-zinc-400 text-sm leading-relaxed">
+                    También te hemos enviado una copia a tu correo electrónico. Puedes tomar captura de pantalla o presionar en "Compartir" para mandarlos por WhatsApp a tus acompañantes.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {tickets.map(ticket => (
+                  <div key={ticket.id} className="bg-white/5 border border-white/10 p-6 rounded-2xl flex flex-col items-center">
+                    <p className="font-bold text-lg text-white mb-1 text-center">{ticket.event_name}</p>
+                    {ticket.seat_name && <p className="text-zinc-400 text-sm mb-4">{ticket.seat_name}</p>}
+                    
+                    <div className="bg-white p-3 rounded-xl">
+                      <QRCodeSVG
+                        id={`qr-${ticket.id}`}
+                        value={JSON.stringify({ scw: true, order: orderId, item: ticket.id, code: ticket.ticket_hash })}
+                        size={180}
+                      />
+                    </div>
+                    
+                    <button
+                      onClick={() => shareQRImage(ticket)}
+                      className="mt-6 flex items-center justify-center gap-2 bg-[#25D366] text-white px-6 py-3 rounded-xl font-bold uppercase tracking-widest text-sm hover:bg-[#128C7E] transition-colors w-full shadow-lg shadow-green-900/20"
+                    >
+                      <Share2 className="w-5 h-5" /> Compartir en WhatsApp
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {hasTickets && tickets.length === 0 && (
             <>
               <div className="bg-zinc-900 border border-green-500/30 rounded-2xl p-6 flex items-start gap-4 text-left">
                 <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -160,7 +265,7 @@ function SuccessContent() {
                 <div>
                   <h3 className="font-bold text-lg mb-1">Revisa tu correo</h3>
                   <p className="text-zinc-400 text-sm leading-relaxed">
-                    Te hemos enviado un correo con tus <strong className="text-white">boletos QR</strong>. Preséntalo en la entrada del evento para que el personal escanee tu código y te dé acceso.
+                    Te hemos enviado un correo con tus <strong className="text-white">boletos QR</strong>. Preséntalo en la entrada del evento para que el personal escanee tu código y te dé acceso. (Puedes verlos en la sección "Mis Compras").
                   </p>
                 </div>
               </div>
@@ -183,7 +288,7 @@ function SuccessContent() {
 
           {/* Merch Notice */}
           {hasMerch && (
-            <div className="bg-zinc-900 border border-green-500/30 rounded-2xl p-6 flex items-start gap-4 text-left">
+            <div className="bg-zinc-900 border border-green-500/30 rounded-2xl p-6 flex items-start gap-4 text-left mt-6">
               <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
                 <Mail className="w-6 h-6 text-green-400" />
               </div>
@@ -203,8 +308,8 @@ function SuccessContent() {
           transition={{ delay: 0.4 }}
           className="mt-10 flex flex-col sm:flex-row gap-3 justify-center"
         >
-          <Link href="/eventos" className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 font-bold uppercase tracking-widest transition-colors rounded-xl">
-            Ver más Eventos
+          <Link href="/dashboard" className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 font-bold uppercase tracking-widest transition-colors rounded-xl">
+            Ver Mis Compras
           </Link>
           <Link href="/" className="bg-zinc-900 border border-white/10 hover:bg-zinc-800 text-white px-8 py-3 font-bold uppercase tracking-widest transition-colors rounded-xl">
             Ir al Inicio
