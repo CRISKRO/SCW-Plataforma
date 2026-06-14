@@ -395,6 +395,43 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Chronicles Section */}
+      {chronicles && chronicles.length > 0 && (
+        <section className="py-24 bg-zinc-950 relative border-t border-white/5">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight">Crónicas</h2>
+            <p className="text-zinc-500 mt-4 max-w-2xl mx-auto">Reseñas y fotos exclusivas de nuestros eventos pasados.</p>
+          </div>
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            {chronicles.map((chronicle: any, i: number) => (
+              <motion.div
+                key={chronicle.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-zinc-900 border border-white/5 rounded-xl overflow-hidden hover:border-zinc-700 transition-colors flex flex-col"
+              >
+                {chronicle.image_url && (
+                  <div className="relative h-64 w-full bg-black">
+                    <Image src={chronicle.image_url} alt={chronicle.title} fill className="object-contain" sizes="(max-width: 768px) 100vw, 33vw" />
+                  </div>
+                )}
+                <div className="p-6 flex-1 flex flex-col">
+                  <div className="text-xs text-zinc-500 font-bold uppercase tracking-widest mb-2 flex justify-between items-center">
+                    <span>{new Date(chronicle.created_at).toLocaleDateString()}</span>
+                    <span className="truncate max-w-[50%] text-right" title={chronicle.writer}>{chronicle.writer}</span>
+                  </div>
+                  <h3 className="text-xl font-bold uppercase mb-3 line-clamp-2" title={chronicle.title}>{chronicle.title}</h3>
+                  <p className="text-zinc-400 text-sm line-clamp-3 mb-4 whitespace-pre-line flex-1">{chronicle.content}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Roster Section */}
       <section className="py-24 bg-black relative border-t border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-16">
@@ -437,55 +474,23 @@ export default function Home() {
           )}
         </div>
 
-        <div className="mt-12 flex flex-col items-center gap-6">
+        <div className="mt-16 flex flex-col items-center gap-10">
           <Link href="/roster" className="inline-flex items-center text-sm font-bold uppercase tracking-widest hover:text-zinc-300 transition-colors border-b border-white pb-1 hover:border-zinc-500">
             Ver Roster Completo
           </Link>
-          <div className="text-center">
-            <p className="text-xs text-zinc-500 mb-2 uppercase tracking-widest font-semibold">¿Quieres ver más acción?</p>
-            <Link href="/premium" className="inline-flex items-center text-sm font-bold uppercase tracking-widest text-red-500 hover:text-red-400 transition-colors border-b border-red-500/30 hover:border-red-400 pb-1">
-              Ver SCW Premium
+          
+          <div className="text-center w-full max-w-md mx-auto px-4 mt-8 pt-8 border-t border-white/5">
+            <p className="text-xs text-zinc-500 mb-6 uppercase tracking-widest font-semibold">¿Quieres ver más acción?</p>
+            <Link href="/premium" className="block relative aspect-video w-full rounded-xl overflow-hidden group mb-4 border border-white/10 hover:border-red-500/50 transition-colors">
+              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors z-10"></div>
+              <Image src="/images/scwpremium.jpeg" alt="SCW Premium" fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
+              <div className="absolute inset-0 z-20 flex items-center justify-center">
+                <span className="bg-red-600 text-white font-black uppercase tracking-widest px-6 py-3 rounded text-sm shadow-xl shadow-red-900/50">Ver SCW Premium</span>
+              </div>
             </Link>
           </div>
         </div>
       </section>
-      
-      {/* Chronicles Section */}
-      {chronicles && chronicles.length > 0 && (
-        <section className="py-24 bg-zinc-950 relative border-t border-white/5">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight">Crónicas</h2>
-            <p className="text-zinc-500 mt-4 max-w-2xl mx-auto">Reseñas y fotos exclusivas de nuestros eventos pasados.</p>
-          </div>
-
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            {chronicles.map((chronicle: any, i: number) => (
-              <motion.div
-                key={chronicle.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="bg-zinc-900 border border-white/5 rounded-xl overflow-hidden hover:border-zinc-700 transition-colors"
-              >
-                {chronicle.image_url && (
-                  <div className="relative h-48 w-full bg-zinc-800">
-                    <Image src={chronicle.image_url} alt={chronicle.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 33vw" />
-                  </div>
-                )}
-                <div className="p-6">
-                  <div className="text-xs text-zinc-500 font-bold uppercase tracking-widest mb-2 flex justify-between items-center">
-                    <span>{new Date(chronicle.created_at).toLocaleDateString()}</span>
-                    <span className="truncate max-w-[50%] text-right" title={chronicle.writer}>{chronicle.writer}</span>
-                  </div>
-                  <h3 className="text-xl font-bold uppercase mb-3 line-clamp-2" title={chronicle.title}>{chronicle.title}</h3>
-                  <p className="text-zinc-400 text-sm line-clamp-3 mb-4 whitespace-pre-line">{chronicle.content}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </section>
-      )}
       
       {selectedEvent && (
         <TicketSelectionModal
