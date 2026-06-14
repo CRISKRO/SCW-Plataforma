@@ -344,65 +344,6 @@ export default function Home() {
 
       </section>
 
-      {/* Upcoming Events Section */}
-      <section className="py-24 bg-black relative border-t border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-end mb-12">
-            <div>
-              <h2 className="text-4xl font-black uppercase tracking-tight">Próximos Eventos</h2>
-              <p className="text-zinc-500 mt-2">Asegura tu lugar en la historia.</p>
-            </div>
-            <Link href="/eventos" className="hidden md:flex items-center text-sm font-bold uppercase tracking-widest hover:text-zinc-300 transition-colors">
-              Ver Cartelera Completa <ChevronRight className="w-4 h-4 ml-1" />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {loading ? (
-              <div className="col-span-3 text-center text-zinc-500 py-12">Cargando eventos...</div>
-            ) : events.length === 0 ? (
-              <div className="col-span-3 text-center text-zinc-500 py-12">No hay eventos programados.</div>
-            ) : (
-              events.map((event, i) => (
-                <Link key={event.id} href={`/eventos/${event.id}`} className="block">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.1 }}
-                    className="group relative h-96 bg-zinc-900 overflow-hidden cursor-pointer"
-                  >
-                    <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-105">
-                      <Image src={event.banner_url || '/images/logoring.png'} alt={event.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 33vw" />
-                    </div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-black/20" />
-
-                    <div className="absolute bottom-0 left-0 p-6 w-full">
-                      <div className="flex items-center gap-2 text-zinc-400 text-sm font-bold uppercase tracking-widest mb-2">
-                        <Calendar className="w-4 h-4" />
-                        {new Date(event.date_time).toLocaleDateString('es-MX')}
-                      </div>
-                      <h3 className="text-3xl font-black uppercase italic mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-zinc-500 transition-all duration-300">
-                        {event.title}
-                      </h3>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-zinc-300 text-sm">
-                          <MapPin className="w-4 h-4" />
-                          {event.location}
-                        </div>
-                        <div className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
-                          <ChevronRight className="w-5 h-5" />
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                </Link>
-              ))
-            )}
-          </div>
-        </div>
-      </section>
-
       {/* Chronicles Section */}
       {chronicles && chronicles.length > 0 && (
         <section className="py-24 bg-black relative border-t border-white/5">
@@ -510,6 +451,65 @@ export default function Home() {
           <Link href="/roster" className="inline-flex items-center text-sm font-bold uppercase tracking-widest hover:text-zinc-300 transition-colors border-b border-white pb-1 hover:border-zinc-500">
             Ver Roster Completo
           </Link>
+        </div>
+      </section>
+
+      {/* Upcoming Events Section */}
+      <section className="py-24 bg-black relative border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-end mb-12">
+            <div>
+              <h2 className="text-4xl font-black uppercase tracking-tight">Próximos Eventos</h2>
+              <p className="text-zinc-500 mt-2">Asegura tu lugar en la historia.</p>
+            </div>
+            <Link href="/eventos" className="hidden md:flex items-center text-sm font-bold uppercase tracking-widest hover:text-zinc-300 transition-colors">
+              Ver Cartelera Completa <ChevronRight className="w-4 h-4 ml-1" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {loading ? (
+              <div className="col-span-3 text-center text-zinc-500 py-12">Cargando eventos...</div>
+            ) : events.length === 0 ? (
+              <div className="col-span-3 text-center text-zinc-500 py-12">No hay eventos programados.</div>
+            ) : (
+              events.map((event, i) => (
+                <Link key={event.id} href={`/eventos/${event.id}`} className="block">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                    className="group relative h-96 bg-zinc-900 overflow-hidden cursor-pointer"
+                  >
+                    <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-105">
+                      <Image src={event.banner_url || '/images/logoring.png'} alt={event.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 33vw" />
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-black/20" />
+
+                    <div className="absolute bottom-0 left-0 p-6 w-full">
+                      <div className="flex items-center gap-2 text-zinc-400 text-sm font-bold uppercase tracking-widest mb-2">
+                        <Calendar className="w-4 h-4" />
+                        {new Date(event.date_time).toLocaleDateString('es-MX')}
+                      </div>
+                      <h3 className="text-3xl font-black uppercase italic mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-zinc-500 transition-all duration-300">
+                        {event.title}
+                      </h3>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-zinc-300 text-sm">
+                          <MapPin className="w-4 h-4" />
+                          {event.location}
+                        </div>
+                        <div className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
+                          <ChevronRight className="w-5 h-5" />
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                </Link>
+              ))
+            )}
+          </div>
         </div>
       </section>
       
