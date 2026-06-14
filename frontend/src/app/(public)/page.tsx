@@ -55,7 +55,7 @@ export default function Home() {
   const [events, setEvents] = useState<any[]>([]);
   const [roster, setRoster] = useState<any[]>([]);
   const [chronicles, setChronicles] = useState<any[]>([]);
-  const [premiumVideo, setPremiumVideo] = useState<any>(null);
+  const [premiumVideos, setPremiumVideos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slides, setSlides] = useState(staticSlides as any[]);
@@ -80,7 +80,7 @@ export default function Home() {
         
         const videosData = videosResponse.data || [];
         if (videosData.length > 0) {
-          setPremiumVideo(videosData[0]);
+          setPremiumVideos(videosData.slice(0, 2));
         }
 
         if (upcoming.length > 0) {
@@ -184,6 +184,14 @@ export default function Home() {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
               className={`flex flex-col-reverse lg:flex-row items-center gap-6 lg:gap-12 ${slide.id ? 'justify-between' : 'justify-start'}`}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(e, { offset }) => {
+                const swipe = offset.x;
+                if (swipe < -50) goTo(currentSlide + 1);
+                else if (swipe > 50) goTo(currentSlide - 1);
+              }}
             >
               {/* Left: Text content */}
               <div className="w-full max-w-2xl flex-shrink-0 text-center lg:text-left flex flex-col items-center lg:items-start">
@@ -346,7 +354,7 @@ export default function Home() {
 
       {/* Chronicles Section */}
       {chronicles && chronicles.length > 0 && (
-        <section className="py-24 bg-black relative border-t border-white/5">
+        <section className="py-12 lg:py-16 bg-black relative border-t border-white/5">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight">Crónicas</h2>
             <p className="text-zinc-500 mt-4 max-w-2xl mx-auto">Reseñas y fotos exclusivas de nuestros eventos pasados.</p>
@@ -382,31 +390,48 @@ export default function Home() {
       )}
 
       {/* Premium Video Section */}
-      <section className="py-24 bg-black relative border-t border-white/5">
+      <section className="py-12 lg:py-16 bg-black relative border-t border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center w-full max-w-2xl mx-auto">
+          <div className="text-center w-full max-w-4xl mx-auto">
             <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight mb-4">¿Quieres ver más acción?</h2>
             <p className="text-zinc-500 mb-8 max-w-2xl mx-auto">Disfruta de contenido exclusivo en nuestra plataforma SCW Premium.</p>
-            <Link href="/premium" className="block relative aspect-video w-full rounded-xl overflow-hidden group border border-white/10 hover:border-red-500/50 transition-colors bg-zinc-900">
-              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors z-10"></div>
-              {premiumVideo && premiumVideo.youtube_id ? (
-                <Image src={`https://img.youtube.com/vi/${premiumVideo.youtube_id}/hqdefault.jpg`} alt={premiumVideo.title || "SCW Premium"} fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
+            <div className={`grid grid-cols-1 ${premiumVideos.length > 1 ? 'md:grid-cols-2' : ''} gap-6 mb-8`}>
+              {premiumVideos.length > 0 ? (
+                premiumVideos.map((video: any, idx: number) => (
+                  <Link key={idx} href="/premium" className="block relative aspect-video w-full rounded-xl overflow-hidden group border border-white/10 hover:border-red-500/50 transition-colors bg-zinc-900">
+                    <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors z-10"></div>
+                    {video.youtube_id ? (
+                      <Image src={`https://img.youtube.com/vi/${video.youtube_id}/hqdefault.jpg`} alt={video.title || "SCW Premium"} fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
+                    ) : (
+                      <Image src="/images/scwpremium.jpeg" alt="SCW Premium" fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
+                    )}
+                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center">
+                      <div className="w-14 h-14 rounded-full bg-red-600/90 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg mb-3">
+                        <PlayCircle className="w-8 h-8 text-white" />
+                      </div>
+                      <span className="bg-black/80 backdrop-blur-md text-white font-black uppercase tracking-widest px-4 py-2 rounded text-xs shadow-xl border border-white/10">Explora Premium</span>
+                    </div>
+                  </Link>
+                ))
               ) : (
-                <Image src="/images/scwpremium.jpeg" alt="SCW Premium" fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
+                <Link href="/premium" className="block relative aspect-video w-full max-w-md mx-auto rounded-xl overflow-hidden group border border-white/10 hover:border-red-500/50 transition-colors bg-zinc-900">
+                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors z-10"></div>
+                  <Image src="/images/scwpremium.jpeg" alt="SCW Premium" fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
+                  <div className="absolute inset-0 z-20 flex flex-col items-center justify-center">
+                    <div className="w-14 h-14 rounded-full bg-red-600/90 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg mb-3">
+                      <PlayCircle className="w-8 h-8 text-white" />
+                    </div>
+                    <span className="bg-black/80 backdrop-blur-md text-white font-black uppercase tracking-widest px-4 py-2 rounded text-xs shadow-xl border border-white/10">Explora Premium</span>
+                  </div>
+                </Link>
               )}
-              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center">
-                <div className="w-14 h-14 rounded-full bg-red-600/90 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg mb-3">
-                  <PlayCircle className="w-8 h-8 text-white" />
-                </div>
-                <span className="bg-black/80 backdrop-blur-md text-white font-black uppercase tracking-widest px-4 py-2 rounded text-xs shadow-xl border border-white/10">Explora Premium</span>
-              </div>
-            </Link>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Roster Section */}
-      <section className="py-24 bg-black relative border-t border-white/5">
+      <section className="py-12 lg:py-16 bg-black relative border-t border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight">El Roster</h2>
           <p className="text-zinc-500 mt-4 max-w-2xl mx-auto">Conoce a los atletas que dejan el alma en el cuadrilátero.</p>
@@ -455,7 +480,7 @@ export default function Home() {
       </section>
 
       {/* Upcoming Events Section */}
-      <section className="py-24 bg-black relative border-t border-white/5">
+      <section className="py-12 lg:py-16 bg-black relative border-t border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-end mb-12">
             <div>
