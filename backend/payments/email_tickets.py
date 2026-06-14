@@ -27,17 +27,18 @@ def send_ticket_email(order):
     for item in items:
         qr_buf = generate_ticket_qr(order.id, item.id, item.product_name)
         qr_b64 = base64.b64encode(qr_buf.read()).decode()
+        cid_str = f"qr_{item.id}@scw.boletos"
         qr_images.append({
             'item': item,
             'b64': qr_b64,
-            'cid': f'qr_{item.id}'
+            'cid': cid_str
         })
         items_html += f"""
         <div style="background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:20px;margin-bottom:20px;text-align:center;">
           <p style="color:#aaa;font-size:12px;text-transform:uppercase;letter-spacing:2px;margin:0 0 4px;">Boleto</p>
           <h3 style="color:#fff;margin:0 0 4px;font-size:18px;">{item.product_name}</h3>
           {'<p style="color:#888;font-size:13px;margin:0 0 16px;">' + item.size + '</p>' if item.size else '<div style="margin-bottom:16px;"></div>'}
-          <img src="cid:{f'qr_{item.id}'}" width="200" height="200" alt="QR Boleto" style="border-radius:8px;"/>
+          <img src="cid:{cid_str}" width="200" height="200" alt="QR Boleto" style="border-radius:8px;"/>
           <p style="color:#666;font-size:11px;margin:12px 0 0;">Presenta este código en la entrada</p>
         </div>
         """
@@ -104,7 +105,7 @@ def send_ticket_email(order):
     # Attach QR images inline
     for qr in qr_images:
         qr_buf = generate_ticket_qr(order.id, qr['item'].id, qr['item'].product_name)
-        img = MIMEImage(qr_buf.read())
+        img = MIMEImage(qr_buf.read(), _subtype='png')
         img.add_header('Content-ID', f"<{qr['cid']}>")
         img.add_header('Content-Disposition', 'inline', filename=f"boleto_{qr['item'].id}.png")
         email.attach(img)
