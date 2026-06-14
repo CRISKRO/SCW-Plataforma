@@ -9,6 +9,7 @@ export interface CartItem {
   image_url: string;
   size?: string;
   seat_id?: number;
+  event_id?: number;
   requires_shipping?: boolean;
 }
 

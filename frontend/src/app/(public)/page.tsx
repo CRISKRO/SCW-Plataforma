@@ -7,6 +7,8 @@ import Image from 'next/image';
 import { ChevronRight, ChevronLeft, Calendar, MapPin, Ticket } from 'lucide-react';
 import { eventsService } from '@/services/events.services';
 
+import { TicketSelectionModal } from '@/components/TicketSelectionModal';
+
 // Always-present promotional slides
 const staticSlides = [
   {
@@ -54,6 +56,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slides, setSlides] = useState(staticSlides as any[]);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Build slides from events once loaded
   useEffect(() => {
@@ -78,7 +82,7 @@ export default function Home() {
             date: ev.date_time,
             location: ev.location,
             cta: [
-              { label: 'Comprar Boletos', href: `/eventos/${ev.id}`, primary: true },
+              { label: 'Comprar Boletos', href: `/eventos/${ev.id}`, primary: true, isEventTicket: true, event: ev },
               { label: 'Todos los Eventos', href: '/eventos', primary: false },
             ],
           }));
@@ -210,8 +214,24 @@ export default function Home() {
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 md:gap-4">
-                  {(slide.cta || []).map((btn: any) => (
-                    btn.primary ? (
+                  {(slide.cta || []).map((btn: any) => {
+                    if (btn.isEventTicket) {
+                      return (
+                        <button
+                          key={btn.label}
+                          onClick={() => {
+                            setSelectedEvent(btn.event);
+                            setIsModalOpen(true);
+                          }}
+                          className="group inline-flex w-full sm:w-auto justify-center items-center gap-2 px-6 py-3 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-black uppercase tracking-widest text-black bg-white hover:bg-zinc-100 transition-all hover:scale-105 rounded-sm"
+                        >
+                          <Ticket className="w-4 h-4 md:w-5 md:h-5" />
+                          {btn.label}
+                          <ChevronRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
+                        </button>
+                      );
+                    }
+                    return btn.primary ? (
                       <Link
                         key={btn.label}
                         href={btn.href}
@@ -229,8 +249,8 @@ export default function Home() {
                       >
                         {btn.label}
                       </Link>
-                    )
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
@@ -425,7 +445,17 @@ export default function Home() {
             </Link>
           </div>
         </div>
+        </div>
       </section>
+      
+      {selectedEvent && (
+        <TicketSelectionModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          eventId={selectedEvent.id}
+          event={selectedEvent}
+        />
+      )}
     </div>
   );
 }

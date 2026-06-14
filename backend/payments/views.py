@@ -108,6 +108,7 @@ class MPPublicKeyView(APIView):
 class OrderItemInputSerializer(serializers.Serializer):
     product_id = serializers.IntegerField(required=False, allow_null=True)
     seat_id = serializers.IntegerField(required=False, allow_null=True)
+    event_id = serializers.IntegerField(required=False, allow_null=True)
     name = serializers.CharField(max_length=200, required=False, allow_blank=True)
     price = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
     quantity = serializers.IntegerField(min_value=1)
@@ -161,6 +162,7 @@ class CreateOrderView(APIView):
             for item in items_data:
                 product = None
                 seat = None
+                event_obj = None
                 price = item.get('price', 0)
                 name = item.get('name', 'Artículo')
                 
@@ -178,7 +180,15 @@ class CreateOrderView(APIView):
                     from tickets.models import Seat
                     try:
                         seat = Seat.objects.get(id=item['seat_id'])
+                        event_obj = seat.zone.event
                     except Seat.DoesNotExist:
+                        pass
+                        
+                if item.get('event_id') and not event_obj:
+                    from events.models import Event
+                    try:
+                        event_obj = Event.objects.get(id=item['event_id'])
+                    except Event.DoesNotExist:
                         pass
                 
                 total_amount += price * item['quantity']
@@ -186,6 +196,7 @@ class CreateOrderView(APIView):
                 order_items_data.append({
                     'product': product,
                     'seat': seat,
+                    'event': event_obj,
                     'product_name': name,
                     'quantity': item['quantity'],
                     'price': price,
@@ -229,6 +240,7 @@ class CreateOrderView(APIView):
                     order=order,
                     product=item_data['product'],
                     seat=item_data.get('seat'),
+                    event=item_data.get('event'),
                     product_name=item_data['product_name'],
                     quantity=item_data['quantity'],
                     price=item_data['price'],
@@ -381,6 +393,7 @@ class ProcessCardPaymentView(APIView):
         for item in items_data:
             product = None
             seat = None
+            event_obj = None
             price = float(item.get('price', 0))
             name = item.get('name', 'Artículo')
             qty = int(item.get('quantity', 1))
@@ -397,11 +410,19 @@ class ProcessCardPaymentView(APIView):
                 from tickets.models import Seat
                 try:
                     seat = Seat.objects.get(id=item['seat_id'])
+                    event_obj = seat.zone.event
                 except Seat.DoesNotExist:
                     pass
 
+            if item.get('event_id') and not event_obj:
+                from events.models import Event
+                try:
+                    event_obj = Event.objects.get(id=item['event_id'])
+                except Event.DoesNotExist:
+                    pass
+
             total_amount += price * qty
-            order_items_data.append({'product': product, 'seat': seat, 'product_name': name, 'quantity': qty, 'price': price, 'size': item.get('size', '')})
+            order_items_data.append({'product': product, 'seat': seat, 'event': event_obj, 'product_name': name, 'quantity': qty, 'price': price, 'size': item.get('size', '')})
             mp_items.append({'title': name, 'quantity': qty, 'unit_price': price, 'currency_id': 'MXN'})
 
         shipping_cost = float(data.get('shipping_cost', 0))

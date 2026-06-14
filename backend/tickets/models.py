@@ -4,6 +4,7 @@ from events.models import Event
 
 class EventZone(models.Model):
     class ZoneType(models.TextChoices):
+        GENERAL = 'GENERAL', _('General')
         NORTE = 'NORTE', _('Norte')
         SUR = 'SUR', _('Sur')
         ESTE = 'ESTE', _('Este')
@@ -27,7 +28,7 @@ class EventZone(models.Model):
         is_new = self.pk is None
         super().save(*args, **kwargs)
         
-        if is_new:
+        if is_new and self.zone_type != self.ZoneType.GENERAL:
             # Generate seats
             letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
             for r in range(self.rows):

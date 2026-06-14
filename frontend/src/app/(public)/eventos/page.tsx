@@ -5,10 +5,13 @@ import { motion } from 'framer-motion';
 import { Calendar, MapPin, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { eventsService } from '@/services/events.services';
+import { TicketSelectionModal } from '@/components/TicketSelectionModal';
 
 export default function EventosPage() {
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -71,9 +74,15 @@ export default function EventosPage() {
                   </div>
                   
                   <div className="mt-8 flex items-center gap-4">
-                    <Link href={`/eventos/${event.id}`} className="bg-red-600 text-white px-6 py-3 font-bold uppercase tracking-widest text-sm hover:bg-red-700 transition-colors rounded-lg">
+                    <button 
+                      onClick={() => {
+                        setSelectedEvent(event);
+                        setIsModalOpen(true);
+                      }}
+                      className="bg-red-600 text-white px-6 py-3 font-bold uppercase tracking-widest text-sm hover:bg-red-700 transition-colors rounded-lg"
+                    >
                       Ver Asientos y Boletos
-                    </Link>
+                    </button>
                   </div>
                 </div>
               </motion.div>
@@ -81,6 +90,14 @@ export default function EventosPage() {
           )}
         </div>
 
+        {selectedEvent && (
+          <TicketSelectionModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            eventId={selectedEvent.id}
+            event={selectedEvent}
+          />
+        )}
       </div>
     </div>
   );
