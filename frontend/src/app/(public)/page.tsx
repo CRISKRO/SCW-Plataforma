@@ -195,7 +195,7 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className={`flex flex-col-reverse lg:flex-row items-center gap-4 sm:gap-6 lg:gap-12 ${slide.id ? 'justify-between pt-16 pb-28 md:py-0 w-full' : 'justify-center mt-[-15vh] md:mt-0 w-full'}`}
+              className={`flex flex-col-reverse lg:flex-row items-center justify-center gap-6 lg:gap-12 ${slide.id ? 'pt-8 pb-44 md:py-0 w-full' : 'mt-[-15vh] md:mt-0 w-full'}`}
               drag="x"
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.2}
@@ -293,7 +293,7 @@ export default function Home() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 30 }}
                     transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
-                    className="block flex-shrink-0 relative mx-auto lg:mx-0 h-[40vh] sm:h-[50vh] lg:h-[70vh] xl:h-[75vh] max-h-[750px] aspect-[2/3]"
+                    className="block flex-shrink-0 relative mx-auto lg:mx-0 w-[260px] sm:w-[320px] lg:w-[450px] aspect-[4/5] md:aspect-[3/4]"
                   >
                     {/* Glow effect behind poster */}
                     <div className="absolute -inset-4 sm:-inset-8 bg-red-600/15 blur-2xl sm:blur-3xl rounded-full" />
@@ -337,7 +337,7 @@ export default function Home() {
         )}
 
         {/* Slide thumbnails / indicators at bottom */}
-        <div className="absolute bottom-20 md:bottom-12 left-0 right-0 z-20">
+        <div className="absolute bottom-16 md:bottom-12 left-0 right-0 z-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex gap-2 justify-center md:justify-start">
               {slides.map((s, index) => (
