@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Ticket, ChevronRight, Loader2 } from 'lucide-react';
-import { api } from '@/services/api';
+import api from '@/services/api';
 import { useCartStore } from '@/store/cartStore';
 
 interface EventZone {
