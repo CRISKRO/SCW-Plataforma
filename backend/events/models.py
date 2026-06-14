@@ -78,3 +78,26 @@ class Match(models.Model):
 
     def __str__(self):
         return f"Lucha {self.order}: {self.match_type} en {self.event.title}"
+
+class Chronicle(models.Model):
+    event = models.ForeignKey(Event, related_name='chronicles', on_delete=models.SET_NULL, null=True, blank=True, verbose_name=_('evento relacionado'))
+    title = models.CharField(_('título'), max_length=200)
+    content = models.TextField(_('contenido/reseña'))
+    writer = models.CharField(_('escritor'), max_length=100)
+    photographer = models.CharField(_('fotógrafo'), max_length=100, blank=True)
+    image = models.ImageField(_('imagen principal'), upload_to='chronicles/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Crónica'
+        verbose_name_plural = 'Crónicas'
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def image_url(self):
+        if self.image and hasattr(self.image, 'url'):
+            return self.image.url
+        return ''

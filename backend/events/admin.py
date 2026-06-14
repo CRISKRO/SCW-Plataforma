@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Fighter, Event, Match
+from .models import Fighter, Event, Match, Chronicle
 
 @admin.register(Fighter)
 class FighterAdmin(admin.ModelAdmin):
@@ -22,3 +22,8 @@ class EventAdmin(admin.ModelAdmin):
 class MatchAdmin(admin.ModelAdmin):
     list_display = ('event', 'match_type', 'order')
     list_filter = ('event',)
+
+@admin.register(Chronicle)
+class ChronicleAdmin(admin.ModelAdmin):
+    list_display = ('title', 'writer', 'photographer', 'created_at')
+    search_fields = ('title', 'writer', 'photographer')

@@ -53,6 +53,7 @@ const staticSlides = [
 export default function Home() {
   const [events, setEvents] = useState<any[]>([]);
   const [roster, setRoster] = useState<any[]>([]);
+  const [chronicles, setChronicles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slides, setSlides] = useState(staticSlides as any[]);
@@ -63,14 +64,16 @@ export default function Home() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [eventsData, fightersData] = await Promise.all([
+        const [eventsData, fightersData, chroniclesData] = await Promise.all([
           eventsService.getEvents(),
-          eventsService.getFighters()
+          eventsService.getFighters(),
+          eventsService.getChronicles()
         ]);
 
         const upcoming = eventsData.slice(0, 5);
         setEvents(eventsData.slice(0, 3));
         setRoster(fightersData.slice(0, 4));
+        setChronicles(chroniclesData.slice(0, 3));
 
         if (upcoming.length > 0) {
           // Append event slides to the static promotional slides
@@ -446,6 +449,43 @@ export default function Home() {
           </div>
         </div>
       </section>
+      
+      {/* Chronicles Section */}
+      {chronicles && chronicles.length > 0 && (
+        <section className="py-24 bg-zinc-950 relative border-t border-white/5">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight">Crónicas</h2>
+            <p className="text-zinc-500 mt-4 max-w-2xl mx-auto">Reseñas y fotos exclusivas de nuestros eventos pasados.</p>
+          </div>
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            {chronicles.map((chronicle: any, i: number) => (
+              <motion.div
+                key={chronicle.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-zinc-900 border border-white/5 rounded-xl overflow-hidden hover:border-zinc-700 transition-colors"
+              >
+                {chronicle.image_url && (
+                  <div className="relative h-48 w-full bg-zinc-800">
+                    <Image src={chronicle.image_url} alt={chronicle.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 33vw" />
+                  </div>
+                )}
+                <div className="p-6">
+                  <div className="text-xs text-zinc-500 font-bold uppercase tracking-widest mb-2 flex justify-between items-center">
+                    <span>{new Date(chronicle.created_at).toLocaleDateString()}</span>
+                    <span className="truncate max-w-[50%] text-right" title={chronicle.writer}>{chronicle.writer}</span>
+                  </div>
+                  <h3 className="text-xl font-bold uppercase mb-3 line-clamp-2" title={chronicle.title}>{chronicle.title}</h3>
+                  <p className="text-zinc-400 text-sm line-clamp-3 mb-4 whitespace-pre-line">{chronicle.content}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
       
       {selectedEvent && (
         <TicketSelectionModal

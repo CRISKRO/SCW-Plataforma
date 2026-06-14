@@ -36,7 +36,7 @@ export default function RosterPage() {
             initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
             className="text-5xl md:text-7xl font-black uppercase tracking-tight"
           >
-            NUESTRO <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-800">ROSTER</span>
+            SUPER ESTRELLAS <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-800">SCW</span>
           </motion.h1>
           <p className="mt-4 text-zinc-400 max-w-2xl mx-auto">Conoce a los atletas y personajes que forman parte de SCW.</p>
         </div>
@@ -45,7 +45,7 @@ export default function RosterPage() {
           {loading ? (
             <div className="col-span-4 text-center text-zinc-500 py-12">Cargando luchadores...</div>
           ) : regularFighters.length === 0 ? (
-            <div className="col-span-4 text-center text-zinc-500 py-12">No hay luchadores registrados en el roster principal.</div>
+            <div className="col-span-4 text-center text-zinc-500 py-12">No hay super estrellas registradas en el roster principal.</div>
           ) : (
             regularFighters.map((fighter, i) => (
               <motion.div 
@@ -88,7 +88,7 @@ export default function RosterPage() {
                 initial={{ opacity: 0, y: -20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
                 className="text-5xl md:text-7xl font-black uppercase tracking-tight"
               >
-                Estudiantes <span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-400 to-zinc-600">SCW</span>
+                SCW <span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-400 to-zinc-600">Talento en desarrollo</span>
               </motion.h2>
               <p className="mt-4 text-zinc-400 max-w-2xl mx-auto">El futuro de SCW. Conoce a los talentos en formación de nuestra escuela.</p>
             </div>

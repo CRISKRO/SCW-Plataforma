@@ -49,5 +49,30 @@ export const eventsService = {
   deleteFighter: async (id: number) => {
     const response = await api.delete(`/events/fighters/${id}/`);
     return response.data;
+  },
+
+  getChronicles: async () => {
+    const response = await api.get('/events/chronicles/');
+    return response.data;
+  },
+
+  getChronicleDetails: async (id: number) => {
+    const response = await api.get(`/events/chronicles/${id}/`);
+    return response.data;
+  },
+
+  createChronicle: async (data: any) => {
+    const response = await api.post('/events/chronicles/', data);
+    return response.data;
+  },
+
+  updateChronicle: async (id: number, data: any) => {
+    const response = await api.patch(`/events/chronicles/${id}/`, data);
+    return response.data;
+  },
+
+  deleteChronicle: async (id: number) => {
+    const response = await api.delete(`/events/chronicles/${id}/`);
+    return response.data;
   }
 };
