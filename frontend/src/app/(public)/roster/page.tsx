@@ -177,11 +177,6 @@ export default function RosterPage() {
               </div>
               
               <div className="md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
-                {selectedFighter.social_network && (
-                  <span className="text-red-500 text-sm font-bold uppercase tracking-widest mb-2 inline-block">
-                    {selectedFighter.social_network}
-                  </span>
-                )}
                 <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter leading-none mb-1">
                   {selectedFighter.name}
                 </h2>
@@ -219,12 +214,17 @@ export default function RosterPage() {
                   </div>
                 )}
 
-                {selectedFighter.achievements && (
+                {selectedFighter.social_network && (
                   <div>
-                    <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-2">Logros</p>
-                    <p className="text-zinc-300 text-sm leading-relaxed whitespace-pre-line">
-                      {selectedFighter.achievements}
-                    </p>
+                    <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-2">Redes Sociales</p>
+                    <a 
+                      href={selectedFighter.social_network.startsWith('http') ? selectedFighter.social_network : (selectedFighter.social_network.startsWith('@') ? `https://instagram.com/${selectedFighter.social_network.substring(1)}` : `https://${selectedFighter.social_network}`)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-red-400 hover:text-red-300 text-sm font-bold transition-colors"
+                    >
+                      {selectedFighter.social_network}
+                    </a>
                   </div>
                 )}
               </div>
