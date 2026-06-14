@@ -195,7 +195,7 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className={`flex flex-col-reverse lg:flex-row items-center justify-center gap-6 lg:gap-12 ${slide.id ? 'pt-8 pb-44 md:py-0 w-full' : 'mt-[-15vh] md:mt-0 w-full'}`}
+              className={`flex flex-col-reverse lg:flex-row items-center justify-center gap-4 lg:gap-12 pt-20 pb-36 md:py-0 w-full`}
               drag="x"
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.2}
@@ -209,7 +209,7 @@ export default function Home() {
               <div className="w-full max-w-2xl flex-shrink-0 text-center lg:text-left flex flex-col items-center lg:items-start">
                 {/* Event badge */}
                 {slide.date && (
-                  <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 mb-4 lg:mb-6">
+                  <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 mb-2 lg:mb-6">
                     <span className="inline-flex items-center gap-1.5 bg-red-600/90 backdrop-blur-sm text-white text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-full">
                       <Ticket className="w-3 h-3" />
                       Próximo Evento
@@ -228,7 +228,7 @@ export default function Home() {
                 )}
 
                 {!slide.id && (
-                  <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter uppercase leading-none mb-4 md:mb-6">
+                  <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter uppercase leading-none mb-2 md:mb-6">
                     {slide.title.split(' ').map((word: string, i: number) => (
                       <span key={i}>
                         {i === slide.title.split(' ').length - 1
@@ -240,7 +240,7 @@ export default function Home() {
                   </h1>
                 )}
 
-                <p className="text-sm sm:text-base md:text-xl text-zinc-300 font-light max-w-xl mb-6 md:mb-10 line-clamp-none">
+                <p className="text-sm sm:text-base md:text-xl text-zinc-300 font-light max-w-xl mb-4 md:mb-10 line-clamp-none">
                   {slide.subtitle}
                 </p>
 
@@ -311,7 +311,7 @@ export default function Home() {
                     </div>
                   </motion.div>
                 ) : (
-                  <div className="block flex-shrink-0 lg:hidden h-[50vh] sm:h-[60vh] w-full" aria-hidden="true" />
+                  <div className="block flex-shrink-0 lg:hidden h-[20vh] sm:h-[30vh] w-full" aria-hidden="true" />
                 )}
               </div>
             </motion.div>
