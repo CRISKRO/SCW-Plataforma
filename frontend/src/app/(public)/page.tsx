@@ -293,17 +293,18 @@ export default function Home() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 30 }}
                     transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
-                    className="block flex-shrink-0 relative mx-auto lg:mx-0 w-[260px] sm:w-[320px] lg:w-[450px] aspect-[4/5] md:aspect-[3/4]"
+                    className="block flex-shrink-0 relative mx-auto lg:mx-0 w-[280px] sm:w-[340px] lg:w-[450px]"
                   >
                     {/* Glow effect behind poster */}
                     <div className="absolute -inset-4 sm:-inset-8 bg-red-600/15 blur-2xl sm:blur-3xl rounded-full" />
                     {/* Poster image */}
-                    <div className="relative h-full w-full">
+                    <div className="relative w-full">
                       <Image
                         src={slide.image}
                         alt={slide.title}
-                        fill
-                        className="object-cover rounded-sm border border-white/10 shadow-2xl"
+                        width={800}
+                        height={1200}
+                        className="w-full h-auto object-contain rounded-sm border border-white/10 shadow-2xl"
                         priority={currentSlide === 0}
                       />
                       {/* Edge highlight */}
