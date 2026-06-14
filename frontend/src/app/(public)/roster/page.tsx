@@ -73,11 +73,7 @@ export default function RosterPage() {
                       {fighter.height_cm} cm | {fighter.weight_kg} kg
                     </p>
                   )}
-                  {fighter.signature_move && (
-                    <p className="text-zinc-300 text-sm mt-1 truncate">
-                      Movimiento: <span className="italic">{fighter.signature_move}</span>
-                    </p>
-                  )}
+
                 </div>
               </motion.div>
             ))
@@ -128,11 +124,7 @@ export default function RosterPage() {
                           {fighter.height_cm} cm | {fighter.weight_kg} kg
                         </p>
                       )}
-                      {fighter.signature_move && (
-                        <p className="text-zinc-300 text-sm mt-1 truncate">
-                          Movimiento: <span className="italic">{fighter.signature_move}</span>
-                        </p>
-                      )}
+
                     </div>
                   </motion.div>
                 ))
@@ -197,12 +189,7 @@ export default function RosterPage() {
                       <p className="text-white text-lg font-medium">{selectedFighter.weight_kg} kg</p>
                     </div>
                   )}
-                  {selectedFighter.signature_move && (
-                    <div className="col-span-2">
-                      <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Movimiento Especial</p>
-                      <p className="text-red-400 text-lg font-bold uppercase">{selectedFighter.signature_move}</p>
-                    </div>
-                  )}
+
                 </div>
 
                 {selectedFighter.bio && (

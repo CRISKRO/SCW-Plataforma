@@ -175,18 +175,6 @@ export default function FighterFormPage() {
               placeholder="Ej. @luchador_scw"
             />
           </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-white uppercase tracking-widest">Movimiento Especial</label>
-            <input
-              type="text"
-              name="signature_move"
-              value={formData.signature_move}
-              onChange={handleChange}
-              className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
-              placeholder="Ej. Huracánrana, DDT..."
-            />
-          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -215,17 +203,7 @@ export default function FighterFormPage() {
           </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-white uppercase tracking-widest">Logros</label>
-          <input
-            type="text"
-            name="achievements"
-            value={formData.achievements}
-            onChange={handleChange}
-            className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
-            placeholder="Ej. Ganador de Royal Rumble 2024"
-          />
-        </div>
+
 
         <div className="space-y-2">
           <label className="text-sm font-bold text-white uppercase tracking-widest">Imagen del Luchador</label>
