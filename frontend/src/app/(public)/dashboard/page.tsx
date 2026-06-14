@@ -8,6 +8,7 @@ import { LogOut, Ticket, Settings, ShoppingBag, Swords, CreditCard, Loader2 } fr
 import Link from 'next/link';
 import { paymentService } from '@/services/payments.services';
 import api from '@/services/api';
+import QRCode from 'react-qr-code';
 
 export default function UserDashboard() {
   const { user, isAuthenticated, logout, updateUser } = useAuthStore();
@@ -276,18 +277,43 @@ export default function UserDashboard() {
                       </div>
                     </div>
                     <div className="p-4">
-                      <div className="space-y-3">
-                        {order.items?.map((item: any) => (
-                          <div key={item.id} className="flex justify-between items-center bg-white/5 p-3 rounded border border-white/5">
-                            <div>
-                              <p className="font-bold text-white text-sm">{item.product_name}</p>
-                              {item.size && <p className="text-zinc-500 text-xs mt-1">Talla/Asiento: {item.size}</p>}
+                      <div className="space-y-4">
+                        {order.items?.map((item: any) => {
+                          const isTicket = item.product_name?.toLowerCase().includes('boleto') || item.product_name?.toLowerCase().includes('entrada');
+                          return (
+                          <div key={item.id} className="flex flex-col bg-white/5 p-4 rounded-lg border border-white/5">
+                            <div className="flex justify-between items-center w-full mb-2">
+                              <div>
+                                <p className="font-bold text-white text-sm">{item.product_name}</p>
+                                {item.size && <p className="text-zinc-500 text-xs mt-1">Talla/Asiento: {item.size}</p>}
+                              </div>
+                              <div className="text-right">
+                                <p className="text-zinc-400 text-sm">{item.quantity} x ${parseFloat(item.price).toFixed(2)}</p>
+                              </div>
                             </div>
-                            <div className="text-right">
-                              <p className="text-zinc-400 text-sm">{item.quantity} x ${parseFloat(item.price).toFixed(2)}</p>
-                            </div>
+                            
+                            {isTicket && order.status === 'PAID' && item.ticket_hash && (
+                              <div className="mt-4 bg-white p-4 rounded-xl flex flex-col items-center self-center w-full max-w-xs">
+                                <div className="bg-white p-2 rounded">
+                                  <QRCode
+                                    value={JSON.stringify({ scw: true, order: order.id, item: item.id, code: item.ticket_hash })}
+                                    size={160}
+                                  />
+                                </div>
+                                <p className="text-black font-bold mt-3 text-xs uppercase tracking-widest text-center">Código de Acceso</p>
+                                <a
+                                  href={`https://wa.me/?text=${encodeURIComponent(`¡Aquí está mi boleto de SCW para ${item.product_name}!\n\nEste código es mi acceso al evento.`)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="mt-4 flex items-center justify-center gap-2 bg-[#25D366] text-white px-4 py-2.5 rounded-lg font-bold uppercase tracking-widest text-xs hover:bg-[#128C7E] transition-colors w-full"
+                                >
+                                  <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-share-2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                                  Compartir QR
+                                </a>
+                              </div>
+                            )}
                           </div>
-                        ))}
+                        )})}
                       </div>
                       
                       {order.status === 'PAID' && hasTickets && (

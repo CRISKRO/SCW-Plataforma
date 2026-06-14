@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Order, OrderItem
 
 class OrderItemSerializer(serializers.ModelSerializer):
+    ticket_hash = serializers.CharField(read_only=True)
     class Meta:
         model = OrderItem
         fields = '__all__'

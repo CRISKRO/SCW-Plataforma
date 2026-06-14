@@ -60,6 +60,10 @@ class OrderItem(models.Model):
     event = models.ForeignKey('events.Event', on_delete=models.SET_NULL, null=True, blank=True, help_text="Vincular a un evento para verificar vigencia")
     seat = models.ForeignKey('tickets.Seat', on_delete=models.SET_NULL, null=True, blank=True, help_text="Vincular a un asiento para bloquearlo tras el pago")
 
+    @property
+    def ticket_hash(self):
+        from .qr import get_ticket_hash
+        return get_ticket_hash(self.order.id, self.id)
 
     class Meta:
         verbose_name = 'Artículo de Orden'
