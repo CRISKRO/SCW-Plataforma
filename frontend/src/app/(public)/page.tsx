@@ -124,7 +124,7 @@ export default function Home() {
     <div className="bg-black text-white selection:bg-zinc-500 selection:text-white">
 
       {/* Hero Section Carousel */}
-      <section className="relative min-h-[100svh] flex items-start md:items-center justify-center overflow-hidden pt-28 pb-48 md:pt-0 md:pb-0">
+      <section className="relative min-h-[100svh] flex items-start md:items-center justify-center overflow-hidden pt-16 pb-40 md:pt-0 md:pb-0">
 
         {/* Background: full-screen for static slides, dark for event slides */}
         <AnimatePresence>
@@ -175,7 +175,7 @@ export default function Home() {
         </AnimatePresence>
 
         {/* Content */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-12 md:mt-0">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-4 md:mt-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={`content-${currentSlide}`}
