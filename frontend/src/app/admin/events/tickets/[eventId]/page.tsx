@@ -12,6 +12,7 @@ const ZONE_TYPES = [
   { value: 'SUR', label: 'Sur' },
   { value: 'ESTE', label: 'Este' },
   { value: 'OESTE', label: 'Oeste' },
+  { value: 'GENERAL', label: 'General' },
 ];
 
 const ZONE_COLORS: Record<string, string> = {
@@ -19,6 +20,7 @@ const ZONE_COLORS: Record<string, string> = {
   SUR: 'bg-red-500/20 text-red-400 border-red-500/30',
   ESTE: 'bg-red-500/20 text-red-400 border-red-500/30',
   OESTE: 'bg-red-500/20 text-red-400 border-red-500/30',
+  GENERAL: 'bg-zinc-800 text-zinc-300 border-zinc-700',
 };
 
 export default function EventTicketsPage() {
@@ -506,41 +508,51 @@ export default function EventTicketsPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-white uppercase tracking-widest">Número de Filas</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="26"
-                  required
-                  value={newZone.rows}
-                  onChange={e => setNewZone({ ...newZone, rows: Number(e.target.value) })}
-                  className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
-                />
-                <p className="text-xs text-zinc-500">Máx. 26 filas (A–Z)</p>
-              </div>
+            {newZone.zone_type !== 'GENERAL' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-white uppercase tracking-widest">Número de Filas</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="26"
+                    required
+                    value={newZone.rows}
+                    onChange={e => setNewZone({ ...newZone, rows: Number(e.target.value) })}
+                    className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
+                  />
+                  <p className="text-xs text-zinc-500">Máx. 26 filas (A–Z)</p>
+                </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-white uppercase tracking-widest">Asientos por Fila</label>
-                <input
-                  type="number"
-                  min="1"
-                  required
-                  value={newZone.seats_per_row}
-                  onChange={e => setNewZone({ ...newZone, seats_per_row: Number(e.target.value) })}
-                  className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
-                />
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-white uppercase tracking-widest">Asientos por Fila</label>
+                  <input
+                    type="number"
+                    min="1"
+                    required
+                    value={newZone.seats_per_row}
+                    onChange={e => setNewZone({ ...newZone, seats_per_row: Number(e.target.value) })}
+                    className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Preview */}
             <div className="bg-zinc-900/50 border border-white/5 rounded-lg p-4">
               <p className="text-xs text-zinc-400 uppercase tracking-widest font-bold mb-1">Vista Previa</p>
               <p className="text-white">
-                Se crearán <strong className="text-red-500">{Number(newZone.rows) * Number(newZone.seats_per_row)} asientos</strong> para{' '}
-                <strong>{ZONE_TYPES.find(zt => zt.value === newZone.zone_type)?.label}</strong>{' '}
-                a <strong>${newZone.price || '0'} MXN</strong> c/u.
+                {newZone.zone_type === 'GENERAL' ? (
+                  <>
+                    Se creará la zona <strong>General</strong> a <strong>${newZone.price || '0'} MXN</strong> c/u (Sin asientos numerados).
+                  </>
+                ) : (
+                  <>
+                    Se crearán <strong className="text-red-500">{Number(newZone.rows) * Number(newZone.seats_per_row)} asientos</strong> para{' '}
+                    <strong>{ZONE_TYPES.find(zt => zt.value === newZone.zone_type)?.label}</strong>{' '}
+                    a <strong>${newZone.price || '0'} MXN</strong> c/u.
+                  </>
+                )}
               </p>
             </div>
 
