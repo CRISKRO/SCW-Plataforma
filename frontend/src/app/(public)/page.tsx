@@ -136,7 +136,7 @@ export default function Home() {
     <div className="bg-black text-white selection:bg-zinc-500 selection:text-white">
 
       {/* Hero Section Carousel */}
-      <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[100svh] flex items-center justify-center overflow-x-hidden">
 
         {/* Background: full-screen for static slides, dark for event slides */}
         <AnimatePresence>
@@ -195,7 +195,7 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className={`flex flex-col-reverse lg:flex-row items-center justify-center gap-4 lg:gap-12 pt-20 pb-36 md:py-0 w-full`}
+              className={`flex flex-col-reverse lg:flex-row items-center justify-center gap-4 lg:gap-12 pt-8 pb-56 md:py-0 w-full`}
               drag="x"
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.2}
@@ -293,7 +293,7 @@ export default function Home() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 30 }}
                     transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
-                    className="block flex-shrink-0 relative mx-auto lg:mx-0 w-[280px] sm:w-[340px] lg:w-[450px]"
+                    className="block flex-shrink-0 relative mx-auto lg:mx-0 w-[90vw] sm:w-[80vw] lg:w-[450px] max-w-[450px]"
                   >
                     {/* Glow effect behind poster */}
                     <div className="absolute -inset-4 sm:-inset-8 bg-red-600/15 blur-2xl sm:blur-3xl rounded-full" />
