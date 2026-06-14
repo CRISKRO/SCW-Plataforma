@@ -124,7 +124,7 @@ export default function Home() {
     <div className="bg-black text-white selection:bg-zinc-500 selection:text-white">
 
       {/* Hero Section Carousel */}
-      <section className="relative h-[100svh] min-h-[100svh] flex items-start md:items-center justify-center overflow-hidden pt-16 pb-48 md:pt-0 md:pb-0">
+      <section className="relative min-h-[100svh] flex items-start md:items-center justify-center overflow-hidden pt-16 pb-56 md:pt-0 md:pb-0">
 
         {/* Background: full-screen for static slides, dark for event slides */}
         <AnimatePresence>
@@ -273,34 +273,35 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Right: Event poster (only for event slides) */}
-              {slide.id && slide.image && (
-                <div className="w-full lg:w-auto flex flex-col items-center lg:items-end">
+              {/* Right: Event poster (only for event slides) or spacer for static slides */}
+              <div className="w-full lg:w-auto flex flex-col items-center lg:items-end">
+                {slide.id && slide.image ? (
                   <motion.div
                     initial={{ opacity: 0, x: 30 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 30 }}
                     transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
-                    className="block flex-shrink-0 relative mx-auto lg:mx-0 h-[38vh] sm:h-[45vh] lg:h-[70vh] xl:h-[75vh] max-h-[750px] aspect-[2/3]"
+                    className="block flex-shrink-0 relative mx-auto lg:mx-0 h-[50vh] sm:h-[60vh] lg:h-[70vh] xl:h-[75vh] max-h-[750px] aspect-[2/3]"
                   >
-                  {/* Glow effect behind poster */}
-                  <div className="absolute -inset-4 sm:-inset-8 bg-red-600/15 blur-2xl sm:blur-3xl rounded-full" />
-                  {/* Poster image */}
-                  <div className="relative w-full h-full rounded-xl sm:rounded-2xl overflow-hidden border border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.9)]">
-                    <Image
-                      src={slide.image}
-                      alt={slide.title}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                      priority
-                    />
-                    {/* Red accent line */}
-                    <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-red-600" />
-                  </div>
-                </motion.div>
-                </div>
-              )}
+                    {/* Glow effect behind poster */}
+                    <div className="absolute -inset-4 sm:-inset-8 bg-red-600/15 blur-2xl sm:blur-3xl rounded-full" />
+                    {/* Poster image */}
+                    <div className="relative h-full w-full">
+                      <Image
+                        src={slide.image}
+                        alt={slide.title}
+                        fill
+                        className="object-cover rounded-sm border border-white/10 shadow-2xl"
+                        priority={currentSlide === 0}
+                      />
+                      {/* Edge highlight */}
+                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-red-600" />
+                    </div>
+                  </motion.div>
+                ) : (
+                  <div className="block flex-shrink-0 lg:hidden h-[50vh] sm:h-[60vh] w-full" aria-hidden="true" />
+                )}
+              </div>
             </motion.div>
           </AnimatePresence>
         </div>
@@ -324,7 +325,7 @@ export default function Home() {
         )}
 
         {/* Slide thumbnails / indicators at bottom */}
-        <div className="absolute bottom-28 left-0 right-0 z-20">
+        <div className="absolute bottom-20 md:bottom-12 left-0 right-0 z-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex gap-2 justify-center md:justify-start">
               {slides.map((s, index) => (
