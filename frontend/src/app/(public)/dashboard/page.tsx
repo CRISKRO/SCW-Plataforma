@@ -164,6 +164,64 @@ export default function UserDashboard() {
     }
   };
 
+  const shareQRImage = async (item: any) => {
+    try {
+      const svg = document.getElementById(`qr-${item.id}`);
+      if (!svg) return;
+      
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const img = new Image();
+      
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
+      });
+      
+      // Añadir margen blanco alrededor del QR
+      canvas.width = img.width + 40;
+      canvas.height = img.height + 40;
+      
+      if (ctx) {
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 20, 20);
+      }
+      
+      const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, "image/png"));
+      if (!blob) return;
+      
+      const file = new File([blob], `Boleto-SCW-${item.id}.png`, { type: "image/png" });
+      
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: `Boleto SCW - ${item.product_name}`,
+          text: `¡Aquí está mi boleto de SCW para ${item.product_name}! Este código es mi acceso al evento.`,
+          files: [file]
+        });
+      } else {
+        // Fallback: Descargar la imagen
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = file.name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        // Intentar abrir Whatsapp de todos modos sin la imagen
+        const textToShare = encodeURIComponent(`¡Aquí está mi boleto de SCW para ${item.product_name}! Acabo de descargar la imagen en mi dispositivo para enviarla.`);
+        window.open(`https://wa.me/?text=${textToShare}`, '_blank');
+      }
+    } catch (error) {
+      console.error("Error sharing QR:", error);
+      alert("Hubo un error al intentar compartir la imagen. Asegúrate de darle permisos a tu navegador.");
+    }
+  };
+
   if (!mounted || !isAuthenticated) return null;
 
   return (
@@ -296,20 +354,19 @@ export default function UserDashboard() {
                               <div className="mt-4 bg-white p-4 rounded-xl flex flex-col items-center self-center w-full max-w-xs">
                                 <div className="bg-white p-2 rounded">
                                   <QRCode
+                                    id={`qr-${item.id}`}
                                     value={JSON.stringify({ scw: true, order: order.id, item: item.id, code: item.ticket_hash })}
                                     size={160}
                                   />
                                 </div>
                                 <p className="text-black font-bold mt-3 text-xs uppercase tracking-widest text-center">Código de Acceso</p>
-                                <a
-                                  href={`https://wa.me/?text=${encodeURIComponent(`¡Aquí está mi boleto de SCW para ${item.product_name}!\n\nEste código es mi acceso al evento.`)}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="mt-4 flex items-center justify-center gap-2 bg-[#25D366] text-white px-4 py-2.5 rounded-lg font-bold uppercase tracking-widest text-xs hover:bg-[#128C7E] transition-colors w-full"
+                                <button
+                                  onClick={() => shareQRImage(item)}
+                                  className="mt-4 flex items-center justify-center gap-2 bg-[#25D366] text-white px-4 py-2.5 rounded-lg font-bold uppercase tracking-widest text-xs hover:bg-[#128C7E] transition-colors w-full cursor-pointer"
                                 >
                                   <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-share-2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
                                   Compartir QR
-                                </a>
+                                </button>
                               </div>
                             )}
                           </div>
