@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronRight, ChevronLeft, Calendar, MapPin, Ticket } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Calendar, MapPin, Ticket, PlayCircle, Video } from 'lucide-react';
 import { eventsService } from '@/services/events.services';
+import api from '@/services/api';
 
 import { TicketSelectionModal } from '@/components/TicketSelectionModal';
 
@@ -54,6 +55,7 @@ export default function Home() {
   const [events, setEvents] = useState<any[]>([]);
   const [roster, setRoster] = useState<any[]>([]);
   const [chronicles, setChronicles] = useState<any[]>([]);
+  const [premiumVideo, setPremiumVideo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slides, setSlides] = useState(staticSlides as any[]);
@@ -64,16 +66,22 @@ export default function Home() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [eventsData, fightersData, chroniclesData] = await Promise.all([
+        const [eventsData, fightersData, chroniclesData, videosResponse] = await Promise.all([
           eventsService.getEvents(),
           eventsService.getFighters(),
-          eventsService.getChronicles()
+          eventsService.getChronicles(),
+          api.get('/premium/videos/').catch(() => ({ data: [] }))
         ]);
 
         const upcoming = eventsData.slice(0, 5);
         setEvents(eventsData.slice(0, 3));
         setRoster(fightersData.slice(0, 4));
         setChronicles(chroniclesData.slice(0, 3));
+        
+        const videosData = videosResponse.data || [];
+        if (videosData.length > 0) {
+          setPremiumVideo(videosData[0]);
+        }
 
         if (upcoming.length > 0) {
           // Append event slides to the static promotional slides
@@ -481,11 +489,18 @@ export default function Home() {
           
           <div className="text-center w-full max-w-md mx-auto px-4 mt-8 pt-8 border-t border-white/5">
             <p className="text-xs text-zinc-500 mb-6 uppercase tracking-widest font-semibold">¿Quieres ver más acción?</p>
-            <Link href="/premium" className="block relative aspect-video w-full rounded-xl overflow-hidden group mb-4 border border-white/10 hover:border-red-500/50 transition-colors">
+            <Link href="/premium" className="block relative aspect-video w-full rounded-xl overflow-hidden group mb-4 border border-white/10 hover:border-red-500/50 transition-colors bg-zinc-900">
               <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors z-10"></div>
-              <Image src="/images/scwpremium.jpeg" alt="SCW Premium" fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
-              <div className="absolute inset-0 z-20 flex items-center justify-center">
-                <span className="bg-red-600 text-white font-black uppercase tracking-widest px-6 py-3 rounded text-sm shadow-xl shadow-red-900/50">Ver SCW Premium</span>
+              {premiumVideo && premiumVideo.youtube_id ? (
+                <Image src={`https://img.youtube.com/vi/${premiumVideo.youtube_id}/hqdefault.jpg`} alt={premiumVideo.title || "SCW Premium"} fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
+              ) : (
+                <Image src="/images/scwpremium.jpeg" alt="SCW Premium" fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
+              )}
+              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center">
+                <div className="w-14 h-14 rounded-full bg-red-600/90 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg mb-3">
+                  <PlayCircle className="w-8 h-8 text-white" />
+                </div>
+                <span className="bg-black/80 backdrop-blur-md text-white font-black uppercase tracking-widest px-4 py-2 rounded text-xs shadow-xl border border-white/10">Explora Premium</span>
               </div>
             </Link>
           </div>
