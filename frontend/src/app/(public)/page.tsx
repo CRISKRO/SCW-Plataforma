@@ -27,6 +27,18 @@ const staticSlides = [
   },
   {
     id: null,
+    title: "Tienda Oficial",
+    subtitle: "Vístete con la mercancía oficial de tus Superestrellas favoritas de SCW y demuestra de qué lado estás.",
+    image: "/images/logoring2.png", // Or a specific store image if available
+    mobileImage: "/images/logoring_mobile.jpg",
+    date: null,
+    location: null,
+    cta: [
+      { label: "Ir a la Tienda", href: "/tienda", primary: true },
+    ],
+  },
+  {
+    id: null,
     title: "SCW Premium",
     subtitle: "Accede a contenido exclusivo, PPVs en vivo y el archivo histórico de nuestras mejores luchas.",
     image: "/images/scwpremium.jpeg",
@@ -113,9 +125,9 @@ export default function Home() {
     if (slides.length <= 1) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 25000);
+    }, 15000); // Also reduced to 15s to be more noticeable, but let's keep it close to original
     return () => clearInterval(timer);
-  }, [slides.length]);
+  }, [slides.length, currentSlide]);
 
   const goTo = (index: number) => setCurrentSlide((index + slides.length) % slides.length);
   const slide = slides[currentSlide];
@@ -453,7 +465,7 @@ export default function Home() {
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="group relative aspect-[3/4] bg-zinc-900 overflow-hidden cursor-pointer grayscale hover:grayscale-0 transition-all duration-500"
+                className="group relative aspect-[3/4] bg-zinc-900 overflow-hidden cursor-pointer transition-all duration-500"
               >
                 <div className="absolute inset-0 bg-zinc-800">
                   <Image src={fighter.image_url || '/images/logoring.png'} alt={fighter.name} fill className="object-cover" sizes="(max-width: 768px) 50vw, 25vw" />

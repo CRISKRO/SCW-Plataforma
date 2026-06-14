@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Ticket, ChevronRight, Loader2 } from 'lucide-react';
+import { X, Ticket, ChevronRight, Loader2, Minus, Plus } from 'lucide-react';
 import api from '@/services/api';
 import { useCartStore } from '@/store/cartStore';
 
@@ -33,6 +33,8 @@ export function TicketSelectionModal({ isOpen, onClose, eventId, event }: Ticket
   const [zones, setZones] = useState<EventZone[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [step, setStep] = useState<'selection' | 'general_quantity'>('selection');
+  const [quantity, setQuantity] = useState(1);
   
   useEffect(() => {
     if (isOpen && eventId) {
@@ -45,6 +47,8 @@ export function TicketSelectionModal({ isOpen, onClose, eventId, event }: Ticket
           setError('Error al cargar opciones del evento.');
         })
         .finally(() => setIsLoading(false));
+      setStep('selection');
+      setQuantity(1);
     }
   }, [isOpen, eventId]);
 
@@ -56,11 +60,18 @@ export function TicketSelectionModal({ isOpen, onClose, eventId, event }: Ticket
       return;
     }
     
+    setStep('general_quantity');
+  };
+
+  const confirmGeneralSelection = () => {
+    const generalZone = zones.find(z => z.zone_type === 'GENERAL');
+    if (!generalZone) return;
+    
     addItem({
       id: parseInt(`999${eventId}000`),
       name: `Boleto General: ${event.title}`,
       price: Number(generalZone.price),
-      quantity: 1,
+      quantity: quantity,
       image_url: event.banner_url || '',
       size: 'General',
       event_id: eventId,
@@ -109,6 +120,44 @@ export function TicketSelectionModal({ isOpen, onClose, eventId, event }: Ticket
             {isLoading ? (
               <div className="flex justify-center py-8">
                 <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+              </div>
+            ) : step === 'general_quantity' ? (
+              <div className="space-y-6">
+                <div className="p-4 rounded-xl border border-zinc-700 bg-zinc-800/50">
+                  <h3 className="text-lg font-semibold text-white mb-1">Boletos Generales</h3>
+                  <p className="text-sm text-zinc-400 mb-4">¿Cuántos boletos deseas comprar?</p>
+                  
+                  <div className="flex items-center justify-center gap-6 py-4">
+                    <button 
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      className="w-12 h-12 rounded-full border border-zinc-600 flex items-center justify-center hover:bg-zinc-700 transition-colors text-white"
+                    >
+                      <Minus size={20} />
+                    </button>
+                    <span className="text-3xl font-black text-white w-12 text-center">{quantity}</span>
+                    <button 
+                      onClick={() => setQuantity(Math.min(10, quantity + 1))}
+                      className="w-12 h-12 rounded-full border border-zinc-600 flex items-center justify-center hover:bg-zinc-700 transition-colors text-white"
+                    >
+                      <Plus size={20} />
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setStep('selection')}
+                    className="flex-1 py-3 px-4 rounded-xl border border-zinc-700 font-bold uppercase tracking-widest text-zinc-300 hover:bg-zinc-800 transition-colors"
+                  >
+                    Volver
+                  </button>
+                  <button
+                    onClick={confirmGeneralSelection}
+                    className="flex-1 py-3 px-4 rounded-xl bg-red-600 hover:bg-red-700 font-bold uppercase tracking-widest text-white transition-colors"
+                  >
+                    Agregar
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
