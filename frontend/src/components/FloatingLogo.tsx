@@ -19,14 +19,22 @@ export default function FloatingLogo() {
   return (
     <>
       <div className="md:hidden fixed top-4 left-4 z-50">
-        <Link href="/">
+        <Link href="/" className="flex items-center gap-2">
           <Image 
             src="/images/logo-scw.png" 
             alt="SCW Logo" 
-            width={48} 
-            height={48} 
+            width={44} 
+            height={44} 
             className="rounded-full shadow-lg shadow-black/50 border border-white/20"
           />
+          <div className="flex flex-col justify-center drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+            <span className="text-white font-black uppercase tracking-widest text-[10px] leading-tight">
+              Strong Classic
+            </span>
+            <span className="text-white font-black uppercase tracking-widest text-[10px] leading-tight">
+              Wrestling
+            </span>
+          </div>
         </Link>
       </div>
 
