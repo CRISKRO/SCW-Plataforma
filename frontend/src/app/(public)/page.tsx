@@ -345,7 +345,7 @@ export default function Home() {
       </section>
 
       {/* Upcoming Events Section */}
-      <section className="py-24 bg-zinc-950 relative border-t border-white/5">
+      <section className="py-24 bg-black relative border-t border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-end mb-12">
             <div>
@@ -405,7 +405,7 @@ export default function Home() {
 
       {/* Chronicles Section */}
       {chronicles && chronicles.length > 0 && (
-        <section className="py-24 bg-zinc-950 relative border-t border-white/5">
+        <section className="py-24 bg-black relative border-t border-white/5">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight">Crónicas</h2>
             <p className="text-zinc-500 mt-4 max-w-2xl mx-auto">Reseñas y fotos exclusivas de nuestros eventos pasados.</p>
@@ -422,8 +422,8 @@ export default function Home() {
                 className="bg-zinc-900 border border-white/5 rounded-xl overflow-hidden hover:border-zinc-700 transition-colors flex flex-col"
               >
                 {chronicle.image_url && (
-                  <div className="relative h-64 w-full bg-black">
-                    <Image src={chronicle.image_url} alt={chronicle.title} fill className="object-contain" sizes="(max-width: 768px) 100vw, 33vw" />
+                  <div className="relative aspect-square w-full bg-zinc-800">
+                    <Image src={chronicle.image_url} alt={chronicle.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 33vw" />
                   </div>
                 )}
                 <div className="p-6 flex-1 flex flex-col">
@@ -439,6 +439,30 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      {/* Premium Video Section */}
+      <section className="py-24 bg-black relative border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center w-full max-w-2xl mx-auto">
+            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight mb-4">¿Quieres ver más acción?</h2>
+            <p className="text-zinc-500 mb-8 max-w-2xl mx-auto">Disfruta de contenido exclusivo en nuestra plataforma SCW Premium.</p>
+            <Link href="/premium" className="block relative aspect-video w-full rounded-xl overflow-hidden group border border-white/10 hover:border-red-500/50 transition-colors bg-zinc-900">
+              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors z-10"></div>
+              {premiumVideo && premiumVideo.youtube_id ? (
+                <Image src={`https://img.youtube.com/vi/${premiumVideo.youtube_id}/hqdefault.jpg`} alt={premiumVideo.title || "SCW Premium"} fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
+              ) : (
+                <Image src="/images/scwpremium.jpeg" alt="SCW Premium" fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
+              )}
+              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center">
+                <div className="w-14 h-14 rounded-full bg-red-600/90 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg mb-3">
+                  <PlayCircle className="w-8 h-8 text-white" />
+                </div>
+                <span className="bg-black/80 backdrop-blur-md text-white font-black uppercase tracking-widest px-4 py-2 rounded text-xs shadow-xl border border-white/10">Explora Premium</span>
+              </div>
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {/* Roster Section */}
       <section className="py-24 bg-black relative border-t border-white/5">
@@ -482,28 +506,10 @@ export default function Home() {
           )}
         </div>
 
-        <div className="mt-16 flex flex-col items-center gap-10">
+        <div className="mt-12 flex flex-col items-center">
           <Link href="/roster" className="inline-flex items-center text-sm font-bold uppercase tracking-widest hover:text-zinc-300 transition-colors border-b border-white pb-1 hover:border-zinc-500">
             Ver Roster Completo
           </Link>
-          
-          <div className="text-center w-full max-w-md mx-auto px-4 mt-8 pt-8 border-t border-white/5">
-            <p className="text-xs text-zinc-500 mb-6 uppercase tracking-widest font-semibold">¿Quieres ver más acción?</p>
-            <Link href="/premium" className="block relative aspect-video w-full rounded-xl overflow-hidden group mb-4 border border-white/10 hover:border-red-500/50 transition-colors bg-zinc-900">
-              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors z-10"></div>
-              {premiumVideo && premiumVideo.youtube_id ? (
-                <Image src={`https://img.youtube.com/vi/${premiumVideo.youtube_id}/hqdefault.jpg`} alt={premiumVideo.title || "SCW Premium"} fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
-              ) : (
-                <Image src="/images/scwpremium.jpeg" alt="SCW Premium" fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
-              )}
-              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center">
-                <div className="w-14 h-14 rounded-full bg-red-600/90 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg mb-3">
-                  <PlayCircle className="w-8 h-8 text-white" />
-                </div>
-                <span className="bg-black/80 backdrop-blur-md text-white font-black uppercase tracking-widest px-4 py-2 rounded text-xs shadow-xl border border-white/10">Explora Premium</span>
-              </div>
-            </Link>
-          </div>
         </div>
       </section>
       
