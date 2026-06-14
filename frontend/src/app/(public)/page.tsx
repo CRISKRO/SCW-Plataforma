@@ -136,7 +136,7 @@ export default function Home() {
     <div className="bg-black text-white selection:bg-zinc-500 selection:text-white">
 
       {/* Hero Section Carousel */}
-      <section className="relative h-[85vh] md:h-[100svh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden">
 
         {/* Background: full-screen for static slides, dark for event slides */}
         <AnimatePresence>
@@ -195,7 +195,7 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className={`flex flex-col-reverse lg:flex-row items-center gap-6 lg:gap-12 ${slide.id ? 'justify-between' : 'justify-start'}`}
+              className={`flex flex-col-reverse lg:flex-row items-center gap-4 sm:gap-6 lg:gap-12 ${slide.id ? 'justify-between pt-16 pb-28 md:py-0 w-full' : 'justify-center mt-[-15vh] md:mt-0 w-full'}`}
               drag="x"
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.2}
@@ -293,7 +293,7 @@ export default function Home() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 30 }}
                     transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
-                    className="block flex-shrink-0 relative mx-auto lg:mx-0 h-[50vh] sm:h-[60vh] lg:h-[70vh] xl:h-[75vh] max-h-[750px] aspect-[2/3]"
+                    className="block flex-shrink-0 relative mx-auto lg:mx-0 h-[40vh] sm:h-[50vh] lg:h-[70vh] xl:h-[75vh] max-h-[750px] aspect-[2/3]"
                   >
                     {/* Glow effect behind poster */}
                     <div className="absolute -inset-4 sm:-inset-8 bg-red-600/15 blur-2xl sm:blur-3xl rounded-full" />
