@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { CheckCircle2, XCircle, Clock, Mail, Ticket, ArrowLeft, Loader2, Share2 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/services/api';
-import { QRCodeSVG } from 'qrcode.react';
+import QRCode from 'react-qr-code';
 
 function SuccessContent() {
   const searchParams = useSearchParams();
@@ -237,7 +237,7 @@ function SuccessContent() {
                     {ticket.seat_name && <p className="text-zinc-400 text-sm mb-4">{ticket.seat_name}</p>}
                     
                     <div className="bg-white p-3 rounded-xl">
-                      <QRCodeSVG
+                      <QRCode
                         id={`qr-${ticket.id}`}
                         value={JSON.stringify({ scw: true, order: orderId, item: ticket.id, code: ticket.ticket_hash })}
                         size={180}
