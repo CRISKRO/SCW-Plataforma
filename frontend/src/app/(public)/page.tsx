@@ -275,13 +275,23 @@ export default function Home() {
 
               {/* Right: Event poster (only for event slides) */}
               {slide.id && slide.image && (
-                <motion.div
-                  initial={{ opacity: 0, x: 30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 30 }}
-                  transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
-                  className="block flex-shrink-0 relative mx-auto lg:mx-0 h-[50vh] sm:h-[60vh] lg:h-[70vh] xl:h-[75vh] max-h-[750px] aspect-[2/3]"
-                >
+                <div className="w-full lg:w-auto flex flex-col items-center lg:items-end">
+                  <motion.h2 
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                    className="text-lg sm:text-xl md:text-2xl font-black uppercase tracking-[0.25em] text-white/80 mb-6 lg:hidden text-center"
+                  >
+                    Strong Classic Wrestling
+                  </motion.h2>
+                  <motion.div
+                    initial={{ opacity: 0, x: 30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 30 }}
+                    transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
+                    className="block flex-shrink-0 relative mx-auto lg:mx-0 h-[50vh] sm:h-[60vh] lg:h-[70vh] xl:h-[75vh] max-h-[750px] aspect-[2/3]"
+                  >
                   {/* Glow effect behind poster */}
                   <div className="absolute -inset-4 sm:-inset-8 bg-red-600/15 blur-2xl sm:blur-3xl rounded-full" />
                   {/* Poster image */}
@@ -298,6 +308,7 @@ export default function Home() {
                     <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-red-600" />
                   </div>
                 </motion.div>
+                </div>
               )}
             </motion.div>
           </AnimatePresence>
