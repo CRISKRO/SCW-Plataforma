@@ -124,9 +124,9 @@ export default function Home() {
     <div className="bg-black text-white selection:bg-zinc-500 selection:text-white">
 
       {/* Hero Section Carousel */}
-      <section className="relative min-h-[100svh] flex items-start md:items-center justify-center overflow-hidden pt-16 pb-40 md:pt-0 md:pb-0">
+      <section className="relative min-h-[100svh] flex items-start md:items-center justify-center overflow-hidden pt-16 pb-56 md:pt-0 md:pb-0">
 
-        {/* Background: full-screen for static slides, dark for event slides */}
+        {/* Background: solid dark for all slides */}
         <AnimatePresence>
           <motion.div
             key={currentSlide}
@@ -136,41 +136,8 @@ export default function Home() {
             transition={{ duration: 1, ease: "easeInOut" }}
             className="absolute inset-0 z-0"
           >
-            {slide.id ? (
-              // Event slide: solid dark background, poster on the right
-              <>
-                <div className="absolute inset-0 bg-zinc-950" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_left,_#18181b_0%,_#000_60%)]" />
-              </>
-            ) : (
-              // Static slide: full bleed background image (separated for mobile and desktop)
-              <>
-                {/* Desktop Background */}
-                <div className="hidden md:block absolute inset-0">
-                  <Image 
-                    src={slide.image} 
-                    alt={slide.title} 
-                    fill 
-                    priority={currentSlide === 0} 
-                    className="object-cover" 
-                    style={{ filter: 'brightness(0.35)' }} 
-                  />
-                </div>
-                {/* Mobile Background */}
-                <div className="block md:hidden absolute inset-0">
-                  <Image 
-                    src={slide.mobileImage || slide.image} 
-                    alt={slide.title} 
-                    fill 
-                    priority={currentSlide === 0} 
-                    className="object-cover" 
-                    style={{ filter: 'brightness(0.35)' }} 
-                  />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/60" />
-              </>
-            )}
+            <div className="absolute inset-0 bg-zinc-950" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_left,_#18181b_0%,_#000_60%)]" />
           </motion.div>
         </AnimatePresence>
 
@@ -183,7 +150,7 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className={`flex flex-col-reverse lg:flex-row items-center gap-6 lg:gap-12 ${slide.id ? 'justify-between' : 'justify-start'}`}
+              className="flex flex-col-reverse lg:flex-row items-center justify-between gap-6 lg:gap-12"
               drag="x"
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.2}
@@ -273,8 +240,8 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Right: Event poster (only for event slides) */}
-              {slide.id && slide.image && (
+              {/* Right: Event poster (for all slides) */}
+              {slide.image && (
                 <div className="w-full lg:w-auto flex flex-col items-center lg:items-end">
                   <motion.div
                     initial={{ opacity: 0, x: 30 }}
