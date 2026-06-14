@@ -195,7 +195,8 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className={`flex flex-col-reverse lg:flex-row items-center justify-center gap-4 lg:gap-12 pt-8 pb-56 md:py-0 w-full`}
+              className={`flex flex-col-reverse lg:flex-row items-center justify-center gap-4 lg:gap-12 pt-32 pb-44 md:py-0 w-full`}
+              style={{ touchAction: 'pan-y' }}
               drag="x"
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.2}
@@ -293,7 +294,7 @@ export default function Home() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 30 }}
                     transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
-                    className="block flex-shrink-0 relative mx-auto lg:mx-0 w-[90vw] sm:w-[80vw] lg:w-[450px] max-w-[450px]"
+                    className="block flex-shrink-0 relative mx-auto lg:mx-0 w-[95vw] sm:w-[85vw] lg:w-[450px] max-w-[500px]"
                   >
                     {/* Glow effect behind poster */}
                     <div className="absolute -inset-4 sm:-inset-8 bg-red-600/15 blur-2xl sm:blur-3xl rounded-full" />
