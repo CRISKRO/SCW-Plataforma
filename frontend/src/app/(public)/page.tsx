@@ -124,7 +124,7 @@ export default function Home() {
     <div className="bg-black text-white selection:bg-zinc-500 selection:text-white">
 
       {/* Hero Section Carousel */}
-      <section className="relative min-h-[100svh] flex items-start md:items-center justify-center overflow-hidden pt-28 pb-48 md:pt-0 md:pb-0">
+      <section className="relative min-h-[80svh] md:min-h-[100svh] flex items-start md:items-center justify-center overflow-hidden pt-20 pb-20 md:pt-0 md:pb-0">
 
         {/* Background: full-screen for static slides, dark for event slides */}
         <AnimatePresence>
@@ -276,15 +276,6 @@ export default function Home() {
               {/* Right: Event poster (only for event slides) */}
               {slide.id && slide.image && (
                 <div className="w-full lg:w-auto flex flex-col items-center lg:items-end">
-                  <motion.h2 
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                    className="text-lg sm:text-xl md:text-2xl font-black uppercase tracking-[0.25em] text-white/80 mb-6 lg:hidden text-center"
-                  >
-                    Strong Classic Wrestling
-                  </motion.h2>
                   <motion.div
                     initial={{ opacity: 0, x: 30 }}
                     animate={{ opacity: 1, x: 0 }}

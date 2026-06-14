@@ -58,15 +58,23 @@ export default function Navbar() {
           
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center h-full py-2">
-            <Link href="/" className="flex items-center h-full">
+            <Link href="/" className="flex items-center h-full gap-3">
               <Image 
                 src="/images/logo-scw.png" 
                 alt="SCW Logo" 
-                width={64} 
-                height={64} 
+                width={56} 
+                height={56} 
                 className="object-contain h-full w-auto rounded-md"
                 priority
               />
+              <div className="flex flex-col justify-center">
+                <span className="text-white font-black uppercase tracking-widest text-xs md:text-sm leading-tight">
+                  Strong Classic
+                </span>
+                <span className="text-white font-black uppercase tracking-widest text-xs md:text-sm leading-tight">
+                  Wrestling
+                </span>
+              </div>
             </Link>
           </div>
 
