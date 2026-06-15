@@ -625,7 +625,7 @@ class VerifyPaymentView(APIView):
                         "event_name": item.seat.event.title if getattr(item, 'seat', None) and getattr(item.seat, 'event', None) else item.product_name,
                         "seat_name": item.seat.name if getattr(item, 'seat', None) else None,
                         "price": str(item.price),
-                        "buyer_name": item.buyer_name or order.user.get_full_name() or order.user.email
+                        "buyer_name": getattr(item, 'buyer_name', None) or (order.user.get_full_name() if order.user else "") or order.contact_email
                     })
             return Response({
                 "status": "approved", 
@@ -680,7 +680,7 @@ class VerifyPaymentView(APIView):
                             "event_name": item.seat.event.title if getattr(item, 'seat', None) and getattr(item.seat, 'event', None) else item.product_name,
                             "seat_name": item.seat.name if getattr(item, 'seat', None) else None,
                             "price": str(item.price),
-                            "buyer_name": item.buyer_name or order.user.get_full_name() or order.user.email
+                            "buyer_name": getattr(item, 'buyer_name', None) or (order.user.get_full_name() if order.user else "") or order.contact_email
                         })
 
                 return Response({
