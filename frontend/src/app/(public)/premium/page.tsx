@@ -28,12 +28,12 @@ export default function PremiumPage() {
 
   useEffect(() => {
     setLoadingVideos(true);
-    api.get('/premium/videos/')
+    api.get(`/premium/videos/?t=${new Date().getTime()}`)
       .then(res => setVideos(res.data))
       .catch(() => setVideos([]))
       .finally(() => setLoadingVideos(false));
 
-    api.get('/premium/plans/')
+    api.get(`/premium/plans/?t=${new Date().getTime()}`)
       .then(res => {
         if (res.data && res.data.length > 0) {
           setPlan(res.data[0]);

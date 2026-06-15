@@ -16,7 +16,7 @@ export default function PremiumCheckoutPage() {
   const [plan, setPlan] = useState<any>(null);
 
   useEffect(() => {
-    api.get('/premium/plans/')
+    api.get(`/premium/plans/?t=${new Date().getTime()}`)
       .then(res => {
         if (res.data && res.data.length > 0) {
           setPlan(res.data[0]);
