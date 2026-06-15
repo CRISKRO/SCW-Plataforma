@@ -41,7 +41,7 @@ const staticSlides = [
     id: null,
     title: "SCW Premium",
     subtitle: "Accede a contenido exclusivo, PPVs en vivo y el archivo histórico de nuestras mejores luchas.",
-    image: "/images/scwpremium.jpeg",
+    image: "/images/scwpremium.jpg",
     date: null,
     location: null, 
     cta: [
@@ -420,7 +420,7 @@ export default function Home() {
                     {video.youtube_id ? (
                       <Image src={`https://img.youtube.com/vi/${video.youtube_id}/hqdefault.jpg`} alt={video.title || "SCW Premium"} fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
                     ) : (
-                      <Image src="/images/scwpremium.jpeg" alt="SCW Premium" fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
+                      <Image src="/images/scwpremium.jpg" alt="SCW Premium" fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
                     )}
                     <div className="absolute inset-0 z-20 flex flex-col items-center justify-center">
                       <div className="w-14 h-14 rounded-full bg-red-600/90 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg mb-3">
@@ -433,7 +433,7 @@ export default function Home() {
               ) : (
                 <Link href="/premium" className="block relative aspect-video w-full max-w-md mx-auto rounded-xl overflow-hidden group border border-white/10 hover:border-red-500/50 transition-colors bg-zinc-900">
                   <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors z-10"></div>
-                  <Image src="/images/scwpremium.jpeg" alt="SCW Premium" fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
+                  <Image src="/images/scwpremium.jpg" alt="SCW Premium" fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
                   <div className="absolute inset-0 z-20 flex flex-col items-center justify-center">
                     <div className="w-14 h-14 rounded-full bg-red-600/90 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg mb-3">
                       <PlayCircle className="w-8 h-8 text-white" />
