@@ -124,33 +124,47 @@ class MySubscriptionView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        try:
-            subscription = UserSubscription.objects.get(user=request.user, is_active=True)
+        subscription = UserSubscription.objects.filter(user=request.user, is_active=True).first()
+        
+        if subscription:
             return Response({
                 "is_active": True,
                 "plan_name": subscription.plan.name,
                 "end_date": subscription.end_date
             })
-        except UserSubscription.DoesNotExist:
+        elif getattr(request.user, 'role', None) in ['PREMIUM', 'ADMIN', 'SUPERADMIN']:
+            # The user has the role but no active UserSubscription object (perhaps granted manually by admin)
             return Response({
-                "is_active": False
+                "is_active": True,
+                "plan_name": "Membresía (Otorgada Manualmente)",
+                "end_date": None
             })
+            
+        return Response({"is_active": False})
 
 class CancelSubscriptionView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        try:
-            subscription = UserSubscription.objects.get(user=request.user, is_active=True)
-            subscription.is_active = False
-            subscription.save()
-            
+        subscriptions = UserSubscription.objects.filter(user=request.user, is_active=True)
+        
+        if subscriptions.exists():
+            for sub in subscriptions:
+                sub.is_active = False
+                sub.save()
+                
             user = request.user
             if getattr(user, 'role', None) == 'PREMIUM':
                 user.role = 'USER'
                 user.save()
                 
             return Response({"message": "Suscripción cancelada exitosamente."})
-        except UserSubscription.DoesNotExist:
-            return Response({"error": "No tienes una suscripción activa."}, status=status.HTTP_404_NOT_FOUND)
+        elif getattr(request.user, 'role', None) == 'PREMIUM':
+            # They have the role but no active subscription object
+            user = request.user
+            user.role = 'USER'
+            user.save()
+            return Response({"message": "Suscripción cancelada exitosamente (Rol removido)."})
+            
+        return Response({"error": "No tienes una suscripción activa."}, status=status.HTTP_404_NOT_FOUND)
 
