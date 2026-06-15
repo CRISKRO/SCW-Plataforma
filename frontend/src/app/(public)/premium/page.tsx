@@ -22,6 +22,7 @@ export default function PremiumPage() {
   const { isAuthenticated, user } = useAuthStore();
   const [videos, setVideos] = useState<any[]>([]);
   const [loadingVideos, setLoadingVideos] = useState(false);
+  const [plan, setPlan] = useState<any>(null);
 
   const isPremium = isAuthenticated && ['PREMIUM', 'ADMIN', 'SUPERADMIN'].includes(user?.role || '');
 
@@ -31,6 +32,14 @@ export default function PremiumPage() {
       .then(res => setVideos(res.data))
       .catch(() => setVideos([]))
       .finally(() => setLoadingVideos(false));
+
+    api.get('/premium/plans/')
+      .then(res => {
+        if (res.data && res.data.length > 0) {
+          setPlan(res.data[0]);
+        }
+      })
+      .catch(console.error);
   }, []);
 
   return (
@@ -68,9 +77,9 @@ export default function PremiumPage() {
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="glass-panel p-8 md:p-12 rounded-3xl text-center relative overflow-hidden border-red-500/30">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1 bg-gradient-to-r from-transparent via-red-500 to-transparent"></div>
-              <h2 className="text-3xl font-bold uppercase mb-4">Membresía Mensual VIP</h2>
+              <h2 className="text-3xl font-bold uppercase mb-4">{plan?.name || "Membresía Mensual VIP"}</h2>
               <div className="flex justify-center items-baseline mb-8">
-                <span className="text-5xl font-black">$199</span>
+                <span className="text-5xl font-black">${plan?.price ? Math.floor(plan.price) : '199'}</span>
                 <span className="text-zinc-400 ml-2">MXN / mes</span>
               </div>
               <ul className="space-y-4 text-left max-w-sm mx-auto mb-10">
@@ -183,7 +192,7 @@ export default function PremiumPage() {
                 href="/premium/checkout"
                 className="inline-block px-8 py-3 bg-red-600 hover:bg-red-700 text-white font-bold uppercase tracking-widest rounded-xl transition-colors"
               >
-                Activar Membresía Premium ($199)
+                Activar {plan?.name || "Membresía Premium"} (${plan?.price ? Math.floor(plan.price) : '199'})
               </Link>
             </div>
           )}

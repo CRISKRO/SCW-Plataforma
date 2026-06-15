@@ -13,12 +13,12 @@ export default async function Home() {
   let premiumVideos = [];
 
   try {
-    // We use next: { revalidate: 60 } to cache these responses for 60 seconds
+    // We use next: { revalidate: 10 } to cache these responses for 10 seconds
     const [eventsRes, fightersRes, chroniclesRes, videosRes] = await Promise.all([
-      fetch(`${apiUrl}/events/events/`, { next: { revalidate: 60 } }).catch(() => null),
-      fetch(`${apiUrl}/events/fighters/`, { next: { revalidate: 60 } }).catch(() => null),
-      fetch(`${apiUrl}/events/chronicles/`, { next: { revalidate: 60 } }).catch(() => null),
-      fetch(`${apiUrl}/premium/videos/`, { next: { revalidate: 60 } }).catch(() => null),
+      fetch(`${apiUrl}/events/events/`, { next: { revalidate: 10 } }).catch(() => null),
+      fetch(`${apiUrl}/events/fighters/`, { next: { revalidate: 10 } }).catch(() => null),
+      fetch(`${apiUrl}/events/chronicles/`, { next: { revalidate: 10 } }).catch(() => null),
+      fetch(`${apiUrl}/premium/videos/`, { next: { revalidate: 10 } }).catch(() => null),
     ]);
 
     if (eventsRes && eventsRes.ok) eventsData = await eventsRes.json();

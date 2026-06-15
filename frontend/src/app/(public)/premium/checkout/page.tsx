@@ -13,6 +13,17 @@ export default function PremiumCheckoutPage() {
   const { user } = useAuthStore();
   const [processing, setProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [plan, setPlan] = useState<any>(null);
+
+  useEffect(() => {
+    api.get('/premium/plans/')
+      .then(res => {
+        if (res.data && res.data.length > 0) {
+          setPlan(res.data[0]);
+        }
+      })
+      .catch(console.error);
+  }, []);
 
   const handlePayment = async () => {
     setProcessing(true);
@@ -42,7 +53,7 @@ export default function PremiumCheckoutPage() {
             <CheckCircle2 className="w-12 h-12" />
           </div>
           <h1 className="text-4xl font-black uppercase tracking-tight">¡Bienvenido a SCW Premium!</h1>
-          <p className="text-zinc-400 text-lg">Tu pago fue procesado correctamente. Tienes 30 días de acceso ilimitado.</p>
+          <p className="text-zinc-400 text-lg">Tu pago fue procesado correctamente. Tienes {plan?.duration_days || 30} días de acceso ilimitado.</p>
           <p className="text-zinc-500 text-sm mt-8 animate-pulse">Redirigiendo al catálogo exclusivo...</p>
         </motion.div>
       </div>
@@ -71,11 +82,11 @@ export default function PremiumCheckoutPage() {
                 Suscripción Mensual
               </div>
               
-              <h2 className="text-3xl font-black mb-2">SCW VIP Pass</h2>
-              <p className="text-zinc-400 mb-6">Acceso ilimitado por 30 días a documentales, eventos en vivo y backstage.</p>
+              <h2 className="text-3xl font-black mb-2">{plan?.name || "SCW VIP Pass"}</h2>
+              <p className="text-zinc-400 mb-6">{plan?.description || "Acceso ilimitado a documentales, eventos en vivo y backstage."}</p>
               
               <div className="text-5xl font-black mb-6">
-                $199<span className="text-xl text-zinc-500 font-medium">.00 MXN</span>
+                ${plan?.price ? Math.floor(plan.price) : '199'}<span className="text-xl text-zinc-500 font-medium">.00 MXN</span>
               </div>
               
               <ul className="space-y-3 text-sm text-zinc-300">
