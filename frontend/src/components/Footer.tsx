@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { Facebook, Instagram, Youtube } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -19,6 +20,22 @@ export default function Footer() {
             <p className="mt-4 text-zinc-500 text-sm">
               Somos la empresa de lucha libre profesional de Morelia, dedicada a crear espectáculos emocionantes y a formar el talento luchístico del futuro a través de SCW DOJO.
             </p>
+            <div className="mt-6 flex items-center gap-3">
+              <a href="https://www.facebook.com/scwmorelia/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 hover:bg-[#1877F2] hover:text-white transition-all duration-300" title="Facebook">
+                <Facebook size={20} />
+              </a>
+              <a href="https://www.instagram.com/scwmorelia/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 hover:bg-[#E1306C] hover:text-white transition-all duration-300" title="Instagram">
+                <Instagram size={20} />
+              </a>
+              <a href="https://www.youtube.com/@scwstrongclassicwrestling" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 hover:bg-[#FF0000] hover:text-white transition-all duration-300" title="YouTube">
+                <Youtube size={20} />
+              </a>
+              <a href="https://www.tiktok.com/@scwprowrestling" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 hover:bg-white hover:text-black transition-all duration-300" title="TikTok">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                </svg>
+              </a>
+            </div>
           </div>
           
           <div>
