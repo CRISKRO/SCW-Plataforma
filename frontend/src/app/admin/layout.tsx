@@ -44,6 +44,15 @@ const sidebarItems = [
   { name: 'Configuración', href: '/admin/settings', icon: Settings },
 ];
 
+const ALLOWED_ROLES = ['SUPERADMIN', 'ADMIN', 'STAFF', 'REPORTER'];
+
+const ROLE_PERMISSIONS: Record<string, string[]> = {
+  SUPERADMIN: ['*'],
+  ADMIN: ['*'],
+  STAFF: ['/admin', '/admin/events', '/admin/fighters', '/admin/gallery', '/admin/school'],
+  REPORTER: ['/admin', '/admin/chronicles'],
+};
+
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -53,10 +62,17 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setMounted(true);
-    if (!isAuthenticated || (user?.role !== 'SUPERADMIN' && user?.role !== 'ADMIN')) {
+    if (!isAuthenticated || !user || !ALLOWED_ROLES.includes(user.role)) {
       router.push('/login');
+    } else {
+      const permissions = ROLE_PERMISSIONS[user.role] || [];
+      const isAllowed = permissions.includes('*') || permissions.some(path => pathname === path || (pathname.startsWith(`${path}/`) && path !== '/admin'));
+      
+      if (!isAllowed) {
+        router.push('/admin');
+      }
     }
-  }, [isAuthenticated, user, router]);
+  }, [isAuthenticated, user, router, pathname]);
 
   // Cerrar sidebar al cambiar de ruta en móviles
   useEffect(() => {
@@ -68,7 +84,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     router.push('/login');
   };
 
-  if (!mounted || !isAuthenticated || (user?.role !== 'SUPERADMIN' && user?.role !== 'ADMIN')) {
+  if (!mounted || !isAuthenticated || !user || !ALLOWED_ROLES.includes(user.role)) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center text-white">
         <div className="animate-pulse flex flex-col items-center">
@@ -78,6 +94,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       </div>
     );
   }
+
+  const permissions = ROLE_PERMISSIONS[user.role] || [];
+  const filteredSidebarItems = sidebarItems.filter(item => {
+    return permissions.includes('*') || permissions.includes(item.href);
+  });
 
   return (
     <div className="flex h-screen bg-black text-white relative overflow-hidden">
@@ -121,8 +142,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         
         <nav className="flex-1 overflow-y-auto py-4">
           <ul className="space-y-1 px-3">
-            {sidebarItems.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            {filteredSidebarItems.map((item) => {
+              const isActive = pathname === item.href || (pathname.startsWith(`${item.href}/`) && item.href !== '/admin');
               const Icon = item.icon;
               return (
                 <li key={item.name}>
@@ -171,7 +192,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           
           <div className="flex items-center gap-4">
             <div className="w-8 h-8 rounded-full bg-zinc-800 border border-white/20 flex items-center justify-center">
-              <span className="text-xs font-bold">AD</span>
+              <span className="text-xs font-bold">{user?.role?.slice(0, 2).toUpperCase() || 'AD'}</span>
             </div>
           </div>
         </header>

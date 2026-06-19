@@ -6,6 +6,16 @@ import { X, Save, Edit, Trash2 } from 'lucide-react';
 import AdminTable from '@/components/admin/AdminTable';
 import { adminService } from '@/services/admin.services';
 
+const ROLE_TRANSLATIONS: Record<string, string> = {
+  SUPERADMIN: 'Súper Administrador',
+  ADMIN: 'Administrador',
+  REPORTER: 'Reportero',
+  STAFF: 'Staff de Eventos',
+  STUDENT: 'Alumno',
+  PREMIUM: 'Usuario Premium',
+  USER: 'Usuario Regular'
+};
+
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,13 +101,9 @@ export default function AdminUsersPage() {
           onChange={(e) => handleRoleChange(item.id, e.target.value)}
           className="bg-zinc-900 border border-white/10 rounded px-2 py-1 text-sm text-white focus:border-red-500 outline-none"
         >
-          <option value="USER">USER</option>
-          <option value="STUDENT">STUDENT</option>
-          <option value="PREMIUM">PREMIUM</option>
-          <option value="REPORTER">REPORTER</option>
-          <option value="STAFF">STAFF</option>
-          <option value="ADMIN">ADMIN</option>
-          <option value="SUPERADMIN">SUPERADMIN</option>
+          {Object.entries(ROLE_TRANSLATIONS).map(([key, label]) => (
+            <option key={key} value={key}>{label}</option>
+          ))}
         </select>
       )
     },
@@ -210,13 +216,9 @@ export default function AdminUsersPage() {
                         onChange={e => setEditingUser({...editingUser, role: e.target.value})}
                         className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500"
                       >
-                        <option value="USER">USER</option>
-                        <option value="STUDENT">STUDENT</option>
-                        <option value="PREMIUM">PREMIUM</option>
-                        <option value="REPORTER">REPORTER</option>
-                        <option value="STAFF">STAFF</option>
-                        <option value="ADMIN">ADMIN</option>
-                        <option value="SUPERADMIN">SUPERADMIN</option>
+                        {Object.entries(ROLE_TRANSLATIONS).map(([key, label]) => (
+                          <option key={key} value={key}>{label}</option>
+                        ))}
                       </select>
                     </div>
                   </div>

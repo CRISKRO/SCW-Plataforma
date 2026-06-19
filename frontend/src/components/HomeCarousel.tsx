@@ -566,7 +566,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
               {[...sponsors, ...sponsors, ...sponsors].map((sponsor: any, idx: number) => (
                 <div key={`${sponsor.id}-${idx}`} className="flex flex-col items-center justify-center mx-8 sm:mx-16 min-w-[150px] opacity-70 hover:opacity-100 transition-opacity">
                   {sponsor.image_url ? (
-                    <div className="relative w-32 h-20 sm:w-40 sm:h-24 grayscale hover:grayscale-0 transition-all duration-300">
+                    <div className="relative w-32 h-20 sm:w-40 sm:h-24 transition-all duration-300">
                       <Image 
                         src={sponsor.image_url} 
                         alt={sponsor.name} 
