@@ -11,7 +11,8 @@ from api.models import get_active_config
 
 def send_order_emails_safely(order):
     has_tickets = order.items.filter(event__isnull=False).exists()
-    has_merch = order.items.filter(event__isnull=True).exists()
+    has_merch = order.items.filter(product__isnull=False).exists()
+    has_raffles = order.items.filter(raffle_tickets__isnull=False).exists()
     
     if has_tickets:
         try:
@@ -20,7 +21,7 @@ def send_order_emails_safely(order):
         except Exception as e:
             print("Email error (tickets):", e)
             
-    if has_merch:
+    if has_merch or has_raffles:
         try:
             if has_tickets:
                 import time
@@ -676,7 +677,7 @@ class VerifyPaymentView(APIView):
         # Already processed
         if order.status == Order.Status.PAID:
             has_tickets = order.items.filter(event__isnull=False).exists()
-            has_merch = order.items.filter(event__isnull=True, raffle_tickets__isnull=True).exists()
+            has_merch = order.items.filter(product__isnull=False).exists()
             has_raffles = order.items.filter(raffle_tickets__isnull=False).exists()
             tickets_data = []
             for item in order.items.filter(event__isnull=False):
@@ -742,7 +743,7 @@ class VerifyPaymentView(APIView):
                 send_order_emails_safely(order)
 
                 has_tickets = order.items.filter(event__isnull=False).exists()
-                has_merch = order.items.filter(event__isnull=True, raffle_tickets__isnull=True).exists()
+                has_merch = order.items.filter(product__isnull=False).exists()
                 has_raffles = order.items.filter(raffle_tickets__isnull=False).exists()
                 tickets_data = []
                 for item in order.items.filter(event__isnull=False):

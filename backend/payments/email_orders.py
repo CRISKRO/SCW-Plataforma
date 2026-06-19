@@ -28,8 +28,12 @@ def send_order_receipt_email(order):
         
     try:
         has_tickets = items.filter(event__isnull=False).exists()
+        has_merch = items.filter(product__isnull=False).exists()
+        has_raffles = items.filter(raffle_tickets__isnull=False).exists()
     except Exception:
         has_tickets = False
+        has_merch = False
+        has_raffles = False
         
     items_html = ""
     for item in items:
@@ -51,6 +55,14 @@ def send_order_receipt_email(order):
         """
 
     tickets_note = '<p style="color:#10b981;font-size:14px;font-weight:bold;line-height:1.6;margin:12px 0 0;">🎟️ Si compraste boletos, estos se enviaron en un correo por separado con sus códigos QR.</p>' if has_tickets else ""
+
+    message_html = ""
+    if has_merch:
+        message_html = "Hemos recibido tu pago exitosamente. Ya estamos procesando tu pedido y te notificaremos en cuanto haya actualizaciones."
+    elif has_raffles:
+        message_html = "Hemos recibido tu pago exitosamente. ¡Gracias por participar en nuestra rifa! Los números que adquiriste ya están registrados a tu nombre."
+    else:
+        message_html = "Hemos recibido tu pago exitosamente. A continuación el detalle de tu orden."
 
     html_body = f"""
     <!DOCTYPE html>
@@ -74,7 +86,7 @@ def send_order_receipt_email(order):
 
         <div style="background:#111;border:1px solid #222;border-radius:12px;padding:20px;margin-bottom:24px;">
           <p style="color:#aaa;font-size:14px;line-height:1.6;margin:0;">
-            Hemos recibido tu pago exitosamente. Ya estamos procesando tu pedido y te notificaremos en cuanto haya actualizaciones.
+            {message_html}
           </p>
           {tickets_note}
         </div>
@@ -102,7 +114,11 @@ def send_order_receipt_email(order):
     </html>
     """
 
-    text_body = f"¡Compra confirmada! Orden #{order.id}. Ya estamos procesando tu pedido."
+    text_body = f"¡Compra confirmada! Orden #{order.id}. "
+    if has_merch:
+        text_body += "Ya estamos procesando tu pedido."
+    elif has_raffles:
+        text_body += "¡Gracias por participar en la rifa!"
 
     config = get_active_config()
     from_email = config.default_from_email if config.default_from_email else settings.DEFAULT_FROM_EMAIL
