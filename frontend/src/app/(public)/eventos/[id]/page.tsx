@@ -6,6 +6,7 @@ import { Calendar, MapPin, Ticket, ShoppingCart, X, CheckCircle, Minus, Plus as 
 import api from '@/services/api';
 import { useCartStore } from '@/store/cartStore';
 import { useToastStore } from '@/store/toastStore';
+import { useRouter } from 'next/navigation';
 
 interface SelectedSeat {
   seatId: number;
@@ -41,6 +42,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
   const [loading, setLoading] = useState(true);
   const addItem = useCartStore((state) => state.addItem);
   const [sessionId] = useState(() => Math.random().toString(36).substring(2, 15));
+  const router = useRouter();
 
   const [scale, setScale] = useState(1);
   const [minScale, setMinScale] = useState(0.6);
@@ -299,6 +301,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
 
       // Smoothly scroll to the top since the page height will shrink and leave the user stranded at the bottom
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      router.push('/carrito');
     } catch (error: any) {
       useToastStore.getState().addToast(error.response?.data?.error || "Error al reservar asientos.", "error");
       // Refetch to get current state
