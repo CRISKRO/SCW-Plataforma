@@ -79,6 +79,15 @@ class ApproveTransferView(APIView):
                     product.stock = max(0, product.stock - item.quantity)
                     product.save(update_fields=['stock'])
 
+        # Process Raffle tickets
+        for item in order.items.all():
+            if hasattr(item, 'raffle_tickets'):
+                from raffles.models import RaffleTicket
+                for rt in item.raffle_tickets.all():
+                    rt.status = RaffleTicket.Status.SOLD_ONLINE
+                    rt.buyer_name = order.user.get_full_name() if order.user else order.contact_email
+                    rt.save()
+
         send_order_emails_safely(order)
 
         html = f"""
@@ -915,6 +924,15 @@ class WebhookView(APIView):
                                         else:
                                             product.stock = max(0, product.stock - item.quantity)
                                             product.save(update_fields=['stock'])
+
+                                # Process Raffle tickets
+                                for item in order.items.all():
+                                    if hasattr(item, 'raffle_tickets'):
+                                        from raffles.models import RaffleTicket
+                                        for rt in item.raffle_tickets.all():
+                                            rt.status = RaffleTicket.Status.SOLD_ONLINE
+                                            rt.buyer_name = order.user.get_full_name() if order.user else order.contact_email
+                                            rt.save()
 
                                 send_order_emails_safely(order)
                 except Exception as e:
