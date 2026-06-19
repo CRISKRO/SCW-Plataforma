@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'gallery',
     'payments',
     'api',
+    'raffles',
 ]
 
 MIDDLEWARE = [

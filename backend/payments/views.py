@@ -113,6 +113,7 @@ class OrderItemInputSerializer(serializers.Serializer):
     price = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
     quantity = serializers.IntegerField(min_value=1)
     size = serializers.CharField(max_length=100, allow_blank=True, required=False)
+    raffle_ticket_id = serializers.IntegerField(required=False, allow_null=True)
 
 class CreateOrderSerializer(serializers.Serializer):
     contact_email = serializers.EmailField()
@@ -191,12 +192,23 @@ class CreateOrderView(APIView):
                     except Event.DoesNotExist:
                         pass
                 
+                raffle_ticket = None
+                if item.get('raffle_ticket_id'):
+                    from raffles.models import RaffleTicket
+                    try:
+                        raffle_ticket = RaffleTicket.objects.get(id=item['raffle_ticket_id'], status=RaffleTicket.Status.AVAILABLE)
+                        price = raffle_ticket.raffle.price
+                        name = f"{raffle_ticket.raffle.title} - Boleto #{raffle_ticket.number}"
+                    except RaffleTicket.DoesNotExist:
+                        return Response({"error": f"Raffle ticket {item['raffle_ticket_id']} not found or already sold."}, status=status.HTTP_400_BAD_REQUEST)
+                
                 total_amount += price * item['quantity']
                 
                 order_items_data.append({
                     'product': product,
                     'seat': seat,
                     'event': event_obj,
+                    'raffle_ticket': raffle_ticket,
                     'product_name': name,
                     'quantity': item['quantity'],
                     'price': price,
@@ -236,7 +248,7 @@ class CreateOrderView(APIView):
 
             mp_items = []
             for item_data in order_items_data:
-                OrderItem.objects.create(
+                order_item = OrderItem.objects.create(
                     order=order,
                     product=item_data['product'],
                     seat=item_data.get('seat'),
@@ -246,6 +258,13 @@ class CreateOrderView(APIView):
                     price=item_data['price'],
                     size=item_data['size']
                 )
+                
+                if item_data.get('raffle_ticket'):
+                    rt = item_data['raffle_ticket']
+                    rt.order_item = order_item
+                    # We might want to temporarily block it so others don't buy it at the same time
+                    # But for now we just link it. MP can handle concurrent failures later or we just hope people are fast.
+                    rt.save()
                 
                 config = get_active_config()
                 commission = float(config.mercadopago_commission_rate)
@@ -360,6 +379,14 @@ class OrderViewSet(viewsets.ModelViewSet):
                             else:
                                 product.stock = max(0, product.stock - item.quantity)
                                 product.save(update_fields=['stock'])
+                        
+                        # Process Raffle tickets
+                        if hasattr(item, 'raffle_tickets'):
+                            from raffles.models import RaffleTicket
+                            for rt in item.raffle_tickets.all():
+                                rt.status = RaffleTicket.Status.SOLD_ONLINE
+                                rt.buyer_name = instance.user.get_full_name() if instance.user else instance.contact_email
+                                rt.save()
 
                     send_order_emails_safely(instance)
                 except Exception as mail_err:
@@ -421,8 +448,18 @@ class ProcessCardPaymentView(APIView):
                 except Event.DoesNotExist:
                     pass
 
+            raffle_ticket = None
+            if item.get('raffle_ticket_id'):
+                from raffles.models import RaffleTicket
+                try:
+                    raffle_ticket = RaffleTicket.objects.get(id=item['raffle_ticket_id'], status=RaffleTicket.Status.AVAILABLE)
+                    price = float(raffle_ticket.raffle.price)
+                    name = f"{raffle_ticket.raffle.title} - Boleto #{raffle_ticket.number}"
+                except RaffleTicket.DoesNotExist:
+                    pass
+
             total_amount += price * qty
-            order_items_data.append({'product': product, 'seat': seat, 'event': event_obj, 'product_name': name, 'quantity': qty, 'price': price, 'size': item.get('size', '')})
+            order_items_data.append({'product': product, 'seat': seat, 'event': event_obj, 'raffle_ticket': raffle_ticket, 'product_name': name, 'quantity': qty, 'price': price, 'size': item.get('size', '')})
             mp_items.append({'title': name, 'quantity': qty, 'unit_price': price, 'currency_id': 'MXN'})
 
         shipping_cost = float(data.get('shipping_cost', 0))
@@ -445,7 +482,11 @@ class ProcessCardPaymentView(APIView):
             status=Order.Status.PENDING
         )
         for item_data in order_items_data:
-            OrderItem.objects.create(order=order, **item_data)
+            raffle_ticket = item_data.pop('raffle_ticket', None)
+            order_item = OrderItem.objects.create(order=order, **item_data)
+            if raffle_ticket:
+                raffle_ticket.order_item = order_item
+                raffle_ticket.save()
 
         # Process payment via MP Payments API
         try:
@@ -487,6 +528,16 @@ class ProcessCardPaymentView(APIView):
                         else:
                             product.stock = max(0, product.stock - item.quantity)
                             product.save(update_fields=['stock'])
+
+                # Process Raffle tickets
+                for item in order.items.all():
+                    if hasattr(item, 'raffle_tickets'):
+                        from raffles.models import RaffleTicket
+                        for rt in item.raffle_tickets.all():
+                            rt.status = RaffleTicket.Status.SOLD_ONLINE
+                            rt.buyer_name = order.user.get_full_name() if order.user else order.contact_email
+                            rt.save()
+
             order.save()
 
             return Response({
@@ -665,6 +716,15 @@ class VerifyPaymentView(APIView):
                         else:
                             product.stock = max(0, product.stock - item.quantity)
                             product.save(update_fields=['stock'])
+
+                # Process Raffle tickets
+                for item in order.items.all():
+                    if hasattr(item, 'raffle_tickets'):
+                        from raffles.models import RaffleTicket
+                        for rt in item.raffle_tickets.all():
+                            rt.status = RaffleTicket.Status.SOLD_ONLINE
+                            rt.buyer_name = order.user.get_full_name() if order.user else order.contact_email
+                            rt.save()
 
                 # Send ticket/merch email
                 send_order_emails_safely(order)

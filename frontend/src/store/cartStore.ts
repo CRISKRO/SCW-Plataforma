@@ -10,6 +10,7 @@ export interface CartItem {
   size?: string;
   seat_id?: number;
   event_id?: number;
+  raffle_ticket_id?: number;
   requires_shipping?: boolean;
 }
 

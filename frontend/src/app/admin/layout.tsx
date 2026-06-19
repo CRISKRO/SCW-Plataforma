@@ -20,7 +20,8 @@ import {
   Package,
   Camera,
   Newspaper,
-  Star
+  Star,
+  Gift
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
@@ -38,6 +39,7 @@ const sidebarItems = [
   { name: 'Escuela', href: '/admin/school', icon: GraduationCap },
   { name: 'Resultados', href: '/admin/chronicles', icon: Newspaper },
   { name: 'Patrocinadores', href: '/admin/sponsors', icon: Star },
+  { name: 'Rifas', href: '/admin/raffles', icon: Gift },
   { name: 'Premium', href: '/admin/premium', icon: Video },
   { name: 'Configuración', href: '/admin/settings', icon: Settings },
 ];

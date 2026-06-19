@@ -30,6 +30,7 @@ urlpatterns = [
     path('api/students/', include('students.urls')),
     path('api/gallery/', include('gallery.urls')),
     path('api/settings/', include('api.urls')),
+    path('api/raffles/', include('raffles.urls')),
 ]
 
 # Serve uploaded media files in development
