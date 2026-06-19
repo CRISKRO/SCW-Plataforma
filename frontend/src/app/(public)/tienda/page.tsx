@@ -73,7 +73,6 @@ export default function StorePage() {
               {cat.name}
             </button>
           ))}
-          ))}
         </div>
 
         {/* Raffles Section */}
