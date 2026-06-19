@@ -174,6 +174,9 @@ export function TicketSelectionModal({ isOpen, onClose, eventId, event }: Ticket
                   <div>
                     <h3 className="text-lg font-semibold text-white group-hover:text-red-400 transition-colors">General</h3>
                     <p className="text-sm text-zinc-400">Acceso a zonas generales. Sin asiento numerado.</p>
+                    {zones.find(z => z.zone_type === 'GENERAL') && (
+                      <p className="text-red-400 font-bold mt-2">${Number(zones.find(z => z.zone_type === 'GENERAL')?.price).toFixed(2)} MXN</p>
+                    )}
                   </div>
                   <ChevronRight className="text-zinc-500 group-hover:text-red-400 transition-colors" />
                 </button>
@@ -185,6 +188,16 @@ export function TicketSelectionModal({ isOpen, onClose, eventId, event }: Ticket
                   <div>
                     <h3 className="text-lg font-semibold text-white group-hover:text-red-400 transition-colors">Primera / Segunda Fila</h3>
                     <p className="text-sm text-zinc-400">Selecciona tu asiento numerado en el mapa.</p>
+                    {(() => {
+                      const numberedZones = zones.filter(z => z.zone_type !== 'GENERAL');
+                      if (numberedZones.length === 0) return null;
+                      
+                      return (
+                        <p className="text-red-400 font-bold mt-2">
+                          ${Number(numberedZones[0].price).toFixed(2)} MXN
+                        </p>
+                      );
+                    })()}
                   </div>
                   <ChevronRight className="text-zinc-500 group-hover:text-red-400 transition-colors" />
                 </button>
