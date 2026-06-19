@@ -113,7 +113,7 @@ export default function Navbar() {
             <div className="hidden md:flex items-center space-x-6">
               {isAuthenticated ? (
                 <div className="flex items-center gap-6">
-                  {(user?.role === 'SUPERADMIN' || user?.role === 'ADMIN') && (
+                  {['SUPERADMIN', 'ADMIN', 'STAFF', 'REPORTER'].includes(user?.role || '') && (
                     <Link href="/admin" className="text-red-500 hover:text-red-400 text-sm font-bold uppercase tracking-widest transition-colors flex items-center gap-1">
                       [Panel Admin]
                     </Link>
@@ -181,7 +181,7 @@ export default function Navbar() {
                   </div>
                   Mi Perfil
                 </Link>
-                {(user?.role === 'SUPERADMIN' || user?.role === 'ADMIN') && (
+                {['SUPERADMIN', 'ADMIN', 'STAFF', 'REPORTER'].includes(user?.role || '') && (
                   <Link 
                     href="/admin" 
                     className="text-center text-red-500 border border-red-500/20 py-3 uppercase tracking-widest font-medium"

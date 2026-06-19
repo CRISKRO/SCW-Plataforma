@@ -240,7 +240,7 @@ export default function UserDashboard() {
             </div>
           </div>
           <div className="flex flex-col gap-3 w-full md:w-auto">
-            {(user?.role === 'SUPERADMIN' || user?.role === 'ADMIN') && (
+            {['SUPERADMIN', 'ADMIN', 'STAFF', 'REPORTER'].includes(user?.role || '') && (
               <Link 
                 href="/admin"
                 className="flex items-center justify-center gap-2 bg-white text-black font-bold uppercase text-sm tracking-widest px-4 py-2 rounded-lg hover:bg-zinc-200 transition-colors w-full"
