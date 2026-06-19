@@ -15,8 +15,7 @@ def send_ticket_email(order):
     Send a ticket confirmation email with QR codes for each item in the order.
     """
     # Only process items that are tickets (have seats or are named Boleto)
-    from django.db.models import Q
-    items = order.items.filter(Q(seat__isnull=False) | Q(product__isnull=True, product_name__icontains='Boleto'))
+    items = order.items.filter(event__isnull=False)
     
     if not items.exists():
         return False

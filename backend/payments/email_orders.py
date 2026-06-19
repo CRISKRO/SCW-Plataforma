@@ -27,7 +27,7 @@ def send_order_receipt_email(order):
         return False
         
     try:
-        has_tickets = items.filter(product_name__icontains='Boleto').exists() or items.filter(product_name__icontains='Entrada').exists()
+        has_tickets = items.filter(event__isnull=False).exists()
     except Exception:
         has_tickets = False
         

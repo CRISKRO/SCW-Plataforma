@@ -10,8 +10,8 @@ from .serializers import OrderSerializer
 from api.models import get_active_config
 
 def send_order_emails_safely(order):
-    has_tickets = order.items.filter(seat__isnull=False).exists() or order.items.filter(product__isnull=True, product_name__icontains='Boleto').exists()
-    has_merch = order.items.filter(product__isnull=False).exists() or order.items.filter(product__isnull=True).exclude(product_name__icontains='Boleto').exists()
+    has_tickets = order.items.filter(event__isnull=False).exists()
+    has_merch = order.items.filter(event__isnull=True).exists()
     
     if has_tickets:
         try:
@@ -666,10 +666,11 @@ class VerifyPaymentView(APIView):
 
         # Already processed
         if order.status == Order.Status.PAID:
-            has_tickets = order.items.filter(seat__isnull=False).exists() or order.items.filter(product__isnull=True, product_name__icontains='Boleto').exists()
-            has_merch = order.items.filter(product__isnull=False).exists() or order.items.filter(product__isnull=True).exclude(product_name__icontains='Boleto').exists()
+            has_tickets = order.items.filter(event__isnull=False).exists()
+            has_merch = order.items.filter(event__isnull=True, raffle_tickets__isnull=True).exists()
+            has_raffles = order.items.filter(raffle_tickets__isnull=False).exists()
             tickets_data = []
-            for item in order.items.all():
+            for item in order.items.filter(event__isnull=False):
                 if item.ticket_hash:
                     tickets_data.append({
                         "id": item.id,
@@ -685,6 +686,7 @@ class VerifyPaymentView(APIView):
                 "order_id": order.id,
                 "has_tickets": has_tickets,
                 "has_merch": has_merch,
+                "has_raffles": has_raffles,
                 "tickets": tickets_data
             })
 
@@ -730,10 +732,11 @@ class VerifyPaymentView(APIView):
                 # Send ticket/merch email
                 send_order_emails_safely(order)
 
-                has_tickets = order.items.filter(seat__isnull=False).exists() or order.items.filter(product__isnull=True, product_name__icontains='Boleto').exists()
-                has_merch = order.items.filter(product__isnull=False).exists() or order.items.filter(product__isnull=True).exclude(product_name__icontains='Boleto').exists()
+                has_tickets = order.items.filter(event__isnull=False).exists()
+                has_merch = order.items.filter(event__isnull=True, raffle_tickets__isnull=True).exists()
+                has_raffles = order.items.filter(raffle_tickets__isnull=False).exists()
                 tickets_data = []
-                for item in order.items.all():
+                for item in order.items.filter(event__isnull=False):
                     if item.ticket_hash:
                         tickets_data.append({
                             "id": item.id,
@@ -749,6 +752,7 @@ class VerifyPaymentView(APIView):
                     "order_id": order.id,
                     "has_tickets": has_tickets,
                     "has_merch": has_merch,
+                    "has_raffles": has_raffles,
                     "tickets": tickets_data
                 })
             else:

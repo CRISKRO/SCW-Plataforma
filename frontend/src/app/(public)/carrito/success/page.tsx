@@ -16,6 +16,7 @@ function SuccessContent() {
   const [alreadyProcessed, setAlreadyProcessed] = useState(false);
   const [hasTickets, setHasTickets] = useState(true); // Default true for direct access without data
   const [hasMerch, setHasMerch] = useState(false);
+  const [hasRaffles, setHasRaffles] = useState(false);
   const [tickets, setTickets] = useState<any[]>([]);
 
   useEffect(() => {
@@ -56,6 +57,9 @@ function SuccessContent() {
           }
           if (res.data.has_merch !== undefined) {
             setHasMerch(res.data.has_merch);
+          }
+          if (res.data.has_raffles !== undefined) {
+            setHasRaffles(res.data.has_raffles);
           }
           if (res.data.tickets) {
             setTickets(res.data.tickets);
@@ -296,6 +300,21 @@ function SuccessContent() {
                 <h3 className="font-bold text-lg mb-1">Tu pedido está en camino</h3>
                 <p className="text-zinc-400 text-sm leading-relaxed">
                   Te hemos enviado un correo con el <strong className="text-white">recibo de tu compra</strong>. Te mantendremos informado sobre el estado de tu envío.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Raffles Notice */}
+          {hasRaffles && (
+            <div className="bg-zinc-900 border border-purple-500/30 rounded-2xl p-6 flex items-start gap-4 text-left mt-6">
+              <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Ticket className="w-6 h-6 text-purple-400" />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg mb-1">¡Boletos de Rifa Adquiridos!</h3>
+                <p className="text-zinc-400 text-sm leading-relaxed">
+                  Tus números para la rifa han sido registrados exitosamente. Te hemos enviado un <strong className="text-white">recibo a tu correo electrónico</strong> con los detalles. ¡Mucha suerte!
                 </p>
               </div>
             </div>
