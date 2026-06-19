@@ -322,11 +322,11 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
         </div>
       </section>
 
-      {/* Chronicles Section */}
+      {/* Resultados Section */}
       {chronicles && chronicles.length > 0 && (
-        <section className="py-12 lg:py-16 bg-black relative border-t border-white/5">
+        <section id="resultados" className="py-12 lg:py-16 bg-black relative border-t border-white/5">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight">Crónicas</h2>
+            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight">Resultados</h2>
             <p className="text-zinc-500 mt-4 max-w-2xl mx-auto">Reseñas y fotos exclusivas de nuestros eventos pasados.</p>
           </div>
 

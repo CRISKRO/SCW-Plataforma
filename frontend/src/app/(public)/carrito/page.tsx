@@ -61,18 +61,17 @@ export default function CartPage() {
   }, [user]);
 
   const handleCheckout = async () => {
-    if (!user) {
-      alert("Por favor inicia sesión o regístrate para poder procesar tu compra.");
-      router.push('/login?redirect=/carrito');
-      return;
-    }
 
     if (!email) {
       alert("Por favor ingresa tu correo electrónico.");
       return;
     }
-    if (hasMerch && (!address || !city || !state || !zipcode || !phone)) {
-      alert("Por favor completa todos los datos de envío y teléfono de contacto.");
+    if (!phone) {
+      alert("Por favor ingresa tu teléfono de contacto.");
+      return;
+    }
+    if (hasMerch && (!address || !city || !state || !zipcode)) {
+      alert("Por favor completa todos los datos de envío.");
       return;
     }
 
@@ -230,26 +229,28 @@ export default function CartPage() {
                   </div>
                 </div>
 
-                {/* Email */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-widest text-zinc-500">Correo para confirmación</label>
-                  <input
-                    type="email"
-                    placeholder="tucorreo@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-black border border-white/20 p-3 rounded-xl text-white focus:outline-none focus:border-[#009EE3] transition-colors text-sm"
-                  />
+                {/* Datos de Contacto */}
+                <div className="space-y-4 pt-4 border-t border-white/10">
+                  <h3 className="font-bold uppercase text-sm">Datos de Contacto</h3>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-widest text-zinc-500">Correo para confirmación</label>
+                    <input
+                      type="email"
+                      placeholder="tucorreo@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full bg-black border border-white/20 p-3 rounded-xl text-white focus:outline-none focus:border-[#009EE3] transition-colors text-sm"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-widest text-zinc-500">Teléfono de contacto</label>
+                    <input type="tel" placeholder="10 dígitos" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-black border border-white/20 p-3 rounded-xl text-white focus:outline-none focus:border-[#009EE3] transition-colors text-sm" />
+                  </div>
                 </div>
 
                 {hasMerch && (
                   <div className="space-y-4 pt-4 border-t border-white/10">
                     <h3 className="font-bold uppercase text-sm">Datos de Envío</h3>
-
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase tracking-widest text-zinc-500">Teléfono de contacto</label>
-                      <input type="tel" placeholder="10 dígitos" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-black border border-white/20 p-3 rounded-xl text-white focus:outline-none focus:border-[#009EE3] transition-colors text-sm" />
-                    </div>
 
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase tracking-widest text-zinc-500">Dirección (Calle y Número)</label>
