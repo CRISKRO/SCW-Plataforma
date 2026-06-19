@@ -3,7 +3,6 @@
 import django.db.models.deletion
 from django.db import migrations, models
 
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -11,30 +10,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='fighter',
-            name='social_network',
-        ),
-        migrations.AddField(
-            model_name='fighter',
-            name='facebook',
-            field=models.URLField(blank=True, verbose_name='Facebook'),
-        ),
-        migrations.AddField(
-            model_name='fighter',
-            name='instagram',
-            field=models.URLField(blank=True, verbose_name='Instagram'),
-        ),
-        migrations.AddField(
-            model_name='fighter',
-            name='tiktok',
-            field=models.URLField(blank=True, verbose_name='TikTok'),
-        ),
-        migrations.AddField(
-            model_name='fighter',
-            name='twitter',
-            field=models.URLField(blank=True, verbose_name='Twitter / X'),
-        ),
         migrations.CreateModel(
             name='Chronicle',
             fields=[
