@@ -74,5 +74,30 @@ export const eventsService = {
   deleteChronicle: async (id: number) => {
     const response = await api.delete(`/events/chronicles/${id}/`);
     return response.data;
+  },
+
+  getSponsors: async () => {
+    const response = await api.get('/events/sponsors/');
+    return response.data;
+  },
+
+  getSponsorDetails: async (id: number) => {
+    const response = await api.get(`/events/sponsors/${id}/`);
+    return response.data;
+  },
+
+  createSponsor: async (data: any) => {
+    const response = await api.post('/events/sponsors/', data);
+    return response.data;
+  },
+
+  updateSponsor: async (id: number, data: any) => {
+    const response = await api.patch(`/events/sponsors/${id}/`, data);
+    return response.data;
+  },
+
+  deleteSponsor: async (id: number) => {
+    const response = await api.delete(`/events/sponsors/${id}/`);
+    return response.data;
   }
 };

@@ -110,9 +110,10 @@ interface HomeCarouselProps {
   roster: any[];
   chronicles: any[];
   premiumVideos: any[];
+  sponsors?: any[];
 }
 
-export default function HomeCarousel({ events, upcomingEvents, roster, chronicles, premiumVideos }: HomeCarouselProps) {
+export default function HomeCarousel({ events, upcomingEvents, roster, chronicles, premiumVideos, sponsors = [] }: HomeCarouselProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slides, setSlides] = useState<any[]>(staticSlides);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
@@ -544,6 +545,45 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
           </div>
         </div>
       </section>
+      
+      {/* Patrocinadores Section */}
+      {sponsors && sponsors.length > 0 && (
+        <section className="py-12 bg-black relative border-t border-white/5 overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-8">
+            <h2 className="text-2xl font-black uppercase tracking-widest text-zinc-500">Patrocinadores Oficiales</h2>
+          </div>
+          
+          <div className="relative flex overflow-x-hidden group">
+            <div className="animate-marquee flex whitespace-nowrap items-center min-w-full">
+              {/* Duplicate array for seamless infinite scroll */}
+              {[...sponsors, ...sponsors, ...sponsors].map((sponsor: any, idx: number) => (
+                <div key={`${sponsor.id}-${idx}`} className="flex flex-col items-center justify-center mx-8 sm:mx-16 min-w-[150px] opacity-70 hover:opacity-100 transition-opacity">
+                  {sponsor.image_url ? (
+                    <div className="relative w-32 h-20 sm:w-40 sm:h-24 grayscale hover:grayscale-0 transition-all duration-300">
+                      <Image 
+                        src={sponsor.image_url} 
+                        alt={sponsor.name} 
+                        fill 
+                        className="object-contain"
+                        sizes="(max-width: 768px) 150px, 200px"
+                      />
+                    </div>
+                  ) : (
+                    <span className="text-xl font-black uppercase text-zinc-400">
+                      {sponsor.name}
+                    </span>
+                  )}
+                  {(sponsor.description || sponsor.phone || sponsor.address) && (
+                    <div className="mt-2 text-center hidden md:block">
+                      {sponsor.phone && <p className="text-xs text-zinc-500">{sponsor.phone}</p>}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
       
       {selectedEvent && (
         <TicketSelectionModal

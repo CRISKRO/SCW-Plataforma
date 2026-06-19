@@ -19,7 +19,8 @@ import {
   ShoppingBag,
   Package,
   Camera,
-  Newspaper
+  Newspaper,
+  Star
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
@@ -36,6 +37,7 @@ const sidebarItems = [
   { name: 'Finanzas', href: '/admin/finances', icon: CreditCard },
   { name: 'Escuela', href: '/admin/school', icon: GraduationCap },
   { name: 'Crónicas', href: '/admin/chronicles', icon: Newspaper },
+  { name: 'Patrocinadores', href: '/admin/sponsors', icon: Star },
   { name: 'Premium', href: '/admin/premium', icon: Video },
   { name: 'Configuración', href: '/admin/settings', icon: Settings },
 ];

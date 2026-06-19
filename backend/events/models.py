@@ -104,3 +104,27 @@ class Chronicle(models.Model):
         if self.image and hasattr(self.image, 'url'):
             return self.image.url
         return ''
+
+class Sponsor(models.Model):
+    name = models.CharField(_('nombre del patrocinador'), max_length=200)
+    address = models.CharField(_('dirección'), max_length=255, blank=True)
+    contact = models.CharField(_('contacto'), max_length=100, blank=True)
+    phone = models.CharField(_('teléfono'), max_length=50, blank=True)
+    description = models.TextField(_('texto de patrocinadores'), blank=True)
+    image = models.ImageField(_('imagen/logo'), upload_to='sponsors/', blank=True, null=True)
+    is_active = models.BooleanField(_('activo'), default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Patrocinador'
+        verbose_name_plural = 'Patrocinadores'
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def image_url(self):
+        if self.image and hasattr(self.image, 'url'):
+            return self.image.url
+        return ''

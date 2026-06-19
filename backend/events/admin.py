@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Fighter, Event, Match, Chronicle
+from .models import Fighter, Event, Match, Chronicle, Sponsor
 
 @admin.register(Fighter)
 class FighterAdmin(admin.ModelAdmin):
@@ -25,5 +25,12 @@ class MatchAdmin(admin.ModelAdmin):
 
 @admin.register(Chronicle)
 class ChronicleAdmin(admin.ModelAdmin):
-    list_display = ('title', 'writer', 'photographer', 'created_at')
-    search_fields = ('title', 'writer', 'photographer')
+    list_display = ('title', 'event', 'writer', 'created_at')
+    search_fields = ('title', 'writer', 'content')
+    list_filter = ('event', 'created_at')
+
+@admin.register(Sponsor)
+class SponsorAdmin(admin.ModelAdmin):
+    list_display = ('name', 'contact', 'phone', 'is_active', 'created_at')
+    search_fields = ('name', 'contact', 'phone', 'description')
+    list_filter = ('is_active', 'created_at')
