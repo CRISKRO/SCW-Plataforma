@@ -11,6 +11,7 @@ interface User {
   state?: string;
   zipcode?: string;
   role: string;
+  is_premium?: boolean;
 }
 
 interface AuthState {

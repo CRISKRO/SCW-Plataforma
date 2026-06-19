@@ -592,7 +592,8 @@ class VerifyPaymentView(APIView):
 
                     user = subscription.user
                     if getattr(user, 'role', 'USER') == 'USER':
-                        user.role = 'PREMIUM'
+                        if user.role not in ['ADMIN', 'SUPERADMIN', 'STAFF', 'REPORTER']:
+                            user.role = 'PREMIUM'
                         user.save()
                         
                     try:
@@ -843,7 +844,8 @@ class WebhookView(APIView):
 
                                     user = subscription.user
                                     if getattr(user, 'role', 'USER') == 'USER':
-                                        user.role = 'PREMIUM'
+                                        if user.role not in ['ADMIN', 'SUPERADMIN', 'STAFF', 'REPORTER']:
+                                            user.role = 'PREMIUM'
                                         user.save()
                                         
                                     try:

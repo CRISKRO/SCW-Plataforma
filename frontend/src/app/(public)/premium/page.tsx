@@ -24,7 +24,7 @@ export default function PremiumPage() {
   const [loadingVideos, setLoadingVideos] = useState(false);
   const [plan, setPlan] = useState<any>(null);
 
-  const isPremium = isAuthenticated && ['PREMIUM', 'ADMIN', 'SUPERADMIN'].includes(user?.role || '');
+  const isPremium = isAuthenticated && (user?.is_premium || ['PREMIUM', 'ADMIN', 'SUPERADMIN'].includes(user?.role || ''));
 
   useEffect(() => {
     setLoadingVideos(true);

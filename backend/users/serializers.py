@@ -9,26 +9,25 @@ from premium.models import UserSubscription
 
 class UserSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
+    is_premium = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'first_name', 'last_name', 'phone_number', 'address', 'city', 'state', 'zipcode', 'role')
-        read_only_fields = ('id', 'role', 'email')
+        fields = ('id', 'email', 'first_name', 'last_name', 'phone_number', 'address', 'city', 'state', 'zipcode', 'role', 'is_premium')
+        read_only_fields = ('id', 'role', 'email', 'is_premium')
 
     def get_role(self, obj):
-        # Admins keep their roles
-        if obj.role in ['ADMIN', 'SUPERADMIN']:
-            return obj.role
-        
-        # Check active subscription
+        return obj.role
+
+    def get_is_premium(self, obj):
+        if obj.role in ['ADMIN', 'SUPERADMIN', 'PREMIUM']:
+            return True
+            
         has_active_sub = UserSubscription.objects.filter(
             user=obj, is_active=True, end_date__gt=timezone.now()
         ).exists()
         
-        if has_active_sub or obj.role == 'PREMIUM':
-            return 'PREMIUM'
-            
-        return obj.role
+        return has_active_sub
 
 class AdminUserSerializer(serializers.ModelSerializer):
     class Meta:
