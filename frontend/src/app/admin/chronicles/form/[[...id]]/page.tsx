@@ -55,7 +55,7 @@ export default function ChronicleFormPage() {
           }
         } catch (error) {
           console.error("Error loading chronicle:", error);
-          alert("No se pudo cargar la información de la crónica.");
+          alert("No se pudo cargar la información del resultado.");
         } finally {
           setLoading(false);
         }
@@ -109,7 +109,7 @@ export default function ChronicleFormPage() {
       router.push('/admin/chronicles');
     } catch (error) {
       console.error("Error saving chronicle:", error);
-      alert("Hubo un error al guardar la crónica.");
+      alert("Hubo un error al guardar el resultado.");
       setSaving(false);
     }
   };
@@ -126,7 +126,7 @@ export default function ChronicleFormPage() {
         </Link>
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-white">
-            {isEdit ? 'Editar Crónica' : 'Nueva Crónica'}
+            {isEdit ? 'Editar Resultado' : 'Nuevo Resultado'}
           </h1>
           <p className="text-zinc-400 mt-1">Publica una reseña de un evento pasado.</p>
         </div>
@@ -198,7 +198,7 @@ export default function ChronicleFormPage() {
             required
             rows={12}
             className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors resize-y"
-            placeholder="Escribe la crónica aquí..."
+            placeholder="Escribe el resultado aquí..."
           ></textarea>
         </div>
 
@@ -228,7 +228,7 @@ export default function ChronicleFormPage() {
             {saving ? 'Guardando...' : (
               <>
                 <Save className="w-5 h-5" />
-                {isEdit ? 'Actualizar Crónica' : 'Publicar Crónica'}
+                {isEdit ? 'Actualizar Resultado' : 'Publicar Resultado'}
               </>
             )}
           </button>

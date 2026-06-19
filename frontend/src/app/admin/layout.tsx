@@ -36,7 +36,7 @@ const sidebarItems = [
   { name: 'Galería', href: '/admin/gallery', icon: Camera },
   { name: 'Finanzas', href: '/admin/finances', icon: CreditCard },
   { name: 'Escuela', href: '/admin/school', icon: GraduationCap },
-  { name: 'Crónicas', href: '/admin/chronicles', icon: Newspaper },
+  { name: 'Resultados', href: '/admin/chronicles', icon: Newspaper },
   { name: 'Patrocinadores', href: '/admin/sponsors', icon: Star },
   { name: 'Premium', href: '/admin/premium', icon: Video },
   { name: 'Configuración', href: '/admin/settings', icon: Settings },

@@ -387,8 +387,15 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                 className="bg-zinc-900 border border-white/5 rounded-xl overflow-hidden hover:border-zinc-700 transition-colors flex flex-col"
               >
                 {chronicle.image_url && (
-                  <div className="relative aspect-square w-full bg-zinc-800">
-                    <Image src={chronicle.image_url} alt={chronicle.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 33vw" />
+                  <div className="relative w-full bg-zinc-800 flex justify-center items-center overflow-hidden">
+                    <Image 
+                      src={chronicle.image_url} 
+                      alt={chronicle.title} 
+                      width={800} 
+                      height={600} 
+                      className="w-full h-auto object-contain" 
+                      sizes="(max-width: 768px) 100vw, 33vw" 
+                    />
                   </div>
                 )}
                 <div className="p-6 flex-1 flex flex-col">

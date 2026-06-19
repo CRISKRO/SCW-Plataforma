@@ -26,13 +26,13 @@ export default function AdminChroniclesPage() {
   }, []);
 
   const handleDelete = async (id: number) => {
-    if (confirm('¿Estás seguro de que deseas eliminar esta crónica?')) {
+    if (confirm('¿Estás seguro de que deseas eliminar este resultado?')) {
       try {
         await eventsService.deleteChronicle(id);
         setChronicles(chronicles.filter(c => c.id !== id));
       } catch (error) {
         console.error("Error deleting chronicle:", error);
-        alert("Hubo un error al eliminar la crónica.");
+        alert("Hubo un error al eliminar el resultado.");
       }
     }
   };
@@ -53,20 +53,20 @@ export default function AdminChroniclesPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">Crónicas</h1>
-          <p className="text-zinc-400 mt-2">Publica reseñas y galerías fotográficas de los eventos pasados.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-white">Resultados</h1>
+          <p className="text-zinc-400 mt-2">Publica los resultados y galerías fotográficas de los eventos pasados.</p>
         </div>
         <Link 
           href="/admin/chronicles/form" 
           className="flex items-center gap-2 bg-white text-black px-4 py-2 font-bold uppercase tracking-widest text-sm hover:bg-zinc-200 transition-colors"
         >
           <Plus className="w-4 h-4" />
-          Añadir Crónica
+          Añadir Resultado
         </Link>
       </div>
 
       {loading ? (
-        <div className="text-zinc-500 py-8">Cargando crónicas...</div>
+        <div className="text-zinc-500 py-8">Cargando resultados...</div>
       ) : (
         <AdminTable 
           columns={columns} 
