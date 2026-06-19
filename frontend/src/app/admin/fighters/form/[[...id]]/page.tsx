@@ -19,7 +19,10 @@ export default function FighterFormPage() {
     name: '',
     nickname: '',
     bio: '',
-    social_network: '',
+    instagram: '',
+    tiktok: '',
+    twitter: '',
+    facebook: '',
     signature_move: '',
     achievements: '',
     weight_kg: '',
@@ -40,7 +43,10 @@ export default function FighterFormPage() {
             name: data.name || '',
             nickname: data.nickname || '',
             bio: data.bio || '',
-            social_network: data.social_network || '',
+            instagram: data.instagram || '',
+            tiktok: data.tiktok || '',
+            twitter: data.twitter || '',
+            facebook: data.facebook || '',
             signature_move: data.signature_move || '',
             achievements: data.achievements || '',
             weight_kg: data.weight_kg || '',
@@ -91,7 +97,10 @@ export default function FighterFormPage() {
       data.append('name', formData.name);
       data.append('nickname', formData.nickname);
       data.append('bio', formData.bio);
-      data.append('social_network', formData.social_network);
+      data.append('instagram', formData.instagram);
+      data.append('tiktok', formData.tiktok);
+      data.append('twitter', formData.twitter);
+      data.append('facebook', formData.facebook);
       data.append('signature_move', formData.signature_move);
       data.append('achievements', formData.achievements);
       if (formData.weight_kg) data.append('weight_kg', formData.weight_kg);
@@ -165,14 +174,50 @@ export default function FighterFormPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <label className="text-sm font-bold text-white uppercase tracking-widest">Red Social</label>
+            <label className="text-sm font-bold text-white uppercase tracking-widest">Instagram (URL)</label>
             <input
-              type="text"
-              name="social_network"
-              value={formData.social_network}
+              type="url"
+              name="instagram"
+              value={formData.instagram}
               onChange={handleChange}
               className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
-              placeholder="Ej. @luchador_scw"
+              placeholder="Ej. https://instagram.com/usuario"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-white uppercase tracking-widest">TikTok (URL)</label>
+            <input
+              type="url"
+              name="tiktok"
+              value={formData.tiktok}
+              onChange={handleChange}
+              className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
+              placeholder="Ej. https://tiktok.com/@usuario"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-white uppercase tracking-widest">Twitter / X (URL)</label>
+            <input
+              type="url"
+              name="twitter"
+              value={formData.twitter}
+              onChange={handleChange}
+              className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
+              placeholder="Ej. https://x.com/usuario"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-white uppercase tracking-widest">Facebook (URL)</label>
+            <input
+              type="url"
+              name="facebook"
+              value={formData.facebook}
+              onChange={handleChange}
+              className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
+              placeholder="Ej. https://facebook.com/usuario"
             />
           </div>
         </div>

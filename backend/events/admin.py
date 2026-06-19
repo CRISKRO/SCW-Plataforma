@@ -3,7 +3,7 @@ from .models import Fighter, Event, Match, Chronicle
 
 @admin.register(Fighter)
 class FighterAdmin(admin.ModelAdmin):
-    list_display = ('name', 'nickname', 'social_network', 'is_active')
+    list_display = ('name', 'nickname', 'instagram', 'is_active')
     list_filter = ('is_active',)
     search_fields = ('name', 'nickname')
 

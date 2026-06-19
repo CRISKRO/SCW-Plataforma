@@ -5,6 +5,51 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { eventsService } from '@/services/events.services';
 
+const InstagramIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+);
+
+const TwitterIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
+);
+
+const FacebookIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+);
+
+const TikTokIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5v3a3 3 0 0 1-3-3"/></svg>
+);
+
+const SocialLinks = ({ fighter, inCard = true }: { fighter: any, inCard?: boolean }) => {
+  const links = [
+    { url: fighter.instagram, icon: <InstagramIcon />, name: 'Instagram' },
+    { url: fighter.tiktok, icon: <TikTokIcon />, name: 'TikTok' },
+    { url: fighter.twitter, icon: <TwitterIcon />, name: 'Twitter' },
+    { url: fighter.facebook, icon: <FacebookIcon />, name: 'Facebook' },
+  ].filter(link => link.url);
+
+  if (links.length === 0) return null;
+
+  return (
+    <div className={`flex items-center gap-3 ${inCard ? 'mb-2' : ''}`}>
+      {links.map((link, i) => (
+        <a 
+          key={i} 
+          href={link.url} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="text-white hover:text-red-500 transition-colors hover:scale-110 transform"
+          title={link.name}
+        >
+          {link.icon}
+        </a>
+      ))}
+    </div>
+  );
+};
+
 export default function RosterPage() {
   const [fighters, setFighters] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,11 +105,7 @@ export default function RosterPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>
                 
                 <div className="absolute bottom-0 left-0 p-5 w-full transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                  {fighter.social_network && (
-                    <span className="text-red-500 text-sm font-bold uppercase tracking-widest">
-                      {fighter.social_network}
-                    </span>
-                  )}
+                  <SocialLinks fighter={fighter} />
                   <h3 className="text-2xl font-black uppercase tracking-tighter leading-none mb-1 mt-1">
                     {fighter.name}
                   </h3>
@@ -111,11 +152,7 @@ export default function RosterPage() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>
                     
                     <div className="absolute bottom-0 left-0 p-5 w-full transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                      {fighter.social_network && (
-                        <span className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded inline-block mb-2 bg-zinc-800 text-zinc-300">
-                          {fighter.social_network}
-                        </span>
-                      )}
+                      <SocialLinks fighter={fighter} />
                       <h3 className="text-2xl font-black uppercase tracking-tighter leading-none mb-1">
                         {fighter.name}
                       </h3>
@@ -201,19 +238,10 @@ export default function RosterPage() {
                   </div>
                 )}
 
-                {selectedFighter.social_network && (
-                  <div>
-                    <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-2">Redes Sociales</p>
-                    <a 
-                      href={selectedFighter.social_network.startsWith('http') ? selectedFighter.social_network : (selectedFighter.social_network.startsWith('@') ? `https://instagram.com/${selectedFighter.social_network.substring(1)}` : `https://${selectedFighter.social_network}`)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-red-400 hover:text-red-300 text-sm font-bold transition-colors"
-                    >
-                      {selectedFighter.social_network}
-                    </a>
-                  </div>
-                )}
+                <div>
+                  <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-2">Redes Sociales</p>
+                  <SocialLinks fighter={selectedFighter} inCard={false} />
+                </div>
               </div>
             </motion.div>
           </motion.div>
