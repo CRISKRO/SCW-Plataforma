@@ -15,7 +15,6 @@ const navItems = [
   { name: 'Resultados', href: '/#resultados' },
   { name: 'Dojo', href: '/escuela' },
   { name: 'Tienda', href: '/tienda' },
-  { name: 'Rifas', href: '/raffles' },
 ];
 
 export default function Navbar() {

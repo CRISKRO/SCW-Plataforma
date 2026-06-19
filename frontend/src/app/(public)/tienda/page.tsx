@@ -3,24 +3,29 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { ShoppingCart, Eye, Truck } from 'lucide-react';
+import { ShoppingCart, Eye, Truck, Ticket } from 'lucide-react';
 import api from '@/services/api';
+import { getRaffles, Raffle } from '@/services/raffles.services';
+import Image from 'next/image';
 
 export default function StorePage() {
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [raffles, setRaffles] = useState<Raffle[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('Todo');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [prodRes, catRes] = await Promise.all([
+        const [prodRes, catRes, rafflesData] = await Promise.all([
           api.get('/merch/products/'),
-          api.get('/merch/categories/')
+          api.get('/merch/categories/'),
+          getRaffles()
         ]);
         setProducts(prodRes.data);
         setCategories(catRes.data);
+        setRaffles(rafflesData.filter((r: Raffle) => r.is_active));
       } catch (error) {
         console.error("Error fetching shop data:", error);
       } finally {
@@ -68,7 +73,60 @@ export default function StorePage() {
               {cat.name}
             </button>
           ))}
+          ))}
         </div>
+
+        {/* Raffles Section */}
+        {!loading && raffles.length > 0 && (
+          <div className="mb-16">
+            <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight mb-6 flex items-center gap-3">
+              <Ticket className="w-8 h-8 text-red-500" />
+              Sorteos <span className="text-red-500">Activos</span>
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {raffles.map((raffle) => (
+                <div key={raffle.id} className="bg-zinc-900/80 border border-white/10 rounded-2xl overflow-hidden hover:border-red-500/50 transition-colors group flex flex-col hover:shadow-2xl hover:shadow-red-500/10">
+                  <div className="relative h-48 w-full bg-zinc-950 overflow-hidden">
+                    {raffle.image ? (
+                      <Image
+                        src={raffle.image}
+                        alt={raffle.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-zinc-700">Sin Imagen</div>
+                    )}
+                    <div className="absolute top-4 right-4 bg-red-600 text-white font-bold px-3 py-1 rounded-full text-sm shadow-lg shadow-red-500/20">
+                      ${raffle.price} MXN
+                    </div>
+                  </div>
+                  
+                  <div className="p-5 flex-1 flex flex-col">
+                    <h3 className="text-xl font-black text-white uppercase tracking-tight mb-2">
+                      {raffle.title}
+                    </h3>
+                    <p className="text-zinc-400 text-xs mb-4 line-clamp-2 flex-1">
+                      {raffle.description}
+                    </p>
+                    
+                    <div className="pt-4 border-t border-white/10 mt-auto flex items-center justify-between">
+                      <div className="text-xs text-zinc-500">
+                        <span className="text-white font-bold">{raffle.total_tickets}</span> Boletos
+                      </div>
+                      <Link
+                        href={`/raffles/${raffle.id}`}
+                        className="bg-white text-black hover:bg-red-500 hover:text-white px-5 py-2 rounded-lg font-bold uppercase tracking-wide transition-colors text-xs"
+                      >
+                        Participar
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Product Grid - ML Style */}
         {loading ? (
