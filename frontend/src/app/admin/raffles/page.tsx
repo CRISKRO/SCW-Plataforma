@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Ticket } from 'lucide-react';
 import { getRaffles, deleteRaffle, Raffle } from '@/services/raffles.services';
 
 export default function AdminRafflesPage() {
