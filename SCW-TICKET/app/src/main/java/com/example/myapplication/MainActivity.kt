@@ -633,23 +633,25 @@ fun RafflesBoxOffice(baseUrl: String, token: String) {
                 }
             }
         } else {
-            Button(onClick = { selectedRaffle = null; buyerName = "" }) { Text("← Volver a Rifas") }
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(selectedRaffle!!.title, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            Text("Precio: $${selectedRaffle!!.price} MXN", color = Color(0xFF4CAF50))
-            Spacer(modifier = Modifier.height(16.dp))
-
-            LazyColumn {
-                // Grid of tickets: approx 5 per row
-                items(selectedRaffle!!.tickets.chunked(5)) { rowTickets ->
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                        rowTickets.forEach { ticket ->
-                            val isAvailable = ticket.status == "AVAILABLE"
-                            Box(
-                                modifier = Modifier.size(50.dp).padding(4.dp)
-                                    .background(if (isAvailable) Color(0xFF4CAF50).copy(alpha=0.2f) else Color.Red.copy(alpha=0.2f), RoundedCornerShape(4.dp))
-                                    .border(1.dp, if (isAvailable) Color(0xFF4CAF50) else Color.Red, RoundedCornerShape(4.dp))
-                                    .clickable(enabled = isAvailable) { ticketToSell = ticket; buyerName = ""; buyerPhone = "" },
+            val raffle = selectedRaffle
+            if (raffle != null) {
+                Button(onClick = { selectedRaffle = null; buyerName = ""; buyerPhone = "" }) { Text("← Volver a Rifas") }
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(raffle.title, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("Precio: $${raffle.price} MXN", color = Color(0xFF4CAF50))
+                Spacer(modifier = Modifier.height(16.dp))
+    
+                LazyColumn {
+                    // Grid of tickets: approx 5 per row
+                    items(raffle.tickets.chunked(5)) { rowTickets ->
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                            rowTickets.forEach { ticket ->
+                                val isAvailable = ticket.status == "AVAILABLE"
+                                Box(
+                                    modifier = Modifier.size(50.dp).padding(4.dp)
+                                        .background(if (isAvailable) Color(0xFF4CAF50).copy(alpha=0.2f) else Color.Red.copy(alpha=0.2f), RoundedCornerShape(4.dp))
+                                        .border(1.dp, if (isAvailable) Color(0xFF4CAF50) else Color.Red, RoundedCornerShape(4.dp))
+                                        .clickable(enabled = isAvailable) { ticketToSell = ticket; buyerName = ""; buyerPhone = "" },
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(ticket.number.toString(), fontWeight = FontWeight.Bold, color = if (isAvailable) Color(0xFF4CAF50) else Color.Red)
@@ -657,6 +659,7 @@ fun RafflesBoxOffice(baseUrl: String, token: String) {
                         }
                     }
                 }
+            }
             }
         }
     }
