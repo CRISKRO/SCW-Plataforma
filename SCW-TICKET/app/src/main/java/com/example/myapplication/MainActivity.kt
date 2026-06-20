@@ -413,20 +413,28 @@ fun EventsBoxOffice(baseUrl: String, token: String) {
                         val norte = selectedEvent!!.zones.find { it.name.contains("NORTE", ignoreCase = true) }
                         if (norte != null) ZoneView(norte) { seat -> seatToSell = Pair(norte, seat) }
                         
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             // OESTE
                             val oeste = selectedEvent!!.zones.find { it.name.contains("OESTE", ignoreCase = true) }
-                            if (oeste != null) ZoneView(oeste, isVertical = true) { seat -> seatToSell = Pair(oeste, seat) }
+                            if (oeste != null) ZoneView(oeste, isVertical = true, reverseRows = true) { seat -> seatToSell = Pair(oeste, seat) }
+                            
+                            Spacer(modifier = Modifier.width(8.dp))
                             
                             // RING
                             Box(modifier = Modifier.size(150.dp).background(Color.White).border(4.dp, Color.Black).padding(8.dp), contentAlignment = Alignment.Center) {
                                 Text("RING SCW", fontWeight = FontWeight.Bold, color = Color.LightGray, fontSize = 20.sp)
                             }
                             
+                            Spacer(modifier = Modifier.width(8.dp))
+                            
                             // ESTE
                             val este = selectedEvent!!.zones.find { it.name.contains("ESTE", ignoreCase = true) }
                             if (este != null) ZoneView(este, isVertical = true) { seat -> seatToSell = Pair(este, seat) }
                         }
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
                         
                         // SUR
                         val sur = selectedEvent!!.zones.find { it.name.contains("SUR", ignoreCase = true) }
@@ -447,7 +455,7 @@ fun EventsBoxOffice(baseUrl: String, token: String) {
 }
 
 @Composable
-fun ZoneView(zone: BoxOfficeZone, isVertical: Boolean = false, onSeatClick: (BoxOfficeSeat) -> Unit) {
+fun ZoneView(zone: BoxOfficeZone, isVertical: Boolean = false, reverseRows: Boolean = false, onSeatClick: (BoxOfficeSeat) -> Unit) {
     val isReverse = zone.name.contains("OESTE", ignoreCase = true) || zone.name.contains("SUR", ignoreCase = true)
     
     val seatsByRow = zone.seats.groupBy { it.row ?: "?" }.mapValues { entry ->
@@ -458,23 +466,16 @@ fun ZoneView(zone: BoxOfficeZone, isVertical: Boolean = false, onSeatClick: (Box
         }
     }
     
-    fun getDisplayNumber(zoneType: String, seatNumber: Int): Int {
-        val upType = zoneType.uppercase()
-        if (upType.contains("NORTE")) return seatNumber
-        if (upType.contains("ESTE")) return seatNumber + 17
-        if (upType.contains("SUR")) return seatNumber + 27
-        if (upType.contains("OESTE")) return seatNumber + 44
-        return seatNumber
-    }
+    val rowEntries = if (reverseRows) seatsByRow.entries.reversed() else seatsByRow.entries
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(8.dp)) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(4.dp)) {
         Text(zone.name, fontWeight = FontWeight.Bold, color = Color.DarkGray)
         Text("$${zone.price}", color = Color(0xFF4CAF50), fontSize = 12.sp)
         Spacer(modifier = Modifier.height(4.dp))
         
         if (isVertical) {
             Row(horizontalArrangement = Arrangement.Center) {
-                seatsByRow.forEach { (rowName, seats) ->
+                rowEntries.forEach { (rowName, seats) ->
                     Column(modifier = Modifier.padding(horizontal = 2.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(rowName, fontWeight = FontWeight.Bold, modifier = Modifier.height(20.dp), fontSize = 10.sp)
                         Spacer(modifier = Modifier.height(2.dp))
@@ -485,14 +486,14 @@ fun ZoneView(zone: BoxOfficeZone, isVertical: Boolean = false, onSeatClick: (Box
                                     .clickable(enabled = seat.is_available) { onSeatClick(seat) },
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(getDisplayNumber(zone.name, seat.number).toString(), color = if (seat.is_available) Color.White else Color.Gray, fontSize = 8.sp)
+                                Text(seat.number.toString(), color = if (seat.is_available) Color.White else Color.Gray, fontSize = 8.sp)
                             }
                         }
                     }
                 }
             }
         } else {
-            seatsByRow.forEach { (rowName, seats) ->
+            rowEntries.forEach { (rowName, seats) ->
                 Row(modifier = Modifier.padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(rowName, fontWeight = FontWeight.Bold, modifier = Modifier.width(20.dp), fontSize = 10.sp)
                     Spacer(modifier = Modifier.width(2.dp))
@@ -503,7 +504,7 @@ fun ZoneView(zone: BoxOfficeZone, isVertical: Boolean = false, onSeatClick: (Box
                                 .clickable(enabled = seat.is_available) { onSeatClick(seat) },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(getDisplayNumber(zone.name, seat.number).toString(), color = if (seat.is_available) Color.White else Color.Gray, fontSize = 8.sp)
+                            Text(seat.number.toString(), color = if (seat.is_available) Color.White else Color.Gray, fontSize = 8.sp)
                         }
                     }
                 }
@@ -557,13 +558,13 @@ fun RafflesBoxOffice(baseUrl: String, token: String) {
                     OutlinedTextField(
                         value = buyerName,
                         onValueChange = { buyerName = it },
-                        label = { Text("Nombre del comprador (opcional)") }
+                        label = { Text("Nombre del comprador ") }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = buyerPhone,
                         onValueChange = { buyerPhone = it },
-                        label = { Text("Teléfono del comprador (opcional)") }
+                        label = { Text("Teléfono del comprador ") }
                     )
                 }
             },
