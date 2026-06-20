@@ -448,18 +448,36 @@ fun EventsBoxOffice(baseUrl: String, token: String) {
 
 @Composable
 fun ZoneView(zone: BoxOfficeZone, isVertical: Boolean = false, onSeatClick: (BoxOfficeSeat) -> Unit) {
-    val seatsByRow = zone.seats.groupBy { it.row ?: "?" }
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(16.dp)) {
+    val isReverse = zone.name.contains("OESTE", ignoreCase = true) || zone.name.contains("SUR", ignoreCase = true)
+    
+    val seatsByRow = zone.seats.groupBy { it.row ?: "?" }.mapValues { entry ->
+        if (isReverse) {
+            entry.value.sortedByDescending { it.number }
+        } else {
+            entry.value.sortedBy { it.number }
+        }
+    }
+    
+    fun getDisplayNumber(zoneType: String, seatNumber: Int): Int {
+        val upType = zoneType.uppercase()
+        if (upType.contains("NORTE")) return seatNumber
+        if (upType.contains("ESTE")) return seatNumber + 17
+        if (upType.contains("SUR")) return seatNumber + 27
+        if (upType.contains("OESTE")) return seatNumber + 44
+        return seatNumber
+    }
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(8.dp)) {
         Text(zone.name, fontWeight = FontWeight.Bold, color = Color.DarkGray)
         Text("$${zone.price}", color = Color(0xFF4CAF50), fontSize = 12.sp)
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(4.dp))
         
         if (isVertical) {
             Row(horizontalArrangement = Arrangement.Center) {
                 seatsByRow.forEach { (rowName, seats) ->
                     Column(modifier = Modifier.padding(horizontal = 2.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(rowName, fontWeight = FontWeight.Bold, modifier = Modifier.height(20.dp), fontSize = 10.sp)
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(2.dp))
                         seats.forEach { seat ->
                             Box(
                                 modifier = Modifier.size(24.dp).padding(1.dp)
@@ -467,7 +485,7 @@ fun ZoneView(zone: BoxOfficeZone, isVertical: Boolean = false, onSeatClick: (Box
                                     .clickable(enabled = seat.is_available) { onSeatClick(seat) },
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(seat.number.toString(), color = if (seat.is_available) Color.White else Color.Gray, fontSize = 8.sp)
+                                Text(getDisplayNumber(zone.name, seat.number).toString(), color = if (seat.is_available) Color.White else Color.Gray, fontSize = 8.sp)
                             }
                         }
                     }
@@ -477,7 +495,7 @@ fun ZoneView(zone: BoxOfficeZone, isVertical: Boolean = false, onSeatClick: (Box
             seatsByRow.forEach { (rowName, seats) ->
                 Row(modifier = Modifier.padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(rowName, fontWeight = FontWeight.Bold, modifier = Modifier.width(20.dp), fontSize = 10.sp)
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(2.dp))
                     seats.forEach { seat ->
                         Box(
                             modifier = Modifier.size(24.dp).padding(1.dp)
@@ -485,7 +503,7 @@ fun ZoneView(zone: BoxOfficeZone, isVertical: Boolean = false, onSeatClick: (Box
                                 .clickable(enabled = seat.is_available) { onSeatClick(seat) },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(seat.number.toString(), color = if (seat.is_available) Color.White else Color.Gray, fontSize = 8.sp)
+                            Text(getDisplayNumber(zone.name, seat.number).toString(), color = if (seat.is_available) Color.White else Color.Gray, fontSize = 8.sp)
                         }
                     }
                 }
@@ -500,6 +518,7 @@ fun RafflesBoxOffice(baseUrl: String, token: String) {
     var selectedRaffle by remember { mutableStateOf<BoxOfficeRaffle?>(null) }
     var ticketToSell by remember { mutableStateOf<BoxOfficeRaffleTicket?>(null) }
     var buyerName by remember { mutableStateOf("") }
+    var buyerPhone by remember { mutableStateOf("") }
     
     var isLoading by remember { mutableStateOf(false) }
     var errorMsg by remember { mutableStateOf("") }
@@ -540,17 +559,24 @@ fun RafflesBoxOffice(baseUrl: String, token: String) {
                         onValueChange = { buyerName = it },
                         label = { Text("Nombre del comprador (opcional)") }
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = buyerPhone,
+                        onValueChange = { buyerPhone = it },
+                        label = { Text("Teléfono del comprador (opcional)") }
+                    )
                 }
             },
             confirmButton = {
                 TextButton(onClick = {
                     val tId = ticketToSell!!.id
                     val name = buyerName
+                    val phone = buyerPhone
                     ticketToSell = null
                     isLoading = true
                     coroutineScope.launch {
                         try {
-                            val res = ApiClient.getService(baseUrl).sellBoxOfficeRaffleTicket(token, SellRaffleRequest(tId, name))
+                            val res = ApiClient.getService(baseUrl).sellBoxOfficeRaffleTicket(token, SellRaffleRequest(tId, name, phone))
                             if (res.isSuccessful && res.body() != null) {
                                 val body = res.body()!!
                                 if (body.success == true) {
@@ -611,7 +637,7 @@ fun RafflesBoxOffice(baseUrl: String, token: String) {
                                 modifier = Modifier.size(50.dp).padding(4.dp)
                                     .background(if (isAvailable) Color(0xFF4CAF50).copy(alpha=0.2f) else Color.Red.copy(alpha=0.2f), RoundedCornerShape(4.dp))
                                     .border(1.dp, if (isAvailable) Color(0xFF4CAF50) else Color.Red, RoundedCornerShape(4.dp))
-                                    .clickable(enabled = isAvailable) { ticketToSell = ticket; buyerName = "" },
+                                    .clickable(enabled = isAvailable) { ticketToSell = ticket; buyerName = ""; buyerPhone = "" },
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(ticket.number.toString(), fontWeight = FontWeight.Bold, color = if (isAvailable) Color(0xFF4CAF50) else Color.Red)

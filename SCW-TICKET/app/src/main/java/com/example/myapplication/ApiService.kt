@@ -79,7 +79,8 @@ data class BoxOfficeRaffle(
 
 data class SellRaffleRequest(
     val ticket_id: Int,
-    val buyer_name: String
+    val buyer_name: String,
+    val buyer_phone: String
 )
 
 data class SellRaffleResponse(

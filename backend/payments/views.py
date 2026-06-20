@@ -1163,6 +1163,7 @@ class BoxOfficeSellRaffleView(APIView):
 
         ticket_id = request.data.get('ticket_id')
         buyer_name = request.data.get('buyer_name', '')
+        buyer_phone = request.data.get('buyer_phone', '')
 
         if not ticket_id:
             return Response({"error": "Falta el ID del boleto."}, status=400)
@@ -1178,6 +1179,7 @@ class BoxOfficeSellRaffleView(APIView):
                 
                 ticket.status = RaffleTicket.Status.SOLD_OFFLINE
                 ticket.buyer_name = buyer_name
+                ticket.buyer_phone = buyer_phone
                 ticket.save()
 
             return Response({

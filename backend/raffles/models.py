@@ -32,6 +32,7 @@ class RaffleTicket(models.Model):
     number = models.PositiveIntegerField(_('número de boleto'))
     status = models.CharField(_('estado'), max_length=15, choices=Status.choices, default=Status.AVAILABLE)
     buyer_name = models.CharField(_('nombre del comprador (offline)'), max_length=150, blank=True)
+    buyer_phone = models.CharField(_('teléfono del comprador (offline)'), max_length=20, blank=True)
     
     # We will connect to payments.OrderItem later or handle it locally, but it's easier to just store order info here if needed
     order_item = models.ForeignKey('payments.OrderItem', on_delete=models.SET_NULL, null=True, blank=True, related_name='raffle_tickets')
