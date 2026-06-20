@@ -55,17 +55,23 @@ export default function EscuelaPage() {
   // Pre-fill user data if logged in or from session
   useEffect(() => {
     const saved = sessionStorage.getItem('dojo_form_data');
+    let parsedSaved: any = {};
     if (saved) {
       try {
-        setFormData(prev => ({ ...prev, ...JSON.parse(saved) }));
+        parsedSaved = JSON.parse(saved);
       } catch (e) {}
-    } else if (user) {
+    }
+    
+    if (user) {
       setFormData(prev => ({
         ...prev,
-        name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
-        email: user.email || '',
-        phone: user.phone_number || '',
+        ...parsedSaved,
+        name: parsedSaved.name || `${user.first_name || ''} ${user.last_name || ''}`.trim(),
+        email: parsedSaved.email || user.email || '',
+        phone: parsedSaved.phone || user.phone_number || '',
       }));
+    } else {
+      setFormData(prev => ({ ...prev, ...parsedSaved }));
     }
   }, [user]);
 
@@ -383,7 +389,7 @@ export default function EscuelaPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Email</label>
-                        <input required type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full bg-black border border-white/20 rounded-xl p-4 text-white focus:outline-none focus:border-red-500 transition-colors bg-zinc-900/50" readOnly />
+                        <input required type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full bg-black border border-white/20 rounded-xl p-4 text-white focus:outline-none focus:border-red-500 transition-colors" placeholder="Tu correo electrónico" />
                       </div>
                       <div>
                         <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">WhatsApp / Teléfono</label>
