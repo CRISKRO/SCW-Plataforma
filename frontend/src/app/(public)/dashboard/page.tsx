@@ -305,6 +305,7 @@ export default function UserDashboard() {
                   const hasTickets = order.items?.some((item: any) => item.event !== null && item.event !== undefined);
                   const hasRaffles = order.items?.some((item: any) => item.event === null && item.product === null);
                   const hasMerch = order.items?.some((item: any) => item.product !== null && item.product !== undefined);
+                  return (
                   <div key={order.id} className="bg-zinc-900 border border-white/10 rounded-xl overflow-hidden">
                     <div className="bg-black/50 p-4 border-b border-white/5 flex flex-wrap justify-between items-center gap-4">
                       <div>
