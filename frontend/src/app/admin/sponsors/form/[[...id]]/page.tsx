@@ -21,6 +21,7 @@ export default function SponsorFormPage() {
     contact: '',
     phone: '',
     description: '',
+    url: '',
     is_active: true,
   });
   
@@ -38,6 +39,7 @@ export default function SponsorFormPage() {
             contact: data.contact || '',
             phone: data.phone || '',
             description: data.description || '',
+            url: data.url || '',
             is_active: data.is_active !== undefined ? data.is_active : true,
           });
           if (data.image_url) {
@@ -93,6 +95,7 @@ export default function SponsorFormPage() {
       data.append('contact', formData.contact);
       data.append('phone', formData.phone);
       data.append('description', formData.description);
+      data.append('url', formData.url);
       data.append('is_active', String(formData.is_active));
       
       if (imageFile) {
@@ -183,6 +186,18 @@ export default function SponsorFormPage() {
               placeholder="Ej. Av. Principal 123"
             />
           </div>
+        </div>
+        
+        <div className="space-y-2">
+          <label className="text-sm font-bold text-white uppercase tracking-widest">Enlace / Página Web (Opcional)</label>
+          <input
+            type="url"
+            name="url"
+            value={formData.url}
+            onChange={handleChange}
+            className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
+            placeholder="Ej. https://www.ejemplo.com"
+          />
         </div>
 
         <div className="space-y-2">

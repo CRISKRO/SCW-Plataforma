@@ -77,9 +77,10 @@ class SponsorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Sponsor
-        fields = ['id', 'name', 'address', 'contact', 'phone', 'description', 'image', 'image_url', 'is_active', 'created_at']
+        fields = ['id', 'name', 'address', 'contact', 'phone', 'description', 'url', 'image', 'image_url', 'is_active', 'created_at']
         extra_kwargs = {
             'image': {'write_only': True, 'required': False, 'allow_null': True},
+            'url': {'required': False, 'allow_blank': True},
         }
 
     def get_image_url(self, obj):

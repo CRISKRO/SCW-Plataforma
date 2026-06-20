@@ -111,6 +111,7 @@ class Sponsor(models.Model):
     contact = models.CharField(_('contacto'), max_length=100, blank=True)
     phone = models.CharField(_('teléfono'), max_length=50, blank=True)
     description = models.TextField(_('texto de patrocinadores'), blank=True)
+    url = models.URLField(_('enlace/página web'), blank=True)
     image = models.ImageField(_('imagen/logo'), upload_to='sponsors/', blank=True, null=True)
     is_active = models.BooleanField(_('activo'), default=True)
     created_at = models.DateTimeField(auto_now_add=True)

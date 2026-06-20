@@ -587,30 +587,51 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
           <div className="relative flex overflow-x-hidden group">
             <div className="animate-marquee flex whitespace-nowrap items-center min-w-full">
               {/* Duplicate array for seamless infinite scroll */}
-              {[...sponsors, ...sponsors, ...sponsors].map((sponsor: any, idx: number) => (
-                <div key={`${sponsor.id}-${idx}`} className="flex flex-col items-center justify-center mx-8 sm:mx-16 min-w-[150px] opacity-70 hover:opacity-100 transition-opacity">
-                  {sponsor.image_url ? (
-                    <div className="relative w-32 h-20 sm:w-40 sm:h-24 transition-all duration-300">
-                      <Image 
-                        src={sponsor.image_url} 
-                        alt={sponsor.name} 
-                        fill 
-                        className="object-contain"
-                        sizes="(max-width: 768px) 150px, 200px"
-                      />
-                    </div>
-                  ) : (
-                    <span className="text-xl font-black uppercase text-zinc-400">
-                      {sponsor.name}
-                    </span>
-                  )}
-                  {(sponsor.description || sponsor.phone || sponsor.address) && (
-                    <div className="mt-2 text-center hidden md:block">
-                      {sponsor.phone && <p className="text-xs text-zinc-500">{sponsor.phone}</p>}
-                    </div>
-                  )}
-                </div>
-              ))}
+              {[...sponsors, ...sponsors, ...sponsors].map((sponsor: any, idx: number) => {
+                const SponsorContent = (
+                  <div className="flex flex-col items-center justify-center min-w-[150px]">
+                    {sponsor.image_url ? (
+                      <div className="relative w-32 h-20 sm:w-40 sm:h-24 transition-all duration-300">
+                        <Image 
+                          src={sponsor.image_url} 
+                          alt={sponsor.name} 
+                          fill 
+                          className="object-contain"
+                          sizes="(max-width: 768px) 150px, 200px"
+                        />
+                      </div>
+                    ) : (
+                      <span className="text-xl font-black uppercase text-zinc-400">
+                        {sponsor.name}
+                      </span>
+                    )}
+                    {(sponsor.description || sponsor.phone || sponsor.address) && (
+                      <div className="mt-2 text-center hidden md:block">
+                        {sponsor.phone && <p className="text-xs text-zinc-500">{sponsor.phone}</p>}
+                      </div>
+                    )}
+                  </div>
+                );
+
+                return sponsor.url ? (
+                  <a
+                    key={`${sponsor.id}-${idx}`}
+                    href={sponsor.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mx-8 sm:mx-16 opacity-70 hover:opacity-100 transition-opacity cursor-pointer block"
+                  >
+                    {SponsorContent}
+                  </a>
+                ) : (
+                  <div
+                    key={`${sponsor.id}-${idx}`}
+                    className="mx-8 sm:mx-16 opacity-70 hover:opacity-100 transition-opacity"
+                  >
+                    {SponsorContent}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
