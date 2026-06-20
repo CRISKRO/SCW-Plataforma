@@ -409,36 +409,38 @@ fun EventsBoxOffice(baseUrl: String, token: String) {
                 
                 Box(modifier = Modifier.fillMaxSize().horizontalScroll(hScroll).verticalScroll(vScroll).padding(32.dp), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        // NORTE
-                        val norte = selectedEvent!!.zones.find { it.name.contains("NORTE", ignoreCase = true) }
-                        if (norte != null) ZoneView(norte) { seat -> seatToSell = Pair(norte, seat) }
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             // OESTE
                             val oeste = selectedEvent!!.zones.find { it.name.contains("OESTE", ignoreCase = true) }
                             if (oeste != null) ZoneView(oeste, isVertical = true, reverseRows = true) { seat -> seatToSell = Pair(oeste, seat) }
                             
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(16.dp))
                             
-                            // RING
-                            Box(modifier = Modifier.size(150.dp).background(Color.White).border(4.dp, Color.Black).padding(8.dp), contentAlignment = Alignment.Center) {
-                                Text("RING SCW", fontWeight = FontWeight.Bold, color = Color.LightGray, fontSize = 20.sp)
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                // NORTE
+                                val norte = selectedEvent!!.zones.find { it.name.contains("NORTE", ignoreCase = true) }
+                                if (norte != null) ZoneView(norte) { seat -> seatToSell = Pair(norte, seat) }
+                                
+                                Spacer(modifier = Modifier.height(16.dp))
+                                
+                                // RING
+                                Box(modifier = Modifier.size(150.dp).background(Color.White).border(4.dp, Color.Black).padding(8.dp), contentAlignment = Alignment.Center) {
+                                    Text("RING SCW", fontWeight = FontWeight.Bold, color = Color.LightGray, fontSize = 20.sp)
+                                }
+                                
+                                Spacer(modifier = Modifier.height(16.dp))
+                                
+                                // SUR
+                                val sur = selectedEvent!!.zones.find { it.name.contains("SUR", ignoreCase = true) }
+                                if (sur != null) ZoneView(sur) { seat -> seatToSell = Pair(sur, seat) }
                             }
                             
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(16.dp))
                             
                             // ESTE
                             val este = selectedEvent!!.zones.find { it.name.contains("ESTE", ignoreCase = true) }
                             if (este != null) ZoneView(este, isVertical = true) { seat -> seatToSell = Pair(este, seat) }
                         }
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        // SUR
-                        val sur = selectedEvent!!.zones.find { it.name.contains("SUR", ignoreCase = true) }
-                        if (sur != null) ZoneView(sur) { seat -> seatToSell = Pair(sur, seat) }
                         
                         // OTHERS
                         val others = selectedEvent!!.zones.filter { !it.name.contains("NORTE", true) && !it.name.contains("SUR", true) && !it.name.contains("ESTE", true) && !it.name.contains("OESTE", true) }
@@ -466,6 +468,15 @@ fun ZoneView(zone: BoxOfficeZone, isVertical: Boolean = false, reverseRows: Bool
         }
     }
     
+    fun getDisplayNumber(zoneType: String, seatNumber: Int): Int {
+        val upType = zoneType.uppercase()
+        if (upType.contains("NORTE")) return seatNumber
+        if (upType.contains("ESTE")) return seatNumber + 17
+        if (upType.contains("SUR")) return seatNumber + 27
+        if (upType.contains("OESTE")) return seatNumber + 44
+        return seatNumber
+    }
+    
     val rowEntries = if (reverseRows) seatsByRow.entries.reversed() else seatsByRow.entries
 
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(4.dp)) {
@@ -486,7 +497,7 @@ fun ZoneView(zone: BoxOfficeZone, isVertical: Boolean = false, reverseRows: Bool
                                     .clickable(enabled = seat.is_available) { onSeatClick(seat) },
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(seat.number.toString(), color = if (seat.is_available) Color.White else Color.Gray, fontSize = 8.sp)
+                                Text(getDisplayNumber(zone.name, seat.number).toString(), color = if (seat.is_available) Color.White else Color.Gray, fontSize = 8.sp)
                             }
                         }
                     }
@@ -504,7 +515,7 @@ fun ZoneView(zone: BoxOfficeZone, isVertical: Boolean = false, reverseRows: Bool
                                 .clickable(enabled = seat.is_available) { onSeatClick(seat) },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(seat.number.toString(), color = if (seat.is_available) Color.White else Color.Gray, fontSize = 8.sp)
+                            Text(getDisplayNumber(zone.name, seat.number).toString(), color = if (seat.is_available) Color.White else Color.Gray, fontSize = 8.sp)
                         }
                     }
                 }
