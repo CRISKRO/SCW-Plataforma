@@ -444,7 +444,7 @@ export default function EscuelaPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Email</label>
-                        <input required type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full bg-black border border-white/20 rounded-xl p-4 text-white focus:outline-none focus:border-red-500 transition-colors" placeholder="Tu correo electrónico" />
+                        <input required type="email" value={formData.email} disabled={true} className="w-full bg-zinc-900 border border-white/10 rounded-xl p-4 text-white focus:outline-none transition-colors opacity-50 cursor-not-allowed" />
                       </div>
                       <div>
                         <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">WhatsApp / Teléfono</label>

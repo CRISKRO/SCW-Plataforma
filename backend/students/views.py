@@ -28,7 +28,11 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
         return [IsAdminUser()]
 
     def create(self, request, *args, **kwargs):
-        email = request.data.get('email')
+        data = request.data.copy()
+        if request.user.is_authenticated:
+            data['email'] = request.user.email
+            
+        email = data.get('email')
         if email:
             email = email.strip()
             existing = Enrollment.objects.filter(email__iexact=email, status__in=['PENDING', 'APPROVED']).first()
@@ -37,7 +41,12 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
                     {"error": "Ya tienes una solicitud en proceso o ya eres alumno."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-        return super().create(request, *args, **kwargs)
+                
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def list(self, request, *args, **kwargs):
         # Recalcular dinámicamente los estados de pago de todos los alumnos activos al listarlos
