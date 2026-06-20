@@ -1,26 +1,34 @@
 import os
 import django
-from django.core.mail import send_mail
+from pathlib import Path
+from dotenv import load_dotenv
 
+BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(BASE_DIR / '.env')
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 django.setup()
 
-from django.conf import settings
-print(f"EMAIL_HOST_USER: {settings.EMAIL_HOST_USER}")
-print(f"EMAIL_HOST_PASSWORD configured: {bool(settings.EMAIL_HOST_PASSWORD)}")
-print(f"EMAIL_HOST: {settings.EMAIL_HOST}")
-print(f"EMAIL_PORT: {settings.EMAIL_PORT}")
-print(f"EMAIL_USE_TLS: {settings.EMAIL_USE_TLS}")
-print(f"EMAIL_BACKEND: {settings.EMAIL_BACKEND}")
+from django.core.mail import send_mail, get_connection
+from api.models import get_active_config
+
+config = get_active_config()
+print(f"Host: {config.email_host}")
+print(f"Port: {config.email_port}")
+print(f"User: {config.email_host_user}")
+print(f"Pass: {'***' if config.email_host_password else 'NONE'}")
+print(f"TLS: {config.email_use_tls}")
 
 try:
-    send_mail(
-        subject="Test Direct from Django",
-        message="This is a test message to verify SMTP settings.",
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=["christianochoa436@gmail.com"],
-        fail_silently=False,
+    connection = get_connection(
+        host=config.email_host,
+        port=config.email_port,
+        username=config.email_host_user,
+        password=config.email_host_password,
+        use_tls=config.email_use_tls
     )
-    print("Direct email sent successfully!")
+    print("Testing connection...")
+    connection.open()
+    print("Connection SUCCESSFUL!")
+    connection.close()
 except Exception as e:
-    print(f"Failed: {e}")
+    print(f"Connection FAILED: {e}")

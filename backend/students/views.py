@@ -79,6 +79,9 @@ Por favor ingresa a tu Portal de Alumno para ver tu código QR y realizar el pag
 ¡Te esperamos en tu primera sesión de entrenamiento!
 """
             from_email = config.default_from_email if config.default_from_email else getattr(settings, 'DEFAULT_FROM_EMAIL', 'contacto@scw.com')
+            import re
+            match = re.search(r'<([^>]+)>', from_email)
+            from_email_clean = match.group(1).strip() if match else from_email.strip()
             
             if config.email_host_user and config.email_host_password:
                 connection = get_connection(
@@ -91,7 +94,7 @@ Por favor ingresa a tu Portal de Alumno para ver tu código QR y realizar el pag
                 send_mail(
                     subject,
                     message,
-                    from_email,
+                    from_email_clean,
                     [enrollment.email],
                     connection=connection,
                     fail_silently=False
@@ -100,7 +103,7 @@ Por favor ingresa a tu Portal de Alumno para ver tu código QR y realizar el pag
                 send_mail(
                     subject,
                     message,
-                    from_email,
+                    from_email_clean,
                     [enrollment.email],
                     fail_silently=False
                 )
