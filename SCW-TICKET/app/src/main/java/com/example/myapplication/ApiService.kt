@@ -62,6 +62,35 @@ data class SellResponse(
     val error: String?
 )
 
+// Raffle Models
+data class BoxOfficeRaffleTicket(
+    val id: Int,
+    val number: Int,
+    val status: String,
+    val buyer_name: String?
+)
+
+data class BoxOfficeRaffle(
+    val id: Int,
+    val title: String,
+    val price: String,
+    val tickets: List<BoxOfficeRaffleTicket>
+)
+
+data class SellRaffleRequest(
+    val ticket_id: Int,
+    val buyer_name: String
+)
+
+data class SellRaffleResponse(
+    val success: Boolean?,
+    val ticket_id: Int?,
+    val number: Int?,
+    val raffle_title: String?,
+    val price: String?,
+    val error: String?
+)
+
 interface ApiService {
     @POST("api/payments/validate-ticket/")
     suspend fun validateTicket(
@@ -79,6 +108,17 @@ interface ApiService {
         @Header("X-Scanner-Token") token: String,
         @Body request: SellRequest
     ): Response<SellResponse>
+
+    @GET("api/payments/box-office-raffles/")
+    suspend fun getBoxOfficeRaffles(
+        @Header("X-Scanner-Token") token: String
+    ): Response<List<BoxOfficeRaffle>>
+
+    @POST("api/payments/box-office-sell-raffle/")
+    suspend fun sellBoxOfficeRaffleTicket(
+        @Header("X-Scanner-Token") token: String,
+        @Body request: SellRaffleRequest
+    ): Response<SellRaffleResponse>
 }
 
 object ApiClient {

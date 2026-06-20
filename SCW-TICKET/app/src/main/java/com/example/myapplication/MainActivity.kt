@@ -36,6 +36,10 @@ import com.journeyapps.barcodescanner.BarcodeEncoder
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import org.json.JSONObject
 
 class MainActivity : ComponentActivity() {
@@ -266,14 +270,32 @@ fun ScannerTab(baseUrl: String, token: String) {
 
 @Composable
 fun BoxOfficeTab(baseUrl: String, token: String) {
+    var tabIndex by remember { mutableIntStateOf(0) }
+    
+    Column(modifier = Modifier.fillMaxSize()) {
+        TabRow(selectedTabIndex = tabIndex) {
+            Tab(selected = tabIndex == 0, onClick = { tabIndex = 0 }, text = { Text("Eventos") })
+            Tab(selected = tabIndex == 1, onClick = { tabIndex = 1 }, text = { Text("Rifas") })
+        }
+        
+        Box(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+            if (tabIndex == 0) {
+                EventsBoxOffice(baseUrl, token)
+            } else {
+                RafflesBoxOffice(baseUrl, token)
+            }
+        }
+    }
+}
+
+@Composable
+fun EventsBoxOffice(baseUrl: String, token: String) {
     var events by remember { mutableStateOf<List<BoxOfficeEvent>>(emptyList()) }
     var selectedEvent by remember { mutableStateOf<BoxOfficeEvent?>(null) }
-    var selectedZone by remember { mutableStateOf<BoxOfficeZone?>(null) }
-    var seatToSell by remember { mutableStateOf<BoxOfficeSeat?>(null) }
+    var seatToSell by remember { mutableStateOf<Pair<BoxOfficeZone, BoxOfficeSeat>?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMsg by remember { mutableStateOf("") }
     
-    // QR Result State
     var qrBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var sellResultText by remember { mutableStateOf("") }
 
@@ -298,48 +320,20 @@ fun BoxOfficeTab(baseUrl: String, token: String) {
         }
     }
 
-    LaunchedEffect(Unit) {
-        loadEvents()
-    }
+    LaunchedEffect(Unit) { loadEvents() }
 
     if (qrBitmap != null) {
-        // Pantalla de Éxito con el QR
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxSize().padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                "¡Venta Exitosa!", 
-                fontSize = 24.sp, 
-                fontWeight = FontWeight.Bold, 
-                color = Color(0xFF4CAF50),
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            
+            Text("¡Venta Exitosa!", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color(0xFF4CAF50), modifier = Modifier.padding(bottom = 8.dp))
             Text(sellResultText, fontSize = 18.sp, textAlign = TextAlign.Center)
-            
             Spacer(modifier = Modifier.height(24.dp))
-            
-            Image(
-                bitmap = qrBitmap!!.asImageBitmap(),
-                contentDescription = "Boleto QR",
-                modifier = Modifier.size(300.dp)
-            )
-            
+            Image(bitmap = qrBitmap!!.asImageBitmap(), contentDescription = "Boleto QR", modifier = Modifier.size(300.dp))
             Spacer(modifier = Modifier.height(32.dp))
-            
-            Button(
-                onClick = { 
-                    qrBitmap = null
-                    selectedEvent = null
-                    selectedZone = null
-                    loadEvents() // Recargar para actualizar los asientos disponibles
-                },
-                modifier = Modifier.fillMaxWidth().height(50.dp)
-            ) {
+            Button(onClick = { qrBitmap = null; selectedEvent = null; loadEvents() }, modifier = Modifier.fillMaxWidth().height(50.dp)) {
                 Text("Siguiente Venta")
             }
         }
@@ -347,154 +341,258 @@ fun BoxOfficeTab(baseUrl: String, token: String) {
     }
 
     if (seatToSell != null) {
+        val (zone, seat) = seatToSell!!
         AlertDialog(
             onDismissRequest = { seatToSell = null },
             title = { Text("Confirmar Venta") },
-            text = { Text("¿Deseas vender el asiento Fila ${seatToSell!!.row} - ${seatToSell!!.number} por $${selectedZone!!.price} MXN?") },
+            text = { Text("¿Deseas vender el asiento de la zona ${zone.name}, Fila ${seat.row} - ${seat.number} por $${zone.price} MXN?") },
             confirmButton = {
                 TextButton(onClick = {
-                    val seatId = seatToSell!!.id
                     seatToSell = null
                     isLoading = true
                     coroutineScope.launch {
                         try {
                             val api = ApiClient.getService(baseUrl)
-                            val res = api.sellBoxOfficeTicket(token, SellRequest(selectedEvent!!.id, seatId))
+                            val res = api.sellBoxOfficeTicket(token, SellRequest(selectedEvent!!.id, seat.id))
                             if (res.isSuccessful && res.body() != null) {
                                 val body = res.body()!!
                                 if (body.success) {
                                     val qrContent = "{\"scw\":true,\"order\":${body.order_id},\"item\":${body.item_id},\"code\":\"${body.code}\"}"
                                     try {
-                                        val encoder = BarcodeEncoder()
-                                        qrBitmap = encoder.encodeBitmap(qrContent, BarcodeFormat.QR_CODE, 600, 600)
-                                        sellResultText = "${body.event_title}\n${body.seat_info}\nTotal: $${body.price}"
-                                    } catch (e: Exception) {
-                                        errorMsg = "Error generando QR"
-                                    }
-                                } else {
-                                    errorMsg = body.error ?: "Error desconocido"
-                                }
-                            } else {
-                                errorMsg = "Error al vender: ${res.code()}"
-                            }
-                        } catch (e: Exception) {
-                            errorMsg = "Error de red: ${e.message}"
-                        } finally {
-                            isLoading = false
-                        }
+                                        qrBitmap = BarcodeEncoder().encodeBitmap(qrContent, BarcodeFormat.QR_CODE, 600, 600)
+                                        sellResultText = "${body.event_title}\\n${body.seat_info}\\nTotal: $${body.price}"
+                                    } catch (e: Exception) { errorMsg = "Error generando QR" }
+                                } else { errorMsg = body.error ?: "Error desconocido" }
+                            } else { errorMsg = "Error al vender: ${res.code()}" }
+                        } catch (e: Exception) { errorMsg = "Error de red: ${e.message}" } finally { isLoading = false }
                     }
                 }) { Text("Confirmar y Cobrar", color = Color(0xFF4CAF50)) }
             },
-            dismissButton = {
-                TextButton(onClick = { seatToSell = null }) { Text("Cancelar") }
-            }
+            dismissButton = { TextButton(onClick = { seatToSell = null }) { Text("Cancelar") } }
         )
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Taquilla - Venta en Efectivo", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+    Column(modifier = Modifier.fillMaxSize()) {
+        Text("Venta en Efectivo de Boletos", fontSize = 20.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(16.dp))
 
         if (isLoading) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
         } else if (errorMsg.isNotEmpty()) {
             Text(errorMsg, color = Color.Red)
-        } else if (events.isEmpty()) {
-            Text("No hay eventos disponibles con lugares.")
+        } else if (selectedEvent == null) {
+            if (events.isEmpty()) Text("No hay eventos disponibles.")
+            else LazyColumn(modifier = Modifier.fillMaxSize()) {
+                items(events) { event ->
+                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).clickable { selectedEvent = event }, elevation = CardDefaults.cardElevation(4.dp)) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(event.title, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                            Text(event.date, color = Color.Gray)
+                        }
+                    }
+                }
+            }
         } else {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                if (selectedEvent == null) {
-                    items(events) { event ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp)
-                                .clickable { selectedEvent = event },
-                            elevation = CardDefaults.cardElevation(4.dp)
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Text(event.title, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                                Text(event.date, color = Color.Gray)
-                                Text("Zonas disponibles: ${event.zones.size}", color = MaterialTheme.colorScheme.primary)
+            Button(onClick = { selectedEvent = null }) { Text("← Volver a Eventos") }
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(selectedEvent!!.title, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text("Mapa Completo", color = Color.Gray)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Box for the 2D pan/zoom Map
+            Box(modifier = Modifier.fillMaxSize().background(Color(0xFFEEEEEE), RoundedCornerShape(8.dp))) {
+                // To keep it simple, we use scrollable Column & Row
+                var scale by remember { mutableFloatStateOf(1f) }
+                // Implementation using simple scrollbars for panning
+                val hScroll = rememberScrollState()
+                val vScroll = rememberScrollState()
+                
+                Box(modifier = Modifier.fillMaxSize().horizontalScroll(hScroll).verticalScroll(vScroll).padding(32.dp), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        // NORTE
+                        val norte = selectedEvent!!.zones.find { it.name.contains("NORTE", ignoreCase = true) }
+                        if (norte != null) ZoneView(norte) { seat -> seatToSell = Pair(norte, seat) }
+                        
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            // OESTE
+                            val oeste = selectedEvent!!.zones.find { it.name.contains("OESTE", ignoreCase = true) }
+                            if (oeste != null) ZoneView(oeste) { seat -> seatToSell = Pair(oeste, seat) }
+                            
+                            // RING
+                            Box(modifier = Modifier.size(150.dp).background(Color.White).border(4.dp, Color.Black).padding(8.dp), contentAlignment = Alignment.Center) {
+                                Text("RING SCW", fontWeight = FontWeight.Bold, color = Color.LightGray, fontSize = 20.sp)
                             }
+                            
+                            // ESTE
+                            val este = selectedEvent!!.zones.find { it.name.contains("ESTE", ignoreCase = true) }
+                            if (este != null) ZoneView(este) { seat -> seatToSell = Pair(este, seat) }
+                        }
+                        
+                        // SUR
+                        val sur = selectedEvent!!.zones.find { it.name.contains("SUR", ignoreCase = true) }
+                        if (sur != null) ZoneView(sur) { seat -> seatToSell = Pair(sur, seat) }
+                        
+                        // OTHERS
+                        val others = selectedEvent!!.zones.filter { !it.name.contains("NORTE", true) && !it.name.contains("SUR", true) && !it.name.contains("ESTE", true) && !it.name.contains("OESTE", true) }
+                        others.forEach { zone ->
+                            Spacer(modifier = Modifier.height(32.dp))
+                            Text(zone.name, fontWeight = FontWeight.Bold)
+                            ZoneView(zone) { seat -> seatToSell = Pair(zone, seat) }
                         }
                     }
-                } else if (selectedZone == null) {
-                    item {
-                        Button(onClick = { selectedEvent = null }) {
-                            Text("← Volver a Eventos")
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text("Evento: ${selectedEvent!!.title}", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                        Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ZoneView(zone: BoxOfficeZone, onSeatClick: (BoxOfficeSeat) -> Unit) {
+    val seatsByRow = zone.seats.groupBy { it.row ?: "?" }
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(16.dp)) {
+        Text(zone.name, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+        Text("$${zone.price}", color = Color(0xFF4CAF50), fontSize = 12.sp)
+        Spacer(modifier = Modifier.height(8.dp))
+        seatsByRow.forEach { (rowName, seats) ->
+            Row(modifier = Modifier.padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(rowName, fontWeight = FontWeight.Bold, modifier = Modifier.width(20.dp), fontSize = 10.sp)
+                Spacer(modifier = Modifier.width(4.dp))
+                seats.forEach { seat ->
+                    Box(
+                        modifier = Modifier.size(24.dp).padding(1.dp)
+                            .background(if (seat.is_available) Color(0xFF4CAF50) else Color(0xFFE0E0E0), RoundedCornerShape(2.dp))
+                            .clickable(enabled = seat.is_available) { onSeatClick(seat) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(seat.number.toString(), color = if (seat.is_available) Color.White else Color.Gray, fontSize = 8.sp)
                     }
-                    
-                    items(selectedEvent!!.zones) { zone ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp)
-                                .clickable { selectedZone = zone },
-                            elevation = CardDefaults.cardElevation(2.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text(zone.name, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                                    Text("$${zone.price} MXN", color = Color(0xFF4CAF50))
-                                    Text("${zone.available_seats} disponibles", fontSize = 12.sp, color = Color.Gray)
-                                }
-                                Icon(Icons.Default.ShoppingCart, contentDescription = "Seleccionar", tint = Color.Gray)
-                            }
-                        }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun RafflesBoxOffice(baseUrl: String, token: String) {
+    var raffles by remember { mutableStateOf<List<BoxOfficeRaffle>>(emptyList()) }
+    var selectedRaffle by remember { mutableStateOf<BoxOfficeRaffle?>(null) }
+    var ticketToSell by remember { mutableStateOf<BoxOfficeRaffleTicket?>(null) }
+    var buyerName by remember { mutableStateOf("") }
+    
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMsg by remember { mutableStateOf("") }
+    var successMsg by remember { mutableStateOf("") }
+
+    val coroutineScope = rememberCoroutineScope()
+
+    fun loadRaffles() {
+        isLoading = true
+        coroutineScope.launch {
+            try {
+                val api = ApiClient.getService(baseUrl)
+                val response = api.getBoxOfficeRaffles(token)
+                if (response.isSuccessful && response.body() != null) {
+                    raffles = response.body()!!
+                    if (selectedRaffle != null) {
+                        selectedRaffle = raffles.find { it.id == selectedRaffle!!.id }
                     }
                 } else {
-                    item {
-                        Button(onClick = { selectedZone = null }) {
-                            Text("← Volver a Zonas")
+                    errorMsg = "Error al cargar rifas: ${response.code()}"
+                }
+            } catch (e: Exception) { errorMsg = "Error de red: ${e.message}" } finally { isLoading = false }
+        }
+    }
+
+    LaunchedEffect(Unit) { loadRaffles() }
+
+    if (ticketToSell != null) {
+        AlertDialog(
+            onDismissRequest = { ticketToSell = null },
+            title = { Text("Vender Boleto #${ticketToSell!!.number}") },
+            text = { 
+                Column {
+                    Text("Total a cobrar: $${selectedRaffle!!.price} MXN")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = buyerName,
+                        onValueChange = { buyerName = it },
+                        label = { Text("Nombre del comprador (opcional)") }
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val tId = ticketToSell!!.id
+                    val name = buyerName
+                    ticketToSell = null
+                    isLoading = true
+                    coroutineScope.launch {
+                        try {
+                            val res = ApiClient.getService(baseUrl).sellBoxOfficeRaffleTicket(token, SellRaffleRequest(tId, name))
+                            if (res.isSuccessful && res.body() != null) {
+                                val body = res.body()!!
+                                if (body.success == true) {
+                                    successMsg = "Venta del boleto #${body.number} exitosa!"
+                                    loadRaffles()
+                                } else { errorMsg = body.error ?: "Error" }
+                            } else { errorMsg = "Error: ${res.code()}" }
+                        } catch (e: Exception) { errorMsg = "Error de red: ${e.message}" } finally { isLoading = false }
+                    }
+                }) { Text("Confirmar Venta") }
+            },
+            dismissButton = { TextButton(onClick = { ticketToSell = null }) { Text("Cancelar") } }
+        )
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        Text("Rifas - Venta en Efectivo", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (successMsg.isNotEmpty()) {
+            Text(successMsg, color = Color(0xFF4CAF50), fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
+            Button(onClick = { successMsg = "" }) { Text("Aceptar") }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        if (isLoading) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+        } else if (errorMsg.isNotEmpty()) {
+            Text(errorMsg, color = Color.Red)
+        } else if (selectedRaffle == null) {
+            if (raffles.isEmpty()) Text("No hay rifas activas.")
+            else LazyColumn(modifier = Modifier.fillMaxSize()) {
+                items(raffles) { raffle ->
+                    val available = raffle.tickets.count { it.status == "AVAILABLE" }
+                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).clickable { selectedRaffle = raffle }, elevation = CardDefaults.cardElevation(4.dp)) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(raffle.title, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                            Text("Precio: $${raffle.price} MXN", color = Color(0xFF4CAF50))
+                            Text("Disponibles: $available / ${raffle.tickets.size}", color = Color.Gray)
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text("Zona: ${selectedZone!!.name}", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                        Text("Selecciona un asiento libre para vender", color = Color.Gray)
-                        Spacer(modifier = Modifier.height(16.dp))
-                        
-                        val seatsList = selectedZone!!.seats ?: emptyList()
-                        
-                        if (seatsList.isEmpty()) {
-                            Text("⚠️ No hay información de asientos.", color = Color.Red, fontWeight = FontWeight.Bold)
-                            Text("Asegúrate de haber hecho 'git pull' en PythonAnywhere y recargado la web.", color = Color.Red, textAlign = TextAlign.Center)
-                        } else {
-                            val seatsByRow = seatsList.groupBy { it.row ?: "?" }
-                            
-                            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                                seatsByRow.forEach { (rowName, seatsInRow) ->
-                                    Row(
-                                        modifier = Modifier.padding(vertical = 4.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.Center
-                                    ) {
-                                        Text(rowName, fontWeight = FontWeight.Bold, modifier = Modifier.width(24.dp))
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        seatsInRow.forEach { seat ->
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(36.dp)
-                                                    .padding(2.dp)
-                                                    .background(
-                                                        if (seat.is_available) Color(0xFF4CAF50) else Color(0xFFE0E0E0),
-                                                        RoundedCornerShape(4.dp)
-                                                    )
-                                                    .clickable(enabled = seat.is_available) { seatToSell = seat },
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Text(seat.number.toString(), color = if (seat.is_available) Color.White else Color.Gray, fontSize = 12.sp)
-                                            }
-                                        }
-                                    }
-                                }
+                    }
+                }
+            }
+        } else {
+            Button(onClick = { selectedRaffle = null; buyerName = "" }) { Text("← Volver a Rifas") }
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(selectedRaffle!!.title, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text("Precio: $${selectedRaffle!!.price} MXN", color = Color(0xFF4CAF50))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            LazyColumn {
+                // Grid of tickets: approx 5 per row
+                items(selectedRaffle!!.tickets.chunked(5)) { rowTickets ->
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                        rowTickets.forEach { ticket ->
+                            val isAvailable = ticket.status == "AVAILABLE"
+                            Box(
+                                modifier = Modifier.size(50.dp).padding(4.dp)
+                                    .background(if (isAvailable) Color(0xFF4CAF50).copy(alpha=0.2f) else Color.Red.copy(alpha=0.2f), RoundedCornerShape(4.dp))
+                                    .border(1.dp, if (isAvailable) Color(0xFF4CAF50) else Color.Red, RoundedCornerShape(4.dp))
+                                    .clickable(enabled = isAvailable) { ticketToSell = ticket; buyerName = "" },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(ticket.number.toString(), fontWeight = FontWeight.Bold, color = if (isAvailable) Color(0xFF4CAF50) else Color.Red)
                             }
                         }
                     }

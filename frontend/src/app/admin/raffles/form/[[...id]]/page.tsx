@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { getRaffle, createRaffle, updateRaffle, toggleTicketStatus, Raffle, RaffleTicket } from '@/services/raffles.services';
 
-export default function AdminRaffleForm({ params }: { params: { id?: string[] } }) {
+export default function AdminRaffleForm() {
   const router = useRouter();
+  const params = useParams();
   const isEditing = !!params.id;
-  const raffleId = isEditing ? parseInt(params.id![0], 10) : null;
+  const raffleId = isEditing ? parseInt((params.id as string[])[0], 10) : null;
 
   const [formData, setFormData] = useState({
     title: '',

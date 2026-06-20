@@ -1118,3 +1118,77 @@ class BoxOfficeSellView(APIView):
             return Response({"error": "Asiento inválido."}, status=404)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
+
+class BoxOfficeRafflesView(APIView):
+    """Devuelve rifas activas y sus boletos para la app de escáner en modo Taquilla."""
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        scanner_token = request.headers.get('X-Scanner-Token')
+        expected_token = getattr(settings, 'SCANNER_TOKEN', 'scw-default-secret-token')
+        if not (request.user.is_staff or scanner_token == expected_token):
+            return Response({"error": "No autorizado."}, status=403)
+
+        from raffles.models import Raffle
+        
+        raffles = Raffle.objects.filter(is_active=True)
+        data = []
+        for raffle in raffles:
+            tickets_data = []
+            for ticket in raffle.tickets.all():
+                tickets_data.append({
+                    "id": ticket.id,
+                    "number": ticket.number,
+                    "status": ticket.status,
+                    "buyer_name": ticket.buyer_name,
+                })
+            
+            data.append({
+                "id": raffle.id,
+                "title": raffle.title,
+                "price": str(raffle.price),
+                "tickets": tickets_data
+            })
+        return Response(data)
+
+class BoxOfficeSellRaffleView(APIView):
+    """Vende un boleto de rifa en taquilla (pago en efectivo)."""
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        scanner_token = request.headers.get('X-Scanner-Token')
+        expected_token = getattr(settings, 'SCANNER_TOKEN', 'scw-default-secret-token')
+        if not (request.user.is_staff or scanner_token == expected_token):
+            return Response({"error": "No autorizado."}, status=403)
+
+        ticket_id = request.data.get('ticket_id')
+        buyer_name = request.data.get('buyer_name', '')
+
+        if not ticket_id:
+            return Response({"error": "Falta el ID del boleto."}, status=400)
+
+        from raffles.models import RaffleTicket
+        from django.db import transaction
+
+        try:
+            with transaction.atomic():
+                ticket = RaffleTicket.objects.select_for_update().get(id=ticket_id)
+                if ticket.status != RaffleTicket.Status.AVAILABLE:
+                    return Response({"error": f"Este boleto ya está vendido ({ticket.status})."}, status=400)
+                
+                ticket.status = RaffleTicket.Status.SOLD_OFFLINE
+                ticket.buyer_name = buyer_name
+                ticket.save()
+
+            return Response({
+                "success": True,
+                "ticket_id": ticket.id,
+                "number": ticket.number,
+                "raffle_title": ticket.raffle.title,
+                "price": str(ticket.raffle.price),
+            })
+
+        except RaffleTicket.DoesNotExist:
+            return Response({"error": "Boleto inválido."}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
