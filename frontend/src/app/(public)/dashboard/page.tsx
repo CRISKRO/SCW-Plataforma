@@ -302,9 +302,9 @@ export default function UserDashboard() {
             ) : (
               <div className="space-y-4">
                 {orders.map((order) => {
-                  const hasTickets = order.items?.some((item: any) => item.product_name?.toLowerCase().includes('boleto') || item.product_name?.toLowerCase().includes('entrada'));
-                  
-                  return (
+                  const hasTickets = order.items?.some((item: any) => item.event !== null && item.event !== undefined);
+                  const hasRaffles = order.items?.some((item: any) => item.event === null && item.product === null);
+                  const hasMerch = order.items?.some((item: any) => item.product !== null && item.product !== undefined);
                   <div key={order.id} className="bg-zinc-900 border border-white/10 rounded-xl overflow-hidden">
                     <div className="bg-black/50 p-4 border-b border-white/5 flex flex-wrap justify-between items-center gap-4">
                       <div>
@@ -337,7 +337,7 @@ export default function UserDashboard() {
                     <div className="p-4">
                       <div className="space-y-4">
                         {order.items?.map((item: any) => {
-                          const isTicket = item.product_name?.toLowerCase().includes('boleto') || item.product_name?.toLowerCase().includes('entrada');
+                          const isTicket = item.event !== null && item.event !== undefined;
                           return (
                           <div key={item.id} className="flex flex-col bg-white/5 p-4 rounded-lg border border-white/5">
                             <div className="flex justify-between items-center w-full mb-2">
@@ -380,7 +380,13 @@ export default function UserDashboard() {
                         </div>
                       )}
                       
-                      {order.status === 'PAID' && !hasTickets && (
+                      {order.status === 'PAID' && hasRaffles && (
+                        <div className="mt-4 pt-4 border-t border-white/5 text-sm text-zinc-400">
+                          ¡Tus boletos de rifa están confirmados! Los números que adquiriste ya están registrados a tu nombre.
+                        </div>
+                      )}
+                      
+                      {order.status === 'PAID' && hasMerch && (
                         <div className="mt-4 pt-4 border-t border-white/5 text-sm text-zinc-400">
                           Tu pedido está siendo procesado y pronto será preparado para envío.
                         </div>
