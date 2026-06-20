@@ -111,15 +111,33 @@ interface HomeCarouselProps {
   chronicles: any[];
   premiumVideos: any[];
   sponsors?: any[];
+  raffles?: any[];
 }
 
-export default function HomeCarousel({ events, upcomingEvents, roster, chronicles, premiumVideos, sponsors = [] }: HomeCarouselProps) {
+export default function HomeCarousel({ events, upcomingEvents, roster, chronicles, premiumVideos, sponsors = [], raffles = [] }: HomeCarouselProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slides, setSlides] = useState<any[]>(staticSlides);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
+    let dynamicSlides: any[] = [];
+    
+    if (raffles && raffles.length > 0) {
+      const raffleSlides = raffles.map((r: any) => ({
+        id: `raffle-${r.id}`,
+        title: r.title,
+        subtitle: `¡Participa en nuestra gran rifa! ${r.description}`,
+        image: r.image || '/images/logoring.webp',
+        date: null,
+        location: null,
+        cta: [
+          { label: 'Ver Detalles y Participar', href: `/raffles/${r.id}`, primary: true },
+        ],
+      }));
+      dynamicSlides = [...dynamicSlides, ...raffleSlides];
+    }
+
     if (upcomingEvents && upcomingEvents.length > 0) {
       const eventSlides = upcomingEvents.map((ev: any) => ({
         id: ev.id,
@@ -133,9 +151,15 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
           { label: 'Todos los Eventos', href: '/eventos', primary: false },
         ],
       }));
-      setSlides([...eventSlides, ...staticSlides]);
+      dynamicSlides = [...dynamicSlides, ...eventSlides];
     }
-  }, [upcomingEvents]);
+
+    if (dynamicSlides.length > 0) {
+      setSlides([...dynamicSlides, ...staticSlides]);
+    } else {
+      setSlides(staticSlides);
+    }
+  }, [upcomingEvents, raffles]);
 
   // Auto-play carousel
   useEffect(() => {

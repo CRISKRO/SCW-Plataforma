@@ -12,15 +12,17 @@ export default async function Home() {
   let chroniclesData = [];
   let premiumVideos = [];
   let sponsorsData = [];
+  let rafflesData: any[] = [];
 
   try {
     // We use next: { revalidate: 10 } to cache these responses for 10 seconds
-    const [eventsRes, fightersRes, chroniclesRes, videosRes, sponsorsRes] = await Promise.all([
+    const [eventsRes, fightersRes, chroniclesRes, videosRes, sponsorsRes, rafflesRes] = await Promise.all([
       fetch(`${apiUrl}/events/events/`, { next: { revalidate: 10 } }).catch(() => null),
       fetch(`${apiUrl}/events/fighters/`, { next: { revalidate: 10 } }).catch(() => null),
       fetch(`${apiUrl}/events/chronicles/`, { next: { revalidate: 10 } }).catch(() => null),
       fetch(`${apiUrl}/premium/videos/`, { next: { revalidate: 10 } }).catch(() => null),
       fetch(`${apiUrl}/events/sponsors/`, { next: { revalidate: 10 } }).catch(() => null),
+      fetch(`${apiUrl}/raffles/`, { next: { revalidate: 10 } }).catch(() => null),
     ]);
 
     if (eventsRes && eventsRes.ok) eventsData = await eventsRes.json();
@@ -31,6 +33,7 @@ export default async function Home() {
       premiumVideos = vData.data || vData || [];
     }
     if (sponsorsRes && sponsorsRes.ok) sponsorsData = await sponsorsRes.json();
+    if (rafflesRes && rafflesRes.ok) rafflesData = await rafflesRes.json();
   } catch (error) {
     console.error("Error fetching data for Home Server Component:", error);
   }
@@ -41,6 +44,7 @@ export default async function Home() {
   const chronicles = chroniclesData.slice(0, 3);
   premiumVideos = premiumVideos.slice(0, 2);
   const sponsors = sponsorsData.filter((s: any) => s.is_active);
+  const activeRaffles = rafflesData.filter((r: any) => r.is_active);
 
   return (
     <main>
@@ -51,6 +55,7 @@ export default async function Home() {
         chronicles={chronicles}
         premiumVideos={premiumVideos}
         sponsors={sponsors}
+        raffles={activeRaffles}
       />
     </main>
   );
