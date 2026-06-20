@@ -328,7 +328,7 @@ export default function EscuelaPage() {
                   <p className="text-zinc-400">
                     Ya hemos recibido tu inscripción o ya formas parte de SCW DOJO. Puedes ver el estado de tu suscripción en tu panel de alumno.
                   </p>
-                  <Link href="/dashboard">
+                  <Link href="/dashboard?tab=dojo">
                     <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="px-8 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold uppercase tracking-widest transition-colors">
                       Ir a mi Panel
                     </motion.button>

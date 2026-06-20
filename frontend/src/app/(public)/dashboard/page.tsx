@@ -18,6 +18,15 @@ export default function UserDashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'orders' | 'settings' | 'dojo'>('orders');
   
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      if (tab && ['orders', 'settings', 'dojo'].includes(tab)) {
+        setActiveTab(tab as any);
+      }
+    }
+  }, []);
   const [studentData, setStudentData] = useState<any>(null);
   const [tuitionFee, setTuitionFee] = useState<string>('0.00');
   const [payingTuition, setPayingTuition] = useState(false);
