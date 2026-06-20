@@ -322,23 +322,32 @@ export default function CartPage() {
 
                 {/* Botón de Pago */}
                 <div className="space-y-3 pt-2">
-                  <button
-                    onClick={handleCheckout}
-                    disabled={loading || !email || (paymentMethod === 'TRANSFER' && !receiptFile)}
-                    className={`w-full ${paymentMethod === 'TRANSFER' ? 'bg-white hover:bg-zinc-200 text-black' : 'bg-[#009EE3] hover:bg-[#0088cc] text-white'} disabled:bg-zinc-800 disabled:text-zinc-500 py-4 rounded-xl font-bold text-base flex items-center justify-center gap-3 transition-all`}
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        Procesando...
-                      </>
-                    ) : (
-                      <>
-                        {paymentMethod === 'TRANSFER' ? <ShoppingBag className="w-5 h-5" /> : <CreditCard className="w-5 h-5" />}
-                        {paymentMethod === 'TRANSFER' ? 'Enviar Comprobante' : `Pagar $${(getTotalPrice() + (hasMerch ? shippingCost : 0)).toFixed(2)} con Mercado Pago`}
-                      </>
-                    )}
-                  </button>
+                  {!user && items.some(i => !i.event_id) ? (
+                    <button
+                      onClick={() => router.push(`/login?redirect=/carrito`)}
+                      className="w-full bg-white hover:bg-zinc-200 text-black py-4 rounded-xl font-bold text-base flex items-center justify-center gap-3 transition-all"
+                    >
+                      <Lock className="w-5 h-5" /> Inicia sesión para continuar
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleCheckout}
+                      disabled={loading || !email || (paymentMethod === 'TRANSFER' && !receiptFile)}
+                      className={`w-full ${paymentMethod === 'TRANSFER' ? 'bg-white hover:bg-zinc-200 text-black' : 'bg-[#009EE3] hover:bg-[#0088cc] text-white'} disabled:bg-zinc-800 disabled:text-zinc-500 py-4 rounded-xl font-bold text-base flex items-center justify-center gap-3 transition-all`}
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Procesando...
+                        </>
+                      ) : (
+                        <>
+                          {paymentMethod === 'TRANSFER' ? <ShoppingBag className="w-5 h-5" /> : <CreditCard className="w-5 h-5" />}
+                          {paymentMethod === 'TRANSFER' ? 'Enviar Comprobante' : `Pagar $${(getTotalPrice() + (hasMerch ? shippingCost : 0)).toFixed(2)} con Mercado Pago`}
+                        </>
+                      )}
+                    </button>
+                  )}
 
                   <div className="flex items-center justify-center gap-2 text-zinc-500 text-xs">
                     <Lock className="w-3 h-3" />
