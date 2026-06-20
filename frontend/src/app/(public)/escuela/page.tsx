@@ -165,7 +165,7 @@ export default function EscuelaPage() {
     } catch (error: any) {
       console.error(error);
       const serverError = error.response?.data;
-      let errorMsg = 'Error al enviar la solicitud.';
+      let errorMsg = 'Error al enviar la inscripción.';
       if (serverError) {
         if (typeof serverError === 'string') errorMsg = serverError;
         else if (serverError.error) errorMsg = serverError.error;
@@ -188,33 +188,13 @@ export default function EscuelaPage() {
           <h1 className="text-5xl md:text-8xl font-black uppercase tracking-tighter mb-6">
             SCW <span className="text-red-600">DOJO</span>
           </h1>
-          <div className="text-lg md:text-xl text-zinc-400 font-light max-w-4xl mx-auto space-y-6 text-left">
+          <div className="text-lg md:text-xl text-zinc-400 font-light max-w-4xl mx-auto space-y-6 text-center">
             <p>
               SCW DOJO es el centro oficial de entrenamiento de Strong Classic Wrestling. Nacimos con el objetivo de crear un espacio serio, profesional y seguro donde cualquier persona apasionada por la lucha libre pueda desarrollar su talento, perfeccionar sus habilidades y alcanzar su máximo potencial dentro de este deporte.
             </p>
             <p>
               Aquí no importa si estás dando tus primeros pasos o si ya tienes experiencia sobre el ring; nuestro compromiso es brindarte las herramientas, la disciplina y la formación necesarias para crecer como luchador y como persona.
             </p>
-            
-            <div className="pt-4">
-              <h3 className="text-red-500 font-bold uppercase tracking-widest text-xl mb-2">Básicos</h3>
-              <p>Desarrollamos tus capacidades físicas fundamentales para que construyas una base sólida como luchador profesional. A través del acondicionamiento físico, la coordinación, la resistencia, la fuerza y la disciplina deportiva, te preparamos para avanzar de forma segura y correcta en tu formación.</p>
-            </div>
-
-            <div className="pt-4">
-              <h3 className="text-red-500 font-bold uppercase tracking-widest text-xl mb-2">Pro Wrestling</h3>
-              <p>Nuestra formación se enfoca en un estilo híbrido internacional que combina lo mejor de la Lucha Libre Mexicana, el Pro Wrestling estadounidense, el Puroresu japonés y la lucha europea. Buscamos formar competidores versátiles, capaces de adaptarse a diferentes estilos y escenarios dentro de la lucha libre profesional.</p>
-            </div>
-
-            <div className="pt-4">
-              <h3 className="text-red-500 font-bold uppercase tracking-widest text-xl mb-2">Habilidades Blandas</h3>
-              <p>La lucha libre es mucho más que golpes, llaves y lances. El espectáculo requiere desarrollar habilidades como la psicología sobre el ring, la construcción y evolución de personajes, el storytelling, la conexión con el público y el uso efectivo del micrófono en promos y segmentos.</p>
-            </div>
-
-            <div className="pt-4">
-              <h3 className="text-red-500 font-bold uppercase tracking-widest text-xl mb-2">Vive la Experiencia</h3>
-              <p>Cuando alcances el nivel técnico, físico y profesional necesario, podrás formar parte de nuestras luchas de exhibición. Estas oportunidades te permitirán poner en práctica lo aprendido frente al público de los eventos de SCW, adquiriendo experiencia real en un entorno profesional.</p>
-            </div>
           </div>
         </motion.div>
       </section>
@@ -223,10 +203,10 @@ export default function EscuelaPage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-24">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { icon: Target, title: 'Técnica Profesional', desc: 'Llaves, caídas, movimientos aéreos y psicología del ring.' },
-            { icon: Users, title: 'Grupos Reducidos', desc: 'Atención personalizada para que avances más rápido en el ring.' },
-            { icon: CheckCircle, title: 'Debut en Eventos', desc: 'Sube al ring en eventos reales de SCW ante nuestro público.' },
-            { icon: ShieldAlert, title: 'Horarios Flexibles', desc: 'Varios días y horarios para que puedas combinar con tu vida.' }
+            { icon: Users, title: 'Básicos', desc: 'Desarrollamos capacidades fundamentales para una base sólida. Acondicionamiento, coordinación, resistencia, fuerza y disciplina.' },
+            { icon: Target, title: 'Pro Wrestling', desc: 'Estilo híbrido: Lucha Libre Mexicana, Pro Wrestling, Puroresu y lucha europea para competidores versátiles.' },
+            { icon: MessageCircle, title: 'Habilidades Blandas', desc: 'Psicología en el ring, evolución de personajes, storytelling, conexión con el público y micrófono.' },
+            { icon: CheckCircle, title: 'Vive la Experiencia', desc: 'Pon en práctica lo aprendido frente al público de los eventos de SCW, adquiriendo experiencia real.' }
           ].map((item, i) => (
             <motion.div key={item.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="bg-zinc-950 p-8 rounded-2xl border border-white/5 text-center hover:border-red-500/50 transition-colors">
               <item.icon className="w-12 h-12 text-red-600 mx-auto mb-6" />
@@ -266,7 +246,7 @@ export default function EscuelaPage() {
             {[
               { label: 'Cuenta', n: 1, active: step === 'check' },
               { label: 'Verificar', n: 2, active: step === 'verify_email' },
-              { label: 'Solicitud', n: 3, active: step === 'form' },
+              { label: 'Inscríbete', n: 3, active: step === 'form' },
             ].map((s, i) => (
               <div key={s.label} className={`flex-1 py-4 text-center text-xs font-bold uppercase tracking-widest transition-colors ${s.active ? 'text-white bg-zinc-800' : 'text-zinc-600'}`}>
                 <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full mr-2 text-xs font-black ${s.active ? 'bg-red-600 text-white' : 'bg-zinc-800 text-zinc-500'}`}>{s.n}</span>
@@ -286,7 +266,7 @@ export default function EscuelaPage() {
                   </div>
                   <h3 className="text-2xl font-bold text-white mb-4">Ya estás inscrito</h3>
                   <p className="text-zinc-400">
-                    Ya hemos recibido tu solicitud o ya formas parte de SCW DOJO. Puedes ver el estado de tu suscripción en tu panel de alumno.
+                    Ya hemos recibido tu inscripción o ya formas parte de SCW DOJO. Puedes ver el estado de tu suscripción en tu panel de alumno.
                   </p>
                   <Link href="/dashboard">
                     <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="px-8 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold uppercase tracking-widest transition-colors">
@@ -301,7 +281,7 @@ export default function EscuelaPage() {
                 <motion.div key="check" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="text-center space-y-6">
                   <Lock className="w-16 h-16 text-red-500 mx-auto" />
                   <h2 className="text-2xl font-black uppercase tracking-tight">Acceso Requerido</h2>
-                  <p className="text-zinc-400">Para postularte a SCW DOJO necesitas una cuenta registrada. Esto nos permite verificar tu identidad y darte seguimiento a tu solicitud.</p>
+                  <p className="text-zinc-400">Para postularte a SCW DOJO necesitas una cuenta registrada. Esto nos permite verificar tu identidad y darte seguimiento a tu inscripción.</p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
                     <Link href="/login" className="flex-1 bg-white text-black py-3 px-6 font-bold uppercase tracking-widest rounded-xl hover:bg-zinc-200 transition-colors text-center">
                       Iniciar Sesión
@@ -564,7 +544,7 @@ export default function EscuelaPage() {
                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.2 }}>
                     <CheckCircle className="w-24 h-24 text-green-500 mx-auto mb-6" />
                   </motion.div>
-                  <h3 className="text-3xl font-black uppercase mb-3">¡Solicitud Enviada!</h3>
+                  <h3 className="text-3xl font-black uppercase mb-3">¡Inscripción Enviada!</h3>
                   <p className="text-zinc-400 text-lg">Un entrenador de SCW se pondrá en contacto contigo por WhatsApp muy pronto.</p>
                   <p className="text-zinc-500 text-sm mt-4">Prepárate para empezar tu camino en el ring. 🥊</p>
                 </motion.div>
