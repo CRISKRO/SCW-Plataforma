@@ -263,9 +263,19 @@ Te esperamos en tu primera sesión de entrenamiento. ¡Prepárate para darlo tod
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def status(self, request):
         """Returns the enrollment status for the current user (PENDING or APPROVED)."""
-        enrollment = Enrollment.objects.filter(email__iexact=request.user.email).first()
-        if not enrollment:
+        # Get all enrollments for this email
+        enrollments = Enrollment.objects.filter(email__iexact=request.user.email.strip())
+        
+        if not enrollments.exists():
             return Response({"status": "NONE"}, status=status.HTTP_200_OK)
+            
+        # Prioritize APPROVED, then PENDING, then others
+        enrollment = enrollments.filter(status='APPROVED').first()
+        if not enrollment:
+            enrollment = enrollments.filter(status='PENDING').first()
+            if not enrollment:
+                enrollment = enrollments.order_by('-created_at').first()
+                
         return Response({
             "status": enrollment.status,
             "enrollment": EnrollmentSerializer(enrollment).data
@@ -287,7 +297,7 @@ Te esperamos en tu primera sesión de entrenamiento. ¡Prepárate para darlo tod
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def my(self, request):
         """Returns the approved enrollment for the current user."""
-        enrollment = Enrollment.objects.filter(email__iexact=request.user.email, status='APPROVED').first()
+        enrollment = Enrollment.objects.filter(email__iexact=request.user.email.strip(), status='APPROVED').order_by('-created_at').first()
         if not enrollment:
             return Response({"error": "No eres un alumno activo."}, status=status.HTTP_404_NOT_FOUND)
         
