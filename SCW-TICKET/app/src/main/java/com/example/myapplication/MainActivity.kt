@@ -471,9 +471,9 @@ fun ZoneView(zone: BoxOfficeZone, isVertical: Boolean = false, reverseRows: Bool
     fun getDisplayNumber(zoneType: String, seatNumber: Int): Int {
         val upType = zoneType.uppercase()
         if (upType.contains("NORTE")) return seatNumber
+        if (upType.contains("OESTE")) return seatNumber + 44
         if (upType.contains("ESTE")) return seatNumber + 17
         if (upType.contains("SUR")) return seatNumber + 27
-        if (upType.contains("OESTE")) return seatNumber + 44
         return seatNumber
     }
     
