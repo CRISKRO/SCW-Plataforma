@@ -27,6 +27,18 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
             return [AllowAny()]
         return [IsAdminUser()]
 
+    def create(self, request, *args, **kwargs):
+        email = request.data.get('email')
+        if email:
+            email = email.strip()
+            existing = Enrollment.objects.filter(email__iexact=email, status__in=['PENDING', 'APPROVED']).first()
+            if existing:
+                return Response(
+                    {"error": "Ya tienes una solicitud en proceso o ya eres alumno."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        return super().create(request, *args, **kwargs)
+
     def list(self, request, *args, **kwargs):
         # Recalcular dinámicamente los estados de pago de todos los alumnos activos al listarlos
         approved_students = Enrollment.objects.filter(status='APPROVED')
@@ -44,7 +56,7 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
             self.send_admission_email(updated_instance)
 
     def send_admission_email(self, enrollment):
-        from django.core.mail import send_mail
+        from django.core.mail import send_mail, get_connection
         from django.conf import settings
         
         try:
@@ -53,32 +65,49 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
             
             experience_str = "Principiante" if enrollment.experience == 'BEGINNER' else "Intermedio" if enrollment.experience == 'INTERMEDIATE' else "Avanzado" if enrollment.experience == 'ADVANCED' else "Ninguna"
             
-            frontend_url = getattr(settings, 'FRONTEND_URL', 'https://boletos.scw.com')
+            frontend_url = getattr(settings, 'FRONTEND_URL', 'https://scw-lucha.com')
             
             message = f"""Hola {enrollment.name},
 
-Nos complace informarte que tu solicitud de inscripción a SCW DOJO ha sido APROBADA por la administración. ¡Ya eres parte oficial del equipo!
+¡Felicidades! Tu solicitud de inscripción a SCW DOJO ha sido APROBADA por la administración.
 
-Nivel de Experiencia: {experience_str}
+Ya fuiste aprobado, nada más completa tu pago de inscripción y mensualidad para habilitar tu acceso completo.
 
-Para proceder y habilitar tu acceso completo, por favor ingresa a tu Portal de Alumno para ver tu código QR y realizar el pago de tu colegiatura en taquilla o en línea:
+Por favor ingresa a tu Portal de Alumno para ver tu código QR y realizar el pago en taquilla o en línea:
 {frontend_url}/dashboard?tab=dojo
 
-Te esperamos en tu primera sesión de entrenamiento. ¡Prepárate para darlo todo en el ring!
+¡Te esperamos en tu primera sesión de entrenamiento!
 """
-            from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'contacto@scw.com')
-            if config.email_host_user:
-                from_email = config.email_host_user
+            from_email = config.default_from_email if config.default_from_email else getattr(settings, 'DEFAULT_FROM_EMAIL', 'contacto@scw.com')
+            
+            if config.email_host_user and config.email_host_password:
+                connection = get_connection(
+                    host=config.email_host,
+                    port=config.email_port,
+                    username=config.email_host_user,
+                    password=config.email_host_password,
+                    use_tls=config.email_use_tls
+                )
+                send_mail(
+                    subject,
+                    message,
+                    from_email,
+                    [enrollment.email],
+                    connection=connection,
+                    fail_silently=False
+                )
+            else:
+                send_mail(
+                    subject,
+                    message,
+                    from_email,
+                    [enrollment.email],
+                    fail_silently=False
+                )
                 
-            send_mail(
-                subject,
-                message,
-                from_email,
-                [enrollment.email],
-                fail_silently=True
-            )
+            logger.info(f"Correo de admisión enviado exitosamente a {enrollment.email}")
         except Exception as e:
-            logger.error(f"Error enviando correo de admision: {e}")
+            logger.error(f"Error enviando correo de admision a {enrollment.email}: {e}")
 
     def send_admission_whatsapp(self, enrollment):
         try:
