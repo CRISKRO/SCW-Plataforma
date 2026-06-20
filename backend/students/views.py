@@ -41,6 +41,44 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
         
         if original_status != 'APPROVED' and updated_instance.status == 'APPROVED':
             self.send_admission_whatsapp(updated_instance)
+            self.send_admission_email(updated_instance)
+
+    def send_admission_email(self, enrollment):
+        from django.core.mail import send_mail
+        from django.conf import settings
+        
+        try:
+            config = get_active_config()
+            subject = "¡Felicidades! Has sido aceptado en SCW Dojo"
+            
+            experience_str = "Principiante" if enrollment.experience == 'BEGINNER' else "Intermedio" if enrollment.experience == 'INTERMEDIATE' else "Avanzado" if enrollment.experience == 'ADVANCED' else "Ninguna"
+            
+            frontend_url = getattr(settings, 'FRONTEND_URL', 'https://boletos.scw.com')
+            
+            message = f"""Hola {enrollment.name},
+
+Nos complace informarte que tu solicitud de inscripción a SCW DOJO ha sido APROBADA por la administración. ¡Ya eres parte oficial del equipo!
+
+Nivel de Experiencia: {experience_str}
+
+Para proceder y habilitar tu acceso completo, por favor ingresa a tu Portal de Alumno para ver tu código QR y realizar el pago de tu colegiatura en taquilla o en línea:
+{frontend_url}/dashboard?tab=dojo
+
+Te esperamos en tu primera sesión de entrenamiento. ¡Prepárate para darlo todo en el ring!
+"""
+            from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'contacto@scw.com')
+            if config.email_host_user:
+                from_email = config.email_host_user
+                
+            send_mail(
+                subject,
+                message,
+                from_email,
+                [enrollment.email],
+                fail_silently=True
+            )
+        except Exception as e:
+            logger.error(f"Error enviando correo de admision: {e}")
 
     def send_admission_whatsapp(self, enrollment):
         try:
@@ -225,7 +263,7 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def status(self, request):
         """Returns the enrollment status for the current user (PENDING or APPROVED)."""
-        enrollment = Enrollment.objects.filter(email=request.user.email).first()
+        enrollment = Enrollment.objects.filter(email__iexact=request.user.email).first()
         if not enrollment:
             return Response({"status": "NONE"}, status=status.HTTP_200_OK)
         return Response({
@@ -249,7 +287,7 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def my(self, request):
         """Returns the approved enrollment for the current user."""
-        enrollment = Enrollment.objects.filter(email=request.user.email, status='APPROVED').first()
+        enrollment = Enrollment.objects.filter(email__iexact=request.user.email, status='APPROVED').first()
         if not enrollment:
             return Response({"error": "No eres un alumno activo."}, status=status.HTTP_404_NOT_FOUND)
         

@@ -610,6 +610,20 @@ export default function EscuelaPage() {
                 </motion.div>
               )}
 
+              {/* ALREADY ENROLLED */}
+              {step === 'already_enrolled' && (
+                <motion.div key="already" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-12">
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.2 }}>
+                    <CheckCircle className="w-24 h-24 text-red-500 mx-auto mb-6" />
+                  </motion.div>
+                  <h3 className="text-3xl font-black uppercase mb-3">¡Ya eres parte del Dojo!</h3>
+                  <p className="text-zinc-400 text-lg mb-6">Tu inscripción ha sido confirmada. Ya puedes ver tu código QR y saldo pendiente.</p>
+                  <Link href="/dashboard?tab=dojo" className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white px-8 py-4 rounded-xl font-bold uppercase tracking-widest transition-colors">
+                    Ir a mi Panel de Alumno
+                  </Link>
+                </motion.div>
+              )}
+
             </AnimatePresence>
           </div>
         </div>
