@@ -416,7 +416,7 @@ fun EventsBoxOffice(baseUrl: String, token: String) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             // OESTE
                             val oeste = selectedEvent!!.zones.find { it.name.contains("OESTE", ignoreCase = true) }
-                            if (oeste != null) ZoneView(oeste) { seat -> seatToSell = Pair(oeste, seat) }
+                            if (oeste != null) ZoneView(oeste, isVertical = true) { seat -> seatToSell = Pair(oeste, seat) }
                             
                             // RING
                             Box(modifier = Modifier.size(150.dp).background(Color.White).border(4.dp, Color.Black).padding(8.dp), contentAlignment = Alignment.Center) {
@@ -425,7 +425,7 @@ fun EventsBoxOffice(baseUrl: String, token: String) {
                             
                             // ESTE
                             val este = selectedEvent!!.zones.find { it.name.contains("ESTE", ignoreCase = true) }
-                            if (este != null) ZoneView(este) { seat -> seatToSell = Pair(este, seat) }
+                            if (este != null) ZoneView(este, isVertical = true) { seat -> seatToSell = Pair(este, seat) }
                         }
                         
                         // SUR
@@ -447,24 +447,46 @@ fun EventsBoxOffice(baseUrl: String, token: String) {
 }
 
 @Composable
-fun ZoneView(zone: BoxOfficeZone, onSeatClick: (BoxOfficeSeat) -> Unit) {
+fun ZoneView(zone: BoxOfficeZone, isVertical: Boolean = false, onSeatClick: (BoxOfficeSeat) -> Unit) {
     val seatsByRow = zone.seats.groupBy { it.row ?: "?" }
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(16.dp)) {
         Text(zone.name, fontWeight = FontWeight.Bold, color = Color.DarkGray)
         Text("$${zone.price}", color = Color(0xFF4CAF50), fontSize = 12.sp)
         Spacer(modifier = Modifier.height(8.dp))
-        seatsByRow.forEach { (rowName, seats) ->
-            Row(modifier = Modifier.padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(rowName, fontWeight = FontWeight.Bold, modifier = Modifier.width(20.dp), fontSize = 10.sp)
-                Spacer(modifier = Modifier.width(4.dp))
-                seats.forEach { seat ->
-                    Box(
-                        modifier = Modifier.size(24.dp).padding(1.dp)
-                            .background(if (seat.is_available) Color(0xFF4CAF50) else Color(0xFFE0E0E0), RoundedCornerShape(2.dp))
-                            .clickable(enabled = seat.is_available) { onSeatClick(seat) },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(seat.number.toString(), color = if (seat.is_available) Color.White else Color.Gray, fontSize = 8.sp)
+        
+        if (isVertical) {
+            Row(horizontalArrangement = Arrangement.Center) {
+                seatsByRow.forEach { (rowName, seats) ->
+                    Column(modifier = Modifier.padding(horizontal = 2.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(rowName, fontWeight = FontWeight.Bold, modifier = Modifier.height(20.dp), fontSize = 10.sp)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        seats.forEach { seat ->
+                            Box(
+                                modifier = Modifier.size(24.dp).padding(1.dp)
+                                    .background(if (seat.is_available) Color(0xFF4CAF50) else Color(0xFFE0E0E0), RoundedCornerShape(2.dp))
+                                    .clickable(enabled = seat.is_available) { onSeatClick(seat) },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(seat.number.toString(), color = if (seat.is_available) Color.White else Color.Gray, fontSize = 8.sp)
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            seatsByRow.forEach { (rowName, seats) ->
+                Row(modifier = Modifier.padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(rowName, fontWeight = FontWeight.Bold, modifier = Modifier.width(20.dp), fontSize = 10.sp)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    seats.forEach { seat ->
+                        Box(
+                            modifier = Modifier.size(24.dp).padding(1.dp)
+                                .background(if (seat.is_available) Color(0xFF4CAF50) else Color(0xFFE0E0E0), RoundedCornerShape(2.dp))
+                                .clickable(enabled = seat.is_available) { onSeatClick(seat) },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(seat.number.toString(), color = if (seat.is_available) Color.White else Color.Gray, fontSize = 8.sp)
+                        }
                     }
                 }
             }
