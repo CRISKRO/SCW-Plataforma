@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Target, Users, ShieldAlert, CheckCircle, Lock, MessageCircle, ChevronRight, Phone, Mail } from 'lucide-react';
+import { Target, Users, ShieldAlert, CheckCircle, Lock, MessageCircle, ChevronRight, Phone, Mail, Clock, Banknote } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
@@ -220,6 +220,60 @@ export default function EscuelaPage() {
               <p className="text-zinc-400 text-sm">{item.desc}</p>
             </motion.div>
           ))}
+        </div>
+      </section>
+
+      {/* Horarios y Costos */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-24">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Horarios */}
+          <div className="bg-zinc-900 border border-white/5 p-8 rounded-3xl hover:border-red-500/50 transition-colors">
+            <h3 className="text-2xl font-black uppercase tracking-tight text-white mb-6 flex items-center gap-3">
+              <Clock className="w-8 h-8 text-red-600" />
+              Horarios
+            </h3>
+            <div className="space-y-4">
+              <div className="pb-4">
+                <p className="text-red-500 font-bold uppercase tracking-widest text-sm mb-1">Lunes a Viernes</p>
+                <div className="space-y-3 mt-4">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                    <span className="text-zinc-300">5:30 a 7:00 p.m.</span>
+                    <span className="text-white font-bold bg-zinc-800 px-3 py-1 rounded-full text-xs uppercase tracking-widest w-fit">Principiantes</span>
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                    <span className="text-zinc-300">7:00 a 8:30 p.m.</span>
+                    <span className="text-white font-bold bg-zinc-800 px-3 py-1 rounded-full text-xs uppercase tracking-widest w-fit">Intermedios y Avanzados</span>
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                    <span className="text-zinc-300">8:30 a 9:30 p.m.</span>
+                    <span className="text-white font-bold bg-zinc-800 px-3 py-1 rounded-full text-xs uppercase tracking-widest w-fit">Open Ring</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Costos */}
+          <div className="bg-zinc-900 border border-white/5 p-8 rounded-3xl hover:border-green-500/50 transition-colors">
+            <h3 className="text-2xl font-black uppercase tracking-tight text-white mb-6 flex items-center gap-3">
+              <Banknote className="w-8 h-8 text-green-500" />
+              Costos
+            </h3>
+            <div className="space-y-4 mt-3">
+              <div className="flex justify-between items-center p-4 bg-black/40 rounded-xl border border-white/5">
+                <span className="text-zinc-300 uppercase tracking-widest font-bold text-sm">Inscripción</span>
+                <span className="text-2xl font-black text-white">$250</span>
+              </div>
+              <div className="flex justify-between items-center p-4 bg-black/40 rounded-xl border border-white/5">
+                <span className="text-zinc-300 uppercase tracking-widest font-bold text-sm">Mensualidad</span>
+                <span className="text-2xl font-black text-white">$600</span>
+              </div>
+              <div className="flex justify-between items-center p-4 bg-black/40 rounded-xl border border-white/5">
+                <span className="text-zinc-300 uppercase tracking-widest font-bold text-sm">Visita</span>
+                <span className="text-2xl font-black text-white">$100</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
