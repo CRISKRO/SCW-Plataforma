@@ -414,28 +414,28 @@ fun EventsBoxOffice(baseUrl: String, token: String) {
                             val oeste = selectedEvent!!.zones.find { it.name.contains("OESTE", ignoreCase = true) }
                             if (oeste != null) ZoneView(oeste, isVertical = true, reverseRows = true) { seat -> seatToSell = Pair(oeste, seat) }
                             
-                            Spacer(modifier = Modifier.width(16.dp))
+                            Spacer(modifier = Modifier.width(32.dp))
                             
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 // NORTE
                                 val norte = selectedEvent!!.zones.find { it.name.contains("NORTE", ignoreCase = true) }
                                 if (norte != null) ZoneView(norte) { seat -> seatToSell = Pair(norte, seat) }
                                 
-                                Spacer(modifier = Modifier.height(16.dp))
+                                Spacer(modifier = Modifier.height(4.dp))
                                 
                                 // RING
-                                Box(modifier = Modifier.size(150.dp).background(Color.White).border(4.dp, Color.Black).padding(8.dp), contentAlignment = Alignment.Center) {
-                                    Text("RING SCW", fontWeight = FontWeight.Bold, color = Color.LightGray, fontSize = 20.sp)
+                                Box(modifier = Modifier.size(200.dp).background(Color.White).border(4.dp, Color.Black).padding(8.dp), contentAlignment = Alignment.Center) {
+                                    Text("RING SCW", fontWeight = FontWeight.Bold, color = Color.LightGray, fontSize = 24.sp)
                                 }
                                 
-                                Spacer(modifier = Modifier.height(16.dp))
+                                Spacer(modifier = Modifier.height(4.dp))
                                 
                                 // SUR
                                 val sur = selectedEvent!!.zones.find { it.name.contains("SUR", ignoreCase = true) }
                                 if (sur != null) ZoneView(sur) { seat -> seatToSell = Pair(sur, seat) }
                             }
                             
-                            Spacer(modifier = Modifier.width(16.dp))
+                            Spacer(modifier = Modifier.width(32.dp))
                             
                             // ESTE
                             val este = selectedEvent!!.zones.find { it.name.contains("ESTE", ignoreCase = true) }
