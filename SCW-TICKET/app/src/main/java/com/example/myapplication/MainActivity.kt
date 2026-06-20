@@ -458,7 +458,7 @@ fun EventsBoxOffice(baseUrl: String, token: String) {
 
 @Composable
 fun ZoneView(zone: BoxOfficeZone, isVertical: Boolean = false, reverseRows: Boolean = false, onSeatClick: (BoxOfficeSeat) -> Unit) {
-    val isReverse = zone.name.contains("OESTE", ignoreCase = true) || zone.name.contains("SUR", ignoreCase = true)
+    val isReverse = zone.name.contains("SUR", ignoreCase = true)
     
     val seatsByRow = zone.seats.groupBy { it.row ?: "?" }.mapValues { entry ->
         if (isReverse) {
