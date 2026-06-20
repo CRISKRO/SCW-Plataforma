@@ -5,6 +5,9 @@ export interface RaffleTicket {
   number: number;
   status: 'AVAILABLE' | 'SOLD_ONLINE' | 'SOLD_OFFLINE';
   buyer_name?: string;
+  order_item?: number;
+  contact_email?: string;
+  contact_phone?: string;
 }
 
 export interface Raffle {
