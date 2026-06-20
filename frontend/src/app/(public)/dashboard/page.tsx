@@ -45,6 +45,7 @@ export default function UserDashboard() {
 
   useEffect(() => {
     setMounted(true);
+    window.scrollTo(0, 0);
     if (!isAuthenticated) {
       router.push('/login');
     } else {
