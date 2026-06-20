@@ -123,21 +123,6 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
   useEffect(() => {
     let dynamicSlides: any[] = [];
     
-    if (raffles && raffles.length > 0) {
-      const raffleSlides = raffles.map((r: any) => ({
-        id: `raffle-${r.id}`,
-        title: r.title,
-        subtitle: `¡Participa en nuestra gran rifa! ${r.description}`,
-        image: r.image || '/images/logoring.webp',
-        date: null,
-        location: null,
-        cta: [
-          { label: 'Ver Detalles y Participar', href: `/raffles/${r.id}`, primary: true },
-        ],
-      }));
-      dynamicSlides = [...dynamicSlides, ...raffleSlides];
-    }
-
     if (upcomingEvents && upcomingEvents.length > 0) {
       const eventSlides = upcomingEvents.map((ev: any) => ({
         id: ev.id,
@@ -152,6 +137,21 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
         ],
       }));
       dynamicSlides = [...dynamicSlides, ...eventSlides];
+    }
+
+    if (raffles && raffles.length > 0) {
+      const raffleSlides = raffles.map((r: any) => ({
+        id: `raffle-${r.id}`,
+        title: r.title,
+        subtitle: `¡Participa en nuestra gran rifa! ${r.description}`,
+        image: r.image || '/images/logoring.webp',
+        date: null,
+        location: null,
+        cta: [
+          { label: 'Ver Detalles y Participar', href: `/raffles/${r.id}`, primary: true },
+        ],
+      }));
+      dynamicSlides = [...dynamicSlides, ...raffleSlides];
     }
 
     if (dynamicSlides.length > 0) {
