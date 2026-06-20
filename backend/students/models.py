@@ -49,6 +49,10 @@ class Enrollment(models.Model):
     )
     last_payment_date = models.DateField(_('fecha de último pago'), null=True, blank=True)
     payment_due_date = models.DateField(_('fecha de próximo vencimiento'), null=True, blank=True)
+    
+    outstanding_balance = models.DecimalField(_('saldo pendiente'), max_digits=10, decimal_places=2, default=0.00)
+    penalty_weeks_counted = models.IntegerField(_('semanas de sanción contadas'), default=0)
+    last_tuition_charge_date = models.DateField(_('fecha de último cargo mensual'), null=True, blank=True)
 
     class Meta:
         verbose_name = 'Inscripción al Dojo'
@@ -58,18 +62,54 @@ class Enrollment(models.Model):
         return f"Aspirante: {self.name} - {self.get_experience_display()}"
 
     def update_dynamic_payment_status(self):
-        """Automatically recalculates the payment status based on the due date."""
+        """Automatically recalculates the payment status and applies penalties."""
         if self.status == 'APPROVED' and self.payment_due_date:
             today = date.today()
+            
+            # 1. Aplicar cargo mensual si ya se alcanzó la fecha de corte
+            if today >= self.payment_due_date:
+                if not self.last_tuition_charge_date or self.last_tuition_charge_date < self.payment_due_date:
+                    from api.models import get_active_config
+                    try:
+                        config = get_active_config()
+                        tuition_fee = config.tuition_fee
+                    except:
+                        tuition_fee = 600.00
+                        
+                    self.outstanding_balance += tuition_fee
+                    self.last_tuition_charge_date = today
+                    self.save(update_fields=['outstanding_balance', 'last_tuition_charge_date'])
+
+            # 2. Lógica de estados y recargos
             if self.payment_due_date < today:
                 if self.payment_status != 'UNPAID':
                     self.payment_status = 'UNPAID'
                     self.save(update_fields=['payment_status'])
+                
+                # Sanciones por atraso
+                days_overdue = (today - self.payment_due_date).days
+                weeks_overdue = days_overdue // 7
+                if weeks_overdue > self.penalty_weeks_counted:
+                    new_penalties = weeks_overdue - self.penalty_weeks_counted
+                    self.outstanding_balance += new_penalties * 50
+                    self.penalty_weeks_counted = weeks_overdue
+                    self.save(update_fields=['outstanding_balance', 'penalty_weeks_counted'])
+                    
             elif today <= self.payment_due_date <= today + timedelta(days=5):
-                if self.payment_status != 'EXPIRING':
-                    self.payment_status = 'EXPIRING'
-                    self.save(update_fields=['payment_status'])
+                if self.outstanding_balance > 0:
+                    if self.payment_status != 'UNPAID':
+                        self.payment_status = 'UNPAID'
+                        self.save(update_fields=['payment_status'])
+                else:
+                    if self.payment_status != 'EXPIRING':
+                        self.payment_status = 'EXPIRING'
+                        self.save(update_fields=['payment_status'])
             else:
-                if self.payment_status != 'PAID':
-                    self.payment_status = 'PAID'
-                    self.save(update_fields=['payment_status'])
+                if self.outstanding_balance > 0:
+                    if self.payment_status != 'UNPAID':
+                        self.payment_status = 'UNPAID'
+                        self.save(update_fields=['payment_status'])
+                else:
+                    if self.payment_status != 'PAID':
+                        self.payment_status = 'PAID'
+                        self.save(update_fields=['payment_status'])

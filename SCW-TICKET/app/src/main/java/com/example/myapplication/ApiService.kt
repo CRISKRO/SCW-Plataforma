@@ -92,6 +92,28 @@ data class SellRaffleResponse(
     val error: String?
 )
 
+// Dojo Models
+data class DojoStudentResponse(
+    val valid: Boolean,
+    val id: Int?,
+    val name: String?,
+    val payment_status: String?,
+    val payment_due_date: String?,
+    val outstanding_balance: String?,
+    val message: String?
+)
+
+data class DojoPaymentRequest(
+    val amount: Float? = null
+)
+
+data class DojoPaymentResponse(
+    val success: Boolean,
+    val message: String,
+    val whatsapp_sent: Boolean?,
+    val error: String?
+)
+
 interface ApiService {
     @POST("api/payments/validate-ticket/")
     suspend fun validateTicket(
@@ -120,6 +142,20 @@ interface ApiService {
         @Header("X-Scanner-Token") token: String,
         @Body request: SellRaffleRequest
     ): Response<SellRaffleResponse>
+
+    // DOJO endpoints
+    @GET("api/payments/box-office-dojo-student/{id}/")
+    suspend fun getDojoStudentStatus(
+        @retrofit2.http.Path("id") id: Int,
+        @Header("X-Scanner-Token") token: String
+    ): Response<DojoStudentResponse>
+
+    @POST("api/payments/box-office-dojo-payment/{id}/")
+    suspend fun registerDojoPayment(
+        @retrofit2.http.Path("id") id: Int,
+        @Header("X-Scanner-Token") token: String,
+        @Body request: DojoPaymentRequest
+    ): Response<DojoPaymentResponse>
 }
 
 object ApiClient {

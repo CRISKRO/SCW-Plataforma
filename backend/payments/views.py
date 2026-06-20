@@ -1194,3 +1194,106 @@ class BoxOfficeSellRaffleView(APIView):
             return Response({"error": "Boleto inválido."}, status=404)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
+
+class BoxOfficeDojoStudentView(APIView):
+    """Devuelve el estado de un alumno del Dojo escaneado en Taquilla."""
+    permission_classes = [AllowAny]
+
+    def get(self, request, pk=None):
+        scanner_token = request.headers.get('X-Scanner-Token')
+        expected_token = getattr(settings, 'SCANNER_TOKEN', 'scw-default-secret-token')
+        if not (request.user.is_staff or scanner_token == expected_token):
+            return Response({"error": "No autorizado."}, status=403)
+
+        from students.models import Enrollment
+        try:
+            enrollment = Enrollment.objects.get(id=pk, status='APPROVED')
+            enrollment.update_dynamic_payment_status()
+            return Response({
+                "valid": True,
+                "id": enrollment.id,
+                "name": enrollment.name,
+                "payment_status": enrollment.payment_status,
+                "payment_due_date": enrollment.payment_due_date.strftime('%Y-%m-%d') if enrollment.payment_due_date else None,
+                "outstanding_balance": str(enrollment.outstanding_balance)
+            }, status=200)
+        except Enrollment.DoesNotExist:
+            return Response({"valid": False, "message": "Alumno no encontrado o no activo."}, status=404)
+
+class BoxOfficeDojoPaymentView(APIView):
+    """Registra el pago en efectivo o abono de un alumno del Dojo desde Taquilla."""
+    permission_classes = [AllowAny]
+
+    def post(self, request, pk=None):
+        scanner_token = request.headers.get('X-Scanner-Token')
+        expected_token = getattr(settings, 'SCANNER_TOKEN', 'scw-default-secret-token')
+        if not (request.user.is_staff or scanner_token == expected_token):
+            return Response({"error": "No autorizado."}, status=403)
+
+        amount = request.data.get('amount')
+        from students.models import Enrollment
+        from decimal import Decimal
+        from datetime import date, timedelta
+        import requests
+
+        try:
+            enrollment = Enrollment.objects.get(id=pk, status='APPROVED')
+            if amount is not None:
+                amount = float(amount)
+                if amount <= 0:
+                    return Response({"error": "Monto debe ser mayor a 0"}, status=400)
+                
+                enrollment.outstanding_balance -= Decimal(str(amount))
+                enrollment.last_payment_date = date.today()
+                
+                if enrollment.outstanding_balance <= 0:
+                    if not enrollment.payment_due_date or enrollment.payment_due_date <= date.today():
+                        enrollment.payment_due_date = date.today() + timedelta(days=30)
+                    else:
+                        enrollment.payment_due_date = enrollment.payment_due_date + timedelta(days=30)
+                    enrollment.penalty_weeks_counted = 0
+                    enrollment.payment_status = 'PAID'
+                else:
+                    enrollment.payment_status = 'UNPAID'
+            else:
+                enrollment.last_payment_date = date.today()
+                if not enrollment.payment_due_date or enrollment.payment_due_date <= date.today():
+                    enrollment.payment_due_date = date.today() + timedelta(days=30)
+                else:
+                    enrollment.payment_due_date = enrollment.payment_due_date + timedelta(days=30)
+                enrollment.outstanding_balance = 0
+                enrollment.penalty_weeks_counted = 0
+                enrollment.payment_status = 'PAID'
+                
+            enrollment.save()
+
+            whatsapp_sent = False
+            try:
+                config = get_active_config()
+                if config.whatsapp_enabled:
+                    whatsapp_url = config.whatsapp_service_url if config.whatsapp_service_url else 'https://scw-whatsapp.onrender.com'
+                    due_date_str = enrollment.payment_due_date.strftime('%d/%m/%Y')
+                    last_payment_str = enrollment.last_payment_date.strftime('%d/%m/%Y')
+                    msg = (
+                        f"🥊 *SCW Dojo — Pago en Taquilla*\n\n"
+                        f"¡Hola *{enrollment.name}*!\n\n"
+                        f"Hemos recibido tu pago en efectivo por ${amount if amount else 'completo'} el día *{last_payment_str}*.\n\n"
+                        f"📅 *Próximo Vencimiento:* {due_date_str}\n"
+                        f"💰 *Saldo Restante:* ${enrollment.outstanding_balance}\n\n"
+                        f"¡Gracias por seguir entrenando en el SCW Dojo! 🥊⚡"
+                    )
+                    requests.post(f"{whatsapp_url}/send-message", json={'phone': enrollment.phone, 'message': msg}, timeout=8)
+                    whatsapp_sent = True
+            except Exception as e:
+                pass
+
+            return Response({
+                "success": True, 
+                "message": "Pago registrado correctamente",
+                "whatsapp_sent": whatsapp_sent
+            })
+            
+        except Enrollment.DoesNotExist:
+            return Response({"error": "Alumno no encontrado."}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)

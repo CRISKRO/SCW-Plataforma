@@ -556,16 +556,25 @@ export default function UserDashboard() {
 
         {activeTab === 'dojo' && studentData && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-2xl bg-zinc-900 border border-white/10 rounded-xl p-8">
-            <div className="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
-              <Swords className="w-8 h-8 text-red-500" />
-              <div>
-                <h2 className="text-2xl font-bold uppercase tracking-tight">Portal del Alumno</h2>
-                <p className="text-zinc-400 text-sm">Gestiona tu colegiatura y estado en SCW DOJO.</p>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-6 border-b border-white/10 pb-6">
+              <div className="flex items-center gap-3">
+                <Swords className="w-8 h-8 text-red-500" />
+                <div>
+                  <h2 className="text-2xl font-bold uppercase tracking-tight">Portal del Alumno</h2>
+                  <p className="text-zinc-400 text-sm">Gestiona tu colegiatura y estado en SCW DOJO.</p>
+                </div>
+              </div>
+              <div className="bg-white p-2 rounded-xl flex-shrink-0">
+                <QRCode
+                  id="dojo-qr"
+                  value={JSON.stringify({ scw: true, dojo_student: true, id: studentData.id })}
+                  size={80}
+                />
               </div>
             </div>
             
             <div className="space-y-6">
-              <div className="flex justify-between items-center bg-black/50 p-4 rounded-lg border border-white/5">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-black/50 p-4 rounded-lg border border-white/5">
                 <div>
                   <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Estado de Pago</p>
                   <p className={`text-lg font-black mt-1 ${
@@ -576,7 +585,15 @@ export default function UserDashboard() {
                      studentData.payment_status === 'EXPIRING' ? '⚠️ POR VENCER' : '🚨 DEBE'}
                   </p>
                 </div>
-                <div className="text-right">
+                {parseFloat(studentData.outstanding_balance || '0') > 0 && (
+                  <div>
+                    <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Saldo Pendiente</p>
+                    <p className="text-red-500 text-lg font-black mt-1">
+                      ${parseFloat(studentData.outstanding_balance).toFixed(2)} MXN
+                    </p>
+                  </div>
+                )}
+                <div className="sm:text-right">
                   <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Próximo Vencimiento</p>
                   <p className="text-white font-bold mt-1">
                     {studentData.payment_due_date ? new Date(studentData.payment_due_date + 'T12:00:00').toLocaleDateString('es-MX', {day: '2-digit', month: 'short', year: 'numeric'}) : 'No registrado'}
@@ -587,6 +604,7 @@ export default function UserDashboard() {
               <div className="bg-red-500/5 border border-red-500/20 p-6 rounded-xl text-center">
                 <p className="text-zinc-300 mb-4 text-sm">
                   Mantén tu colegiatura al día para seguir entrenando y participar en los próximos eventos de SCW.
+                  Muestra tu código QR en taquilla para pagos en efectivo.
                 </p>
                 <div className="flex flex-col items-center gap-2">
                   <span className="text-3xl font-black text-white">${tuitionFee} <span className="text-sm text-zinc-500 font-medium">MXN / mes</span></span>
@@ -602,7 +620,7 @@ export default function UserDashboard() {
                       ) : (
                         <>
                           <CreditCard className="w-5 h-5" />
-                          Pagar Mensualidad
+                          Pagar con Tarjeta
                         </>
                       )}
                     </button>

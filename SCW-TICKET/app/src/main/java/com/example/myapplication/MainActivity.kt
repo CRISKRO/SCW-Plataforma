@@ -156,6 +156,9 @@ fun ScannerTab(baseUrl: String, token: String) {
     var scanResultColor by remember { mutableStateOf(Color.Gray) }
     var isLoading by remember { mutableStateOf(false) }
 
+    var dojoStudent by remember { mutableStateOf<DojoStudentResponse?>(null) }
+    var dojoChargeAmount by remember { mutableStateOf("") }
+
     val coroutineScope = rememberCoroutineScope()
 
     val scanLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
@@ -164,51 +167,83 @@ fun ScannerTab(baseUrl: String, token: String) {
         } else {
             try {
                 val json = JSONObject(result.contents)
-                val orderId = json.getInt("order")
-                val itemId = json.getInt("item")
-                val code = json.getString("code")
-
-                isLoading = true
-                scanResultText = "Validando boleto..."
-                scanResultColor = Color.Blue
-
-                coroutineScope.launch {
-                    try {
-                        val api = ApiClient.getService(baseUrl)
-                        val request = ValidationRequest(order_id = orderId, item_id = itemId, code = code)
-                        val response = api.validateTicket(token, request)
-
-                        if (response.isSuccessful && response.body() != null) {
-                            val body = response.body()!!
-                            if (body.valid) {
-                                scanResultText = "${body.message}\n${body.item ?: ""} (${body.size ?: ""})"
-                                scanResultColor = Color(0xFF4CAF50) // Green
-                            } else {
-                                scanResultText = body.message
-                                scanResultColor = Color(0xFFF44336) // Red
-                            }
-                        } else {
-                            if (response.code() == 403) {
-                                scanResultText = "❌ Error 403: Token inválido."
-                            } else {
-                                val errorBody = response.errorBody()?.string()
-                                if (errorBody != null && errorBody.contains("message")) {
-                                    val errJson = JSONObject(errorBody)
-                                    scanResultText = errJson.optString("message", "Error de validación")
+                if (json.has("dojo_student") && json.getBoolean("dojo_student")) {
+                    val studentId = json.getInt("id")
+                    isLoading = true
+                    scanResultText = "Buscando alumno..."
+                    scanResultColor = Color.Blue
+                    
+                    coroutineScope.launch {
+                        try {
+                            val api = ApiClient.getService(baseUrl)
+                            val response = api.getDojoStudentStatus(studentId, token)
+                            if (response.isSuccessful && response.body() != null) {
+                                val body = response.body()!!
+                                if (body.valid) {
+                                    dojoStudent = body
+                                    scanResultText = "Alumno: ${body.name}\nSaldo: $${body.outstanding_balance}"
+                                    scanResultColor = Color(0xFF4CAF50)
                                 } else {
-                                    scanResultText = "❌ Error en el servidor: ${response.code()}"
+                                    scanResultText = body.message ?: "Alumno no encontrado"
+                                    scanResultColor = Color(0xFFF44336)
                                 }
+                            } else {
+                                scanResultText = "❌ Error en el servidor: ${response.code()}"
+                                scanResultColor = Color(0xFFF44336)
                             }
-                            scanResultColor = Color(0xFFF44336)
+                        } catch (e: Exception) {
+                            scanResultText = "❌ Error de conexión: ${e.message}"
+                            scanResultColor = Color.Red
+                        } finally {
+                            isLoading = false
                         }
-                    } catch (e: Exception) {
-                        scanResultText = "❌ Error de conexión: ${e.message}"
-                        scanResultColor = Color.Red
-                    } finally {
-                        isLoading = false
+                    }
+                } else {
+                    val orderId = json.getInt("order")
+                    val itemId = json.getInt("item")
+                    val code = json.getString("code")
+
+                    isLoading = true
+                    scanResultText = "Validando boleto..."
+                    scanResultColor = Color.Blue
+
+                    coroutineScope.launch {
+                        try {
+                            val api = ApiClient.getService(baseUrl)
+                            val request = ValidationRequest(order_id = orderId, item_id = itemId, code = code)
+                            val response = api.validateTicket(token, request)
+
+                            if (response.isSuccessful && response.body() != null) {
+                                val body = response.body()!!
+                                if (body.valid) {
+                                    scanResultText = "${body.message}\n${body.item ?: ""} (${body.size ?: ""})"
+                                    scanResultColor = Color(0xFF4CAF50) // Green
+                                } else {
+                                    scanResultText = body.message
+                                    scanResultColor = Color(0xFFF44336) // Red
+                                }
+                            } else {
+                                if (response.code() == 403) {
+                                    scanResultText = "❌ Error 403: Token inválido."
+                                } else {
+                                    val errorBody = response.errorBody()?.string()
+                                    if (errorBody != null && errorBody.contains("message")) {
+                                        val errJson = JSONObject(errorBody)
+                                        scanResultText = errJson.optString("message", "Error de validación")
+                                    } else {
+                                        scanResultText = "❌ Error en el servidor: ${response.code()}"
+                                    }
+                                }
+                                scanResultColor = Color(0xFFF44336)
+                            }
+                        } catch (e: Exception) {
+                            scanResultText = "❌ Error de conexión: ${e.message}"
+                            scanResultColor = Color.Red
+                        } finally {
+                            isLoading = false
+                        }
                     }
                 }
-
             } catch (e: Exception) {
                 scanResultText = "❌ QR Inválido o formato desconocido"
                 scanResultColor = Color.Red
@@ -263,8 +298,72 @@ fun ScannerTab(baseUrl: String, token: String) {
                 .height(60.dp),
             shape = RoundedCornerShape(30.dp)
         ) {
-            Text("Escanear Boleto", fontSize = 18.sp)
+            Text("Escanear Boleto / QR", fontSize = 18.sp)
         }
+    }
+
+    if (dojoStudent != null) {
+        AlertDialog(
+            onDismissRequest = { dojoStudent = null; dojoChargeAmount = "" },
+            title = { Text("Cobrar Mensualidad/Abono") },
+            text = {
+                Column {
+                    Text("Alumno: ${dojoStudent!!.name}", fontWeight = FontWeight.Bold)
+                    Text("Estado: ${dojoStudent!!.payment_status}")
+                    Text("Saldo pendiente: $${dojoStudent!!.outstanding_balance} MXN", color = Color.Red)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedTextField(
+                        value = dojoChargeAmount,
+                        onValueChange = { dojoChargeAmount = it },
+                        label = { Text("Monto a cobrar (vacío = todo)") }
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val amount = dojoChargeAmount.toFloatOrNull()
+                    val sId = dojoStudent!!.id!!
+                    dojoStudent = null
+                    dojoChargeAmount = ""
+                    isLoading = true
+                    scanResultText = "Registrando pago..."
+                    scanResultColor = Color.Blue
+                    
+                    coroutineScope.launch {
+                        try {
+                            val api = ApiClient.getService(baseUrl)
+                            val req = DojoPaymentRequest(amount = amount)
+                            val res = api.registerDojoPayment(sId, token, req)
+                            if (res.isSuccessful && res.body() != null) {
+                                val body = res.body()!!
+                                if (body.success) {
+                                    scanResultText = "✅ ${body.message}"
+                                    scanResultColor = Color(0xFF4CAF50)
+                                } else {
+                                    scanResultText = "❌ ${body.error ?: "Error"}"
+                                    scanResultColor = Color.Red
+                                }
+                            } else {
+                                scanResultText = "❌ Error servidor: ${res.code()}"
+                                scanResultColor = Color.Red
+                            }
+                        } catch(e: Exception) {
+                            scanResultText = "❌ Error de red: ${e.message}"
+                            scanResultColor = Color.Red
+                        } finally {
+                            isLoading = false
+                        }
+                    }
+                }) {
+                    Text("Registrar Pago")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { dojoStudent = null; dojoChargeAmount = "" }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 }
 

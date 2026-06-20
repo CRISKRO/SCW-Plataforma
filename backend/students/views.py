@@ -7,6 +7,8 @@ from datetime import date, timedelta
 import requests
 import os
 import logging
+from decimal import Decimal
+import logging
 from api.models import get_active_config
 
 logger = logging.getLogger(__name__)
@@ -80,11 +82,46 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        amount = request.data.get('amount')
         today = date.today()
-        enrollment.last_payment_date = today
-        enrollment.payment_due_date = today + timedelta(days=30)
-        enrollment.payment_status = 'PAID'
-        enrollment.save()
+        
+        if amount is not None:
+            try:
+                amount = float(amount)
+                if amount <= 0:
+                    raise ValueError("Monto debe ser mayor a 0")
+            except:
+                return Response({"error": "Monto inválido"}, status=status.HTTP_400_BAD_REQUEST)
+                
+            enrollment.outstanding_balance -= Decimal(str(amount))
+            enrollment.last_payment_date = today
+            
+            if enrollment.outstanding_balance <= 0:
+                # Liquidó el mes
+                if not enrollment.payment_due_date or enrollment.payment_due_date <= today:
+                    enrollment.payment_due_date = today + timedelta(days=30)
+                else:
+                    enrollment.payment_due_date = enrollment.payment_due_date + timedelta(days=30)
+                # Si pagó de más, dejar el saldo negativo o en 0
+                if enrollment.outstanding_balance < 0:
+                    pass # Tiene saldo a favor
+                enrollment.penalty_weeks_counted = 0
+                enrollment.payment_status = 'PAID'
+            else:
+                enrollment.payment_status = 'UNPAID'
+                
+            enrollment.save()
+        else:
+            # Modo legacy: pago del mes completo
+            enrollment.last_payment_date = today
+            if not enrollment.payment_due_date or enrollment.payment_due_date <= today:
+                enrollment.payment_due_date = today + timedelta(days=30)
+            else:
+                enrollment.payment_due_date = enrollment.payment_due_date + timedelta(days=30)
+            enrollment.outstanding_balance = 0
+            enrollment.penalty_weeks_counted = 0
+            enrollment.payment_status = 'PAID'
+            enrollment.save()
 
         # Enviar confirmación por WhatsApp
         config = get_active_config()
@@ -194,6 +231,19 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
         return Response({
             "status": enrollment.status,
             "enrollment": EnrollmentSerializer(enrollment).data
+        }, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['get'], permission_classes=[IsAdminUser])
+    def mobile_status(self, request, pk=None):
+        """Devuelve el estado actualizado para la aplicación móvil"""
+        enrollment = self.get_object()
+        enrollment.update_dynamic_payment_status()
+        return Response({
+            "id": enrollment.id,
+            "name": enrollment.name,
+            "payment_status": enrollment.payment_status,
+            "payment_due_date": enrollment.payment_due_date,
+            "outstanding_balance": str(enrollment.outstanding_balance)
         }, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
