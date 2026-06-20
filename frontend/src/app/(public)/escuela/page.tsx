@@ -188,9 +188,34 @@ export default function EscuelaPage() {
           <h1 className="text-5xl md:text-8xl font-black uppercase tracking-tighter mb-6">
             SCW <span className="text-red-600">DOJO</span>
           </h1>
-          <p className="text-xl md:text-2xl text-zinc-400 font-light max-w-4xl mx-auto">
-            SCW DOJO es el centro de entrenamiento de SCW. Nacimos con el objetivo de crear un espacio serio y profesional donde cualquier persona apasionada por la lucha libre pueda desarrollar su talento.
-          </p>
+          <div className="text-lg md:text-xl text-zinc-400 font-light max-w-4xl mx-auto space-y-6 text-left">
+            <p>
+              SCW DOJO es el centro oficial de entrenamiento de Strong Classic Wrestling. Nacimos con el objetivo de crear un espacio serio, profesional y seguro donde cualquier persona apasionada por la lucha libre pueda desarrollar su talento, perfeccionar sus habilidades y alcanzar su máximo potencial dentro de este deporte.
+            </p>
+            <p>
+              Aquí no importa si estás dando tus primeros pasos o si ya tienes experiencia sobre el ring; nuestro compromiso es brindarte las herramientas, la disciplina y la formación necesarias para crecer como luchador y como persona.
+            </p>
+            
+            <div className="pt-4">
+              <h3 className="text-red-500 font-bold uppercase tracking-widest text-xl mb-2">Básicos</h3>
+              <p>Desarrollamos tus capacidades físicas fundamentales para que construyas una base sólida como luchador profesional. A través del acondicionamiento físico, la coordinación, la resistencia, la fuerza y la disciplina deportiva, te preparamos para avanzar de forma segura y correcta en tu formación.</p>
+            </div>
+
+            <div className="pt-4">
+              <h3 className="text-red-500 font-bold uppercase tracking-widest text-xl mb-2">Pro Wrestling</h3>
+              <p>Nuestra formación se enfoca en un estilo híbrido internacional que combina lo mejor de la Lucha Libre Mexicana, el Pro Wrestling estadounidense, el Puroresu japonés y la lucha europea. Buscamos formar competidores versátiles, capaces de adaptarse a diferentes estilos y escenarios dentro de la lucha libre profesional.</p>
+            </div>
+
+            <div className="pt-4">
+              <h3 className="text-red-500 font-bold uppercase tracking-widest text-xl mb-2">Habilidades Blandas</h3>
+              <p>La lucha libre es mucho más que golpes, llaves y lances. El espectáculo requiere desarrollar habilidades como la psicología sobre el ring, la construcción y evolución de personajes, el storytelling, la conexión con el público y el uso efectivo del micrófono en promos y segmentos.</p>
+            </div>
+
+            <div className="pt-4">
+              <h3 className="text-red-500 font-bold uppercase tracking-widest text-xl mb-2">Vive la Experiencia</h3>
+              <p>Cuando alcances el nivel técnico, físico y profesional necesario, podrás formar parte de nuestras luchas de exhibición. Estas oportunidades te permitirán poner en práctica lo aprendido frente al público de los eventos de SCW, adquiriendo experiencia real en un entorno profesional.</p>
+            </div>
+          </div>
         </motion.div>
       </section>
 
