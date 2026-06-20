@@ -92,17 +92,17 @@ export default function RouletteModal({ isOpen, onClose, tickets }: RouletteModa
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.9 }}
-          className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl relative"
+          className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl relative scrollbar-thin scrollbar-thumb-zinc-700"
         >
           {/* Close button */}
           <button 
             onClick={onClose}
-            className="absolute top-4 right-4 text-zinc-400 hover:text-white transition-colors z-10"
+            className="absolute top-4 right-4 text-zinc-400 hover:text-white transition-colors z-10 bg-zinc-900/50 rounded-full p-1"
           >
             <X className="w-6 h-6" />
           </button>
           
-          <div className="p-8 text-center">
+          <div className="p-8 text-center pt-10">
             <h2 className="text-2xl font-black text-white uppercase tracking-wider mb-2">
               Sorteo de Ganador
             </h2>
