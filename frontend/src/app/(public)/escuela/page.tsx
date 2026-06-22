@@ -23,12 +23,11 @@ const EXPERIENCE_LABELS: Record<string, string> = {
   ADVANCED: 'Avanzado (Ya he luchado o estoy listo para debutar)',
 };
 
-type Step = 'check' | 'verify_email' | 'form' | 'success' | 'already_enrolled';
-
+type Step = 'loading' | 'check' | 'verify_email' | 'form' | 'success' | 'already_enrolled';
 
 export default function EscuelaPage() {
   const { isAuthenticated, user } = useAuthStore();
-  const [step, setStep] = useState<Step>('check');
+  const [step, setStep] = useState<Step>('loading');
   const [verifyCode, setVerifyCode] = useState('');
   const [codeSent, setCodeSent] = useState(false);
   const [sendingCode, setSendingCode] = useState(false);
@@ -120,7 +119,11 @@ export default function EscuelaPage() {
           }
         } catch (e) {
           console.error("Error al obtener status de enrollment:", e);
-          // not enrolled or error
+          // Si falló la consulta (por red o error del servidor), bloqueamos el acceso al formulario
+          // para evitar que creen un registro duplicado sin validación.
+          setVerifyError("Ocurrió un error conectando con el servidor al verificar tu estatus. Por favor recarga la página.");
+          setStep('check');
+          return;
         }
         
         if (!isSubmittedLocally) {
@@ -339,6 +342,13 @@ export default function EscuelaPage() {
 
           <div className="p-8 md:p-12">
             <AnimatePresence mode="wait">
+              {/* LOADING */}
+              {step === 'loading' && (
+                <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center py-20">
+                  <Loader2 className="w-12 h-12 text-red-600 animate-spin mb-4" />
+                  <p className="text-zinc-400 font-medium tracking-widest uppercase text-sm">Verificando estatus de inscripción...</p>
+                </motion.div>
+              )}
 
               {/* STEP: Already Enrolled */}
               {step === 'already_enrolled' && (
@@ -361,6 +371,11 @@ export default function EscuelaPage() {
               {/* STEP 1: Must be logged in */}
               {step === 'check' && (
                 <motion.div key="check" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="text-center space-y-6">
+                  {verifyError && (
+                    <div className="p-4 bg-red-900/50 border border-red-500/50 rounded-xl text-red-200 text-sm">
+                      {verifyError}
+                    </div>
+                  )}
                   <Lock className="w-16 h-16 text-red-500 mx-auto" />
                   <h2 className="text-2xl font-black uppercase tracking-tight">Acceso Requerido</h2>
                   <p className="text-zinc-400">Para postularte a SCW DOJO necesitas una cuenta registrada. Esto nos permite verificar tu identidad y darte seguimiento a tu inscripción.</p>
@@ -626,9 +641,8 @@ export default function EscuelaPage() {
                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.2 }}>
                     <CheckCircle className="w-24 h-24 text-green-500 mx-auto mb-6" />
                   </motion.div>
-                  <h3 className="text-3xl font-black uppercase mb-3">Tu inscripción está en proceso</h3>
-                  <p className="text-zinc-400 text-lg">Un entrenador de SCW se pondrá en contacto contigo por WhatsApp muy pronto para avisarte.</p>
-                  <p className="text-zinc-500 text-sm mt-4">Prepárate para empezar tu camino en el ring. 🥊</p>
+                  <h3 className="text-3xl font-black uppercase mb-3">¡Inscripción recibida!</h3>
+                  <p className="text-zinc-400 text-lg">Gracias por registrarte. Tu solicitud está actualmente bajo revisión por parte de la administración del dojo. Te notificaremos vía correo electrónico cuando sea aprobada.</p>
                 </motion.div>
               )}
 
