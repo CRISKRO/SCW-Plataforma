@@ -381,10 +381,15 @@ Por favor ingresa a tu Portal de Alumno para ver tu código QR y realizar el pag
         
         enrollment.update_dynamic_payment_status()
         
-        config = get_active_config()
+        try:
+            config = get_active_config()
+            tuition_fee = str(config.tuition_fee)
+        except:
+            tuition_fee = "500.00"
+            
         return Response({
             "enrollment": EnrollmentSerializer(enrollment).data,
-            "tuition_fee": str(config.tuition_fee)
+            "tuition_fee": tuition_fee
         })
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
