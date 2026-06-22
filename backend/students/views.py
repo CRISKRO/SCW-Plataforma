@@ -3,7 +3,7 @@ from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Enrollment
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 import requests
 import os
 import logging
@@ -17,6 +17,24 @@ class EnrollmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Enrollment
         fields = '__all__'
+
+    def to_representation(self, instance):
+        try:
+            return super().to_representation(instance)
+        except ValueError:
+            # Si los archivos se eliminaron del disco, el serializer fallará.
+            # Retornamos un dict manual o evitamos los campos de archivo.
+            data = {}
+            for field in self.Meta.model._meta.fields:
+                if field.name not in ['id_document', 'medical_certificate']:
+                    val = getattr(instance, field.name)
+                    if isinstance(val, (date, datetime)):
+                        data[field.name] = val.isoformat() if val else None
+                    elif isinstance(val, Decimal):
+                        data[field.name] = str(val)
+                    else:
+                        data[field.name] = val
+            return data
 
 class EnrollmentViewSet(viewsets.ModelViewSet):
     queryset = Enrollment.objects.all()

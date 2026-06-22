@@ -370,13 +370,13 @@ export default function EscuelaPage() {
                   <div className="w-20 h-20 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
                     <CheckCircle className="w-10 h-10" />
                   </div>
-                  <h3 className="text-2xl font-bold text-white mb-4">Ya estás inscrito</h3>
-                  <p className="text-zinc-400">
-                    Ya hemos recibido tu inscripción o ya formas parte de SCW DOJO. Puedes ver el estado de tu suscripción en tu panel de alumno.
+                  <h3 className="text-2xl font-bold text-white mb-4">¡Tu inscripción fue Aprobada!</h3>
+                  <p className="text-zinc-400 mb-6">
+                    Ya fuiste aprobado por la administración del Dojo. Por favor, ingresa a tu Panel de Alumno para realizar tu pago de inscripción y habilitar tu acceso.
                   </p>
                   <Link href="/dashboard?tab=dojo">
                     <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="px-8 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold uppercase tracking-widest transition-colors">
-                      Ir a mi Panel
+                      Ir a mi Panel a Pagar
                     </motion.button>
                   </Link>
                 </motion.div>
