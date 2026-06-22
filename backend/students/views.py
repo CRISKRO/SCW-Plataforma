@@ -305,7 +305,11 @@ Por favor ingresa a tu Portal de Alumno para ver tu código QR y realizar el pag
     def status(self, request):
         """Returns the enrollment status for the current user (PENDING or APPROVED)."""
         # Get all enrollments for this email
-        enrollments = Enrollment.objects.filter(email__iexact=request.user.email.strip())
+        email = request.user.email
+        if not email:
+            return Response({"status": "NONE"}, status=status.HTTP_200_OK)
+            
+        enrollments = Enrollment.objects.filter(email__iexact=email.strip())
         
         if not enrollments.exists():
             return Response({"status": "NONE"}, status=status.HTTP_200_OK)

@@ -92,6 +92,13 @@ export default function EscuelaPage() {
   useEffect(() => {
     const checkEnrollment = async () => {
       if (isAuthenticated) {
+        // Fallback para migración de sessionStorage a localStorage (para no perder el estado de la sesión actual del usuario)
+        ['dojo_submitted', 'dojo_email_verified', 'dojo_code_sent', 'dojo_form_data'].forEach(key => {
+          if (!localStorage.getItem(key) && sessionStorage.getItem(key)) {
+            localStorage.setItem(key, sessionStorage.getItem(key) as string);
+          }
+        });
+
         let isSubmittedLocally = localStorage.getItem('dojo_submitted') === 'true';
         if (isSubmittedLocally) {
           setStep('success');
