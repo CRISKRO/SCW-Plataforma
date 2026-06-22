@@ -34,6 +34,7 @@ export default function EscuelaPage() {
   const [sendingCode, setSendingCode] = useState(false);
   const [verifyError, setVerifyError] = useState('');
   const [formStatus, setFormStatus] = useState<'idle' | 'loading' | 'error'>('idle');
+  const [paymentStatus, setPaymentStatus] = useState<string>('');
 
   const [formData, setFormData] = useState({
     name: '',
@@ -103,6 +104,9 @@ export default function EscuelaPage() {
             setStep('success'); // Muestra: Tu solicitud está en revisión
             return;
           } else if (res.data.status === 'APPROVED') {
+            if (res.data.enrollment) {
+              setPaymentStatus(res.data.enrollment.payment_status);
+            }
             localStorage.setItem('dojo_submitted', 'true');
             setStep('already_enrolled');
             return;
@@ -628,9 +632,13 @@ export default function EscuelaPage() {
                     <CheckCircle className="w-24 h-24 text-green-500 mx-auto mb-6" />
                   </motion.div>
                   <h3 className="text-3xl font-black uppercase mb-3">¡Fuiste Aprobado!</h3>
-                  <p className="text-zinc-400 text-lg mb-6">Nada más completa tu pago de inscripción y mensualidad para tener acceso completo.</p>
+                  {paymentStatus === 'PAID' ? (
+                    <p className="text-zinc-400 text-lg mb-6">Ya eres miembro activo del Dojo y tu colegiatura está al día.</p>
+                  ) : (
+                    <p className="text-zinc-400 text-lg mb-6">Ya estás inscrito, pero aún no pagas. Completa tu pago de inscripción y mensualidad para tener acceso completo.</p>
+                  )}
                   <Link href="/dashboard?tab=dojo" className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white px-8 py-4 rounded-xl font-bold uppercase tracking-widest transition-colors">
-                    Ir a mi Panel para Pagar
+                    Ir a mi Panel
                   </Link>
                 </motion.div>
               )}
