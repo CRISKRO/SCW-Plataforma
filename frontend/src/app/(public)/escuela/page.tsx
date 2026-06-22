@@ -97,41 +97,55 @@ export default function EscuelaPage() {
             localStorage.setItem(key, sessionStorage.getItem(key) as string);
           }
         });
-
+        
         let isSubmittedLocally = localStorage.getItem('dojo_submitted') === 'true';
-        if (isSubmittedLocally) {
-          setStep('success');
-        }
 
         try {
           const res = await api.get('/students/enrollments/status/');
-          if (res.data.status === 'PENDING') {
+          const serverStatus = res.data?.status ? String(res.data.status).trim().toUpperCase() : null;
+
+          if (serverStatus === 'PENDING') {
             localStorage.setItem('dojo_submitted', 'true');
-            setStep('success'); // Muestra: Tu solicitud está en revisión
+            setStep('success');
             return;
-          } else if (res.data.status === 'APPROVED') {
+          } else if (serverStatus === 'APPROVED') {
             if (res.data.enrollment) {
               setPaymentStatus(res.data.enrollment.payment_status);
             }
             localStorage.setItem('dojo_submitted', 'true');
             setStep('already_enrolled');
             return;
+          } else if (serverStatus === 'NONE' || serverStatus === 'REJECTED') {
+            // Permite el registro
+            isSubmittedLocally = false;
+            localStorage.removeItem('dojo_submitted');
+          } else {
+            // Fallback si devuelve un estado inesperado o no tiene status (ej. array), asumimos success si ya estaba localmente o mostramos error.
+            if (isSubmittedLocally) {
+              setStep('success');
+              return;
+            }
           }
         } catch (e) {
           console.error("Error al obtener status de enrollment:", e);
-          // Si falló la consulta (por red o error del servidor), bloqueamos el acceso al formulario
-          // para evitar que creen un registro duplicado sin validación.
+          if (isSubmittedLocally) {
+            setStep('success');
+            return;
+          }
           setVerifyError("Ocurrió un error conectando con el servidor al verificar tu estatus. Por favor recarga la página.");
           setStep('check');
           return;
         }
         
-        if (!isSubmittedLocally) {
-          if (localStorage.getItem('dojo_email_verified') === 'true') {
-            setStep('form');
-          } else {
-            setStep('verify_email');
-          }
+        if (isSubmittedLocally) {
+          setStep('success');
+          return;
+        }
+
+        if (localStorage.getItem('dojo_email_verified') === 'true') {
+          setStep('form');
+        } else {
+          setStep('verify_email');
         }
       } else {
         setStep('check');
