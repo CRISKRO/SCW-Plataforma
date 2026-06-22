@@ -614,7 +614,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
                     className="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold uppercase tracking-widest py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
                   >
                     <ShoppingCart className="w-5 h-5" />
-                    Agregar al Carrito
+                    Comprar Ahora
                   </button>
                 </div>
               </div>
