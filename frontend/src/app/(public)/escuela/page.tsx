@@ -148,7 +148,7 @@ export default function EscuelaPage() {
     } catch (error: any) {
       const errorMsg = error.response?.data?.error || error.message || 'Error al enviar el código al correo.';
       setVerifyError(errorMsg);
-      if (errorMsg.includes('Para pruebas')) {
+      if (errorMsg.includes('Para pruebas') || errorMsg.includes('probando')) {
         setCodeSent(true);
         localStorage.setItem('dojo_code_sent', 'true');
       }
