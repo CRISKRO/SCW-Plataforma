@@ -145,7 +145,7 @@ export default function RaffleDetailPage() {
             })}
           </div>
 
-          <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 sticky bottom-4 bg-zinc-900/90 backdrop-blur-md p-4 rounded-xl">
+          <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 sticky bottom-24 md:bottom-4 z-20 bg-zinc-900/90 backdrop-blur-md p-4 rounded-xl shadow-2xl">
             <div className="text-center sm:text-left">
               <p className="text-zinc-400 text-sm">Boletos seleccionados: <strong className="text-white">{selectedTickets.length}</strong></p>
               <p className="text-2xl font-black text-white mt-1">Total: ${totalPrice.toFixed(2)} MXN</p>
