@@ -54,7 +54,7 @@ export default function EscuelaPage() {
 
   // Pre-fill user data if logged in or from session
   useEffect(() => {
-    const saved = sessionStorage.getItem('dojo_form_data');
+    const saved = localStorage.getItem('dojo_form_data');
     let parsedSaved: any = {};
     if (saved) {
       try {
@@ -77,12 +77,12 @@ export default function EscuelaPage() {
 
   // Save form data to session storage
   useEffect(() => {
-    sessionStorage.setItem('dojo_form_data', JSON.stringify(formData));
+    localStorage.setItem('dojo_form_data', JSON.stringify(formData));
   }, [formData]);
 
   // Restore code sent status
   useEffect(() => {
-    if (sessionStorage.getItem('dojo_code_sent') === 'true') {
+    if (localStorage.getItem('dojo_code_sent') === 'true') {
       setCodeSent(true);
     }
   }, []);
@@ -91,12 +91,19 @@ export default function EscuelaPage() {
   useEffect(() => {
     const checkEnrollment = async () => {
       if (isAuthenticated) {
+        let isSubmittedLocally = localStorage.getItem('dojo_submitted') === 'true';
+        if (isSubmittedLocally) {
+          setStep('success');
+        }
+
         try {
           const res = await api.get('/students/enrollments/status/');
           if (res.data.status === 'PENDING') {
+            localStorage.setItem('dojo_submitted', 'true');
             setStep('success'); // Muestra: Tu solicitud está en revisión
             return;
           } else if (res.data.status === 'APPROVED') {
+            localStorage.setItem('dojo_submitted', 'true');
             setStep('already_enrolled');
             return;
           }
@@ -105,10 +112,12 @@ export default function EscuelaPage() {
           // not enrolled or error
         }
         
-        if (sessionStorage.getItem('dojo_email_verified') === 'true') {
-          setStep('form');
-        } else {
-          setStep('verify_email');
+        if (!isSubmittedLocally) {
+          if (localStorage.getItem('dojo_email_verified') === 'true') {
+            setStep('form');
+          } else {
+            setStep('verify_email');
+          }
         }
       } else {
         setStep('check');
@@ -124,13 +133,13 @@ export default function EscuelaPage() {
       const res = await api.post('/auth/send-email-otp/');
       if (res.data.error) throw new Error(res.data.error);
       setCodeSent(true);
-      sessionStorage.setItem('dojo_code_sent', 'true');
+      localStorage.setItem('dojo_code_sent', 'true');
     } catch (error: any) {
       const errorMsg = error.response?.data?.error || error.message || 'Error al enviar el código al correo.';
       setVerifyError(errorMsg);
       if (errorMsg.includes('Para pruebas')) {
         setCodeSent(true);
-        sessionStorage.setItem('dojo_code_sent', 'true');
+        localStorage.setItem('dojo_code_sent', 'true');
       }
     } finally {
       setSendingCode(false);
@@ -142,7 +151,7 @@ export default function EscuelaPage() {
     try {
       const res = await api.post('/auth/verify-email-otp/', { code: verifyCode });
       if (res.data.error) throw new Error(res.data.error);
-      sessionStorage.setItem('dojo_email_verified', 'true');
+      localStorage.setItem('dojo_email_verified', 'true');
       setStep('form');
     } catch (error: any) {
       setVerifyError(error.response?.data?.error || error.message || 'Código incorrecto. Intenta de nuevo.');
@@ -165,10 +174,11 @@ export default function EscuelaPage() {
       data.append('medical_certificate', medicalCertificate);
 
       await api.post('/students/enrollments/', data);
+      localStorage.setItem('dojo_submitted', 'true');
       setStep('success');
-      sessionStorage.removeItem('dojo_email_verified');
-      sessionStorage.removeItem('dojo_code_sent');
-      sessionStorage.removeItem('dojo_form_data');
+      localStorage.removeItem('dojo_email_verified');
+      localStorage.removeItem('dojo_code_sent');
+      localStorage.removeItem('dojo_form_data');
     } catch (error: any) {
       console.error(error);
       const serverError = error.response?.data;
@@ -605,8 +615,8 @@ export default function EscuelaPage() {
                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.2 }}>
                     <CheckCircle className="w-24 h-24 text-green-500 mx-auto mb-6" />
                   </motion.div>
-                  <h3 className="text-3xl font-black uppercase mb-3">¡Inscripción Enviada!</h3>
-                  <p className="text-zinc-400 text-lg">Un entrenador de SCW se pondrá en contacto contigo por WhatsApp muy pronto.</p>
+                  <h3 className="text-3xl font-black uppercase mb-3">Tu inscripción está en proceso</h3>
+                  <p className="text-zinc-400 text-lg">Un entrenador de SCW se pondrá en contacto contigo por WhatsApp muy pronto para avisarte.</p>
                   <p className="text-zinc-500 text-sm mt-4">Prepárate para empezar tu camino en el ring. 🥊</p>
                 </motion.div>
               )}
