@@ -642,6 +642,8 @@ class VerifyPaymentView(APIView):
                         enrollment.payment_status = 'PAID'
                         enrollment.last_payment_date = timezone.now().date()
                         enrollment.payment_due_date = timezone.now().date() + timedelta(days=30)
+                        enrollment.outstanding_balance = 0
+                        enrollment.penalty_weeks_counted = 0
                         enrollment.save()
                         
                         # Automate WhatsApp receipt
@@ -880,6 +882,8 @@ class WebhookView(APIView):
                                     enrollment.payment_status = 'PAID'
                                     enrollment.last_payment_date = timezone.now().date()
                                     enrollment.payment_due_date = timezone.now().date() + timedelta(days=30)
+                                    enrollment.outstanding_balance = 0
+                                    enrollment.penalty_weeks_counted = 0
                                     enrollment.save()
 
                                     # Automate WhatsApp receipt

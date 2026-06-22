@@ -61,6 +61,21 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
         updated_instance = serializer.save()
         
         if original_status != 'APPROVED' and updated_instance.status == 'APPROVED':
+            # Cobrar inscripción + mensualidad
+            from api.models import get_active_config
+            try:
+                config = get_active_config()
+                tuition_fee = config.tuition_fee
+                enrollment_fee = config.enrollment_fee
+            except:
+                tuition_fee = 500.00
+                enrollment_fee = 500.00
+            
+            # Asignar saldo inicial
+            updated_instance.outstanding_balance = tuition_fee + enrollment_fee
+            updated_instance.payment_status = 'UNPAID'
+            updated_instance.save(update_fields=['outstanding_balance', 'payment_status'])
+
             self.send_admission_whatsapp(updated_instance)
             self.send_admission_email(updated_instance)
 
@@ -366,9 +381,17 @@ Por favor ingresa a tu Portal de Alumno para ver tu código QR y realizar el pag
             return Response({"error": "Solo alumnos confirmados pueden pagar colegiatura."}, status=status.HTTP_400_BAD_REQUEST)
             
         config = get_active_config()
-        tuition_fee = float(config.tuition_fee)
+        
+        # Determine amount to pay: outstanding_balance or regular tuition_fee
+        if enrollment.outstanding_balance > 0:
+            base_amount = float(enrollment.outstanding_balance)
+            title = f"Pago Pendiente SCW Dojo - {enrollment.name}"
+        else:
+            base_amount = float(config.tuition_fee)
+            title = f"Mensualidad Adelantada SCW Dojo - {enrollment.name}"
+            
         commission = float(config.mercadopago_commission_rate)
-        price_with_commission = round(tuition_fee * (1 + commission), 2)
+        price_with_commission = round(base_amount * (1 + commission), 2)
         
         try:
             import mercadopago
@@ -382,7 +405,7 @@ Por favor ingresa a tu Portal de Alumno para ver tu código QR y realizar el pag
             preference_data = {
                 "items": [
                     {
-                        "title": f"Mensualidad SCW Dojo - {enrollment.name}",
+                        "title": title,
                         "quantity": 1,
                         "currency_id": "MXN",
                         "unit_price": price_with_commission

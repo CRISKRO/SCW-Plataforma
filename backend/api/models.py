@@ -83,6 +83,13 @@ class SystemConfiguration(models.Model):
         verbose_name=_("Costo de Mensualidad del Dojo"),
         help_text=_("Costo a cobrar por la mensualidad escolar a través de Mercado Pago")
     )
+    enrollment_fee = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        default=500.00,
+        verbose_name=_("Costo de Inscripción al Dojo"),
+        help_text=_("Costo a cobrar por única vez al aprobar a un nuevo alumno")
+    )
     
     # Store Settings
     shipping_cost = models.DecimalField(
