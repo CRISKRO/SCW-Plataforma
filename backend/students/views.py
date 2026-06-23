@@ -159,11 +159,17 @@ Por favor ingresa a tu Portal de Alumno para ver tu código QR y realizar el pag
             config = get_active_config()
             if not config.whatsapp_enabled:
                 return
-            whatsapp_url = config.whatsapp_service_url if config.whatsapp_service_url else 'http://localhost:3001'
+            whatsapp_phone_number_id = config.whatsapp_phone_number_id
+            whatsapp_access_token = config.whatsapp_access_token
         except Exception as e:
             logger.error(f"Error al obtener la configuración activa (¿falta migrar?): {e}")
             return
+            
         phone = enrollment.phone
+        import re
+        clean_phone = re.sub(r'\D', '', phone)
+        if not clean_phone.startswith('52'):
+            clean_phone = '52' + clean_phone
         
         message = (
             f"🎉 *¡SCW Dojo — Felicitaciones, has sido Admitido!* 🥊\n\n"
@@ -174,16 +180,24 @@ Por favor ingresa a tu Portal de Alumno para ver tu código QR y realizar el pag
             f"Si tienes alguna duda sobre los horarios, uniformes o mensualidades, no dudes en escribirnos por este medio."
         )
         
-        try:
-            res = requests.post(
-                f"{whatsapp_url}/send-message",
-                json={'phone': phone, 'message': message},
-                timeout=8
-            )
-            if res.status_code != 200:
-                logger.error(f"Error al enviar mensaje de admisión por WhatsApp: {res.text}")
-        except Exception as e:
-            logger.error(f"Error de conexión con el servicio de WhatsApp al enviar admisión: {e}")
+        if config.whatsapp_enabled and whatsapp_phone_number_id and whatsapp_access_token:
+            try:
+                url = f"https://graph.facebook.com/v19.0/{whatsapp_phone_number_id}/messages"
+                headers = {
+                    "Authorization": f"Bearer {whatsapp_access_token}",
+                    "Content-Type": "application/json"
+                }
+                payload = {
+                    "messaging_product": "whatsapp",
+                    "to": clean_phone,
+                    "type": "text",
+                    "text": {"body": message}
+                }
+                res = requests.post(url, json=payload, headers=headers, timeout=8)
+                if res.status_code != 200:
+                    logger.error(f"Error al enviar mensaje de admisión por WhatsApp: {res.text}")
+            except Exception as e:
+                logger.error(f"Error de conexión con la API de WhatsApp al enviar admisión: {e}")
 
     @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
     def register_payment(self, request, pk=None):
@@ -237,8 +251,15 @@ Por favor ingresa a tu Portal de Alumno para ver tu código QR y realizar el pag
 
         # Enviar confirmación por WhatsApp
         config = get_active_config()
-        whatsapp_url = config.whatsapp_service_url if config.whatsapp_service_url else 'http://localhost:3001'
+        whatsapp_phone_number_id = config.whatsapp_phone_number_id
+        whatsapp_access_token = config.whatsapp_access_token
+        
         phone = enrollment.phone
+        import re
+        clean_phone = re.sub(r'\D', '', phone)
+        if not clean_phone.startswith('52'):
+            clean_phone = '52' + clean_phone
+            
         due_date_str = enrollment.payment_due_date.strftime('%d/%m/%Y')
         last_payment_str = enrollment.last_payment_date.strftime('%d/%m/%Y')
         
@@ -251,19 +272,26 @@ Por favor ingresa a tu Portal de Alumno para ver tu código QR y realizar el pag
         )
 
         whatsapp_sent = False
-        if config.whatsapp_enabled:
+        if config.whatsapp_enabled and whatsapp_phone_number_id and whatsapp_access_token:
             try:
-                res = requests.post(
-                    f"{whatsapp_url}/send-message",
-                    json={'phone': phone, 'message': message},
-                    timeout=8
-                )
+                url = f"https://graph.facebook.com/v19.0/{whatsapp_phone_number_id}/messages"
+                headers = {
+                    "Authorization": f"Bearer {whatsapp_access_token}",
+                    "Content-Type": "application/json"
+                }
+                payload = {
+                    "messaging_product": "whatsapp",
+                    "to": clean_phone,
+                    "type": "text",
+                    "text": {"body": message}
+                }
+                res = requests.post(url, json=payload, headers=headers, timeout=8)
                 if res.status_code == 200:
                     whatsapp_sent = True
                 else:
                     logger.error(f"Error al enviar mensaje por WhatsApp: {res.text}")
             except Exception as e:
-                logger.error(f"Error de conexión con el servicio de WhatsApp: {e}")
+                logger.error(f"Error de conexión con la API de WhatsApp: {e}")
 
         return Response({
             "success": True,
@@ -291,8 +319,15 @@ Por favor ingresa a tu Portal de Alumno para ver tu código QR y realizar el pag
         enrollment.update_dynamic_payment_status()
 
         config = get_active_config()
-        whatsapp_url = config.whatsapp_service_url if config.whatsapp_service_url else 'http://localhost:3001'
+        whatsapp_phone_number_id = config.whatsapp_phone_number_id
+        whatsapp_access_token = config.whatsapp_access_token
+        
         phone = enrollment.phone
+        import re
+        clean_phone = re.sub(r'\D', '', phone)
+        if not clean_phone.startswith('52'):
+            clean_phone = '52' + clean_phone
+            
         due_date_str = enrollment.payment_due_date.strftime('%d/%m/%Y')
 
         if enrollment.payment_status == 'UNPAID':
@@ -314,24 +349,31 @@ Por favor ingresa a tu Portal de Alumno para ver tu código QR y realizar el pag
             )
 
         whatsapp_sent = False
-        if config.whatsapp_enabled:
+        if config.whatsapp_enabled and whatsapp_phone_number_id and whatsapp_access_token:
             try:
-                res = requests.post(
-                    f"{whatsapp_url}/send-message",
-                    json={'phone': phone, 'message': message},
-                    timeout=8
-                )
+                url = f"https://graph.facebook.com/v19.0/{whatsapp_phone_number_id}/messages"
+                headers = {
+                    "Authorization": f"Bearer {whatsapp_access_token}",
+                    "Content-Type": "application/json"
+                }
+                payload = {
+                    "messaging_product": "whatsapp",
+                    "to": clean_phone,
+                    "type": "text",
+                    "text": {"body": message}
+                }
+                res = requests.post(url, json=payload, headers=headers, timeout=8)
                 if res.status_code == 200:
                     whatsapp_sent = True
                 else:
                     logger.error(f"Error al enviar recordatorio por WhatsApp: {res.text}")
             except Exception as e:
-                logger.error(f"Error de conexión con el servicio de WhatsApp: {e}")
+                logger.error(f"Error de conexión con la API de WhatsApp: {e}")
 
         return Response({
             "success": True,
             "whatsapp_sent": whatsapp_sent,
-            "message": "Recordatorio enviado con éxito." if whatsapp_sent else ("No se pudo enviar el mensaje por WhatsApp. ¿Está el microservicio encendido?" if config.whatsapp_enabled else "Las notificaciones de WhatsApp están desactivadas en la configuración.")
+            "message": "Recordatorio enviado con éxito." if whatsapp_sent else ("No se pudo enviar el mensaje por WhatsApp. Verifique la configuración." if config.whatsapp_enabled else "Las notificaciones de WhatsApp están desactivadas en la configuración.")
         })
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])

@@ -63,11 +63,19 @@ class SystemConfiguration(models.Model):
     )
     
     # WhatsApp Settings
-    whatsapp_service_url = models.CharField(
-        max_length=255, 
-        default='http://localhost:3001',
-        verbose_name=_("URL de WhatsApp API"),
-        help_text=_("URL base del microservicio de WhatsApp (ej. http://localhost:3001)")
+    whatsapp_phone_number_id = models.CharField(
+        max_length=255,
+        default="",
+        blank=True,
+        verbose_name="ID del número de teléfono de WhatsApp",
+        help_text="El Phone Number ID proporcionado por Meta"
+    )
+    whatsapp_access_token = models.CharField(
+        max_length=500,
+        default="",
+        blank=True,
+        verbose_name="Token de acceso de WhatsApp",
+        help_text="Token temporal o permanente proporcionado por Meta"
     )
     whatsapp_enabled = models.BooleanField(
         default=True,

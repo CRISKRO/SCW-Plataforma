@@ -641,28 +641,53 @@ class VerifyPaymentView(APIView):
                     if enrollment.payment_status != 'PAID' or enrollment.last_payment_date != timezone.now().date():
                         enrollment.payment_status = 'PAID'
                         enrollment.last_payment_date = timezone.now().date()
-                        enrollment.payment_due_date = timezone.now().date() + timedelta(days=30)
+                    enrollment.payment_due_date = timezone.now().date() + timedelta(days=30)
                         enrollment.outstanding_balance = 0
                         enrollment.penalty_weeks_counted = 0
                         enrollment.save()
                         
-                        # Automate WhatsApp receipt
-                        whatsapp_url = config.whatsapp_service_url if config.whatsapp_service_url else 'https://scw-whatsapp.onrender.com'
+                        # Automate WhatsApp
+                        whatsapp_phone_number_id = config.whatsapp_phone_number_id
+                        whatsapp_access_token = config.whatsapp_access_token
+                        
+                        import re
+                        clean_phone = re.sub(r'\D', '', enrollment.phone)
+                        if not clean_phone.startswith('52'):
+                            clean_phone = '52' + clean_phone
+                        
                         due_date_str = enrollment.payment_due_date.strftime('%d/%m/%Y')
                         last_payment_str = enrollment.last_payment_date.strftime('%d/%m/%Y')
-                        message = (
+                        whatsapp_message = (
                             f"🥊 *SCW Dojo — Confirmación de Mensualidad*\n\n"
                             f"¡Hola *{enrollment.name}*!\n\n"
                             f"Te confirmamos que hemos recibido con éxito el pago de tu mensualidad por Mercado Pago el día *{last_payment_str}*.\n\n"
                             f"📅 *Próximo Vencimiento:* {due_date_str}\n\n"
                             f"¡Muchas gracias por seguir entrenando en el SCW Dojo! ¡A seguir dándolo todo en el ring! 🥊⚡"
                         )
-                        if config.whatsapp_enabled:
+                        
+                        if config.whatsapp_enabled and whatsapp_phone_number_id and whatsapp_access_token:
                             import requests
+                            import logging
+                            logger = logging.getLogger(__name__)
                             try:
-                                requests.post(f"{whatsapp_url}/send-message", json={'phone': enrollment.phone, 'message': message}, timeout=8)
+                                url = f"https://graph.facebook.com/v19.0/{whatsapp_phone_number_id}/messages"
+                                headers = {
+                                    "Authorization": f"Bearer {whatsapp_access_token}",
+                                    "Content-Type": "application/json"
+                                }
+                                payload = {
+                                    "messaging_product": "whatsapp",
+                                    "to": clean_phone,
+                                    "type": "text",
+                                    "text": {"body": whatsapp_message}
+                                }
+                                res = requests.post(url, json=payload, headers=headers, timeout=8)
+                                if res.status_code == 200:
+                                    logger.info(f"WhatsApp de confirmación de colegiatura enviado a {enrollment.phone}")
+                                else:
+                                    logger.error(f"Error al enviar WhatsApp API: {res.text}")
                             except Exception as e:
-                                print("Error sending tuition receipt:", e)
+                                logger.error(f"Error de conexión con WhatsApp API: {e}")
 
                     return Response({"status": "approved", "enrollment_id": enrollment.id})
                 else:
@@ -886,11 +911,17 @@ class WebhookView(APIView):
                                     enrollment.penalty_weeks_counted = 0
                                     enrollment.save()
 
-                                    # Automate WhatsApp receipt
-                                    whatsapp_url = config.whatsapp_service_url if config.whatsapp_service_url else 'https://scw-whatsapp.onrender.com'
+                                    whatsapp_phone_number_id = config.whatsapp_phone_number_id
+                                    whatsapp_access_token = config.whatsapp_access_token
+                                    
+                                    import re
+                                    clean_phone = re.sub(r'\D', '', enrollment.phone)
+                                    if not clean_phone.startswith('52'):
+                                        clean_phone = '52' + clean_phone
+                                    
                                     due_date_str = enrollment.payment_due_date.strftime('%d/%m/%Y')
                                     last_payment_str = enrollment.last_payment_date.strftime('%d/%m/%Y')
-                                    message = (
+                                    whatsapp_message = (
                                         f"🥊 *SCW Dojo — Confirmación de Mensualidad*\n\n"
                                         f"¡Hola *{enrollment.name}*!\n\n"
                                         f"Te confirmamos que hemos recibido con éxito el pago de tu mensualidad por Mercado Pago el día *{last_payment_str}*.\n\n"

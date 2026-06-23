@@ -38,12 +38,7 @@ if ($portOccupied) {
 
 # Iniciar Next.js frontend
 $env:NEXT_PUBLIC_API_URL = "http://${LOCAL_IP}:8000/api"
-$env:NEXT_PUBLIC_WHATSAPP_SERVICE = "http://${LOCAL_IP}:3001"
 $frontendProc = Start-Process npm -ArgumentList "run dev -- --hostname 0.0.0.0 --port $FRONTEND_PORT" -PassThru -NoNewWindow
-
-Write-Host "Iniciando Microservicio WhatsApp..."
-Set-Location ..\whatsapp
-$whatsappProc = Start-Process node -ArgumentList "index.js" -PassThru -NoNewWindow
 
 Set-Location ..
 
@@ -54,7 +49,6 @@ Write-Host "Backend (API Django):        http://localhost:8000"
 if ($LOCAL_IP) {
   Write-Host "Frontend móvil:              http://${LOCAL_IP}:${FRONTEND_PORT}"
   Write-Host "Backend móvil (API):         http://${LOCAL_IP}:8000"
-  Write-Host "WhatsApp móvil:              http://${LOCAL_IP}:3001"
 }
 Write-Host "========================================================="
 Write-Host "IMPORTANTE: Usa la dirección móvil en el teléfono"
@@ -68,7 +62,4 @@ try {
     }
 } finally {
     Write-Host "`nDeteniendo servidores..."
-    if ($backendProc) { Stop-Process -Id $backendProc.Id -ErrorAction SilentlyContinue }
     if ($frontendProc) { Stop-Process -Id $frontendProc.Id -ErrorAction SilentlyContinue }
-    if ($whatsappProc) { Stop-Process -Id $whatsappProc.Id -ErrorAction SilentlyContinue }
-}
