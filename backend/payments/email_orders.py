@@ -274,14 +274,17 @@ def send_transfer_admin_email(order, request):
     """
 
     import re
-    match = re.search(r'<([^>]+)>', from_email)
-    to_email = match.group(1).strip() if match else from_email.strip()
+    if config.admin_notification_email:
+        to_email = config.admin_notification_email.strip()
+    else:
+        match = re.search(r'<([^>]+)>', from_email)
+        to_email = match.group(1).strip() if match else from_email.strip()
 
     email = EmailMultiAlternatives(
         subject=f"⚠️ Comprobante Recibido - Orden #{order.id}",
         body=f"Revisa el comprobante de la orden #{order.id}.",
         from_email=from_email,
-        to=[to_email]  # send to raw admin email
+        to=[to_email]  # send to admin email
     )
     email.attach_alternative(html_body, "text/html")
     

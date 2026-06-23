@@ -15,6 +15,7 @@ class SystemConfigurationSerializer(serializers.ModelSerializer):
             'email_host_user',
             'email_host_password',
             'default_from_email',
+            'admin_notification_email',
             'whatsapp_phone_number_id',
             'whatsapp_access_token',
             'whatsapp_enabled',

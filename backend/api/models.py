@@ -61,6 +61,12 @@ class SystemConfiguration(models.Model):
         verbose_name=_("Remitente por Defecto"),
         help_text=_("Nombre e email del remitente (ej. Nombre <email@dominio.com>)")
     )
+    admin_notification_email = models.EmailField(
+        blank=True, 
+        null=True,
+        verbose_name=_("Correo Administrador para Transferencias"),
+        help_text=_("Correo al que llegarán los comprobantes de transferencia de los clientes")
+    )
     
     # WhatsApp Settings
     whatsapp_phone_number_id = models.CharField(

@@ -36,6 +36,7 @@ export default function AdminSettingsPage() {
     email_host_user: '',
     email_host_password: '',
     default_from_email: 'SCW Boletos <boletos.scw@gmail.com>',
+    admin_notification_email: '',
     whatsapp_phone_number_id: '',
     whatsapp_access_token: '',
     whatsapp_enabled: true,
@@ -58,6 +59,7 @@ export default function AdminSettingsPage() {
             email_host_user: data.email_host_user || '',
             email_host_password: data.email_host_password || '',
             default_from_email: data.default_from_email || 'SCW Boletos <boletos.scw@gmail.com>',
+            admin_notification_email: data.admin_notification_email || '',
             whatsapp_phone_number_id: data.whatsapp_phone_number_id || '',
             whatsapp_access_token: data.whatsapp_access_token || '',
             whatsapp_enabled: data.whatsapp_enabled !== undefined ? Boolean(data.whatsapp_enabled) : true,
@@ -377,6 +379,21 @@ export default function AdminSettingsPage() {
                     placeholder="SCW Pro Wrestling <boletos.scw@gmail.com>"
                     className="w-full bg-zinc-900/80 border border-white/10 hover:border-white/20 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none rounded-xl px-4 py-3 text-white transition-all text-sm"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">Correo Notificaciones (Transferencias)</label>
+                  <input
+                    type="email"
+                    name="admin_notification_email"
+                    value={formData.admin_notification_email}
+                    onChange={handleInputChange}
+                    placeholder="admin@tu-dominio.com"
+                    className="w-full bg-zinc-900/80 border border-white/10 hover:border-white/20 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none rounded-xl px-4 py-3 text-white transition-all text-sm"
+                  />
+                  <p className="text-zinc-500 text-xs mt-1.5">
+                    Correo al que llegarán los avisos de "Comprobante Recibido" cuando un cliente pague por Transferencia. Si se deja en blanco, llegarán al correo remitente.
+                  </p>
                 </div>
 
                 <div className="flex items-center justify-between p-4 bg-zinc-900/50 rounded-xl border border-white/5">
