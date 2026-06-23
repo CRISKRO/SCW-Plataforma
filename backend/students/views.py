@@ -190,8 +190,20 @@ Por favor ingresa a tu Portal de Alumno para ver tu código QR y realizar el pag
                 payload = {
                     "messaging_product": "whatsapp",
                     "to": clean_phone,
-                    "type": "text",
-                    "text": {"body": message}
+                    "type": "template",
+                    "template": {
+                        "name": "scw_bienvenida_dojo",
+                        "language": {"code": "es_MX"},
+                        "components": [
+                            {
+                                "type": "body",
+                                "parameters": [
+                                    {"type": "text", "text": enrollment.name},
+                                    {"type": "text", "text": enrollment.get_experience_display() or "Principiante"}
+                                ]
+                            }
+                        ]
+                    }
                 }
                 res = requests.post(url, json=payload, headers=headers, timeout=8)
                 if res.status_code != 200:
@@ -282,8 +294,21 @@ Por favor ingresa a tu Portal de Alumno para ver tu código QR y realizar el pag
                 payload = {
                     "messaging_product": "whatsapp",
                     "to": clean_phone,
-                    "type": "text",
-                    "text": {"body": message}
+                    "type": "template",
+                    "template": {
+                        "name": "scw_pago_mensualidad",
+                        "language": {"code": "es_MX"},
+                        "components": [
+                            {
+                                "type": "body",
+                                "parameters": [
+                                    {"type": "text", "text": enrollment.name},
+                                    {"type": "text", "text": last_payment_str},
+                                    {"type": "text", "text": due_date_str}
+                                ]
+                            }
+                        ]
+                    }
                 }
                 res = requests.post(url, json=payload, headers=headers, timeout=8)
                 if res.status_code == 200:
@@ -359,8 +384,20 @@ Por favor ingresa a tu Portal de Alumno para ver tu código QR y realizar el pag
                 payload = {
                     "messaging_product": "whatsapp",
                     "to": clean_phone,
-                    "type": "text",
-                    "text": {"body": message}
+                    "type": "template",
+                    "template": {
+                        "name": "scw_recordatorio_pago",
+                        "language": {"code": "es_MX"},
+                        "components": [
+                            {
+                                "type": "body",
+                                "parameters": [
+                                    {"type": "text", "text": enrollment.name},
+                                    {"type": "text", "text": due_date_str}
+                                ]
+                            }
+                        ]
+                    }
                 }
                 res = requests.post(url, json=payload, headers=headers, timeout=8)
                 if res.status_code == 200:
