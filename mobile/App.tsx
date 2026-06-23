@@ -1,20 +1,9 @@
-// import "./global.css";
+import "./global.css";
 import React, { useState, useRef } from 'react';
 import { StyleSheet, View, Text, StatusBar, SafeAreaView } from 'react-native';
 import { Video, ResizeMode } from 'expo-av';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
-const Stack = createNativeStackNavigator();
-
-function HomeScreen() {
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#121212', justifyContent: 'center', alignItems: 'center' }}>
-      <Text style={{ color: 'white', fontSize: 24, fontWeight: 'bold' }}>Lucha SCW</Text>
-      <Text style={{ color: '#aaa', marginTop: 10 }}>Bienvenido a la App</Text>
-    </SafeAreaView>
-  );
-}
+import AppNavigator from './src/navigation/AppNavigator';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export default function App() {
   const [isVideoFinished, setIsVideoFinished] = useState(false);
@@ -43,12 +32,10 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
+    <SafeAreaProvider>
       <StatusBar barStyle="light-content" backgroundColor="#121212" />
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Home" component={HomeScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+      <AppNavigator />
+    </SafeAreaProvider>
   );
 }
 

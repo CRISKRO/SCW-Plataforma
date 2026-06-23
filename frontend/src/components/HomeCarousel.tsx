@@ -126,6 +126,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
     if (upcomingEvents && upcomingEvents.length > 0) {
       const eventSlides = upcomingEvents.map((ev: any) => ({
         id: ev.id,
+        type: 'event',
         title: ev.title,
         subtitle: ev.description || `${ev.location}`,
         image: ev.banner_url || '/images/logoring.webp',
@@ -142,8 +143,9 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
     if (raffles && raffles.length > 0) {
       const raffleSlides = raffles.map((r: any) => ({
         id: `raffle-${r.id}`,
+        type: 'raffle',
         title: r.title,
-        subtitle: `¡Participa en nuestra gran rifa! ${r.description}`,
+        subtitle: r.description,
         image: r.image || '/images/logoring.webp',
         date: null,
         location: null,
@@ -240,6 +242,17 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
               }}
             >
               <div className="w-full max-w-2xl flex-shrink-0 text-center lg:text-left flex flex-col items-center lg:items-start">
+                {slide.type === 'raffle' && (
+                  <div className="flex items-center gap-2 mb-4 bg-yellow-500/20 border border-yellow-500/30 px-4 py-2 rounded-full">
+                    <span className="relative flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-yellow-500"></span>
+                    </span>
+                    <span className="text-yellow-400 text-xs sm:text-sm font-black uppercase tracking-widest">
+                      Gran Rifa SCW
+                    </span>
+                  </div>
+                )}
                 {slide.date && (
                   <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 mb-2 lg:mb-6">
                     <span className="inline-flex items-center gap-1.5 bg-red-600/90 backdrop-blur-sm text-white text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-full">
@@ -259,12 +272,12 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                   </div>
                 )}
 
-                {!slide.id && (
+                {(!slide.id || slide.type === 'event' || slide.type === 'raffle') && (
                   <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter uppercase leading-none mb-2 md:mb-6">
                     {slide.title.split(' ').map((word: string, i: number) => (
                       <span key={i}>
                         {i === slide.title.split(' ').length - 1
-                          ? <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-zinc-500">{word}</span>
+                          ? <span className={`text-transparent bg-clip-text bg-gradient-to-r ${slide.type === 'raffle' ? 'from-yellow-400 to-amber-600' : 'from-white to-zinc-500'}`}>{word}</span>
                           : <span>{word} </span>
                         }
                       </span>
@@ -272,7 +285,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                   </h1>
                 )}
 
-                <p className="text-sm sm:text-base md:text-xl text-zinc-300 font-light max-w-xl mb-4 md:mb-10 line-clamp-none">
+                <p className={`text-sm sm:text-base md:text-xl font-light max-w-xl mb-4 md:mb-10 line-clamp-none ${slide.type === 'raffle' ? 'text-yellow-100/80' : 'text-zinc-300'}`}>
                   {slide.subtitle}
                 </p>
 
@@ -298,7 +311,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                       <Link
                         key={btn.label}
                         href={btn.href}
-                        className="group inline-flex w-full sm:w-auto justify-center items-center gap-2 px-6 py-3 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-black uppercase tracking-widest text-black bg-white hover:bg-zinc-100 transition-all hover:scale-105 rounded-sm"
+                        className={`group inline-flex w-full sm:w-auto justify-center items-center gap-2 px-6 py-3 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-black uppercase tracking-widest transition-all hover:scale-105 rounded-sm shadow-xl ${slide.type === 'raffle' ? 'bg-gradient-to-r from-yellow-500 to-amber-600 text-black hover:from-yellow-400 hover:to-amber-500 shadow-yellow-900/50' : 'text-black bg-white hover:bg-zinc-100'}`}
                       >
                         <Ticket className="w-4 h-4 md:w-5 md:h-5" />
                         {btn.label}
@@ -326,17 +339,17 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                     transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
                     className="block flex-shrink-0 relative mx-auto lg:mx-0 w-[280px] sm:w-[320px] lg:w-[450px]"
                   >
-                    <div className="absolute -inset-4 sm:-inset-8 bg-red-600/15 blur-2xl sm:blur-3xl rounded-full" />
+                    <div className={`absolute -inset-4 sm:-inset-8 blur-2xl sm:blur-3xl rounded-full ${slide.type === 'raffle' ? 'bg-yellow-500/20' : 'bg-red-600/15'}`} />
                     <div className="relative w-full">
                       <Image
                         src={slide.image}
                         alt={slide.title}
                         width={800}
                         height={1200}
-                        className="w-full h-auto object-contain rounded-sm border border-white/10 shadow-2xl"
+                        className={`w-full h-auto object-contain rounded-sm border shadow-2xl ${slide.type === 'raffle' ? 'border-yellow-500/30' : 'border-white/10'}`}
                         priority={currentSlide === 0}
                       />
-                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-red-600" />
+                      <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${slide.type === 'raffle' ? 'bg-gradient-to-b from-yellow-400 to-amber-600' : 'bg-red-600'}`} />
                     </div>
                   </motion.div>
                 ) : (
