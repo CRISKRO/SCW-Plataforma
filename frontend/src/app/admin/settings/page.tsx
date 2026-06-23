@@ -36,7 +36,8 @@ export default function AdminSettingsPage() {
     email_host_user: '',
     email_host_password: '',
     default_from_email: 'SCW Boletos <boletos.scw@gmail.com>',
-    whatsapp_service_url: 'https://scw-whatsapp.onrender.com',
+    whatsapp_phone_number_id: '',
+    whatsapp_access_token: '',
     whatsapp_enabled: true,
     tuition_fee: 500.00,
     registration_method: 'whatsapp',
@@ -57,7 +58,8 @@ export default function AdminSettingsPage() {
             email_host_user: data.email_host_user || '',
             email_host_password: data.email_host_password || '',
             default_from_email: data.default_from_email || 'SCW Boletos <boletos.scw@gmail.com>',
-            whatsapp_service_url: data.whatsapp_service_url || 'https://scw-whatsapp.onrender.com',
+            whatsapp_phone_number_id: data.whatsapp_phone_number_id || '',
+            whatsapp_access_token: data.whatsapp_access_token || '',
             whatsapp_enabled: data.whatsapp_enabled !== undefined ? Boolean(data.whatsapp_enabled) : true,
             tuition_fee: data.tuition_fee !== undefined ? Number(data.tuition_fee) : 500.00,
             registration_method: data.registration_method || 'whatsapp',
@@ -406,18 +408,30 @@ export default function AdminSettingsPage() {
                     Configuración de WhatsApp API
                   </h3>
                   <p className="text-zinc-500 text-sm mt-1">
-                    Controla el microservicio que envía notificaciones de mensualidad, recordatorios de pago y alertas a tus alumnos registrados.
+                    Controla las credenciales de la API Oficial de Meta (Facebook) para enviar notificaciones de mensualidad y alertas a tus alumnos.
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">URL Base del Microservicio</label>
+                  <label className="block text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">ID del Número de Teléfono (WhatsApp Cloud API)</label>
                   <input
-                    type="url"
-                    name="whatsapp_service_url"
-                    value={formData.whatsapp_service_url}
+                    type="text"
+                    name="whatsapp_phone_number_id"
+                    value={formData.whatsapp_phone_number_id}
                     onChange={handleInputChange}
-                    placeholder="https://scw-whatsapp.onrender.com"
+                    placeholder="123456789012345"
+                    className="w-full bg-zinc-900/80 border border-white/10 hover:border-white/20 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none rounded-xl px-4 py-3 text-white transition-all text-sm font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">Token de Acceso (Access Token)</label>
+                  <input
+                    type="password"
+                    name="whatsapp_access_token"
+                    value={formData.whatsapp_access_token}
+                    onChange={handleInputChange}
+                    placeholder="EAA..."
                     className="w-full bg-zinc-900/80 border border-white/10 hover:border-white/20 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none rounded-xl px-4 py-3 text-white transition-all text-sm font-mono"
                   />
                 </div>
