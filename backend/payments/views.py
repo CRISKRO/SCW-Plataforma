@@ -33,6 +33,8 @@ def send_order_emails_safely(order):
 
     if has_merch:
         try:
+            import time
+            time.sleep(2) # Prevenir bloqueo del SMTP
             from .email_orders import send_new_merch_admin_email
             send_new_merch_admin_email(order)
         except Exception as e:
