@@ -21,7 +21,8 @@ class EnrollmentSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         try:
             return super().to_representation(instance)
-        except ValueError:
+        except Exception as e:
+            logger.error(f"Error in EnrollmentSerializer to_representation: {e}")
             # Si los archivos se eliminaron del disco, el serializer fallará.
             # Retornamos un dict manual o evitamos los campos de archivo.
             data = {}
@@ -33,7 +34,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
                     elif isinstance(val, Decimal):
                         data[field.name] = str(val)
                     else:
-                        data[field.name] = val
+                        data[field.name] = str(val) if val is not None else None
             return data
 
 class EnrollmentViewSet(viewsets.ModelViewSet):
