@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Target, Users, ShieldAlert, CheckCircle, Lock, MessageCircle, ChevronRight, Phone, Mail, Clock, Banknote } from 'lucide-react';
+import { Target, Users, ShieldAlert, CheckCircle, Lock, MessageCircle, ChevronRight, Phone, Mail, Clock, Banknote, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
