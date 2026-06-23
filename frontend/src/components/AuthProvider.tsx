@@ -14,7 +14,11 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     if (token) {
       authService.getProfile()
         .then(user => setAuth(user, token, !!localStorage.getItem('access_token')))
-        .catch(() => logout());
+        .catch((error) => {
+          if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+            logout();
+          }
+        });
     }
   }, [setAuth, logout]);
 
