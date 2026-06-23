@@ -242,17 +242,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
               }}
             >
               <div className="w-full max-w-2xl flex-shrink-0 text-center lg:text-left flex flex-col items-center lg:items-start">
-                {slide.type === 'raffle' && (
-                  <div className="flex items-center gap-2 mb-4 bg-yellow-500/20 border border-yellow-500/30 px-4 py-2 rounded-full">
-                    <span className="relative flex h-3 w-3">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-3 w-3 bg-yellow-500"></span>
-                    </span>
-                    <span className="text-yellow-400 text-xs sm:text-sm font-black uppercase tracking-widest">
-                      Gran Rifa SCW
-                    </span>
-                  </div>
-                )}
+
                 {slide.date && (
                   <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 mb-2 lg:mb-6">
                     <span className="inline-flex items-center gap-1.5 bg-red-600/90 backdrop-blur-sm text-white text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-full">
@@ -273,7 +263,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                 )}
 
                 {(!slide.id || slide.type === 'event' || slide.type === 'raffle') && (
-                  <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter uppercase leading-none mb-2 md:mb-6">
+                  <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-6xl xl:text-7xl font-black tracking-tighter uppercase leading-none mb-2 md:mb-6">
                     {slide.title.split(' ').map((word: string, i: number) => (
                       <span key={i}>
                         {i === slide.title.split(' ').length - 1
