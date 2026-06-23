@@ -312,3 +312,75 @@ def send_transfer_admin_email(order, request):
         print("CRITICAL ERROR sending transfer admin email:", e)
         return False
 
+def send_new_merch_admin_email(order):
+    """
+    Notify the admin that a customer has successfully purchased merch/physical products.
+    """
+    from django.core.mail import EmailMultiAlternatives, get_connection
+    from django.conf import settings
+    from api.models import get_active_config
+    import re
+
+    items = order.items.filter(product__isnull=False)
+    if not items.exists():
+        return False
+        
+    config = get_active_config()
+    from_email = config.default_from_email if config.default_from_email else settings.DEFAULT_FROM_EMAIL
+    
+    if config.admin_notification_email:
+        to_email = config.admin_notification_email.strip()
+    else:
+        match = re.search(r'<([^>]+)>', from_email)
+        to_email = match.group(1).strip() if match else from_email.strip()
+        
+    items_text = "\n".join([f"- {int(item.quantity)}x {item.product_name} {item.size if item.size else ''}" for item in items])
+    items_html = "".join([f"<li>{int(item.quantity)}x {item.product_name} {item.size if item.size else ''}</li>" for item in items])
+    
+    html_body = f"""
+    <!DOCTYPE html>
+    <html>
+    <body style="font-family:sans-serif;padding:20px;background:#111;color:#fff;">
+        <h2 style="color:#16a34a;">¡Nueva Venta de Mercancía! 💰</h2>
+        <p style="color:#ccc;">El cliente <b>{order.contact_email}</b> ha realizado una compra de productos físicos.</p>
+        <p style="color:#ccc;"><b>Orden #{order.id}</b></p>
+        <p style="color:#ccc;"><b>Monto Total Pagado:</b> ${order.total_amount} MXN</p>
+        <br/>
+        <h3 style="color:#fff;">Productos:</h3>
+        <ul style="color:#ccc;">
+            {items_html}
+        </ul>
+        <br/>
+        <h3 style="color:#fff;">Datos de Envío:</h3>
+        <p style="color:#ccc;">{order.shipping_address}, {order.shipping_city}, {order.shipping_state} {order.shipping_zipcode}</p>
+        <p style="color:#ccc;"><b>Teléfono:</b> {order.contact_phone}</p>
+    </body>
+    </html>
+    """
+    
+    email = EmailMultiAlternatives(
+        subject=f"💰 Nueva Venta de Merch - Orden #{order.id}",
+        body=f"Nueva venta de mercancía. Orden #{order.id}. Total: ${order.total_amount}\n\nProductos:\n{items_text}",
+        from_email=from_email,
+        to=[to_email]
+    )
+    email.attach_alternative(html_body, "text/html")
+    
+    try:
+        connection = None
+        if config.email_host_user and config.email_host_password:
+            connection = get_connection(
+                host=config.email_host,
+                port=config.email_port,
+                username=config.email_host_user,
+                password=config.email_host_password,
+                use_tls=config.email_use_tls,
+            )
+        email.connection = connection
+        email.send(fail_silently=False)
+        return True
+    except Exception as e:
+        print("Error sending new merch admin email:", e)
+        return False
+
+

@@ -31,6 +31,13 @@ def send_order_emails_safely(order):
         except Exception as e:
             print("Email error (merch):", e)
 
+    if has_merch:
+        try:
+            from .email_orders import send_new_merch_admin_email
+            send_new_merch_admin_email(order)
+        except Exception as e:
+            print("Email error (admin merch alert):", e)
+
 class ApproveTransferView(APIView):
     """Allows admins to approve transfer orders directly via a secure email link."""
     permission_classes = [AllowAny]
