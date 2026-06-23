@@ -44,6 +44,8 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action == 'create':
             return [AllowAny()]
+        elif self.action in ['status', 'my', 'pay_tuition']:
+            return [IsAuthenticated()]
         return [IsAdminUser()]
 
     def create(self, request, *args, **kwargs):
