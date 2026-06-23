@@ -163,19 +163,19 @@ export default function LoginPage() {
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="flex items-center">
+            <label htmlFor="remember-me" className="flex items-center cursor-pointer select-none py-2 pr-4">
               <input 
                 id="remember-me" 
                 name="remember-me" 
                 type="checkbox" 
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="h-4 w-4 bg-zinc-900 border-zinc-700 rounded text-white focus:ring-white accent-white cursor-pointer" 
+                className="h-5 w-5 bg-zinc-900 border-zinc-700 rounded text-white focus:ring-white accent-white cursor-pointer" 
               />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-zinc-400 cursor-pointer select-none">
+              <span className="ml-2 block text-sm text-zinc-400">
                 Recordarme
-              </label>
-            </div>
+              </span>
+            </label>
             <div className="text-sm">
               <button 
                 type="button" 
