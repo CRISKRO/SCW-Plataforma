@@ -26,6 +26,8 @@ export default function CartPage() {
   const [paymentMethod, setPaymentMethod] = useState<'MERCADOPAGO' | 'TRANSFER'>('MERCADOPAGO');
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
 
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const { items, removeItem, updateQuantity, getTotalPrice, getTotalItems, clearCart } = useCartStore();
 
@@ -77,6 +79,11 @@ export default function CartPage() {
 
     if (paymentMethod === 'TRANSFER' && !receiptFile) {
       alert("Por favor sube tu comprobante de pago para la transferencia.");
+      return;
+    }
+
+    if (!acceptedTerms) {
+      alert("Debes aceptar los Términos y Condiciones para continuar.");
       return;
     }
 
@@ -321,6 +328,26 @@ export default function CartPage() {
                   )}
                 </div>
 
+                {/* Checkbox Términos */}
+                <div className="pt-2 border-t border-white/10">
+                  <label className="flex items-start gap-3 cursor-pointer group">
+                    <div className="mt-0.5">
+                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${acceptedTerms ? 'bg-[#009EE3] border-[#009EE3]' : 'bg-black border-zinc-600 group-hover:border-zinc-400'}`}>
+                        {acceptedTerms && <ShieldCheck className="w-3 h-3 text-white" />}
+                      </div>
+                      <input 
+                        type="checkbox" 
+                        className="hidden" 
+                        checked={acceptedTerms}
+                        onChange={(e) => setAcceptedTerms(e.target.checked)}
+                      />
+                    </div>
+                    <p className="text-sm text-zinc-300 leading-tight">
+                      He leído y acepto los <Link href="/terminos-y-condiciones" target="_blank" className="text-[#009EE3] hover:text-[#0088cc] underline underline-offset-2">Términos y Condiciones</Link> (no mal uso de sus datos, no hay rembolsos).
+                    </p>
+                  </label>
+                </div>
+
                 {/* Botón de Pago */}
                 <div className="space-y-3 pt-2">
                   {!user && items.some(i => !i.event_id) ? (
@@ -333,7 +360,7 @@ export default function CartPage() {
                   ) : (
                     <button
                       onClick={handleCheckout}
-                      disabled={loading || !email || (paymentMethod === 'TRANSFER' && !receiptFile)}
+                      disabled={loading || !email || (paymentMethod === 'TRANSFER' && !receiptFile) || !acceptedTerms}
                       className={`w-full ${paymentMethod === 'TRANSFER' ? 'bg-white hover:bg-zinc-200 text-black' : 'bg-[#009EE3] hover:bg-[#0088cc] text-white'} disabled:bg-zinc-800 disabled:text-zinc-500 py-4 rounded-xl font-bold text-base flex items-center justify-center gap-3 transition-all`}
                     >
                       {loading ? (
