@@ -377,6 +377,7 @@ Por favor ingresa a tu Portal de Alumno para ver tu código QR y realizar el pag
             )
 
         whatsapp_sent = False
+        error_msg = ""
         if config.whatsapp_enabled and whatsapp_phone_number_id and whatsapp_access_token:
             try:
                 url = f"https://graph.facebook.com/v19.0/{whatsapp_phone_number_id}/messages"
@@ -406,14 +407,16 @@ Por favor ingresa a tu Portal de Alumno para ver tu código QR y realizar el pag
                 if res.status_code == 200:
                     whatsapp_sent = True
                 else:
-                    logger.error(f"Error al enviar recordatorio por WhatsApp: {res.text}")
+                    error_msg = res.text
+                    logger.error(f"Error al enviar recordatorio por WhatsApp: {error_msg}")
             except Exception as e:
-                logger.error(f"Error de conexión con la API de WhatsApp: {e}")
+                error_msg = str(e)
+                logger.error(f"Error de conexión con la API de WhatsApp: {error_msg}")
 
         return Response({
             "success": True,
             "whatsapp_sent": whatsapp_sent,
-            "message": "Recordatorio enviado con éxito." if whatsapp_sent else ("No se pudo enviar el mensaje por WhatsApp. Verifique la configuración." if config.whatsapp_enabled else "Las notificaciones de WhatsApp están desactivadas en la configuración.")
+            "message": "Recordatorio enviado con éxito." if whatsapp_sent else ("Error de Meta API: " + error_msg if error_msg else "No se pudo enviar el mensaje por WhatsApp.")
         })
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])

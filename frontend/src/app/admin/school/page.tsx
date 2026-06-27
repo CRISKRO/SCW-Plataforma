@@ -129,7 +129,8 @@ export default function AdminSchoolPage() {
       if (whatsappSentSuccessfully) {
         alert(`📲 Recordatorio enviado con éxito por WhatsApp a ${studentName}.`);
       } else {
-        alert(`❌ No se pudo enviar el recordatorio por WhatsApp.\nDetalle: Asegúrate de que las credenciales de Facebook estén configuradas en la Administración.`);
+        const errorDetail = response.message || "Asegúrate de que las credenciales de Facebook estén configuradas en la Administración.";
+        alert(`❌ No se pudo enviar el recordatorio por WhatsApp.\nDetalle: ${errorDetail}`);
       }
     } catch (error: any) {
       console.error("Error sending reminder:", error);
