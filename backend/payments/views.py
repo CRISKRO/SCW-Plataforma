@@ -1327,10 +1327,15 @@ class BoxOfficeDojoPaymentView(APIView):
             whatsapp_sent = False
             try:
                 config = get_active_config()
-                if config.whatsapp_enabled:
-                    whatsapp_url = config.whatsapp_service_url if config.whatsapp_service_url else 'https://scw-whatsapp.onrender.com'
+                if config.whatsapp_enabled and config.whatsapp_phone_number_id and config.whatsapp_access_token:
+                    # Formato de número: debe incluir código de país, usualmente 52 para México sin el 1 extra.
+                    phone_str = str(enrollment.phone)
+                    if not phone_str.startswith('52'):
+                        phone_str = '52' + phone_str
+                        
                     due_date_str = enrollment.payment_due_date.strftime('%d/%m/%Y')
                     last_payment_str = enrollment.last_payment_date.strftime('%d/%m/%Y')
+                    
                     msg = (
                         f"🥊 *SCW Dojo — Pago en Taquilla*\n\n"
                         f"¡Hola *{enrollment.name}*!\n\n"
@@ -1339,10 +1344,32 @@ class BoxOfficeDojoPaymentView(APIView):
                         f"💰 *Saldo Restante:* ${enrollment.outstanding_balance}\n\n"
                         f"¡Gracias por seguir entrenando en el SCW Dojo! 🥊⚡"
                     )
-                    requests.post(f"{whatsapp_url}/send-message", json={'phone': enrollment.phone, 'message': msg}, timeout=8)
-                    whatsapp_sent = True
+
+                    headers = {
+                        "Authorization": f"Bearer {config.whatsapp_access_token}",
+                        "Content-Type": "application/json"
+                    }
+                    
+                    # Intentamos enviar como mensaje de texto libre (Solo funcionará si el usuario escribió en las últimas 24 hrs)
+                    # NOTA: Para mensajes en frío, deberás cambiar "type": "text" por "type": "template" y usar una plantilla aprobada.
+                    payload = {
+                        "messaging_product": "whatsapp",
+                        "to": phone_str,
+                        "type": "text",
+                        "text": {
+                            "body": msg
+                        }
+                    }
+                    
+                    meta_url = f"https://graph.facebook.com/v19.0/{config.whatsapp_phone_number_id}/messages"
+                    response = requests.post(meta_url, headers=headers, json=payload, timeout=10)
+                    
+                    if response.status_code == 200:
+                        whatsapp_sent = True
+                    else:
+                        print("Error Meta API:", response.text)
             except Exception as e:
-                pass
+                print("Exception WhatsApp:", str(e))
 
             return Response({
                 "success": True, 

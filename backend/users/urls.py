@@ -5,6 +5,7 @@ from .views import (
     SendEmailOTPView, VerifyEmailOTPView,
     SendPasswordResetOTPView, ResetPasswordWithOTPView,
     SendRegisterEmailOTPView, VerifyRegisterEmailOTPView,
+    SendRegisterWhatsAppOTPView, VerifyRegisterWhatsAppOTPView,
     GoogleLoginView
 )
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -18,6 +19,8 @@ urlpatterns = [
     path('verify-email-otp/', VerifyEmailOTPView.as_view(), name='verify_email_otp'),
     path('send-register-otp/', SendRegisterEmailOTPView.as_view(), name='send_register_otp'),
     path('verify-register-otp/', VerifyRegisterEmailOTPView.as_view(), name='verify_register_otp'),
+    path('send-register-whatsapp-otp/', SendRegisterWhatsAppOTPView.as_view(), name='send_register_whatsapp_otp'),
+    path('verify-register-whatsapp-otp/', VerifyRegisterWhatsAppOTPView.as_view(), name='verify_register_whatsapp_otp'),
     path('password-reset-otp/', SendPasswordResetOTPView.as_view(), name='send_password_reset_otp'),
     path('password-reset-confirm/', ResetPasswordWithOTPView.as_view(), name='reset_password_with_otp'),
     path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

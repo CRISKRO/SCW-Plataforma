@@ -101,38 +101,12 @@ export default function AdminSchoolPage() {
 
         let whatsappSentSuccessfully = response.whatsapp_sent;
 
-        // Si el backend en PythonAnywhere no pudo enviarlo, lo enviamos directo desde el navegador local
-        if (!whatsappSentSuccessfully) {
-          try {
-            const student = response.data;
-            const lastPaymentDateStr = student.last_payment_date ? new Date(student.last_payment_date + 'T12:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
-            const dueDateStr = student.payment_due_date ? new Date(student.payment_due_date + 'T12:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
-            
-            const message = 
-              `🥊 *SCW DOJO — Confirmación de Mensualidad*\n\n` +
-              `Hola *${student.user.first_name}*,\n\n` +
-              `Hemos registrado tu pago de *$${student.payment_amount}* por concepto de mensualidad. Tu próximo pago deberá realizarse el día *${dueDateStr}*.\n\n` +
-              `*Nota adicional:* ${student.payment_notes}\n\n` +
-              `¡Muchas gracias por seguir entrenando en SCW DOJO! ¡A seguir dándolo todo en el ring! 🥊⚡`;
-
-            const localRes = await fetch('https://scw-whatsapp.onrender.com/send-message', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ phone: student.phone, message: message })
-            });
-            const localData = await localRes.json();
-            if (localRes.ok && localData.success) {
-              whatsappSentSuccessfully = true;
-            }
-          } catch (localErr) {
-            console.error("Error al enviar WhatsApp directo desde el navegador:", localErr);
-          }
-        }
+        // Eliminado: Bloque de fallback a Render directo desde el navegador
 
         if (whatsappSentSuccessfully) {
           alert(`✅ Pago registrado con éxito.\n📲 Se envió la confirmación de pago por WhatsApp a ${studentName}.`);
         } else {
-          alert(`⚠️ Pago registrado con éxito en el sistema.\n❌ Sin embargo, el mensaje por WhatsApp no pudo enviarse. Por favor verifica que el microservicio esté activo y tu celular esté vinculado en https://scw-whatsapp.onrender.com/qr`);
+          alert(`⚠️ Pago registrado con éxito en el sistema.\n❌ Sin embargo, el mensaje por WhatsApp no pudo enviarse vía Meta. Asegúrate de que las credenciales de Facebook estén configuradas en Administración.`);
         }
       } catch (error: any) {
         console.error("Error registering payment:", error);
@@ -150,50 +124,12 @@ export default function AdminSchoolPage() {
       
       let whatsappSentSuccessfully = response.whatsapp_sent;
 
-      // Si el backend en PythonAnywhere no pudo enviarlo, lo enviamos directo desde el navegador local
-      if (!whatsappSentSuccessfully) {
-        try {
-          const student = enrollments.find(e => e.id === studentId);
-          if (student) {
-            const dueDateStr = student.payment_due_date ? new Date(student.payment_due_date + 'T12:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
-            
-            let message = '';
-            if (student.payment_status === 'UNPAID') {
-              message = 
-                `🚨 *SCW DOJO — Recordatorio de Pago Vencido*\n\n` +
-                `Hola *${student.user.first_name}*,\n\n` +
-                `Te recordamos que el pago de tu mensualidad de SCW DOJO se encuentra *VENCIDO* desde el día *${dueDateStr}*.\n\n` +
-                `Para mantener tu lugar activo en los entrenamientos, te pedimos realizar tu pago a la brevedad.\n\n` +
-                `¡Te esperamos en el entrenamiento! ¡A seguir preparándote! 🥊`;
-            } else {
-              message = 
-                `⏰ *SCW DOJO — Recordatorio de Mensualidad Próxima a Vencer*\n\n` +
-                `Hola *${student.user.first_name}*,\n\n` +
-                `Te recordamos de manera atenta que tu mensualidad de SCW DOJO está próxima a vencer.\n\n` +
-                `📅 *Fecha Límite:* ${dueDateStr}\n\n` +
-                `Por favor tómalo en cuenta para realizar tu pago a tiempo y no perder ritmo.\n\n` +
-                `¡Nos vemos en el entrenamiento! 🥊⚡`;
-            }
-
-            const localRes = await fetch('https://scw-whatsapp.onrender.com/send-message', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ phone: student.phone, message: message })
-            });
-            const localData = await localRes.json();
-            if (localRes.ok && localData.success) {
-              whatsappSentSuccessfully = true;
-            }
-          }
-        } catch (localErr) {
-          console.error("Error al enviar recordatorio directo desde el navegador:", localErr);
-        }
-      }
+      // Eliminado: Bloque de fallback a Render directo desde el navegador para el recordatorio
 
       if (whatsappSentSuccessfully) {
         alert(`📲 Recordatorio enviado con éxito por WhatsApp a ${studentName}.`);
       } else {
-        alert(`❌ No se pudo enviar el recordatorio por WhatsApp.\nDetalle: Asegúrate de que el microservicio esté activo y tu celular esté vinculado en https://scw-whatsapp.onrender.com/qr`);
+        alert(`❌ No se pudo enviar el recordatorio por WhatsApp.\nDetalle: Asegúrate de que las credenciales de Facebook estén configuradas en la Administración.`);
       }
     } catch (error: any) {
       console.error("Error sending reminder:", error);

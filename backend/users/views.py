@@ -234,6 +234,94 @@ class SendRegisterEmailOTPView(APIView):
             print(f"Error enviando correo OTP de registro: {str(e)}. Código: {code}")
             return Response({"error": f"El servidor bloqueó el envío de correos. Para pruebas, tu código es: {code}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+class SendRegisterWhatsAppOTPView(APIView):
+    permission_classes = (AllowAny,)
+    
+    def post(self, request):
+        phone = request.data.get('phone')
+        if not phone:
+            return Response({"error": "Teléfono requerido."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        import random
+        from django.core.cache import cache
+        from api.models import get_active_config
+        import requests
+        
+        code = f"{random.randint(100000, 999999)}"
+        # Store in cache for 10 minutes
+        cache.set(f"register_whatsapp_otp_{phone}", code, timeout=600)
+        
+        config = get_active_config()
+        if not config.whatsapp_enabled or not config.whatsapp_phone_number_id or not config.whatsapp_access_token:
+            return Response({"error": f"WhatsApp no configurado. Para pruebas, tu código es: {code}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+        phone_str = str(phone)
+        import re
+        clean_phone = re.sub(r'\D', '', phone_str)
+        if not clean_phone.startswith('52'):
+            clean_phone = '52' + clean_phone
+            
+        try:
+            url = f"https://graph.facebook.com/v19.0/{config.whatsapp_phone_number_id}/messages"
+            headers = {
+                "Authorization": f"Bearer {config.whatsapp_access_token}",
+                "Content-Type": "application/json"
+            }
+            # Asume que existe una plantilla llamada "scw_codigo_verificacion" con 1 parámetro (el código)
+            payload = {
+                "messaging_product": "whatsapp",
+                "to": clean_phone,
+                "type": "template",
+                "template": {
+                    "name": "scw_codigo_verificacion",
+                    "language": {"code": "es_MX"},
+                    "components": [
+                        {
+                            "type": "body",
+                            "parameters": [
+                                {"type": "text", "text": code}
+                            ]
+                        },
+                        {
+                            "type": "button",
+                            "sub_type": "url",
+                            "index": "0",
+                            "parameters": [
+                                {"type": "text", "text": code}
+                            ]
+                        }
+                    ]
+                }
+            }
+            response = requests.post(url, headers=headers, json=payload, timeout=10)
+            if response.status_code == 200:
+                return Response({"message": "Código enviado por WhatsApp."}, status=status.HTTP_200_OK)
+            else:
+                print("Error Meta API:", response.text)
+                return Response({"error": f"Error de Meta API. Para pruebas, tu código es: {code}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            print(f"Exception WhatsApp OTP: {str(e)}")
+            return Response({"error": f"Error enviando WhatsApp. Para pruebas, tu código es: {code}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class VerifyRegisterWhatsAppOTPView(APIView):
+    permission_classes = (AllowAny,)
+    
+    def post(self, request):
+        phone = request.data.get('phone')
+        code = request.data.get('code')
+        
+        if not phone or not code:
+            return Response({"error": "Teléfono y código son requeridos."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        from django.core.cache import cache
+        cached_code = cache.get(f"register_whatsapp_otp_{phone}")
+        
+        if cached_code and cached_code == code:
+            cache.delete(f"register_whatsapp_otp_{phone}")
+            return Response({"message": "Código verificado exitosamente."}, status=status.HTTP_200_OK)
+            
+        return Response({"error": "Código inválido o expirado."}, status=status.HTTP_400_BAD_REQUEST)
+
 class VerifyRegisterEmailOTPView(APIView):
     permission_classes = (AllowAny,)
     

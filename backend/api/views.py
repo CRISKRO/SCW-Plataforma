@@ -72,3 +72,49 @@ class SystemConfigurationView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return get_active_config()
+
+import requests
+
+class SendWhatsAppReminderView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request):
+        phone = request.data.get('phone')
+        message = request.data.get('message')
+
+        if not phone or not message:
+            return Response({"success": False, "error": "Teléfono y mensaje son obligatorios"}, status=400)
+
+        config = get_active_config()
+        if not config.whatsapp_enabled or not config.whatsapp_phone_number_id or not config.whatsapp_access_token:
+            return Response({"success": False, "error": "WhatsApp no está configurado o está deshabilitado en el sistema"}, status=400)
+
+        phone_str = str(phone)
+        if not phone_str.startswith('52'):
+            phone_str = '52' + phone_str
+
+        headers = {
+            "Authorization": f"Bearer {config.whatsapp_access_token}",
+            "Content-Type": "application/json"
+        }
+        
+        # Enviar como texto. NOTA: Para plantillas frías usar "type": "template"
+        payload = {
+            "messaging_product": "whatsapp",
+            "to": phone_str,
+            "type": "text",
+            "text": {
+                "body": message
+            }
+        }
+        
+        meta_url = f"https://graph.facebook.com/v19.0/{config.whatsapp_phone_number_id}/messages"
+        
+        try:
+            response = requests.post(meta_url, headers=headers, json=payload, timeout=10)
+            if response.status_code == 200:
+                return Response({"success": True, "message": "Recordatorio enviado por Meta"})
+            else:
+                return Response({"success": False, "error": f"Error de Meta API: {response.text}"}, status=response.status_code)
+        except Exception as e:
+            return Response({"success": False, "error": str(e)}, status=500)

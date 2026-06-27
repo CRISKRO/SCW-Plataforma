@@ -14,7 +14,7 @@ const envWhatsappUrl = typeof process !== 'undefined' && process.env?.NEXT_PUBLI
   ? process.env.NEXT_PUBLIC_WHATSAPP_SERVICE
   : undefined;
 
-const WHATSAPP_SERVICE = envWhatsappUrl || 'https://scw-whatsapp.onrender.com';
+// URL de render eliminada porque ahora usamos la API de Meta vía el backend de Django
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -88,13 +88,7 @@ export default function RegisterPage() {
       }
 
       // Default: WhatsApp
-      const res = await fetch(`${WHATSAPP_SERVICE}/send-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: formData.phone_number })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Error al enviar código de WhatsApp.');
+      await api.post('/auth/send-register-whatsapp-otp/', { phone: formData.phone_number });
       
       setStep('verify');
     } catch (err: any) {
@@ -133,13 +127,7 @@ export default function RegisterPage() {
       if (regMethod === 'email') {
         await api.post('/auth/verify-register-otp/', { email: formData.email, code: verifyCode });
       } else {
-        const verifyRes = await fetch(`${WHATSAPP_SERVICE}/verify-otp`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: formData.phone_number, code: verifyCode })
-        });
-        const verifyData = await verifyRes.json();
-        if (!verifyRes.ok) throw new Error(verifyData.error || 'Código de WhatsApp incorrecto');
+        await api.post('/auth/verify-register-whatsapp-otp/', { phone: formData.phone_number, code: verifyCode });
       }
 
       await authService.register(formData);
