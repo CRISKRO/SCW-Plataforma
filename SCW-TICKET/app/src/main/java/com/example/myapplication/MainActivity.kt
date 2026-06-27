@@ -10,16 +10,21 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,16 +35,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.myapplication.ui.theme.MyApplicationTheme
+import com.example.myapplication.ui.theme.*
 import com.google.zxing.BarcodeFormat
 import com.journeyapps.barcodescanner.BarcodeEncoder
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 import kotlinx.coroutines.launch
-import androidx.compose.foundation.border
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import org.json.JSONObject
 
 class MainActivity : ComponentActivity() {
@@ -71,9 +72,15 @@ fun MainAppScreen() {
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Scaffold(
+        containerColor = SCWBlack,
         topBar = {
             TopAppBar(
-                title = { Text(if (selectedTab == 0) "SCW Escáner" else "SCW Taquilla") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = SCWBlack,
+                    titleContentColor = SCWTextWhite,
+                    actionIconContentColor = SCWTextWhite
+                ),
+                title = { Text(if (selectedTab == 0) "SCW Escáner" else "SCW Taquilla", fontWeight = FontWeight.Black) },
                 actions = {
                     IconButton(onClick = { showSettings = true }) {
                         Icon(Icons.Default.Settings, contentDescription = "Configuración")
@@ -82,16 +89,33 @@ fun MainAppScreen() {
             )
         },
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                containerColor = SCWBlack,
+                contentColor = SCWTextWhite
+            ) {
                 NavigationBarItem(
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = SCWTextWhite,
+                        unselectedIconColor = SCWTextGray,
+                        selectedTextColor = SCWTextWhite,
+                        unselectedTextColor = SCWTextGray,
+                        indicatorColor = SCWRed
+                    ),
                     icon = { Icon(Icons.Default.Home, contentDescription = "Escanear") },
-                    label = { Text("Escanear") },
+                    label = { Text("Escanear", fontWeight = FontWeight.Bold) },
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 }
                 )
                 NavigationBarItem(
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = SCWTextWhite,
+                        unselectedIconColor = SCWTextGray,
+                        selectedTextColor = SCWTextWhite,
+                        unselectedTextColor = SCWTextGray,
+                        indicatorColor = SCWRed
+                    ),
                     icon = { Icon(Icons.Default.ShoppingCart, contentDescription = "Taquilla") },
-                    label = { Text("Taquilla") },
+                    label = { Text("Taquilla", fontWeight = FontWeight.Bold) },
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 }
                 )
@@ -110,26 +134,45 @@ fun MainAppScreen() {
     if (showSettings) {
         AlertDialog(
             onDismissRequest = { showSettings = false },
-            title = { Text("Configuración") },
+            containerColor = SCWSurface,
+            titleContentColor = SCWTextWhite,
+            textContentColor = SCWTextWhite,
+            title = { Text("Configuración", fontWeight = FontWeight.Bold) },
             text = {
                 Column {
                     OutlinedTextField(
                         value = baseUrl,
                         onValueChange = { baseUrl = it },
-                        label = { Text("URL del Servidor") },
-                        modifier = Modifier.fillMaxWidth()
+                        label = { Text("URL del Servidor", color = SCWTextGray) },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = SCWTextWhite,
+                            unfocusedTextColor = SCWTextWhite,
+                            focusedBorderColor = SCWRed,
+                            unfocusedBorderColor = SCWBorder,
+                            cursorColor = SCWRed
+                        )
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = token,
                         onValueChange = { token = it },
-                        label = { Text("Token de Acceso") },
-                        modifier = Modifier.fillMaxWidth()
+                        label = { Text("Token de Acceso", color = SCWTextGray) },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = SCWTextWhite,
+                            unfocusedTextColor = SCWTextWhite,
+                            focusedBorderColor = SCWRed,
+                            unfocusedBorderColor = SCWBorder,
+                            cursorColor = SCWRed
+                        )
                     )
                 }
             },
             confirmButton = {
-                TextButton(onClick = {
+                Button(
+                    colors = ButtonDefaults.buttonColors(containerColor = SCWRed, contentColor = SCWTextWhite),
+                    onClick = {
                     prefs.edit()
                         .putString("base_url", baseUrl)
                         .putString("token", token)
@@ -137,12 +180,12 @@ fun MainAppScreen() {
                     showSettings = false
                     Toast.makeText(context, "Configuración guardada", Toast.LENGTH_SHORT).show()
                 }) {
-                    Text("Guardar")
+                    Text("Guardar", fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showSettings = false }) {
-                    Text("Cancelar")
+                    Text("Cancelar", color = SCWTextGray)
                 }
             }
         )
@@ -153,7 +196,7 @@ fun MainAppScreen() {
 fun ScannerTab(baseUrl: String, token: String) {
     val context = LocalContext.current
     var scanResultText by remember { mutableStateOf("Presiona el botón para escanear un boleto") }
-    var scanResultColor by remember { mutableStateOf(Color.Gray) }
+    var scanResultColor by remember { mutableStateOf(SCWTextGray) }
     var isLoading by remember { mutableStateOf(false) }
 
     var dojoStudent by remember { mutableStateOf<DojoStudentResponse?>(null) }
@@ -171,7 +214,7 @@ fun ScannerTab(baseUrl: String, token: String) {
                     val studentId = json.getInt("id")
                     isLoading = true
                     scanResultText = "Buscando alumno..."
-                    scanResultColor = Color.Blue
+                    scanResultColor = SCWTextWhite
                     
                     coroutineScope.launch {
                         try {
@@ -182,18 +225,18 @@ fun ScannerTab(baseUrl: String, token: String) {
                                 if (body.valid) {
                                     dojoStudent = body
                                     scanResultText = "Alumno: ${body.name}\nSaldo: $${body.outstanding_balance}"
-                                    scanResultColor = Color(0xFF4CAF50)
+                                    scanResultColor = SCWGreen
                                 } else {
                                     scanResultText = body.message ?: "Alumno no encontrado"
-                                    scanResultColor = Color(0xFFF44336)
+                                    scanResultColor = SCWRed
                                 }
                             } else {
                                 scanResultText = "❌ Error en el servidor: ${response.code()}"
-                                scanResultColor = Color(0xFFF44336)
+                                scanResultColor = SCWRed
                             }
                         } catch (e: Exception) {
                             scanResultText = "❌ Error de conexión: ${e.message}"
-                            scanResultColor = Color.Red
+                            scanResultColor = SCWRed
                         } finally {
                             isLoading = false
                         }
@@ -205,7 +248,7 @@ fun ScannerTab(baseUrl: String, token: String) {
 
                     isLoading = true
                     scanResultText = "Validando boleto..."
-                    scanResultColor = Color.Blue
+                    scanResultColor = SCWTextWhite
 
                     coroutineScope.launch {
                         try {
@@ -217,10 +260,10 @@ fun ScannerTab(baseUrl: String, token: String) {
                                 val body = response.body()!!
                                 if (body.valid) {
                                     scanResultText = "${body.message}\n${body.item ?: ""} (${body.size ?: ""})"
-                                    scanResultColor = Color(0xFF4CAF50) // Green
+                                    scanResultColor = SCWGreen // Green
                                 } else {
                                     scanResultText = body.message
-                                    scanResultColor = Color(0xFFF44336) // Red
+                                    scanResultColor = SCWRed // Red
                                 }
                             } else {
                                 if (response.code() == 403) {
@@ -234,11 +277,11 @@ fun ScannerTab(baseUrl: String, token: String) {
                                         scanResultText = "❌ Error en el servidor: ${response.code()}"
                                     }
                                 }
-                                scanResultColor = Color(0xFFF44336)
+                                scanResultColor = SCWRed
                             }
                         } catch (e: Exception) {
                             scanResultText = "❌ Error de conexión: ${e.message}"
-                            scanResultColor = Color.Red
+                            scanResultColor = SCWRed
                         } finally {
                             isLoading = false
                         }
@@ -246,7 +289,7 @@ fun ScannerTab(baseUrl: String, token: String) {
                 }
             } catch (e: Exception) {
                 scanResultText = "❌ QR Inválido o formato desconocido"
-                scanResultColor = Color.Red
+                scanResultColor = SCWRed
                 isLoading = false
             }
         }
@@ -263,12 +306,13 @@ fun ScannerTab(baseUrl: String, token: String) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(200.dp)
-                .background(scanResultColor.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
+                .background(SCWGlass, RoundedCornerShape(16.dp))
+                .border(1.dp, SCWBorder, RoundedCornerShape(16.dp))
                 .padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
             if (isLoading) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = SCWRed)
             } else {
                 Text(
                     text = scanResultText,
@@ -296,38 +340,51 @@ fun ScannerTab(baseUrl: String, token: String) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(60.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = SCWRed, contentColor = SCWTextWhite),
             shape = RoundedCornerShape(30.dp)
         ) {
-            Text("Escanear Boleto / QR", fontSize = 18.sp)
+            Text("ESCANEAR BOLETO / QR", fontSize = 16.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
         }
     }
 
     if (dojoStudent != null) {
         AlertDialog(
             onDismissRequest = { dojoStudent = null; dojoChargeAmount = "" },
-            title = { Text("Cobrar Mensualidad/Abono") },
+            containerColor = SCWSurface,
+            titleContentColor = SCWTextWhite,
+            textContentColor = SCWTextWhite,
+            title = { Text("Cobrar Mensualidad/Abono", fontWeight = FontWeight.Bold) },
             text = {
                 Column {
                     Text("Alumno: ${dojoStudent!!.name}", fontWeight = FontWeight.Bold)
                     Text("Estado: ${dojoStudent!!.payment_status}")
-                    Text("Saldo pendiente: $${dojoStudent!!.outstanding_balance} MXN", color = Color.Red)
+                    Text("Saldo pendiente: $${dojoStudent!!.outstanding_balance} MXN", color = SCWRed, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(16.dp))
                     OutlinedTextField(
                         value = dojoChargeAmount,
                         onValueChange = { dojoChargeAmount = it },
-                        label = { Text("Monto a cobrar (vacío = todo)") }
+                        label = { Text("Monto a cobrar (vacío = todo)", color = SCWTextGray) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = SCWTextWhite,
+                            unfocusedTextColor = SCWTextWhite,
+                            focusedBorderColor = SCWRed,
+                            unfocusedBorderColor = SCWBorder,
+                            cursorColor = SCWRed
+                        )
                     )
                 }
             },
             confirmButton = {
-                TextButton(onClick = {
+                Button(
+                    colors = ButtonDefaults.buttonColors(containerColor = SCWRed, contentColor = SCWTextWhite),
+                    onClick = {
                     val amount = dojoChargeAmount.toFloatOrNull()
                     val sId = dojoStudent!!.id!!
                     dojoStudent = null
                     dojoChargeAmount = ""
                     isLoading = true
                     scanResultText = "Registrando pago..."
-                    scanResultColor = Color.Blue
+                    scanResultColor = SCWTextWhite
                     
                     coroutineScope.launch {
                         try {
@@ -338,29 +395,29 @@ fun ScannerTab(baseUrl: String, token: String) {
                                 val body = res.body()!!
                                 if (body.success) {
                                     scanResultText = "✅ ${body.message}"
-                                    scanResultColor = Color(0xFF4CAF50)
+                                    scanResultColor = SCWGreen
                                 } else {
                                     scanResultText = "❌ ${body.error ?: "Error"}"
-                                    scanResultColor = Color.Red
+                                    scanResultColor = SCWRed
                                 }
                             } else {
                                 scanResultText = "❌ Error servidor: ${res.code()}"
-                                scanResultColor = Color.Red
+                                scanResultColor = SCWRed
                             }
                         } catch(e: Exception) {
                             scanResultText = "❌ Error de red: ${e.message}"
-                            scanResultColor = Color.Red
+                            scanResultColor = SCWRed
                         } finally {
                             isLoading = false
                         }
                     }
                 }) {
-                    Text("Registrar Pago")
+                    Text("Registrar Pago", fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { dojoStudent = null; dojoChargeAmount = "" }) {
-                    Text("Cancelar")
+                    Text("Cancelar", color = SCWTextGray)
                 }
             }
         )
@@ -372,9 +429,19 @@ fun BoxOfficeTab(baseUrl: String, token: String) {
     var tabIndex by remember { mutableIntStateOf(0) }
     
     Column(modifier = Modifier.fillMaxSize()) {
-        TabRow(selectedTabIndex = tabIndex) {
-            Tab(selected = tabIndex == 0, onClick = { tabIndex = 0 }, text = { Text("Eventos") })
-            Tab(selected = tabIndex == 1, onClick = { tabIndex = 1 }, text = { Text("Rifas") })
+        TabRow(
+            selectedTabIndex = tabIndex,
+            containerColor = SCWBlack,
+            contentColor = SCWTextWhite,
+            indicator = { tabPositions ->
+                TabRowDefaults.SecondaryIndicator(
+                    Modifier.tabIndicatorOffset(tabPositions[tabIndex]),
+                    color = SCWRed
+                )
+            }
+        ) {
+            Tab(selected = tabIndex == 0, onClick = { tabIndex = 0 }, text = { Text("EVENTOS", fontWeight = FontWeight.Bold, color = if (tabIndex == 0) SCWRed else SCWTextGray) })
+            Tab(selected = tabIndex == 1, onClick = { tabIndex = 1 }, text = { Text("RIFAS", fontWeight = FontWeight.Bold, color = if (tabIndex == 1) SCWRed else SCWTextGray) })
         }
         
         Box(modifier = Modifier.fillMaxSize().padding(16.dp)) {
@@ -427,13 +494,17 @@ fun EventsBoxOffice(baseUrl: String, token: String) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text("¡Venta Exitosa!", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color(0xFF4CAF50), modifier = Modifier.padding(bottom = 8.dp))
-            Text(sellResultText, fontSize = 18.sp, textAlign = TextAlign.Center)
+            Text("¡Venta Exitosa!", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = SCWGreen, modifier = Modifier.padding(bottom = 8.dp))
+            Text(sellResultText, fontSize = 18.sp, textAlign = TextAlign.Center, color = SCWTextWhite)
             Spacer(modifier = Modifier.height(24.dp))
-            Image(bitmap = qrBitmap!!.asImageBitmap(), contentDescription = "Boleto QR", modifier = Modifier.size(300.dp))
+            Image(bitmap = qrBitmap!!.asImageBitmap(), contentDescription = "Boleto QR", modifier = Modifier.size(300.dp).background(Color.White).padding(8.dp))
             Spacer(modifier = Modifier.height(32.dp))
-            Button(onClick = { qrBitmap = null; selectedEvent = null; loadEvents() }, modifier = Modifier.fillMaxWidth().height(50.dp)) {
-                Text("Siguiente Venta")
+            Button(
+                colors = ButtonDefaults.buttonColors(containerColor = SCWRed, contentColor = SCWTextWhite),
+                onClick = { qrBitmap = null; selectedEvent = null; loadEvents() }, 
+                modifier = Modifier.fillMaxWidth().height(50.dp)
+            ) {
+                Text("Siguiente Venta", fontWeight = FontWeight.Bold)
             }
         }
         return
@@ -443,10 +514,15 @@ fun EventsBoxOffice(baseUrl: String, token: String) {
         val (zone, seat) = seatToSell!!
         AlertDialog(
             onDismissRequest = { seatToSell = null },
-            title = { Text("Confirmar Venta") },
+            containerColor = SCWSurface,
+            titleContentColor = SCWTextWhite,
+            textContentColor = SCWTextWhite,
+            title = { Text("Confirmar Venta", fontWeight = FontWeight.Bold) },
             text = { Text("¿Deseas vender el asiento de la zona ${zone.name}, Fila ${seat.row} - ${seat.number} por $${zone.price} MXN?") },
             confirmButton = {
-                TextButton(onClick = {
+                Button(
+                    colors = ButtonDefaults.buttonColors(containerColor = SCWGreen, contentColor = SCWTextWhite),
+                    onClick = {
                     seatToSell = null
                     isLoading = true
                     coroutineScope.launch {
@@ -459,47 +535,56 @@ fun EventsBoxOffice(baseUrl: String, token: String) {
                                     val qrContent = "{\"scw\":true,\"order\":${body.order_id},\"item\":${body.item_id},\"code\":\"${body.code}\"}"
                                     try {
                                         qrBitmap = BarcodeEncoder().encodeBitmap(qrContent, BarcodeFormat.QR_CODE, 600, 600)
-                                        sellResultText = "${body.event_title}\\n${body.seat_info}\\nTotal: $${body.price}"
+                                        sellResultText = "${body.event_title}\n${body.seat_info}\nTotal: $${body.price}"
                                     } catch (e: Exception) { errorMsg = "Error generando QR" }
                                 } else { errorMsg = body.error ?: "Error desconocido" }
                             } else { errorMsg = "Error al vender: ${res.code()}" }
                         } catch (e: Exception) { errorMsg = "Error de red: ${e.message}" } finally { isLoading = false }
                     }
-                }) { Text("Confirmar y Cobrar", color = Color(0xFF4CAF50)) }
+                }) { Text("Confirmar y Cobrar", fontWeight = FontWeight.Bold) }
             },
-            dismissButton = { TextButton(onClick = { seatToSell = null }) { Text("Cancelar") } }
+            dismissButton = { TextButton(onClick = { seatToSell = null }) { Text("Cancelar", color = SCWTextGray) } }
         )
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        Text("Venta en Efectivo de Boletos", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text("VENTA EN EFECTIVO", fontSize = 20.sp, fontWeight = FontWeight.Black, color = SCWTextWhite, letterSpacing = 1.sp)
         Spacer(modifier = Modifier.height(16.dp))
 
         if (isLoading) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+            CircularProgressIndicator(color = SCWRed, modifier = Modifier.align(Alignment.CenterHorizontally))
         } else if (errorMsg.isNotEmpty()) {
-            Text(errorMsg, color = Color.Red)
+            Text(errorMsg, color = SCWRed)
         } else if (selectedEvent == null) {
-            if (events.isEmpty()) Text("No hay eventos disponibles.")
+            if (events.isEmpty()) Text("No hay eventos disponibles.", color = SCWTextGray)
             else LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(events) { event ->
-                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).clickable { selectedEvent = event }, elevation = CardDefaults.cardElevation(4.dp)) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).clickable { selectedEvent = event },
+                        colors = CardDefaults.cardColors(containerColor = SCWGlass),
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = CardDefaults.cardElevation(0.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, SCWBorder)
+                    ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text(event.title, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                            Text(event.date, color = Color.Gray)
+                            Text(event.title, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = SCWTextWhite)
+                            Text(event.date, color = SCWRed, fontWeight = FontWeight.Medium)
                         }
                     }
                 }
             }
         } else {
-            Button(onClick = { selectedEvent = null }) { Text("← Volver a Eventos") }
+            Button(
+                colors = ButtonDefaults.buttonColors(containerColor = SCWDarkGray, contentColor = SCWTextWhite),
+                onClick = { selectedEvent = null }
+            ) { Text("← Volver a Eventos") }
             Spacer(modifier = Modifier.height(16.dp))
-            Text(selectedEvent!!.title, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            Text("Mapa Completo", color = Color.Gray)
+            Text(selectedEvent!!.title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = SCWTextWhite)
+            Text("Selecciona un asiento del mapa", color = SCWTextGray)
             Spacer(modifier = Modifier.height(16.dp))
 
             // Box for the 2D pan/zoom Map
-            Box(modifier = Modifier.fillMaxSize().background(Color(0xFFEEEEEE), RoundedCornerShape(8.dp))) {
+            Box(modifier = Modifier.fillMaxSize().background(SCWBlack).border(1.dp, SCWBorder, RoundedCornerShape(8.dp))) {
                 // To keep it simple, we use scrollable Column & Row
                 var scale by remember { mutableFloatStateOf(1f) }
                 // Implementation using simple scrollbars for panning
@@ -523,8 +608,8 @@ fun EventsBoxOffice(baseUrl: String, token: String) {
                                 Spacer(modifier = Modifier.height(4.dp))
                                 
                                 // RING
-                                Box(modifier = Modifier.size(200.dp).background(Color.White).border(4.dp, Color.Black).padding(8.dp), contentAlignment = Alignment.Center) {
-                                    Text("RING SCW", fontWeight = FontWeight.Bold, color = Color.LightGray, fontSize = 24.sp)
+                                Box(modifier = Modifier.size(200.dp).background(Color(0xFF111111)).border(4.dp, SCWRed).padding(8.dp), contentAlignment = Alignment.Center) {
+                                    Text("RING SCW", fontWeight = FontWeight.Black, color = Color.White, fontSize = 24.sp, letterSpacing = 2.sp)
                                 }
                                 
                                 Spacer(modifier = Modifier.height(4.dp))
@@ -545,7 +630,7 @@ fun EventsBoxOffice(baseUrl: String, token: String) {
                         val others = selectedEvent!!.zones.filter { !it.name.contains("NORTE", true) && !it.name.contains("SUR", true) && !it.name.contains("ESTE", true) && !it.name.contains("OESTE", true) }
                         others.forEach { zone ->
                             Spacer(modifier = Modifier.height(32.dp))
-                            Text(zone.name, fontWeight = FontWeight.Bold)
+                            Text(zone.name, fontWeight = FontWeight.Bold, color = SCWTextWhite)
                             ZoneView(zone) { seat -> seatToSell = Pair(zone, seat) }
                         }
                     }
@@ -579,24 +664,25 @@ fun ZoneView(zone: BoxOfficeZone, isVertical: Boolean = false, reverseRows: Bool
     val rowEntries = if (reverseRows) seatsByRow.entries.reversed() else seatsByRow.entries
 
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(4.dp)) {
-        Text(zone.name, fontWeight = FontWeight.Bold, color = Color.DarkGray)
-        Text("$${zone.price}", color = Color(0xFF4CAF50), fontSize = 12.sp)
+        Text(zone.name, fontWeight = FontWeight.Bold, color = SCWTextWhite)
+        Text("$${zone.price}", color = SCWGreen, fontSize = 12.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(4.dp))
         
         if (isVertical) {
             Row(horizontalArrangement = Arrangement.Center) {
                 rowEntries.forEach { (rowName, seats) ->
                     Column(modifier = Modifier.padding(horizontal = 2.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(rowName, fontWeight = FontWeight.Bold, modifier = Modifier.height(20.dp), fontSize = 10.sp)
+                        Text(rowName, fontWeight = FontWeight.Bold, modifier = Modifier.height(20.dp), fontSize = 10.sp, color = SCWTextGray)
                         Spacer(modifier = Modifier.height(2.dp))
                         seats.forEach { seat ->
                             Box(
                                 modifier = Modifier.size(24.dp).padding(1.dp)
-                                    .background(if (seat.is_available) Color(0xFF4CAF50) else Color(0xFFE0E0E0), RoundedCornerShape(2.dp))
+                                    .background(if (seat.is_available) SCWGreen else SCWSurface, RoundedCornerShape(4.dp))
+                                    .border(1.dp, if (seat.is_available) SCWGreen else SCWBorder, RoundedCornerShape(4.dp))
                                     .clickable(enabled = seat.is_available) { onSeatClick(seat) },
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(getDisplayNumber(zone.name, seat.number).toString(), color = if (seat.is_available) Color.White else Color.Gray, fontSize = 8.sp)
+                                Text(getDisplayNumber(zone.name, seat.number).toString(), color = if (seat.is_available) SCWBlack else SCWTextGray, fontSize = 8.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -605,16 +691,17 @@ fun ZoneView(zone: BoxOfficeZone, isVertical: Boolean = false, reverseRows: Bool
         } else {
             rowEntries.forEach { (rowName, seats) ->
                 Row(modifier = Modifier.padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(rowName, fontWeight = FontWeight.Bold, modifier = Modifier.width(20.dp), fontSize = 10.sp)
+                    Text(rowName, fontWeight = FontWeight.Bold, modifier = Modifier.width(20.dp), fontSize = 10.sp, color = SCWTextGray)
                     Spacer(modifier = Modifier.width(2.dp))
                     seats.forEach { seat ->
                         Box(
                             modifier = Modifier.size(24.dp).padding(1.dp)
-                                .background(if (seat.is_available) Color(0xFF4CAF50) else Color(0xFFE0E0E0), RoundedCornerShape(2.dp))
+                                .background(if (seat.is_available) SCWGreen else SCWSurface, RoundedCornerShape(4.dp))
+                                .border(1.dp, if (seat.is_available) SCWGreen else SCWBorder, RoundedCornerShape(4.dp))
                                 .clickable(enabled = seat.is_available) { onSeatClick(seat) },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(getDisplayNumber(zone.name, seat.number).toString(), color = if (seat.is_available) Color.White else Color.Gray, fontSize = 8.sp)
+                            Text(getDisplayNumber(zone.name, seat.number).toString(), color = if (seat.is_available) SCWBlack else SCWTextGray, fontSize = 8.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -660,26 +747,45 @@ fun RafflesBoxOffice(baseUrl: String, token: String) {
     if (ticketToSell != null) {
         AlertDialog(
             onDismissRequest = { ticketToSell = null },
-            title = { Text("Vender Boleto #${ticketToSell!!.number}") },
+            containerColor = SCWSurface,
+            titleContentColor = SCWTextWhite,
+            textContentColor = SCWTextWhite,
+            title = { Text("Vender Boleto #${ticketToSell!!.number}", fontWeight = FontWeight.Bold) },
             text = { 
                 Column {
-                    Text("Total a cobrar: $${selectedRaffle!!.price} MXN")
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Total a cobrar: $${selectedRaffle!!.price} MXN", color = SCWGreen, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(16.dp))
                     OutlinedTextField(
                         value = buyerName,
                         onValueChange = { buyerName = it },
-                        label = { Text("Nombre del comprador ") }
+                        label = { Text("Nombre del comprador", color = SCWTextGray) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = SCWTextWhite,
+                            unfocusedTextColor = SCWTextWhite,
+                            focusedBorderColor = SCWRed,
+                            unfocusedBorderColor = SCWBorder,
+                            cursorColor = SCWRed
+                        )
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = buyerPhone,
                         onValueChange = { buyerPhone = it },
-                        label = { Text("Teléfono del comprador ") }
+                        label = { Text("Teléfono del comprador", color = SCWTextGray) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = SCWTextWhite,
+                            unfocusedTextColor = SCWTextWhite,
+                            focusedBorderColor = SCWRed,
+                            unfocusedBorderColor = SCWBorder,
+                            cursorColor = SCWRed
+                        )
                     )
                 }
             },
             confirmButton = {
-                TextButton(onClick = {
+                Button(
+                    colors = ButtonDefaults.buttonColors(containerColor = SCWGreen, contentColor = SCWTextWhite),
+                    onClick = {
                     val tId = ticketToSell!!.id
                     val name = buyerName
                     val phone = buyerPhone
@@ -697,36 +803,45 @@ fun RafflesBoxOffice(baseUrl: String, token: String) {
                             } else { errorMsg = "Error: ${res.code()}" }
                         } catch (e: Exception) { errorMsg = "Error de red: ${e.message}" } finally { isLoading = false }
                     }
-                }) { Text("Confirmar Venta") }
+                }) { Text("Confirmar Venta", fontWeight = FontWeight.Bold) }
             },
-            dismissButton = { TextButton(onClick = { ticketToSell = null }) { Text("Cancelar") } }
+            dismissButton = { TextButton(onClick = { ticketToSell = null }) { Text("Cancelar", color = SCWTextGray) } }
         )
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        Text("Rifas - Venta en Efectivo", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text("RIFAS - VENTA EN EFECTIVO", fontSize = 20.sp, fontWeight = FontWeight.Black, color = SCWTextWhite, letterSpacing = 1.sp)
         Spacer(modifier = Modifier.height(16.dp))
 
         if (successMsg.isNotEmpty()) {
-            Text(successMsg, color = Color(0xFF4CAF50), fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
-            Button(onClick = { successMsg = "" }) { Text("Aceptar") }
+            Text(successMsg, color = SCWGreen, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
+            Button(
+                colors = ButtonDefaults.buttonColors(containerColor = SCWDarkGray, contentColor = SCWTextWhite),
+                onClick = { successMsg = "" }
+            ) { Text("Aceptar") }
             Spacer(modifier = Modifier.height(16.dp))
         }
 
         if (isLoading) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+            CircularProgressIndicator(color = SCWRed, modifier = Modifier.align(Alignment.CenterHorizontally))
         } else if (errorMsg.isNotEmpty()) {
-            Text(errorMsg, color = Color.Red)
+            Text(errorMsg, color = SCWRed)
         } else if (selectedRaffle == null) {
-            if (raffles.isEmpty()) Text("No hay rifas activas.")
+            if (raffles.isEmpty()) Text("No hay rifas activas.", color = SCWTextGray)
             else LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(raffles) { raffle ->
                     val available = raffle.tickets.count { it.status == "AVAILABLE" }
-                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).clickable { selectedRaffle = raffle }, elevation = CardDefaults.cardElevation(4.dp)) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).clickable { selectedRaffle = raffle },
+                        colors = CardDefaults.cardColors(containerColor = SCWGlass),
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = CardDefaults.cardElevation(0.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, SCWBorder)
+                    ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text(raffle.title, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                            Text("Precio: $${raffle.price} MXN", color = Color(0xFF4CAF50))
-                            Text("Disponibles: $available / ${raffle.tickets.size}", color = Color.Gray)
+                            Text(raffle.title, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = SCWTextWhite)
+                            Text("Precio: $${raffle.price} MXN", color = SCWGreen, fontWeight = FontWeight.Bold)
+                            Text("Disponibles: $available / ${raffle.tickets.size}", color = SCWTextGray)
                         }
                     }
                 }
@@ -734,10 +849,13 @@ fun RafflesBoxOffice(baseUrl: String, token: String) {
         } else {
             val raffle = selectedRaffle
             if (raffle != null) {
-                Button(onClick = { selectedRaffle = null; buyerName = ""; buyerPhone = "" }) { Text("← Volver a Rifas") }
+                Button(
+                    colors = ButtonDefaults.buttonColors(containerColor = SCWDarkGray, contentColor = SCWTextWhite),
+                    onClick = { selectedRaffle = null; buyerName = ""; buyerPhone = "" }
+                ) { Text("← Volver a Rifas") }
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(raffle.title, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                Text("Precio: $${raffle.price} MXN", color = Color(0xFF4CAF50))
+                Text(raffle.title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = SCWTextWhite)
+                Text("Precio: $${raffle.price} MXN", color = SCWGreen, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(16.dp))
     
                 LazyColumn {
@@ -748,12 +866,12 @@ fun RafflesBoxOffice(baseUrl: String, token: String) {
                                 val isAvailable = ticket.status == "AVAILABLE"
                                 Box(
                                     modifier = Modifier.size(50.dp).padding(4.dp)
-                                        .background(if (isAvailable) Color(0xFF4CAF50).copy(alpha=0.2f) else Color.Red.copy(alpha=0.2f), RoundedCornerShape(4.dp))
-                                        .border(1.dp, if (isAvailable) Color(0xFF4CAF50) else Color.Red, RoundedCornerShape(4.dp))
+                                        .background(if (isAvailable) SCWGreen.copy(alpha=0.1f) else SCWRed.copy(alpha=0.1f), RoundedCornerShape(8.dp))
+                                        .border(1.dp, if (isAvailable) SCWGreen else SCWRed.copy(alpha=0.5f), RoundedCornerShape(8.dp))
                                         .clickable(enabled = isAvailable) { ticketToSell = ticket; buyerName = ""; buyerPhone = "" },
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(ticket.number.toString(), fontWeight = FontWeight.Bold, color = if (isAvailable) Color(0xFF4CAF50) else Color.Red)
+                                Text(ticket.number.toString(), fontWeight = FontWeight.Bold, color = if (isAvailable) SCWGreen else SCWRed)
                             }
                         }
                     }
