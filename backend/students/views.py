@@ -469,12 +469,15 @@ Por favor ingresa a tu Portal de Alumno para ver tu código QR y realizar el pag
         try:
             config = get_active_config()
             tuition_fee = str(config.tuition_fee)
+            enrollment_fee = str(config.enrollment_fee)
         except:
             tuition_fee = "500.00"
+            enrollment_fee = "250.00"
             
         return Response({
             "enrollment": EnrollmentSerializer(enrollment).data,
-            "tuition_fee": tuition_fee
+            "tuition_fee": tuition_fee,
+            "enrollment_fee": enrollment_fee
         })
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])

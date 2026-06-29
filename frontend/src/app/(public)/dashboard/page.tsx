@@ -29,6 +29,7 @@ export default function UserDashboard() {
   }, []);
   const [studentData, setStudentData] = useState<any>(null);
   const [tuitionFee, setTuitionFee] = useState<string>('0.00');
+  const [enrollmentFee, setEnrollmentFee] = useState<string>('0.00');
   const [payingTuition, setPayingTuition] = useState(false);
   const [subscription, setSubscription] = useState<any>(null);
   const [cancellingSub, setCancellingSub] = useState(false);
@@ -81,6 +82,9 @@ export default function UserDashboard() {
       if (res.data && res.data.enrollment) {
         setStudentData(res.data.enrollment);
         setTuitionFee(res.data.tuition_fee);
+        if (res.data.enrollment_fee) {
+          setEnrollmentFee(res.data.enrollment_fee);
+        }
       }
     } catch (error) {
       // 404 means not a student, ignore.
@@ -607,7 +611,14 @@ export default function UserDashboard() {
                   Muestra tu código QR en taquilla para pagos en efectivo.
                 </p>
                 <div className="flex flex-col items-center gap-2">
-                  <span className="text-3xl font-black text-white">${tuitionFee} <span className="text-sm text-zinc-500 font-medium">MXN / mes</span></span>
+                  {studentData.last_payment_date === null && parseFloat(studentData.outstanding_balance || '0') > parseFloat(tuitionFee || '0') ? (
+                    <div className="mb-2">
+                      <span className="text-3xl font-black text-white">${parseFloat(studentData.outstanding_balance).toFixed(2)} <span className="text-sm text-zinc-500 font-medium">MXN</span></span>
+                      <p className="text-xs text-zinc-400 mt-1">Incluye inscripción (${enrollmentFee}) y primera mensualidad (${tuitionFee})</p>
+                    </div>
+                  ) : (
+                    <span className="text-3xl font-black text-white">${tuitionFee} <span className="text-sm text-zinc-500 font-medium">MXN / mes</span></span>
+                  )}
                   
                   {studentData.payment_status !== 'PAID' ? (
                     <button 
