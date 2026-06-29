@@ -20,6 +20,7 @@ class SystemConfigurationSerializer(serializers.ModelSerializer):
             'whatsapp_access_token',
             'whatsapp_enabled',
             'tuition_fee',
+            'enrollment_fee',
             'registration_method',
         ]
         # In a real-world app we might obfuscate or write-only the password/token fields

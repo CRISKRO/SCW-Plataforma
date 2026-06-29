@@ -41,6 +41,7 @@ export default function AdminSettingsPage() {
     whatsapp_access_token: '',
     whatsapp_enabled: true,
     tuition_fee: 500.00,
+    enrollment_fee: 250.00,
     registration_method: 'whatsapp',
   });
 
@@ -64,6 +65,7 @@ export default function AdminSettingsPage() {
             whatsapp_access_token: data.whatsapp_access_token || '',
             whatsapp_enabled: data.whatsapp_enabled !== undefined ? Boolean(data.whatsapp_enabled) : true,
             tuition_fee: data.tuition_fee !== undefined ? Number(data.tuition_fee) : 500.00,
+            enrollment_fee: data.enrollment_fee !== undefined ? Number(data.enrollment_fee) : 250.00,
             registration_method: data.registration_method || 'whatsapp',
           });
         }
@@ -292,6 +294,28 @@ export default function AdminSettingsPage() {
                     </div>
                     <p className="text-zinc-500 text-xs mt-1.5">
                       Este es el monto base (en MXN) que se le cobrará a los alumnos cada mes a través de su panel.
+                    </p>
+                  </div>
+
+                  <div className="pt-4 border-t border-white/10">
+                    <label className="block text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                      <DollarSign className="w-4 h-4 text-green-500" />
+                      Costo de Inscripción al DOJO
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm font-bold">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        name="enrollment_fee"
+                        value={formData.enrollment_fee}
+                        onChange={handleInputChange}
+                        className="w-full bg-zinc-900/80 border border-white/10 hover:border-white/20 focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none rounded-xl px-4 py-3 text-white transition-all text-sm pl-8"
+                      />
+                    </div>
+                    <p className="text-zinc-500 text-xs mt-1.5">
+                      Este es el monto único (en MXN) que se suma a la primera mensualidad de los nuevos alumnos inscritos.
                     </p>
                   </div>
                 </div>
