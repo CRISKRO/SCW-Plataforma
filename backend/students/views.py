@@ -116,7 +116,7 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
             
             experience_str = "Principiante" if enrollment.experience == 'BEGINNER' else "Intermedio" if enrollment.experience == 'INTERMEDIATE' else "Avanzado" if enrollment.experience == 'ADVANCED' else "Ninguna"
             
-            frontend_url = getattr(settings, 'FRONTEND_URL', 'https://scw-lucha.com')
+            frontend_url = getattr(settings, 'FRONTEND_URL', 'https://scwlucha.com')
             
             message = f"""Hola {enrollment.name},
 
