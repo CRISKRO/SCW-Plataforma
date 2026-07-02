@@ -61,13 +61,13 @@ export default function Footer() {
             <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-4">Contacto</h3>
             <ul className="space-y-3 text-zinc-400 text-sm">
               <li className="flex items-start gap-2">
-                <span className="font-bold text-white">Dir:</span> Av. Michoacán 614, Morelia, Mich.
+                <span className="font-bold text-white">Dir:</span> <a href="https://maps.google.com/?q=Av.+Michoacán+614,+Morelia,+Mich." target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Av. Michoacán 614, Morelia, Mich.</a>
               </li>
               <li className="flex items-start gap-2">
                 <span className="font-bold text-white">Tel:</span> <a href="tel:4435028658" className="hover:text-white transition-colors">443 502 8658</a>
               </li>
               <li className="flex items-start gap-2">
-                <span className="font-bold text-white">Email:</span> scwdojo@gmail.com
+                <span className="font-bold text-white">Email:</span> <a href="mailto:scwdojo@gmail.com" className="hover:text-white transition-colors">scwdojo@gmail.com</a>
               </li>
             </ul>
           </div>
