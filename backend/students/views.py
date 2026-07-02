@@ -216,7 +216,11 @@ Por favor ingresa a tu Portal de Alumno para ver tu código QR y realizar el pag
                 }
                 res = requests.post(url, json=payload, headers=headers, timeout=8)
                 if res.status_code != 200:
-                    logger.error(f"Error al enviar mensaje de admisión por WhatsApp: {res.text}")
+                    # Intento secundario con 'es' estándar
+                    payload["template"]["language"]["code"] = "es"
+                    res2 = requests.post(url, json=payload, headers=headers, timeout=8)
+                    if res2.status_code != 200:
+                        logger.error(f"Error al enviar mensaje de admisión por WhatsApp (es_MX y es): {res2.text}")
             except Exception as e:
                 logger.error(f"Error de conexión con la API de WhatsApp al enviar admisión: {e}")
 
@@ -323,7 +327,12 @@ Por favor ingresa a tu Portal de Alumno para ver tu código QR y realizar el pag
                 if res.status_code == 200:
                     whatsapp_sent = True
                 else:
-                    logger.error(f"Error al enviar mensaje por WhatsApp: {res.text}")
+                    payload["template"]["language"]["code"] = "es"
+                    res2 = requests.post(url, json=payload, headers=headers, timeout=8)
+                    if res2.status_code == 200:
+                        whatsapp_sent = True
+                    else:
+                        logger.error(f"Error al enviar mensaje por WhatsApp (es_MX y es): {res2.text}")
             except Exception as e:
                 logger.error(f"Error de conexión con la API de WhatsApp: {e}")
 
@@ -413,8 +422,13 @@ Por favor ingresa a tu Portal de Alumno para ver tu código QR y realizar el pag
                 if res.status_code == 200:
                     whatsapp_sent = True
                 else:
-                    error_msg = res.text
-                    logger.error(f"Error al enviar recordatorio por WhatsApp: {error_msg}")
+                    payload["template"]["language"]["code"] = "es"
+                    res2 = requests.post(url, json=payload, headers=headers, timeout=8)
+                    if res2.status_code == 200:
+                        whatsapp_sent = True
+                    else:
+                        error_msg = res2.text
+                        logger.error(f"Error al enviar recordatorio por WhatsApp (es_MX y es): {error_msg}")
             except Exception as e:
                 error_msg = str(e)
                 logger.error(f"Error de conexión con la API de WhatsApp: {error_msg}")
