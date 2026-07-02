@@ -44,6 +44,14 @@ export const adminService = {
     const response = await api.get('/students/enrollments/');
     return response.data;
   },
+  createEnrollment: async (data: any) => {
+    const response = await api.post('/students/enrollments/', data);
+    return response.data;
+  },
+  updateEnrollment: async (id: number, data: any) => {
+    const response = await api.patch(`/students/enrollments/${id}/`, data);
+    return response.data;
+  },
   updateEnrollmentStatus: async (id: number, status: string) => {
     const response = await api.patch(`/students/enrollments/${id}/`, { status });
     return response.data;

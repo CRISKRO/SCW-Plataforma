@@ -31,6 +31,21 @@ export default function AdminSchoolPage() {
   // Action loaders
   const [actionLoading, setActionLoading] = useState<Record<number, boolean>>({});
 
+  // Modal states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<any>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    age: '',
+    experience: 'NONE',
+    status: 'APPROVED',
+    payment_due_date: '',
+    last_payment_date: '',
+    outstanding_balance: '0'
+  });
+
   const fetchEnrollments = async () => {
     try {
       setLoading(true);
@@ -46,6 +61,61 @@ export default function AdminSchoolPage() {
   useEffect(() => {
     fetchEnrollments();
   }, []);
+
+  const handleOpenAddModal = () => {
+    setEditingStudent(null);
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      age: '',
+      experience: 'NONE',
+      status: 'APPROVED',
+      payment_due_date: '',
+      last_payment_date: '',
+      outstanding_balance: '0'
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (student: any) => {
+    setEditingStudent(student);
+    setFormData({
+      name: student.name || '',
+      email: student.email || '',
+      phone: student.phone || '',
+      age: student.age || '',
+      experience: student.experience || 'NONE',
+      status: student.status || 'APPROVED',
+      payment_due_date: student.payment_due_date || '',
+      last_payment_date: student.last_payment_date || '',
+      outstanding_balance: student.outstanding_balance || '0'
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleSaveStudent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const payload = { ...formData };
+      if (!payload.payment_due_date) delete payload.payment_due_date;
+      if (!payload.last_payment_date) delete payload.last_payment_date;
+      
+      if (editingStudent) {
+        const response = await adminService.updateEnrollment(editingStudent.id, payload);
+        setEnrollments(enrollments.map(en => en.id === editingStudent.id ? response : en));
+        alert('Alumno actualizado correctamente.');
+      } else {
+        const response = await adminService.createEnrollment(payload);
+        setEnrollments([response, ...enrollments]);
+        alert('Alumno registrado correctamente.');
+      }
+      setIsModalOpen(false);
+    } catch (error: any) {
+      console.error("Error saving student:", error);
+      alert(error?.response?.data?.error || "Error al guardar el alumno.");
+    }
+  };
 
   const handleStatusChange = async (enrollmentId: number, newStatus: string) => {
     if (confirm(`¿Marcar solicitud como ${newStatus === 'APPROVED' ? 'CONFIRMADO' : 'RECHAZADO'}?`)) {
@@ -233,13 +303,22 @@ export default function AdminSchoolPage() {
       key: 'actions',
       label: 'Acciones',
       render: (_: any, item: any) => (
-        <button
-          onClick={() => handleDeleteEnrollment(item.id, item.name)}
-          className="px-2.5 py-1.5 bg-red-600/10 text-red-500 hover:bg-red-600 hover:text-white rounded-lg text-xs font-bold transition-all border border-red-600/20 hover:border-red-600"
-          title="Eliminar solicitud permanentemente"
-        >
-          Eliminar
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleOpenEditModal(item)}
+            className="px-2.5 py-1.5 bg-zinc-800 text-blue-400 hover:bg-zinc-700 rounded-lg text-xs font-bold transition-all border border-blue-500/20 hover:border-blue-500"
+            title="Editar"
+          >
+            Editar
+          </button>
+          <button
+            onClick={() => handleDeleteEnrollment(item.id, item.name)}
+            className="px-2.5 py-1.5 bg-red-600/10 text-red-500 hover:bg-red-600 hover:text-white rounded-lg text-xs font-bold transition-all border border-red-600/20 hover:border-red-600"
+            title="Eliminar solicitud permanentemente"
+          >
+            Eliminar
+          </button>
+        </div>
       )
     }
   ];
@@ -258,7 +337,14 @@ export default function AdminSchoolPage() {
         </div>
         
         {/* Navigation Tabs */}
-        <div className="flex space-x-1.5 bg-zinc-900 border border-white/5 rounded-xl p-1">
+        <div className="flex space-x-1.5 bg-zinc-900 border border-white/5 rounded-xl p-1 flex-wrap">
+          <button
+            onClick={handleOpenAddModal}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg bg-green-600 hover:bg-green-500 text-white transition-all shadow-lg shadow-green-900/20 mr-2"
+          >
+            <UserCheck className="w-4 h-4" />
+            Registrar Alumno
+          </button>
           <button
             onClick={() => setActiveTab('payments')}
             className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
@@ -572,6 +658,14 @@ export default function AdminSchoolPage() {
                               </button>
 
                               <button
+                                onClick={() => handleOpenEditModal(student)}
+                                className="inline-flex items-center gap-1 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-blue-400 font-bold rounded-lg text-xs transition-all transform active:scale-95 border border-blue-500/20 hover:border-blue-500"
+                                title="Editar alumno"
+                              >
+                                Editar
+                              </button>
+                              
+                              <button
                                 onClick={() => handleDeleteEnrollment(student.id, student.name)}
                                 className="inline-flex items-center gap-1 px-3 py-1.5 bg-red-600/10 text-red-500 hover:bg-red-600 hover:text-white rounded-lg text-xs font-bold transition-all border border-red-600/20 hover:border-red-600"
                                 title="Eliminar alumno permanentemente"
@@ -600,6 +694,85 @@ export default function AdminSchoolPage() {
         ) : (
           <AdminTable columns={requestColumns} data={enrollments} />
         )
+      )}
+
+      {/* ADD/EDIT STUDENT MODAL */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-zinc-950 border border-white/10 p-6 rounded-2xl w-full max-w-2xl my-8 relative">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold uppercase tracking-widest">{editingStudent ? 'Editar Alumno' : 'Registrar Nuevo Alumno'}</h2>
+              <button onClick={() => setIsModalOpen(false)} className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-white/5 transition-all">
+                <XCircle className="w-6 h-6" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveStudent} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Nombre Completo</label>
+                  <input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-red-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Correo Electrónico</label>
+                  <input type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-red-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">WhatsApp / Teléfono</label>
+                  <input type="text" required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-red-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Edad</label>
+                  <input type="number" required value={formData.age} onChange={(e) => setFormData({...formData, age: e.target.value})} className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-red-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Nivel de Experiencia</label>
+                  <select value={formData.experience} onChange={(e) => setFormData({...formData, experience: e.target.value})} className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-red-500">
+                    <option value="NONE">Ninguna</option>
+                    <option value="BEGINNER">Principiante</option>
+                    <option value="INTERMEDIATE">Intermedio</option>
+                    <option value="ADVANCED">Avanzado / Profesional</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Estado de Admisión</label>
+                  <select value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})} className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-red-500">
+                    <option value="PENDING">Pendiente</option>
+                    <option value="APPROVED">Confirmado (Activo)</option>
+                    <option value="REJECTED">Rechazado</option>
+                  </select>
+                </div>
+              </div>
+              
+              <hr className="border-white/5 my-4" />
+              <h3 className="text-sm font-bold uppercase tracking-widest text-zinc-400 mb-2">Mensualidades y Saldos</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Vencimiento Mensual</label>
+                  <input type="date" value={formData.payment_due_date} onChange={(e) => setFormData({...formData, payment_due_date: e.target.value})} className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-red-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Último Pago</label>
+                  <input type="date" value={formData.last_payment_date} onChange={(e) => setFormData({...formData, last_payment_date: e.target.value})} className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-red-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Saldo Pendiente (Debe)</label>
+                  <input type="number" step="0.01" value={formData.outstanding_balance} onChange={(e) => setFormData({...formData, outstanding_balance: e.target.value})} className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-red-500" />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-6 border-t border-white/10 mt-6">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-2.5 rounded-xl font-bold text-sm bg-zinc-800 text-white hover:bg-zinc-700 transition-colors">
+                  Cancelar
+                </button>
+                <button type="submit" className="px-6 py-2.5 rounded-xl font-bold text-sm bg-red-600 text-white hover:bg-red-500 transition-colors shadow-lg shadow-red-900/20">
+                  {editingStudent ? 'Guardar Cambios' : 'Registrar Alumno'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );
