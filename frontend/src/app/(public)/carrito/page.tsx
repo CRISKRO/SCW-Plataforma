@@ -311,9 +311,10 @@ export default function CartPage() {
                       </p>
                       <div className="bg-black p-3 rounded border border-white/10 font-mono text-sm text-white">
                         Banco: BBVA<br />
-                        Cuenta: 1234567890<br />
-                        CLABE: 012345678901234567<br />
-                        Nombre: SCW Pro Wrestling
+                        Tarjeta: 4152 3143 1296 6552<br />
+                        Cuenta: 2987715307<br />
+                        CLABE: 012470029877153077<br />
+                        Nombre: René Ochoa Magallon
                       </div>
                       <div className="space-y-2">
                         <label className="text-xs font-bold uppercase tracking-widest text-zinc-500">Comprobante de Pago</label>
