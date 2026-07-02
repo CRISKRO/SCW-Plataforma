@@ -350,7 +350,7 @@ export default function CartPage() {
 
                 {/* Botón de Pago */}
                 <div className="space-y-3 pt-2">
-                  {!user && items.some(i => !i.event_id) ? (
+                  {!user && hasMerch ? (
                     <button
                       onClick={() => router.push(`/login?redirect=/carrito`)}
                       className="w-full bg-white hover:bg-zinc-200 text-black py-4 rounded-xl font-bold text-base flex items-center justify-center gap-3 transition-all"
