@@ -64,7 +64,7 @@ export default function Footer() {
                 <span className="font-bold text-white">Dir:</span> Av. Michoacán 614, Morelia, Mich.
               </li>
               <li className="flex items-start gap-2">
-                <span className="font-bold text-white">Tel:</span> 443 502 8658
+                <span className="font-bold text-white">Tel:</span> <a href="tel:4435028658" className="hover:text-white transition-colors">443 502 8658</a>
               </li>
               <li className="flex items-start gap-2">
                 <span className="font-bold text-white">Email:</span> scwdojo@gmail.com
@@ -75,8 +75,7 @@ export default function Footer() {
           <div>
             <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-4">Legal</h3>
             <ul className="space-y-3 text-zinc-400 text-sm">
-              <li><Link href="/terminos" className="hover:text-white transition-colors">Términos de Servicio</Link></li>
-              <li><Link href="/privacidad" className="hover:text-white transition-colors">Aviso de Privacidad</Link></li>
+              <li><Link href="/terminos-y-condiciones" className="hover:text-white transition-colors">Términos y Condiciones</Link></li>
             </ul>
           </div>
         </div>
