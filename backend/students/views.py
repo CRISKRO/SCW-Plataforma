@@ -50,7 +50,7 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         data = request.data.copy()
-        if request.user.is_authenticated:
+        if request.user.is_authenticated and not request.user.is_staff:
             data['email'] = request.user.email
             
         email = data.get('email')
