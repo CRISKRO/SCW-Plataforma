@@ -48,6 +48,12 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
             return [IsAuthenticated()]
         return [IsAdminUser()]
 
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        if instance.status == 'APPROVED':
+            self.send_admission_whatsapp(instance)
+            self.send_admission_email(instance)
+
     def create(self, request, *args, **kwargs):
         data = request.data.copy()
         if request.user.is_authenticated and not request.user.is_staff:
