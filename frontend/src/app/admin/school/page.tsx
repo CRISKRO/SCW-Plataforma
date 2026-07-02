@@ -97,7 +97,7 @@ export default function AdminSchoolPage() {
   const handleSaveStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const payload = { ...formData };
+      const payload: any = { ...formData };
       if (!payload.payment_due_date) delete payload.payment_due_date;
       if (!payload.last_payment_date) delete payload.last_payment_date;
       
