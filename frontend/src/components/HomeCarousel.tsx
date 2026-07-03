@@ -120,7 +120,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
         date: ev.date_time,
         location: ev.location,
         cta: [
-          { label: 'Comprar Boletos', href: `/eventos/${ev.id}`, primary: true, isEventTicket: true, event: ev },
+          { label: 'Comprar Boletos', href: `/eventos`, primary: true },
           { label: 'Todos los Eventos', href: '/eventos', primary: false },
         ],
       }));
@@ -528,7 +528,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
               <div className="col-span-3 text-center text-zinc-500 py-12">No hay eventos programados.</div>
             ) : (
               events.map((event: any, i: number) => (
-                <Link key={event.id} href={`/eventos/${event.id}`} className="block">
+                <Link key={event.id} href={`/eventos`} className="block">
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}

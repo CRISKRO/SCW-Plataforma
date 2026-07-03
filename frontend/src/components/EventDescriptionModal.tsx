@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, MapPin } from 'lucide-react';
+import { X, Calendar, MapPin, Ticket } from 'lucide-react';
 import Image from 'next/image';
 
 interface Event {
@@ -18,9 +18,10 @@ interface EventDescriptionModalProps {
   isOpen: boolean;
   onClose: () => void;
   event: Event | null;
+  onBuyTickets?: () => void;
 }
 
-export function EventDescriptionModal({ isOpen, onClose, event }: EventDescriptionModalProps) {
+export function EventDescriptionModal({ isOpen, onClose, event, onBuyTickets }: EventDescriptionModalProps) {
   if (!isOpen || !event) return null;
 
   return (
@@ -62,11 +63,23 @@ export function EventDescriptionModal({ isOpen, onClose, event }: EventDescripti
               </div>
             </div>
             
-            <div className="prose prose-invert max-w-none">
+            <div className="prose prose-invert max-w-none mb-8">
               <p className="text-zinc-300 text-base leading-relaxed whitespace-pre-wrap">
                 {event.description}
               </p>
             </div>
+            
+            {onBuyTickets && (
+              <div className="mt-6 border-t border-zinc-800 pt-6">
+                <button
+                  onClick={onBuyTickets}
+                  className="w-full bg-red-600 text-white px-6 py-4 font-bold uppercase tracking-widest text-sm hover:bg-red-700 transition-colors rounded-xl shadow-lg flex items-center justify-center gap-2"
+                >
+                  <Ticket className="w-5 h-5" />
+                  Elegir Asientos y Boletos
+                </button>
+              </div>
+            )}
           </div>
         </motion.div>
       </div>

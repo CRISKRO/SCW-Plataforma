@@ -90,17 +90,7 @@ export default function EventosPage() {
                     </button>
                   </div>
                   
-                  <div className="mt-8 flex items-center gap-4">
-                    <button 
-                      onClick={() => {
-                        setSelectedEvent(event);
-                        setIsTicketModalOpen(true);
-                      }}
-                      className="bg-red-600 text-white px-6 py-3 font-bold uppercase tracking-widest text-sm hover:bg-red-700 transition-colors rounded-lg"
-                    >
-                      Ver Asientos y Boletos
-                    </button>
-                  </div>
+                  
                 </div>
               </motion.div>
             ))
@@ -120,6 +110,13 @@ export default function EventosPage() {
           isOpen={isDescModalOpen}
           onClose={() => setIsDescModalOpen(false)}
           event={selectedEventForDesc}
+          onBuyTickets={() => {
+            setIsDescModalOpen(false);
+            setSelectedEvent(selectedEventForDesc);
+            setTimeout(() => {
+              setIsTicketModalOpen(true);
+            }, 300);
+          }}
         />
       </div>
     </div>
