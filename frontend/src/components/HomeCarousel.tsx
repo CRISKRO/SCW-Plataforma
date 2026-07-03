@@ -55,19 +55,6 @@ const SocialLinks = ({ fighter }: { fighter: any }) => {
 const staticSlides = [
   {
     id: null,
-    title: "Lucha Extrema",
-    subtitle: "Siente el impacto. Vive la gloria. La plataforma oficial de SCW Strong Classic Wrestling.",
-    image: "/images/logoring.webp",
-    mobileImage: "/images/logoring_mobile.jpg",
-    date: null,
-    location: null,
-    cta: [
-      { label: "Comprar Boletos", href: "/eventos", primary: true },
-      { label: "Ver Cartelera", href: "/eventos", primary: false },
-    ],
-  },
-  {
-    id: null,
     title: "Tienda Oficial",
     subtitle: "Vístete con la mercancía oficial de tus Superestrellas favoritas de SCW y demuestra de qué lado estás.",
     image: "/images/logoring2.webp",
@@ -128,7 +115,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
         id: ev.id,
         type: 'event',
         title: ev.title,
-        subtitle: ev.description || `${ev.location}`,
+        subtitle: `${ev.location}`,
         image: ev.banner_url || '/images/logoring.webp',
         date: ev.date_time,
         location: ev.location,
