@@ -37,6 +37,7 @@ export default function AdminSchoolPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    password: '',
     phone: '',
     age: '',
     experience: 'NONE',
@@ -67,6 +68,7 @@ export default function AdminSchoolPage() {
     setFormData({
       name: '',
       email: '',
+      password: '',
       phone: '',
       age: '',
       experience: 'NONE',
@@ -83,6 +85,7 @@ export default function AdminSchoolPage() {
     setFormData({
       name: student.name || '',
       email: student.email || '',
+      password: '',
       phone: student.phone || '',
       age: student.age || '',
       experience: student.experience || 'NONE',
@@ -100,6 +103,7 @@ export default function AdminSchoolPage() {
       const payload: any = { ...formData };
       if (!payload.payment_due_date) delete payload.payment_due_date;
       if (!payload.last_payment_date) delete payload.last_payment_date;
+      if (editingStudent && !payload.password) delete payload.password;
       
       if (editingStudent) {
         const response = await adminService.updateEnrollment(editingStudent.id, payload);
@@ -716,6 +720,10 @@ export default function AdminSchoolPage() {
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Correo Electrónico</label>
                   <input type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-red-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Contraseña</label>
+                  <input type="password" required={!editingStudent} value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-red-500" placeholder={editingStudent ? "Dejar en blanco para no cambiar" : ""} />
                 </div>
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">WhatsApp / Teléfono</label>
