@@ -16,9 +16,13 @@ export default function EventDetailClient({ event }: { event: any }) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mt-8">
           <motion.div 
             initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
-            className="w-full aspect-[4/3] sm:aspect-video lg:aspect-[3/4] bg-zinc-900 rounded-3xl overflow-hidden relative shadow-2xl shadow-black/50 border border-white/10"
+            className="w-full bg-zinc-900 rounded-3xl overflow-hidden shadow-2xl shadow-black/50 border border-white/10 flex items-center justify-center"
           >
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${event.banner_url})` }}></div>
+            <img 
+              src={event.banner_url}
+              alt={`Póster oficial de ${event.title}`}
+              className="w-full h-auto object-contain"
+            />
           </motion.div>
 
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
