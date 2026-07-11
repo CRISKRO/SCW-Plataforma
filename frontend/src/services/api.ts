@@ -4,15 +4,16 @@ const browserOrigin = typeof window !== 'undefined'
   ? window.location.origin
   : 'http://localhost';
 
-const envApiUrl = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL
+const envApiUrl = typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_URL
   ? process.env.NEXT_PUBLIC_API_URL
   : undefined;
 
 // Si estamos en desarrollo, forzamos la ruta del backend local (así evitamos que apunte a producción por error)
 const isDevelopment = typeof process !== 'undefined' && process.env.NODE_ENV === 'development';
+const fallbackProductionUrl = 'https://renescw.pythonanywhere.com/api';
 const API_URL = isDevelopment 
   ? `${browserOrigin.replace(/:\d+$/, '')}:8000/api` 
-  : (envApiUrl || `${browserOrigin.replace(/:\d+$/, '')}:8000/api`);
+  : (envApiUrl || fallbackProductionUrl);
 
 const api = axios.create({
   baseURL: API_URL,
