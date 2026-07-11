@@ -320,7 +320,7 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
     } catch (error: any) {
       useToastStore.getState().addToast(error.response?.data?.error || "Error al reservar asientos.", "error");
       // Refetch to get current state
-      const zonesRes = await api.get(`/tickets/zones/by_event/?event_id=${eventId}`);
+      const zonesRes = await api.get(`/tickets/zones/by_event/?event_id=${actualEventId}`);
       setZones(zonesRes.data);
       // Remove locked ones from selected
       const currentAvailable = zonesRes.data.flatMap((z: any) => z.seats).filter((s: any) => s.is_available && !s.is_locked).map((s: any) => s.id);
