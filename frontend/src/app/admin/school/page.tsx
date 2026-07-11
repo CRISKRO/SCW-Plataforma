@@ -854,13 +854,13 @@ export default function AdminSchoolPage() {
                     {req.status === 'PENDING' ? (
                       <>
                         <button
-                          onClick={() => handleUpdateStatus(req.id, 'APPROVED')}
+                          onClick={() => handleStatusChange(req.id, 'APPROVED')}
                           className="flex justify-center items-center py-2.5 bg-green-500 text-black hover:bg-green-400 font-bold rounded-lg text-xs transition-all"
                         >
                           Aprobar
                         </button>
                         <button
-                          onClick={() => handleUpdateStatus(req.id, 'RECHAZADA')}
+                          onClick={() => handleStatusChange(req.id, 'REJECTED')}
                           className="flex justify-center items-center py-2.5 bg-red-600/10 text-red-500 font-bold rounded-lg text-xs border border-red-600/20"
                         >
                           Rechazar
