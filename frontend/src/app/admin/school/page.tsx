@@ -340,37 +340,42 @@ export default function AdminSchoolPage() {
           </p>
         </div>
         
-        {/* Navigation Tabs */}
-        <div className="flex space-x-1.5 bg-zinc-900 border border-white/5 rounded-xl p-1 flex-wrap">
+        {/* Actions & Navigation */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <button
             onClick={handleOpenAddModal}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg bg-green-600 hover:bg-green-500 text-white transition-all shadow-lg shadow-green-900/20 mr-2"
+            className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold rounded-lg bg-red-600 hover:bg-red-500 text-white transition-all w-full sm:w-auto shrink-0"
           >
             <UserCheck className="w-4 h-4" />
             Registrar Alumno
           </button>
-          <button
-            onClick={() => setActiveTab('payments')}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
-              activeTab === 'payments'
-                ? 'bg-gradient-to-r from-red-600 to-red-800 text-white shadow-lg shadow-red-950/20'
-                : 'text-zinc-400 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <DollarSign className="w-4 h-4" />
-            Control de Mensualidades
-          </button>
-          <button
-            onClick={() => setActiveTab('requests')}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
-              activeTab === 'requests'
-                ? 'bg-gradient-to-r from-red-600 to-red-800 text-white shadow-lg shadow-red-950/20'
-                : 'text-zinc-400 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <UserCheck className="w-4 h-4" />
-            Solicitudes de Admisión ({pendingRequests.length})
-          </button>
+
+          <div className="flex bg-zinc-900 border border-white/10 rounded-lg p-1 w-full sm:w-auto overflow-x-auto">
+            <button
+              onClick={() => setActiveTab('payments')}
+              className={`flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold rounded-md transition-all whitespace-nowrap flex-1 sm:flex-none ${
+                activeTab === 'payments'
+                  ? 'bg-zinc-800 text-white shadow-sm border border-white/5'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/5 border border-transparent'
+              }`}
+            >
+              <DollarSign className="w-4 h-4" />
+              <span className="hidden sm:inline">Control de Mensualidades</span>
+              <span className="sm:hidden">Mensualidades</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('requests')}
+              className={`flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold rounded-md transition-all whitespace-nowrap flex-1 sm:flex-none ${
+                activeTab === 'requests'
+                  ? 'bg-zinc-800 text-white shadow-sm border border-white/5'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/5 border border-transparent'
+              }`}
+            >
+              <Inbox className="w-4 h-4" />
+              <span className="hidden sm:inline">Solicitudes de Admisión ({pendingRequests.length})</span>
+              <span className="sm:hidden">Solicitudes ({pendingRequests.length})</span>
+            </button>
+          </div>
         </div>
       </div>
 
