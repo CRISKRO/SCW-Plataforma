@@ -37,9 +37,9 @@ export default function EventDetailClient({ event }: { event: any }) {
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-zinc-400 text-lg mb-8 hover:text-white hover:underline transition-colors"
+              className="inline-flex items-center gap-2 text-zinc-300 text-lg mb-8 underline underline-offset-4 decoration-zinc-600 hover:text-white hover:decoration-white transition-all"
             >
-              <MapPin className="w-5 h-5 shrink-0" />
+              <MapPin className="w-5 h-5 shrink-0 text-red-500" />
               <span>{event.location}</span>
             </a>
             
