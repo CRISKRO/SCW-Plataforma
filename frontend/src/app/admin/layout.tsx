@@ -55,23 +55,25 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isAuthenticated, user, logout } = useAuthStore();
+  const { isAuthenticated, user, isLoading, logout } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    if (!isAuthenticated || !user || !ALLOWED_ROLES.includes(user.role)) {
-      router.push('/login');
-    } else {
-      const permissions = ROLE_PERMISSIONS[user.role] || [];
-      const isAllowed = permissions.includes('*') || permissions.some(path => pathname === path || (pathname.startsWith(`${path}/`) && path !== '/admin'));
-      
-      if (!isAllowed) {
-        router.push('/admin');
+    if (!isLoading) {
+      if (!isAuthenticated || !user || !ALLOWED_ROLES.includes(user.role)) {
+        router.push('/login');
+      } else {
+        const permissions = ROLE_PERMISSIONS[user.role] || [];
+        const isAllowed = permissions.includes('*') || permissions.some(path => pathname === path || (pathname.startsWith(`${path}/`) && path !== '/admin'));
+        
+        if (!isAllowed) {
+          router.push('/admin');
+        }
       }
     }
-  }, [isAuthenticated, user, router, pathname]);
+  }, [isAuthenticated, user, isLoading, router, pathname]);
 
   // Cerrar sidebar al cambiar de ruta en móviles
   useEffect(() => {
@@ -83,7 +85,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     router.push('/login');
   };
 
-  if (!mounted || !isAuthenticated || !user || !ALLOWED_ROLES.includes(user.role)) {
+  if (!mounted || isLoading || !isAuthenticated || !user || !ALLOWED_ROLES.includes(user.role)) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center text-white">
         <div className="animate-pulse flex flex-col items-center">

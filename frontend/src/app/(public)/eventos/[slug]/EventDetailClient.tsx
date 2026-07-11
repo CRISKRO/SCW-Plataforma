@@ -34,13 +34,18 @@ export default function EventDetailClient({ event }: { event: any }) {
             <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tight mb-4">{event.title}</h1>
             
             <a 
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`} 
+              href={
+                event.location?.toLowerCase().includes('dojo')
+                  ? 'https://share.google/zSjJUeXVE9kBjhAzr'
+                  : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location || '')}`
+              }
               target="_blank" 
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-zinc-300 text-lg mb-8 underline underline-offset-4 decoration-zinc-600 hover:text-white hover:decoration-white transition-all"
+              title="Abrir en Google Maps"
             >
               <MapPin className="w-5 h-5 shrink-0 text-red-500" />
-              <span>{event.location}</span>
+              <span className="text-blue-400 font-semibold hover:text-blue-300">{event.location}</span>
             </a>
             
             <p className="text-zinc-300 text-lg whitespace-pre-line leading-relaxed mb-10">

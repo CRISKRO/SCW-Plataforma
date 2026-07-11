@@ -17,14 +17,17 @@ interface User {
 interface AuthState {
   isAuthenticated: boolean;
   user: User | null;
+  isLoading: boolean;
   setAuth: (user: User, token: string, remember?: boolean) => void;
   updateUser: (user: Partial<User>) => void;
   logout: () => void;
+  setLoading: (loading: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
   user: null,
+  isLoading: true,
   setAuth: (user, token, remember = true) => {
     if (typeof window !== 'undefined') {
       if (remember) {
@@ -35,7 +38,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         localStorage.removeItem('access_token');
       }
     }
-    set({ isAuthenticated: true, user });
+    set({ isAuthenticated: true, user, isLoading: false });
   },
   updateUser: (updatedFields) => {
     set((state) => ({
@@ -49,6 +52,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       sessionStorage.removeItem('access_token');
       sessionStorage.removeItem('refresh_token');
     }
-    set({ isAuthenticated: false, user: null });
+    set({ isAuthenticated: false, user: null, isLoading: false });
   },
+  setLoading: (loading) => set({ isLoading: loading }),
 }));

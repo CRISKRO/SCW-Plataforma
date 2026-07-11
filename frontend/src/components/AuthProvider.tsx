@@ -5,7 +5,7 @@ import { useAuthStore } from '@/store/authStore';
 import { authService } from '@/services/auth.services';
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { setAuth, logout } = useAuthStore();
+  const { setAuth, logout, setLoading } = useAuthStore();
 
   useEffect(() => {
     const token = typeof window !== 'undefined' 
@@ -13,14 +13,20 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
       : null;
     if (token) {
       authService.getProfile()
-        .then(user => setAuth(user, token, !!localStorage.getItem('access_token')))
+        .then(user => {
+          setAuth(user, token, !!localStorage.getItem('access_token'));
+        })
         .catch((error) => {
           if (error.response && (error.response.status === 401 || error.response.status === 403)) {
             logout();
+          } else {
+            setLoading(false); // In case of network error, just stop loading but don't logout immediately
           }
         });
+    } else {
+      setLoading(false);
     }
-  }, [setAuth, logout]);
+  }, [setAuth, logout, setLoading]);
 
   return <>{children}</>;
 }

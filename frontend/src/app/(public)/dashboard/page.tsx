@@ -11,7 +11,7 @@ import api from '@/services/api';
 import QRCode from 'react-qr-code';
 
 export default function UserDashboard() {
-  const { user, isAuthenticated, logout, updateUser } = useAuthStore();
+  const { user, isAuthenticated, isLoading, logout, updateUser } = useAuthStore();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
@@ -47,6 +47,11 @@ export default function UserDashboard() {
   useEffect(() => {
     setMounted(true);
     window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || isLoading) return;
+    
     if (!isAuthenticated) {
       router.push('/login');
     } else {
@@ -236,7 +241,15 @@ export default function UserDashboard() {
     }
   };
 
-  if (!mounted || !isAuthenticated) return null;
+  if (!mounted || isLoading || !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center text-white">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="w-12 h-12 border-t-2 border-red-500 rounded-full animate-spin mb-4"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-black min-h-screen text-white pt-24 pb-12">

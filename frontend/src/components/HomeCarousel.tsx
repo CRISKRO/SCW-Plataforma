@@ -110,6 +110,11 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
   useEffect(() => {
     let dynamicSlides: any[] = [];
     
+const generateSlug = (title: string) => {
+  if (!title) return '';
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+};
+
     if (upcomingEvents && upcomingEvents.length > 0) {
       const eventSlides = upcomingEvents.map((ev: any) => ({
         id: ev.id,
@@ -120,7 +125,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
         date: ev.date_time,
         location: ev.location,
         cta: [
-          { label: 'Comprar Boletos', href: `/eventos`, primary: true },
+          { label: 'Comprar Boletos', href: `/eventos/${generateSlug(ev.title)}`, primary: true },
           { label: 'Todos los Eventos', href: '/eventos', primary: false },
         ],
       }));
