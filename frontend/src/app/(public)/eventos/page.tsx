@@ -6,15 +6,12 @@ import { Calendar, MapPin, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { eventsService } from '@/services/events.services';
 import { TicketSelectionModal } from '@/components/TicketSelectionModal';
-import { EventDescriptionModal } from '@/components/EventDescriptionModal';
 
 export default function EventosPage() {
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
-  const [selectedEventForDesc, setSelectedEventForDesc] = useState<any>(null);
-  const [isDescModalOpen, setIsDescModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -60,7 +57,7 @@ export default function EventosPage() {
               >
                 <div 
                   className="md:w-2/5 h-64 md:h-auto bg-zinc-800 relative overflow-hidden cursor-pointer"
-                  onClick={() => { setSelectedEventForDesc(event); setIsDescModalOpen(true); }}
+                  onClick={() => { setSelectedEvent(event); setIsTicketModalOpen(true); }}
                 >
                   <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" style={{ backgroundImage: `url(${event.banner_url})` }}></div>
                 </div>
@@ -77,20 +74,20 @@ export default function EventosPage() {
                       {event.location}
                     </div>
                     <p 
-                      className="text-zinc-300 text-sm line-clamp-2 cursor-pointer hover:text-white transition-colors"
-                      onClick={() => { setSelectedEventForDesc(event); setIsDescModalOpen(true); }}
+                      className="text-zinc-300 text-sm whitespace-pre-line"
                     >
                       {event.description}
                     </p>
-                    <button
-                      onClick={() => { setSelectedEventForDesc(event); setIsDescModalOpen(true); }}
-                      className="text-zinc-500 text-xs uppercase tracking-widest font-bold mt-2 hover:text-zinc-300 transition-colors"
-                    >
-                      Ver más detalles
-                    </button>
                   </div>
                   
-                  
+                  <div className="mt-6">
+                    <button
+                      onClick={() => { setSelectedEvent(event); setIsTicketModalOpen(true); }}
+                      className="w-full py-3 bg-white text-black font-black uppercase tracking-widest text-sm rounded hover:bg-zinc-200 transition-colors"
+                    >
+                      Comprar Boletos
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             ))
@@ -105,19 +102,6 @@ export default function EventosPage() {
             event={selectedEvent}
           />
         )}
-
-        <EventDescriptionModal
-          isOpen={isDescModalOpen}
-          onClose={() => setIsDescModalOpen(false)}
-          event={selectedEventForDesc}
-          onBuyTickets={() => {
-            setIsDescModalOpen(false);
-            setSelectedEvent(selectedEventForDesc);
-            setTimeout(() => {
-              setIsTicketModalOpen(true);
-            }, 300);
-          }}
-        />
       </div>
     </div>
   );

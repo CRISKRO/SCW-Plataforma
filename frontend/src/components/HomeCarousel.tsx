@@ -155,7 +155,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
     if (slides.length <= 1) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 15000);
+    }, 90000);
     return () => clearInterval(timer);
   }, [slides.length, currentSlide]);
 
