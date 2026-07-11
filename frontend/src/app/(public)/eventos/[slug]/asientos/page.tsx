@@ -7,6 +7,7 @@ import api from '@/services/api';
 import { useCartStore } from '@/store/cartStore';
 import { useToastStore } from '@/store/toastStore';
 import { useRouter } from 'next/navigation';
+import { eventsService } from '@/services/events.services';
 
 interface SelectedSeat {
   seatId: number;
@@ -180,8 +181,8 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
     let isMounted = true;
     const fetchEventData = async () => {
       try {
-        const eventsRes = await api.get(`/events/events/`);
-        const eventMatch = eventsRes.data.find((e: any) => {
+        const events = await eventsService.getEvents();
+        const eventMatch = events.find((e: any) => {
           const genSlug = e.title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
           return genSlug === slug || e.id.toString() === slug;
         });

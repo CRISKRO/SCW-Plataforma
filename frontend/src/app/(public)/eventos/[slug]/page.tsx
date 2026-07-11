@@ -1,5 +1,6 @@
 import { Metadata, ResolvingMetadata } from 'next'
 import EventDetailClient from './EventDetailClient'
+import { eventsService } from '@/services/events.services'
 
 type Props = {
   params: { slug: string }
@@ -7,8 +8,7 @@ type Props = {
 
 async function getEventBySlug(slug: string) {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://scw-plataforma-1.onrender.com/api'}/events/events/`, { next: { revalidate: 60 } })
-    const events = await res.json()
+    const events = await eventsService.getEvents()
     return events.find((e: any) => {
       const genSlug = e.title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
       return genSlug === slug || e.id.toString() === slug;
