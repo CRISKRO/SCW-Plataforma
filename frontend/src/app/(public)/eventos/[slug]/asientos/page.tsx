@@ -31,11 +31,12 @@ const ZONE_COLORS: Record<string, string> = {
   OESTE: 'text-red-400 border-red-500',
 };
 
-export default function EventDetail({ params }: { params: Promise<{ id: string }> }) {
+export default function EventDetail({ params }: { params: Promise<{ slug: string }> }) {
   const unwrappedParams = use(params);
-  const eventId = unwrappedParams.id;
+  const slug = unwrappedParams.slug;
 
   const [event, setEvent] = useState<any>(null);
+  const [actualEventId, setActualEventId] = useState<number | null>(null);
   const [zones, setZones] = useState<any[]>([]);
   const [selectedSeats, setSelectedSeats] = useState<SelectedSeat[]>([]);
   const [showConfirmPanel, setShowConfirmPanel] = useState(false);
@@ -179,13 +180,26 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
     let isMounted = true;
     const fetchEventData = async () => {
       try {
-        const eventRes = await api.get(`/events/events/${eventId}/`);
-        if (isMounted) setEvent(eventRes.data);
+        const eventsRes = await api.get(`/events/events/`);
+        const eventMatch = eventsRes.data.find((e: any) => {
+          const genSlug = e.title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+          return genSlug === slug || e.id.toString() === slug;
+        });
 
-        const zonesRes = await api.get(`/tickets/zones/by_event/?event_id=${eventId}`);
-        if (isMounted) setZones(zonesRes.data);
+        if (!eventMatch) throw new Error("Event not found");
+        const foundId = eventMatch.id;
+        
+        if (isMounted) {
+          setEvent(eventMatch);
+          setActualEventId(foundId);
+        }
+
+        const res = await api.get(`/tickets/zones/by_event/?event_id=${foundId}`);
+        if (isMounted) {
+          setZones(res.data);
+        }
       } catch (error) {
-        console.error("Error loading event data", error);
+        console.error("Error loading data:", error);
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -196,7 +210,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
       isMounted = false;
       clearInterval(interval);
     };
-  }, [eventId]);
+  }, [slug]);
 
   useEffect(() => {
     if (mapContainerRef.current && innerContainerRef.current && parsedZones.length > 0) {
@@ -279,6 +293,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
   };
 
   const handleConfirm = async () => {
+    if (!event || !actualEventId) return;
     try {
       setLoading(true);
       const seatIds = selectedSeats.map(s => s.seatId);
@@ -286,7 +301,7 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
 
       selectedSeats.forEach(seat => {
         addItem({
-          id: parseInt(`999${seat.seatId}`),
+          id: parseInt(`${actualEventId}${seat.seatId}`),
           name: `Boleto: ${event.title}`,
           price: seat.price,
           quantity: 1,

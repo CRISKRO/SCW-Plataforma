@@ -83,8 +83,9 @@ export function TicketSelectionModal({ isOpen, onClose, eventId, event }: Ticket
   };
 
   const handleSeatSelection = () => {
+    const genSlug = event.title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
     onClose();
-    router.push(`/eventos/${eventId}`);
+    router.push(`/eventos/${genSlug}/asientos`);
   };
 
   if (!isOpen) return null;
