@@ -568,22 +568,14 @@ export default function UserDashboard() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl space-y-8">
             
             {/* ID Card (Credencial Digital) */}
-            <div className="relative overflow-hidden rounded-3xl border border-red-500/30 bg-gradient-to-br from-red-950 via-black to-zinc-950 shadow-2xl shadow-red-900/10 p-8 sm:p-10 flex flex-col sm:flex-row items-center gap-10">
-              {/* Background accents */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-red-600/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
-              <div className="absolute bottom-0 left-0 w-40 h-40 bg-red-800/10 rounded-full blur-2xl pointer-events-none -ml-10 -mb-10"></div>
+            <div className="flex flex-col items-center gap-6 py-4">
               
-              {/* Left Side: Info */}
-              <div className="flex-1 relative z-10 text-center sm:text-left flex flex-col h-full w-full">
-
-                
-                <div className="mb-8 flex-1 flex flex-col justify-center">
-                  <p className="text-2xl sm:text-3xl font-black uppercase text-white truncate w-full">
-                    {user?.first_name} {user?.last_name}
-                  </p>
-                </div>
-                
-                <div className="mt-auto flex justify-center sm:justify-start">
+              {/* Info */}
+              <div className="text-center w-full">
+                <p className="text-2xl sm:text-3xl font-black uppercase text-white truncate w-full mb-4">
+                  {user?.first_name} {user?.last_name}
+                </p>
+                <div className="flex justify-center">
                    <span className={`px-4 py-2 rounded-lg text-xs font-bold tracking-widest uppercase inline-flex items-center gap-2 border ${
                       studentData.payment_status === 'PAID' ? 'bg-green-500/10 text-green-400 border-green-500/30' :
                       studentData.payment_status === 'EXPIRING' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30' : 'bg-red-500/10 text-red-400 border-red-500/30'
@@ -594,9 +586,9 @@ export default function UserDashboard() {
                 </div>
               </div>
 
-              {/* Right Side: Big QR Code */}
-              <div className="relative z-10 flex flex-col items-center shrink-0">
-                <div className="bg-white p-5 sm:p-6 rounded-3xl shadow-xl border-4 border-zinc-800">
+              {/* Big QR Code */}
+              <div className="flex flex-col items-center shrink-0">
+                <div className="bg-white p-5 sm:p-6 rounded-3xl">
                   <QRCode
                     id="dojo-qr"
                     value={JSON.stringify({ scw: true, dojo_student: true, id: studentData.id })}
@@ -604,20 +596,18 @@ export default function UserDashboard() {
                     style={{ height: "auto", maxWidth: "100%", width: "220px" }}
                   />
                 </div>
-                <p className="text-zinc-500 font-bold text-[10px] uppercase tracking-widest mt-5 bg-black/40 px-3 py-1.5 rounded-full border border-white/5">
+                <p className="text-zinc-500 font-bold text-[10px] uppercase tracking-widest mt-5">
                   Escanea tu QR en recepción
                 </p>
               </div>
             </div>
             
             {/* Payment Section */}
-            <div className="bg-zinc-900/80 border border-white/10 rounded-3xl p-6 sm:p-10 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-bl-full pointer-events-none"></div>
-              
-              <h3 className="text-xl font-black uppercase tracking-tight mb-8">Administración de Colegiatura</h3>
+            <div className="bg-zinc-900 border border-white/10 rounded-xl p-8">
+              <h2 className="text-2xl font-bold uppercase tracking-tight mb-6">Administración de Colegiatura</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div className="bg-black/40 p-5 rounded-2xl border border-white/5">
+                <div className="bg-black/40 p-5 rounded-lg border border-white/5">
                   <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-2">Próximo Vencimiento</p>
                   <p className="text-white font-bold text-lg">
                     {studentData.payment_due_date ? new Date(studentData.payment_due_date + 'T12:00:00').toLocaleDateString('es-MX', {day: '2-digit', month: 'short', year: 'numeric'}) : 'No registrado'}
@@ -625,7 +615,7 @@ export default function UserDashboard() {
                 </div>
                 
                 {parseFloat(studentData.outstanding_balance || '0') > 0 && (
-                  <div className="bg-red-500/10 p-5 rounded-2xl border border-red-500/20">
+                  <div className="bg-red-500/10 p-5 rounded-lg border border-red-500/20">
                     <p className="text-red-400/80 text-xs font-bold uppercase tracking-widest mb-2">Saldo Pendiente</p>
                     <p className="text-red-500 text-2xl font-black">
                       ${parseFloat(studentData.outstanding_balance).toFixed(2)} MXN
@@ -634,7 +624,7 @@ export default function UserDashboard() {
                 )}
               </div>
 
-              <div className="bg-black/60 border border-white/5 p-8 rounded-2xl text-center flex flex-col items-center">
+              <div className="bg-black/30 border border-white/5 p-6 rounded-lg text-center flex flex-col items-center">
                 <p className="text-zinc-400 mb-6 text-sm max-w-lg">
                   Mantén tu colegiatura al día para seguir entrenando y participar en los eventos de SCW. Si prefieres pagar en efectivo, solo muestra tu código QR en taquilla.
                 </p>
