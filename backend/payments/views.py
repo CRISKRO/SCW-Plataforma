@@ -1166,7 +1166,7 @@ class BoxOfficeSellView(APIView):
                 "order_id": order.id,
                 "item_id": item.id,
                 "code": code,
-                "seat_info": f"{zone.get_zone_type_display()} - Fila {seat.row_name} Asiento {seat.seat_number}",
+                "seat_info": f"{zone.get_zone_type_display()} - Fila {seat.row_name} Asiento {seat.display_number}",
                 "price": str(zone.price),
                 "event_title": zone.event.title
             })
@@ -1421,7 +1421,7 @@ class GenerateCourtesyTicketView(APIView):
 
                 OrderItem.objects.create(
                     order=order,
-                    product_name=f"Boleto CORTESÍA: {zone.zone_type} - Fila {seat.row_name} Asiento {seat.seat_number}",
+                    product_name=f"Boleto CORTESÍA: {zone.zone_type} - Fila {seat.row_name} Asiento {seat.display_number}",
                     quantity=1,
                     price=0,
                     event=zone.event,

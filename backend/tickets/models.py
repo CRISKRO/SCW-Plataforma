@@ -56,5 +56,18 @@ class Seat(models.Model):
         verbose_name = 'Asiento'
         verbose_name_plural = 'Asientos'
 
+    @property
+    def display_number(self):
+        zt = self.zone.zone_type
+        if zt == 'NORTE':
+            return self.seat_number
+        elif zt == 'ESTE':
+            return self.seat_number + 17
+        elif zt == 'SUR':
+            return self.seat_number + 27
+        elif zt == 'OESTE':
+            return self.seat_number + 44
+        return self.seat_number
+
     def __str__(self):
-        return f"Asiento {self.seat_number} - Fila {self.row_name} ({self.zone})"
+        return f"Asiento {self.display_number} - Fila {self.row_name} ({self.zone})"
