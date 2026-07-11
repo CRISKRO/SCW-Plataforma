@@ -56,12 +56,13 @@ export default function EventosPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="group flex flex-col bg-zinc-900 rounded-3xl overflow-hidden border border-white/10 hover:border-zinc-500 transition-all hover:shadow-2xl hover:shadow-white/10 h-full"
+                className="group flex flex-col bg-zinc-900 rounded-3xl overflow-hidden border border-white/10 hover:border-zinc-500 transition-all hover:shadow-2xl hover:shadow-white/10"
               >
-                <Link href={`/eventos/${generateSlug(event.title)}`} className="w-full h-full block relative aspect-[4/3] sm:aspect-video bg-zinc-800 overflow-hidden">
-                  <div 
-                    className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" 
-                    style={{ backgroundImage: `url(${event.banner_url})` }}
+                <Link href={`/eventos/${generateSlug(event.title)}`} className="w-full block relative bg-zinc-800 overflow-hidden">
+                  <img 
+                    src={event.banner_url}
+                    alt={`Póster oficial de ${event.title}`}
+                    className="w-full h-auto object-contain transition-transform duration-700 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-500" />
                 </Link>
