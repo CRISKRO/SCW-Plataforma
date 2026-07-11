@@ -273,32 +273,37 @@ export default function UserDashboard() {
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-4 border-b border-white/10 mb-8 overflow-x-auto pb-2">
-          <button 
-            onClick={() => setActiveTab('orders')}
-            className={`flex items-center gap-2 px-4 py-2 font-bold uppercase tracking-widest text-sm transition-colors whitespace-nowrap ${activeTab === 'orders' ? 'text-white border-b-2 border-white' : 'text-zinc-500 hover:text-zinc-300'}`}
-          >
-            <ShoppingBag className="w-4 h-4" /> Mis Compras
-          </button>
-          <button 
-            onClick={() => setActiveTab('settings')}
-            className={`flex items-center gap-2 px-4 py-2 font-bold uppercase tracking-widest text-sm transition-colors whitespace-nowrap ${activeTab === 'settings' ? 'text-white border-b-2 border-white' : 'text-zinc-500 hover:text-zinc-300'}`}
-          >
-            <Settings className="w-4 h-4" /> Configuración de Cuenta
-          </button>
-          
-          {studentData && (
+        <div className="flex flex-col md:flex-row gap-8 pb-10">
+          {/* Navegación Lateral / Lista de Botones */}
+          <div className="w-full md:w-64 shrink-0 flex flex-col gap-2">
             <button 
-              onClick={() => setActiveTab('dojo')}
-              className={`flex items-center gap-2 px-4 py-2 font-bold uppercase tracking-widest text-sm transition-colors whitespace-nowrap ${activeTab === 'dojo' ? 'text-red-500 border-b-2 border-red-500' : 'text-zinc-500 hover:text-zinc-300'}`}
+              onClick={() => setActiveTab('orders')}
+              className={`flex items-center gap-3 px-5 py-4 font-bold uppercase tracking-widest text-xs sm:text-sm transition-all rounded-2xl w-full text-left ${activeTab === 'orders' ? 'bg-white text-black shadow-xl shadow-white/10' : 'bg-zinc-900/40 text-zinc-400 hover:bg-zinc-900 hover:text-white border border-white/5'}`}
             >
-              <Swords className="w-4 h-4" /> SCW DOJO
+              <ShoppingBag className="w-5 h-5 shrink-0" /> 
+              <span>Mis Compras</span>
             </button>
-          )}
-        </div>
+            <button 
+              onClick={() => setActiveTab('settings')}
+              className={`flex items-center gap-3 px-5 py-4 font-bold uppercase tracking-widest text-xs sm:text-sm transition-all rounded-2xl w-full text-left ${activeTab === 'settings' ? 'bg-white text-black shadow-xl shadow-white/10' : 'bg-zinc-900/40 text-zinc-400 hover:bg-zinc-900 hover:text-white border border-white/5'}`}
+            >
+              <Settings className="w-5 h-5 shrink-0" /> 
+              <span>Configuración</span>
+            </button>
+            
+            {studentData && (
+              <button 
+                onClick={() => setActiveTab('dojo')}
+                className={`flex items-center gap-3 px-5 py-4 font-bold uppercase tracking-widest text-xs sm:text-sm transition-all rounded-2xl w-full text-left ${activeTab === 'dojo' ? 'bg-red-600 text-white shadow-xl shadow-red-600/20 border-red-500' : 'bg-zinc-900/40 text-red-500/60 hover:bg-zinc-900 hover:text-red-400 border border-white/5'}`}
+              >
+                <Swords className="w-5 h-5 shrink-0" /> 
+                <span>SCW DOJO</span>
+              </button>
+            )}
+          </div>
 
-        {/* Contenido */}
+          {/* Contenido principal */}
+          <div className="flex-1 min-w-0">
         {activeTab === 'orders' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
             <h2 className="text-2xl font-bold uppercase tracking-tight mb-6">Historial de Compras</h2>
@@ -672,6 +677,9 @@ export default function UserDashboard() {
             </div>
           </motion.div>
         )}
+        
+          </div>
+        </div>
 
       </div>
     </div>
