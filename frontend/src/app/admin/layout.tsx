@@ -34,7 +34,6 @@ const sidebarItems = [
   { name: 'Usuarios', href: '/admin/users', icon: Users },
   { name: 'Productos', href: '/admin/products', icon: ShoppingBag },
   { name: 'Pedidos', href: '/admin/orders', icon: Package },
-  { name: 'Galería', href: '/admin/gallery', icon: Camera },
   { name: 'Finanzas', href: '/admin/finances', icon: CreditCard },
   { name: 'Escuela', href: '/admin/school', icon: GraduationCap },
   { name: 'Resultados', href: '/admin/chronicles', icon: Newspaper },
@@ -49,7 +48,7 @@ const ALLOWED_ROLES = ['SUPERADMIN', 'ADMIN', 'STAFF', 'REPORTER'];
 const ROLE_PERMISSIONS: Record<string, string[]> = {
   SUPERADMIN: ['*'],
   ADMIN: ['*'],
-  STAFF: ['/admin', '/admin/events', '/admin/fighters', '/admin/gallery', '/admin/school'],
+  STAFF: ['/admin', '/admin/events', '/admin/fighters', '/admin/school'],
   REPORTER: ['/admin', '/admin/chronicles'],
 };
 

@@ -382,91 +382,6 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
         </div>
       </section>
 
-      {/* Resultados Section */}
-      {chronicles && chronicles.length > 0 && (
-        <section id="resultados" className="py-12 lg:py-16 bg-black relative border-t border-white/5">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight">Resultados</h2>
-            <p className="text-zinc-500 mt-4 max-w-2xl mx-auto">Reseñas y fotos exclusivas de nuestros eventos pasados.</p>
-          </div>
-
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            {chronicles.map((chronicle: any, i: number) => (
-              <motion.div
-                key={chronicle.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="bg-zinc-900 border border-white/5 rounded-xl overflow-hidden hover:border-zinc-700 transition-colors flex flex-col"
-              >
-                {chronicle.image_url && (
-                  <div className="relative w-full bg-zinc-800 flex justify-center items-center overflow-hidden">
-                    <Image 
-                      src={chronicle.image_url} 
-                      alt={chronicle.title} 
-                      width={800} 
-                      height={600} 
-                      className="w-full h-auto object-contain" 
-                      sizes="(max-width: 768px) 100vw, 33vw" 
-                    />
-                  </div>
-                )}
-                <div className="p-6 flex-1 flex flex-col">
-                  <div className="text-xs text-zinc-500 font-bold uppercase tracking-widest mb-2 flex justify-between items-center">
-                    <span>{new Date(chronicle.created_at).toLocaleDateString()}</span>
-                    <span className="truncate max-w-[50%] text-right" title={chronicle.writer}>{chronicle.writer}</span>
-                  </div>
-                  <h3 className="text-xl font-bold uppercase mb-3 line-clamp-2" title={chronicle.title}>{chronicle.title}</h3>
-                  <p className="text-zinc-400 text-sm line-clamp-3 mb-4 whitespace-pre-line flex-1">{chronicle.content}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Premium Video Section */}
-      <section className="py-12 lg:py-16 bg-black relative border-t border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center w-full max-w-4xl mx-auto">
-            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight mb-4">¿Quieres ver más acción?</h2>
-            <p className="text-zinc-500 mb-8 max-w-2xl mx-auto">Disfruta de contenido exclusivo en nuestra plataforma SCW Premium.</p>
-            <div className={`grid grid-cols-1 ${premiumVideos.length > 1 ? 'md:grid-cols-2' : ''} gap-6 mb-8`}>
-              {premiumVideos.length > 0 ? (
-                premiumVideos.map((video: any, idx: number) => (
-                  <Link key={idx} href="/premium" className="block relative aspect-video w-full rounded-xl overflow-hidden group border border-white/10 hover:border-red-500/50 transition-colors bg-zinc-900">
-                    <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors z-10"></div>
-                    {video.youtube_id ? (
-                      <Image src={`https://img.youtube.com/vi/${video.youtube_id}/hqdefault.jpg`} alt={video.title || "SCW Premium"} fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
-                    ) : (
-                      <Image src="/images/scwpremium.webp" alt="SCW Premium" fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
-                    )}
-                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center">
-                      <div className="w-14 h-14 rounded-full bg-red-600/90 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg mb-3">
-                        <PlayCircle className="w-8 h-8 text-white" />
-                      </div>
-                      <span className="bg-black/80 backdrop-blur-md text-white font-black uppercase tracking-widest px-4 py-2 rounded text-xs shadow-xl border border-white/10">Explora Premium</span>
-                    </div>
-                  </Link>
-                ))
-              ) : (
-                <Link href="/premium" className="block relative aspect-video w-full max-w-md mx-auto rounded-xl overflow-hidden group border border-white/10 hover:border-red-500/50 transition-colors bg-zinc-900">
-                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors z-10"></div>
-                  <Image src="/images/scwpremium.webp" alt="SCW Premium" fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
-                  <div className="absolute inset-0 z-20 flex flex-col items-center justify-center">
-                    <div className="w-14 h-14 rounded-full bg-red-600/90 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg mb-3">
-                      <PlayCircle className="w-8 h-8 text-white" />
-                    </div>
-                    <span className="bg-black/80 backdrop-blur-md text-white font-black uppercase tracking-widest px-4 py-2 rounded text-xs shadow-xl border border-white/10">Explora Premium</span>
-                  </div>
-                </Link>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Roster Section */}
       <section className="py-12 lg:py-16 bg-black relative border-t border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-16">
@@ -563,6 +478,91 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                 </Link>
               ))
             )}
+          </div>
+        </div>
+      </section>
+
+      {/* Resultados Section */}
+      {chronicles && chronicles.length > 0 && (
+        <section id="resultados" className="py-12 lg:py-16 bg-black relative border-t border-white/5">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight">Resultados</h2>
+            <p className="text-zinc-500 mt-4 max-w-2xl mx-auto">Reseñas y fotos exclusivas de nuestros eventos pasados.</p>
+          </div>
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            {chronicles.map((chronicle: any, i: number) => (
+              <motion.div
+                key={chronicle.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-zinc-900 border border-white/5 rounded-xl overflow-hidden hover:border-zinc-700 transition-colors flex flex-col"
+              >
+                {chronicle.image_url && (
+                  <div className="relative w-full bg-zinc-800 flex justify-center items-center overflow-hidden">
+                    <Image 
+                      src={chronicle.image_url} 
+                      alt={chronicle.title} 
+                      width={800} 
+                      height={600} 
+                      className="w-full h-auto object-contain" 
+                      sizes="(max-width: 768px) 100vw, 33vw" 
+                    />
+                  </div>
+                )}
+                <div className="p-6 flex-1 flex flex-col">
+                  <div className="text-xs text-zinc-500 font-bold uppercase tracking-widest mb-2 flex justify-between items-center">
+                    <span>{new Date(chronicle.created_at).toLocaleDateString()}</span>
+                    <span className="truncate max-w-[50%] text-right" title={chronicle.writer}>{chronicle.writer}</span>
+                  </div>
+                  <h3 className="text-xl font-bold uppercase mb-3 line-clamp-2" title={chronicle.title}>{chronicle.title}</h3>
+                  <p className="text-zinc-400 text-sm line-clamp-3 mb-4 whitespace-pre-line flex-1">{chronicle.content}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Premium Video Section */}
+      <section className="py-12 lg:py-16 bg-black relative border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center w-full max-w-4xl mx-auto">
+            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight mb-4">¿Quieres ver más acción?</h2>
+            <p className="text-zinc-500 mb-8 max-w-2xl mx-auto">Disfruta de contenido exclusivo en nuestra plataforma SCW Premium.</p>
+            <div className={`grid grid-cols-1 ${premiumVideos.length > 1 ? 'md:grid-cols-2' : ''} gap-6 mb-8`}>
+              {premiumVideos.length > 0 ? (
+                premiumVideos.map((video: any, idx: number) => (
+                  <Link key={idx} href="/premium" className="block relative aspect-video w-full rounded-xl overflow-hidden group border border-white/10 hover:border-red-500/50 transition-colors bg-zinc-900">
+                    <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors z-10"></div>
+                    {video.youtube_id ? (
+                      <Image src={`https://img.youtube.com/vi/${video.youtube_id}/hqdefault.jpg`} alt={video.title || "SCW Premium"} fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
+                    ) : (
+                      <Image src="/images/scwpremium.webp" alt="SCW Premium" fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
+                    )}
+                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center">
+                      <div className="w-14 h-14 rounded-full bg-red-600/90 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg mb-3">
+                        <PlayCircle className="w-8 h-8 text-white" />
+                      </div>
+                      <span className="bg-black/80 backdrop-blur-md text-white font-black uppercase tracking-widest px-4 py-2 rounded text-xs shadow-xl border border-white/10">Explora Premium</span>
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <Link href="/premium" className="block relative aspect-video w-full max-w-md mx-auto rounded-xl overflow-hidden group border border-white/10 hover:border-red-500/50 transition-colors bg-zinc-900">
+                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors z-10"></div>
+                  <Image src="/images/scwpremium.webp" alt="SCW Premium" fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
+                  <div className="absolute inset-0 z-20 flex flex-col items-center justify-center">
+                    <div className="w-14 h-14 rounded-full bg-red-600/90 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg mb-3">
+                      <PlayCircle className="w-8 h-8 text-white" />
+                    </div>
+                    <span className="bg-black/80 backdrop-blur-md text-white font-black uppercase tracking-widest px-4 py-2 rounded text-xs shadow-xl border border-white/10">Explora Premium</span>
+                  </div>
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </section>
