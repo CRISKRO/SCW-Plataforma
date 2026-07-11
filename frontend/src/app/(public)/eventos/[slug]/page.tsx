@@ -3,7 +3,7 @@ import EventDetailClient from './EventDetailClient'
 import { eventsService } from '@/services/events.services'
 
 type Props = {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }
 
 async function getEventBySlug(slug: string) {
@@ -23,7 +23,8 @@ export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const event = await getEventBySlug(params.slug)
+  const resolvedParams = await params;
+  const event = await getEventBySlug(resolvedParams.slug)
   
   if (!event) return { title: 'Evento no encontrado' }
 
@@ -39,7 +40,8 @@ export async function generateMetadata(
 }
 
 export default async function EventPage({ params }: Props) {
-  const event = await getEventBySlug(params.slug)
+  const resolvedParams = await params;
+  const event = await getEventBySlug(resolvedParams.slug)
   
   if (!event) {
     return <div className="min-h-screen bg-black text-white pt-32 text-center text-2xl">Evento no encontrado</div>
