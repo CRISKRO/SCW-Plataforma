@@ -18,6 +18,7 @@ import AuthProvider from "@/components/AuthProvider";
 import ToastProvider from "@/components/ToastProvider";
 
 import GoogleProvider from "@/components/GoogleProvider";
+import GlobalBackButton from "@/components/GlobalBackButton";
 
 export default function RootLayout({
   children,
@@ -29,6 +30,7 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased bg-black text-white`}>
         <GoogleProvider>
           <AuthProvider>
+            <GlobalBackButton />
             {children}
             <ToastProvider />
           </AuthProvider>
