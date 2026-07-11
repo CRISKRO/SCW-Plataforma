@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { eventsService } from '@/services/events.services';
 import { adminService } from '@/services/admin.services';
+import AdminSeatMap from '@/components/admin/AdminSeatMap';
 
 export default function AdminEventsPage() {
   const [events, setEvents] = useState<any[]>([]);
@@ -399,7 +400,7 @@ export default function AdminEventsPage() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }} 
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-zinc-950 border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl relative"
+            className="bg-zinc-950 border border-white/10 rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl relative my-8"
           >
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 to-yellow-600"></div>
             
@@ -411,10 +412,10 @@ export default function AdminEventsPage() {
                 </div>
                 <div>
                   <h2 className="text-lg font-bold uppercase tracking-wider text-white leading-tight">Otorgar Cortesía</h2>
-                  <p className="text-xs text-zinc-500 truncate max-w-[250px]">{selectedEvent.title}</p>
+                  <p className="text-xs text-zinc-500 truncate max-w-[250px] md:max-w-md">{selectedEvent.title}</p>
                 </div>
               </div>
-              <button onClick={() => setIsCourtesyModalOpen(false)} className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-white/5 transition-all">
+              <button type="button" onClick={() => setIsCourtesyModalOpen(false)} className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-white/5 transition-all">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -422,38 +423,29 @@ export default function AdminEventsPage() {
             {/* Modal Form */}
             <form onSubmit={handleGrantCourtesy} className="p-6 space-y-6">
               
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-bold uppercase tracking-widest text-zinc-400">Asiento / Zona</label>
+              <div className="space-y-6">
+                
+                {/* Admin Seat Map Component */}
+                <div className="bg-zinc-950 p-2 rounded-xl border border-white/5">
                   {loadingZones ? (
-                    <div className="w-full bg-black border border-white/10 rounded-lg p-3 text-zinc-500 text-sm flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" /> Cargando asientos disponibles...
+                    <div className="w-full h-[350px] flex flex-col items-center justify-center gap-3 text-zinc-500">
+                      <Loader2 className="w-6 h-6 animate-spin" />
+                      <span className="text-sm">Cargando mapa de asientos...</span>
                     </div>
                   ) : (
-                    <select 
-                      required
-                      value={selectedSeat}
-                      onChange={(e) => setSelectedSeat(e.target.value)}
-                      className="w-full bg-black border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-yellow-500/50 transition-all text-sm"
-                    >
-                      <option value="">-- Selecciona un asiento disponible --</option>
-                      {eventZones.map(zone => (
-                        <optgroup key={zone.id} label={`${zone.zone_type} ($${zone.price})`}>
-                          {zone.seats.filter((s:any) => s.is_available).map((seat:any) => (
-                            <option key={seat.id} value={seat.id}>
-                              Fila {seat.row_name}, Asiento {seat.seat_number}
-                            </option>
-                          ))}
-                        </optgroup>
-                      ))}
-                    </select>
+                    <AdminSeatMap 
+                      zones={eventZones} 
+                      selectedSeatId={selectedSeat ? parseInt(selectedSeat) : null} 
+                      onSelectSeat={(id) => setSelectedSeat(id.toString())} 
+                    />
                   )}
                   {!loadingZones && eventZones.length > 0 && eventZones.every(z => z.seats.filter((s:any) => s.is_available).length === 0) && (
-                    <p className="text-xs text-red-500 mt-1">⚠️ No hay asientos disponibles en este evento.</p>
+                    <p className="text-xs text-red-500 mt-2 text-center font-bold">⚠️ Todos los asientos de este evento están ocupados.</p>
                   )}
                 </div>
 
-                <div className="space-y-1.5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
                   <label className="block text-xs font-bold uppercase tracking-widest text-zinc-400">Correo Electrónico del Invitado</label>
                   <input 
                     required 
