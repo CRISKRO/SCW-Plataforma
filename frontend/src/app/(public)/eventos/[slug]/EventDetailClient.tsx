@@ -33,10 +33,15 @@ export default function EventDetailClient({ event }: { event: any }) {
             
             <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tight mb-4">{event.title}</h1>
             
-            <div className="flex items-center gap-2 text-zinc-400 text-lg mb-8">
-              <MapPin className="w-5 h-5" />
-              {event.location}
-            </div>
+            <a 
+              href="https://share.google/zSjJUeXVE9kBjhAzr" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-zinc-400 text-lg mb-8 hover:text-white hover:underline transition-colors"
+            >
+              <MapPin className="w-5 h-5 shrink-0" />
+              <span>{event.location}</span>
+            </a>
             
             <p className="text-zinc-300 text-lg whitespace-pre-line leading-relaxed mb-10">
               {event.description}
