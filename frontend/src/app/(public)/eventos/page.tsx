@@ -56,42 +56,15 @@ export default function EventosPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="group flex flex-col bg-zinc-900/50 rounded-3xl overflow-hidden border border-white/10 hover:border-zinc-500 transition-colors h-full shadow-2xl shadow-black/50"
+                className="group flex flex-col bg-zinc-900 rounded-3xl overflow-hidden border border-white/10 hover:border-zinc-500 transition-all hover:shadow-2xl hover:shadow-white/10 h-full"
               >
-                <div 
-                  className="w-full aspect-[4/3] sm:aspect-video bg-zinc-800 relative overflow-hidden cursor-pointer shrink-0"
-                  onClick={() => router.push(`/eventos/${generateSlug(event.title)}`)}
-                >
-                  <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" style={{ backgroundImage: `url(${event.banner_url})` }}></div>
-                </div>
-                
-                <div className="w-full p-6 sm:p-8 flex flex-col justify-between flex-1">
-                  <div>
-                    <div className="flex items-center gap-2 text-red-500 text-sm font-bold uppercase tracking-widest mb-3">
-                      <Calendar className="w-4 h-4" />
-                      {new Date(event.date_time).toLocaleDateString()}
-                    </div>
-                    <h3 className="text-3xl font-black uppercase tracking-tight mb-2">{event.title}</h3>
-                    <div className="flex items-center gap-2 text-zinc-400 text-sm mb-6">
-                      <MapPin className="w-4 h-4" />
-                      {event.location}
-                    </div>
-                    <p 
-                      className="text-zinc-300 text-sm whitespace-pre-line"
-                    >
-                      {event.description}
-                    </p>
-                  </div>
-                  
-                  <div className="mt-8 flex flex-col gap-3">
-                    <button
-                      onClick={() => router.push(`/eventos/${generateSlug(event.title)}`)}
-                      className="w-full py-4 bg-white text-black font-black uppercase tracking-widest text-sm rounded-xl hover:bg-zinc-200 transition-colors shadow-lg"
-                    >
-                      Comprar Boletos / Ver Detalles
-                    </button>
-                  </div>
-                </div>
+                <Link href={`/eventos/${generateSlug(event.title)}`} className="w-full h-full block relative aspect-[4/3] sm:aspect-video bg-zinc-800 overflow-hidden">
+                  <div 
+                    className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" 
+                    style={{ backgroundImage: `url(${event.banner_url})` }}
+                  />
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-500" />
+                </Link>
               </motion.div>
             ))
           )}
