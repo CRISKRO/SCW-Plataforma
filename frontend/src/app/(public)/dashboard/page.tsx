@@ -559,89 +559,122 @@ export default function UserDashboard() {
         )}
 
         {activeTab === 'dojo' && studentData && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-2xl bg-zinc-900 border border-white/10 rounded-xl p-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-6 border-b border-white/10 pb-6">
-              <div className="flex items-center gap-3">
-                <Swords className="w-8 h-8 text-red-500" />
-                <div>
-                  <h2 className="text-2xl font-bold uppercase tracking-tight">Portal del Alumno</h2>
-                  <p className="text-zinc-400 text-sm">Gestiona tu colegiatura y estado en SCW DOJO.</p>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl space-y-8">
+            
+            {/* ID Card (Credencial Digital) */}
+            <div className="relative overflow-hidden rounded-3xl border border-red-500/30 bg-gradient-to-br from-red-950 via-black to-zinc-950 shadow-2xl shadow-red-900/10 p-8 sm:p-10 flex flex-col sm:flex-row items-center gap-10">
+              {/* Background accents */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-red-600/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
+              <div className="absolute bottom-0 left-0 w-40 h-40 bg-red-800/10 rounded-full blur-2xl pointer-events-none -ml-10 -mb-10"></div>
+              
+              {/* Left Side: Info */}
+              <div className="flex-1 relative z-10 text-center sm:text-left flex flex-col h-full w-full">
+                <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-4 mb-8">
+                  <div className="bg-red-500/10 p-3 rounded-2xl border border-red-500/20">
+                    <Swords className="w-8 h-8 text-red-500" />
+                  </div>
+                  <div>
+                    <h2 className="text-3xl font-black uppercase tracking-tight text-white leading-none">SCW DOJO</h2>
+                    <p className="text-red-400 font-bold text-xs tracking-widest uppercase mt-1">Portal del Alumno</p>
+                  </div>
+                </div>
+                
+                <div className="mb-8 flex-1 flex flex-col justify-center">
+                  <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-1">Alumno / Student</p>
+                  <p className="text-2xl sm:text-3xl font-black uppercase text-white truncate w-full">
+                    {user?.first_name} {user?.last_name}
+                  </p>
+                  <p className="text-zinc-400 mt-2 text-sm font-mono bg-black/30 inline-block px-3 py-1 rounded-md self-center sm:self-start">ID: #{studentData.id.toString().padStart(4, '0')}</p>
+                </div>
+                
+                <div className="mt-auto flex justify-center sm:justify-start">
+                   <span className={`px-4 py-2 rounded-lg text-xs font-bold tracking-widest uppercase inline-flex items-center gap-2 border ${
+                      studentData.payment_status === 'PAID' ? 'bg-green-500/10 text-green-400 border-green-500/30' :
+                      studentData.payment_status === 'EXPIRING' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30' : 'bg-red-500/10 text-red-400 border-red-500/30'
+                    }`}>
+                      {studentData.payment_status === 'PAID' ? '✅ AL CORRIENTE' :
+                       studentData.payment_status === 'EXPIRING' ? '⚠️ POR VENCER' : '🚨 DEBE MENSUALIDAD'}
+                    </span>
                 </div>
               </div>
-              <div className="bg-white p-2 rounded-xl flex-shrink-0">
-                <QRCode
-                  id="dojo-qr"
-                  value={JSON.stringify({ scw: true, dojo_student: true, id: studentData.id })}
-                  size={80}
-                />
+
+              {/* Right Side: Big QR Code */}
+              <div className="relative z-10 flex flex-col items-center shrink-0">
+                <div className="bg-white p-5 sm:p-6 rounded-3xl shadow-xl border-4 border-zinc-800">
+                  <QRCode
+                    id="dojo-qr"
+                    value={JSON.stringify({ scw: true, dojo_student: true, id: studentData.id })}
+                    size={220}
+                    style={{ height: "auto", maxWidth: "100%", width: "220px" }}
+                  />
+                </div>
+                <p className="text-zinc-500 font-bold text-[10px] uppercase tracking-widest mt-5 bg-black/40 px-3 py-1.5 rounded-full border border-white/5">
+                  Escanea tu QR en recepción
+                </p>
               </div>
             </div>
             
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-black/50 p-4 rounded-lg border border-white/5">
-                <div>
-                  <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Estado de Pago</p>
-                  <p className={`text-lg font-black mt-1 ${
-                    studentData.payment_status === 'PAID' ? 'text-green-500' :
-                    studentData.payment_status === 'EXPIRING' ? 'text-yellow-500' : 'text-red-500'
-                  }`}>
-                    {studentData.payment_status === 'PAID' ? '✅ AL CORRIENTE' :
-                     studentData.payment_status === 'EXPIRING' ? '⚠️ POR VENCER' : '🚨 DEBE'}
+            {/* Payment Section */}
+            <div className="bg-zinc-900/80 border border-white/10 rounded-3xl p-6 sm:p-10 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-bl-full pointer-events-none"></div>
+              
+              <h3 className="text-xl font-black uppercase tracking-tight mb-8">Administración de Colegiatura</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="bg-black/40 p-5 rounded-2xl border border-white/5">
+                  <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-2">Próximo Vencimiento</p>
+                  <p className="text-white font-bold text-lg">
+                    {studentData.payment_due_date ? new Date(studentData.payment_due_date + 'T12:00:00').toLocaleDateString('es-MX', {day: '2-digit', month: 'short', year: 'numeric'}) : 'No registrado'}
                   </p>
                 </div>
+                
                 {parseFloat(studentData.outstanding_balance || '0') > 0 && (
-                  <div>
-                    <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Saldo Pendiente</p>
-                    <p className="text-red-500 text-lg font-black mt-1">
+                  <div className="bg-red-500/10 p-5 rounded-2xl border border-red-500/20">
+                    <p className="text-red-400/80 text-xs font-bold uppercase tracking-widest mb-2">Saldo Pendiente</p>
+                    <p className="text-red-500 text-2xl font-black">
                       ${parseFloat(studentData.outstanding_balance).toFixed(2)} MXN
                     </p>
                   </div>
                 )}
-                <div className="sm:text-right">
-                  <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Próximo Vencimiento</p>
-                  <p className="text-white font-bold mt-1">
-                    {studentData.payment_due_date ? new Date(studentData.payment_due_date + 'T12:00:00').toLocaleDateString('es-MX', {day: '2-digit', month: 'short', year: 'numeric'}) : 'No registrado'}
-                  </p>
-                </div>
               </div>
 
-              <div className="bg-red-500/5 border border-red-500/20 p-6 rounded-xl text-center">
-                <p className="text-zinc-300 mb-4 text-sm">
-                  Mantén tu colegiatura al día para seguir entrenando y participar en los próximos eventos de SCW.
-                  Muestra tu código QR en taquilla para pagos en efectivo.
+              <div className="bg-black/60 border border-white/5 p-8 rounded-2xl text-center flex flex-col items-center">
+                <p className="text-zinc-400 mb-6 text-sm max-w-lg">
+                  Mantén tu colegiatura al día para seguir entrenando y participar en los eventos de SCW. Si prefieres pagar en efectivo, solo muestra tu código QR en taquilla.
                 </p>
-                <div className="flex flex-col items-center gap-2">
+                
+                <div className="flex flex-col items-center gap-4 w-full">
                   {studentData.last_payment_date === null && parseFloat(studentData.outstanding_balance || '0') > parseFloat(tuitionFee || '0') ? (
                     <div className="mb-2">
-                      <span className="text-3xl font-black text-white">${parseFloat(studentData.outstanding_balance).toFixed(2)} <span className="text-sm text-zinc-500 font-medium">MXN</span></span>
-                      <p className="text-xs text-zinc-400 mt-1">Incluye inscripción (${enrollmentFee}) y primera mensualidad (${tuitionFee})</p>
+                      <span className="text-4xl font-black text-white">${parseFloat(studentData.outstanding_balance).toFixed(2)} <span className="text-base text-zinc-500 font-bold">MXN</span></span>
+                      <p className="text-xs text-zinc-400 mt-2">Incluye inscripción (${enrollmentFee}) y primera mensualidad (${tuitionFee})</p>
                     </div>
                   ) : (
-                    <span className="text-3xl font-black text-white">${tuitionFee} <span className="text-sm text-zinc-500 font-medium">MXN / mes</span></span>
+                    <span className="text-4xl font-black text-white">${tuitionFee} <span className="text-base text-zinc-500 font-bold">MXN / mes</span></span>
                   )}
                   
                   {studentData.payment_status !== 'PAID' ? (
                     <button 
                       onClick={handlePayTuition}
                       disabled={payingTuition}
-                      className="mt-4 flex items-center justify-center gap-2 w-full max-w-sm bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold uppercase tracking-widest py-3 px-6 rounded-xl transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50"
+                      className="mt-4 flex items-center justify-center gap-3 w-full max-w-sm bg-[#009EE3] hover:bg-[#008ACA] text-white font-black uppercase tracking-widest py-4 px-6 rounded-xl transition-all disabled:opacity-50 text-sm"
                     >
                       {payingTuition ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
                       ) : (
                         <>
                           <CreditCard className="w-5 h-5" />
-                          Pagar con Tarjeta
+                          Pagar con Mercado Pago
                         </>
                       )}
                     </button>
                   ) : (
-                    <div className="mt-4 flex items-center justify-center w-full max-w-sm bg-green-500/10 border border-green-500/20 text-green-500 font-bold uppercase tracking-widest py-3 px-6 rounded-xl text-sm">
+                    <div className="mt-4 flex items-center justify-center w-full max-w-sm bg-green-500/10 border border-green-500/20 text-green-500 font-bold uppercase tracking-widest py-4 px-6 rounded-xl text-sm">
                       ¡Pago al corriente!
                     </div>
                   )}
-                  <p className="text-xs text-zinc-500 mt-3 flex items-center justify-center gap-1">
-                    Pago seguro procesado por Mercado Pago
+                  <p className="text-xs text-zinc-500 mt-2">
+                    Pago seguro. Puedes pagar con Tarjeta, Transferencia o Efectivo (OXXO).
                   </p>
                 </div>
               </div>
