@@ -469,6 +469,7 @@ export default function AdminEventsPage() {
                   />
                 </div>
               </div>
+              </div>
 
               {/* Action Buttons */}
               <div className="flex gap-3 pt-4 border-t border-white/5">
