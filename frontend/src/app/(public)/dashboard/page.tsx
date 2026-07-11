@@ -243,31 +243,32 @@ export default function UserDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Header Perfil */}
-        <div className="flex flex-col md:flex-row items-center md:items-start gap-8 bg-zinc-900/50 p-8 rounded-2xl border border-white/10 mb-8">
-          <div className="w-24 h-24 rounded-full bg-zinc-800 flex items-center justify-center text-4xl font-black text-zinc-500 border-2 border-white/20">
-            {user?.first_name?.charAt(0) || 'U'}
-          </div>
-          <div className="flex-1 text-center md:text-left">
-            <h1 className="text-3xl font-bold uppercase tracking-tight">{user?.first_name} {user?.last_name}</h1>
-            <p className="text-zinc-400 mt-1">{user?.email}</p>
-            <div className="mt-4 flex flex-wrap justify-center md:justify-start gap-3">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 pt-4">
+          <div className="flex items-center gap-5">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-zinc-800 to-zinc-900 flex items-center justify-center text-2xl sm:text-3xl font-black text-white shadow-xl border border-white/10 shrink-0">
+              {user?.first_name?.charAt(0) || 'U'}
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight leading-none text-white mb-1">{user?.first_name} {user?.last_name}</h1>
+              <p className="text-zinc-400 text-sm">{user?.email}</p>
             </div>
           </div>
-          <div className="flex flex-col gap-3 w-full md:w-auto">
+          
+          <div className="flex gap-3 w-full md:w-auto mt-2 md:mt-0">
             {['SUPERADMIN', 'ADMIN', 'STAFF', 'REPORTER'].includes(user?.role || '') && (
               <Link 
                 href="/admin"
-                className="flex items-center justify-center gap-2 bg-white text-black font-bold uppercase text-sm tracking-widest px-4 py-2 rounded-lg hover:bg-zinc-200 transition-colors w-full"
+                className="flex-1 md:flex-none flex items-center justify-center bg-white text-black font-bold uppercase text-xs tracking-widest px-5 py-3 rounded-xl hover:bg-zinc-200 transition-colors shadow-lg shadow-white/5"
               >
-                Ir a Panel Admin
+                Panel Admin
               </Link>
             )}
             <button
               onClick={handleLogout}
-              className="flex items-center justify-center gap-2 text-red-500 hover:text-red-400 font-bold uppercase text-sm tracking-widest px-4 py-2 rounded-lg hover:bg-red-500/10 transition-colors w-full border border-red-500/20"
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 text-zinc-300 hover:text-white font-bold uppercase text-xs tracking-widest px-5 py-3 rounded-xl bg-zinc-900 border border-white/10 hover:border-white/20 hover:bg-zinc-800 transition-all shadow-lg shadow-black/50"
             >
               <LogOut className="w-4 h-4" />
-              Cerrar Sesión
+              Salir
             </button>
           </div>
         </div>
