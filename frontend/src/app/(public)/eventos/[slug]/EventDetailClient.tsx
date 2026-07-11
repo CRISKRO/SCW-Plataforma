@@ -34,7 +34,7 @@ export default function EventDetailClient({ event }: { event: any }) {
             <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tight mb-4">{event.title}</h1>
             
             <a 
-              href="https://share.google/zSjJUeXVE9kBjhAzr" 
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`} 
               target="_blank" 
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-zinc-400 text-lg mb-8 hover:text-white hover:underline transition-colors"
