@@ -13,12 +13,7 @@ export default function EventDetailClient({ event }: { event: any }) {
     <div className="bg-black min-h-screen text-white pt-24 pb-12">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <Link href="/eventos" className="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition-colors mb-8">
-          <ChevronLeft className="w-5 h-5" />
-          Volver a Cartelera
-        </Link>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mt-8">
           <motion.div 
             initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
             className="w-full aspect-[4/3] sm:aspect-video lg:aspect-[3/4] bg-zinc-900 rounded-3xl overflow-hidden relative shadow-2xl shadow-black/50 border border-white/10"
