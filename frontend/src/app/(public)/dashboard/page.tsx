@@ -569,22 +569,12 @@ export default function UserDashboard() {
               
               {/* Left Side: Info */}
               <div className="flex-1 relative z-10 text-center sm:text-left flex flex-col h-full w-full">
-                <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-4 mb-8">
-                  <div className="bg-red-500/10 p-3 rounded-2xl border border-red-500/20">
-                    <Swords className="w-8 h-8 text-red-500" />
-                  </div>
-                  <div>
-                    <h2 className="text-3xl font-black uppercase tracking-tight text-white leading-none">SCW DOJO</h2>
-                    <p className="text-red-400 font-bold text-xs tracking-widest uppercase mt-1">Portal del Alumno</p>
-                  </div>
-                </div>
+
                 
                 <div className="mb-8 flex-1 flex flex-col justify-center">
-                  <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-1">Alumno / Student</p>
                   <p className="text-2xl sm:text-3xl font-black uppercase text-white truncate w-full">
                     {user?.first_name} {user?.last_name}
                   </p>
-                  <p className="text-zinc-400 mt-2 text-sm font-mono bg-black/30 inline-block px-3 py-1 rounded-md self-center sm:self-start">ID: #{studentData.id.toString().padStart(4, '0')}</p>
                 </div>
                 
                 <div className="mt-auto flex justify-center sm:justify-start">
@@ -592,8 +582,8 @@ export default function UserDashboard() {
                       studentData.payment_status === 'PAID' ? 'bg-green-500/10 text-green-400 border-green-500/30' :
                       studentData.payment_status === 'EXPIRING' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30' : 'bg-red-500/10 text-red-400 border-red-500/30'
                     }`}>
-                      {studentData.payment_status === 'PAID' ? '✅ AL CORRIENTE' :
-                       studentData.payment_status === 'EXPIRING' ? '⚠️ POR VENCER' : '🚨 DEBE MENSUALIDAD'}
+                      {studentData.payment_status === 'PAID' ? 'AL CORRIENTE' :
+                       studentData.payment_status === 'EXPIRING' ? 'POR VENCER' : 'DEBE MENSUALIDAD'}
                     </span>
                 </div>
               </div>
