@@ -1381,3 +1381,58 @@ class BoxOfficeDojoPaymentView(APIView):
             return Response({"error": "Alumno no encontrado."}, status=404)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
+
+class GenerateCourtesyTicketView(APIView):
+    """Genera un boleto de cortesía gratuito y lo envía por correo."""
+    permission_classes = [IsAdminUser]
+
+    def post(self, request):
+        event_id = request.data.get('event_id')
+        seat_id = request.data.get('seat_id')
+        email = request.data.get('email')
+        name = request.data.get('name', 'Cortesía SCW')
+
+        if not event_id or not seat_id or not email:
+            return Response({"error": "Faltan datos de asiento, evento o correo."}, status=400)
+
+        from tickets.models import Seat
+        from django.db import transaction
+
+        try:
+            with transaction.atomic():
+                seat = Seat.objects.select_for_update().get(id=seat_id, zone__event_id=event_id)
+                if not seat.is_available:
+                    return Response({"error": "Este asiento ya no está disponible."}, status=400)
+                
+                zone = seat.zone
+                
+                # Bloquear asiento
+                seat.is_available = False
+                seat.save()
+
+                # Crear orden de cortesía
+                order = Order.objects.create(
+                    user=request.user,
+                    contact_email=email,
+                    total_amount=0,
+                    status=Order.Status.PAID,
+                    payment_method='TRANSFER'
+                )
+
+                OrderItem.objects.create(
+                    order=order,
+                    product_name=f"Boleto CORTESÍA: {zone.zone_type} - Fila {seat.row_name} Asiento {seat.seat_number}",
+                    quantity=1,
+                    price=0,
+                    event=zone.event,
+                    seat=seat
+                )
+                
+            # Fuera de la transacción enviamos el correo
+            send_order_emails_safely(order)
+            return Response({"success": True, "message": "Boleto de cortesía generado y enviado."})
+        except Seat.DoesNotExist:
+            return Response({"error": "El asiento no existe o no pertenece al evento."}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+

@@ -90,6 +90,10 @@ export const adminService = {
     const response = await api.patch(`/tickets/seats/${id}/`, data);
     return response.data;
   },
+  generateCourtesyTicket: async (data: { event_id: number, seat_id: number, email: string, name?: string }) => {
+    const response = await api.post('/payments/courtesy-ticket/', data);
+    return response.data;
+  },
 
   // Premium Videos & Plans
   getSubscriptionPlans: async () => {

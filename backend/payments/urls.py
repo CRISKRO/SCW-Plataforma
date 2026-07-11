@@ -4,7 +4,8 @@ from .views import (
     CreateOrderView, OrderViewSet, MPPublicKeyView, ProcessCardPaymentView, 
     VerifyPaymentView, ValidateTicketView, WebhookView, MyOrdersView, 
     TestEmailView, ApproveTransferView, BoxOfficeEventsView, BoxOfficeSellView,
-    BoxOfficeRafflesView, BoxOfficeSellRaffleView, BoxOfficeDojoStudentView, BoxOfficeDojoPaymentView
+    BoxOfficeRafflesView, BoxOfficeSellRaffleView, BoxOfficeDojoStudentView, BoxOfficeDojoPaymentView,
+    GenerateCourtesyTicketView
 )
 
 router = DefaultRouter()
@@ -26,5 +27,6 @@ urlpatterns = [
     path('box-office-sell-raffle/', BoxOfficeSellRaffleView.as_view(), name='box-office-sell-raffle'),
     path('box-office-dojo-student/<int:pk>/', BoxOfficeDojoStudentView.as_view(), name='box-office-dojo-student'),
     path('box-office-dojo-payment/<int:pk>/', BoxOfficeDojoPaymentView.as_view(), name='box-office-dojo-payment'),
+    path('courtesy-ticket/', GenerateCourtesyTicketView.as_view(), name='courtesy-ticket'),
     path('', include(router.urls)),
 ]
