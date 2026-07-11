@@ -24,6 +24,7 @@ export default function AdminProductsPage() {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState<'ALL' | 'ACTIVE' | 'DRAFT' | 'OUT_OF_STOCK'>('ALL');
   
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -203,11 +204,23 @@ export default function AdminProductsPage() {
     }
   };
 
-  // Filter products by search
-  const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (p.category_name && p.category_name.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  // Filter products by search and status
+  const filteredProducts = products.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          (p.category_name && p.category_name.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    if (!matchesSearch) return false;
+    
+    const stockCount = p.is_clothing 
+      ? Object.values(p.stock_by_size || {}).reduce((a:any, b:any) => a + b, 0) 
+      : p.stock;
+      
+    if (filterStatus === 'ACTIVE') return p.is_active;
+    if (filterStatus === 'DRAFT') return !p.is_active;
+    if (filterStatus === 'OUT_OF_STOCK') return stockCount === 0;
+    
+    return true;
+  });
 
   return (
     <div className="space-y-6">
@@ -285,15 +298,67 @@ export default function AdminProductsPage() {
 
       {/* Search and List */}
       <div className="space-y-4">
-        <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar producto por nombre o categoría..."
-            className="w-full bg-zinc-950 border border-white/5 rounded-xl py-3 pl-10 pr-4 text-sm text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-red-500/50 focus:bg-zinc-900 transition-all"
-          />
+        
+        {/* Controls Bar */}
+        <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 bg-zinc-950 border border-white/5 p-4 rounded-xl">
+          {/* Search input */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar producto por nombre o categoría..."
+              className="w-full bg-zinc-900/50 border border-white/5 rounded-lg py-2 pl-10 pr-4 text-sm text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-red-500/50 focus:bg-zinc-900 transition-all"
+            />
+          </div>
+          
+          {/* Filter buttons */}
+          <div className="flex items-center gap-1.5 overflow-x-auto">
+            <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-1 mr-1">
+              Filtrar:
+            </span>
+            <button
+              onClick={() => setFilterStatus('ALL')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                filterStatus === 'ALL'
+                  ? 'bg-white/10 text-white border-white/20'
+                  : 'bg-transparent text-zinc-400 border-transparent hover:text-white'
+              }`}
+            >
+              Todos
+            </button>
+            <button
+              onClick={() => setFilterStatus('ACTIVE')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                filterStatus === 'ACTIVE'
+                  ? 'bg-green-500/10 text-green-400 border-green-500/20'
+                  : 'bg-transparent text-zinc-400 border-transparent hover:text-green-400/80'
+              }`}
+            >
+              Activos
+            </button>
+            <button
+              onClick={() => setFilterStatus('DRAFT')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                filterStatus === 'DRAFT'
+                  ? 'bg-zinc-800 text-zinc-300 border-white/10'
+                  : 'bg-transparent text-zinc-400 border-transparent hover:text-zinc-300'
+              }`}
+            >
+              Borradores
+            </button>
+            <button
+              onClick={() => setFilterStatus('OUT_OF_STOCK')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                filterStatus === 'OUT_OF_STOCK'
+                  ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+                  : 'bg-transparent text-zinc-400 border-transparent hover:text-yellow-400/80'
+              }`}
+            >
+              Agotados
+            </button>
+          </div>
         </div>
 
         {loading ? (
@@ -308,84 +373,151 @@ export default function AdminProductsPage() {
             <p className="text-xs text-zinc-600 mt-1">Prueba a escribir otra búsqueda o agrega un nuevo producto.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-white/10 bg-zinc-950">
-            <table className="w-full text-left text-sm text-zinc-300">
-              <thead className="text-xs text-zinc-400 uppercase bg-zinc-900/60 border-b border-white/10">
-                <tr>
-                  <th className="px-6 py-4 font-semibold tracking-wider">Imagen</th>
-                  <th className="px-6 py-4 font-semibold tracking-wider">Producto</th>
-                  <th className="px-6 py-4 font-semibold tracking-wider">Categoría</th>
-                  <th className="px-6 py-4 font-semibold tracking-wider">Precio (MXN)</th>
-                  <th className="px-6 py-4 font-semibold tracking-wider">Stock</th>
-                  <th className="px-6 py-4 font-semibold tracking-wider">Tallas</th>
-                  <th className="px-6 py-4 font-semibold tracking-wider">Estado</th>
-                  <th className="px-6 py-4 font-semibold tracking-wider text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredProducts.map((prod) => (
-                  <tr key={prod.id} className="border-b border-white/5 hover:bg-white/5 transition-all duration-200">
-                    <td className="px-6 py-4">
-                      <div className="w-12 h-12 bg-zinc-900 border border-white/10 rounded-lg overflow-hidden flex items-center justify-center shrink-0">
+          <>
+            {/* DESKTOP VIEW (TABLE) */}
+            <div className="hidden lg:block overflow-x-auto rounded-xl border border-white/10 bg-zinc-950">
+              <table className="w-full text-left text-sm text-zinc-300">
+                <thead className="text-xs text-zinc-400 uppercase bg-zinc-900/60 border-b border-white/10">
+                  <tr>
+                    <th className="px-6 py-4 font-semibold tracking-wider">Imagen</th>
+                    <th className="px-6 py-4 font-semibold tracking-wider">Producto</th>
+                    <th className="px-6 py-4 font-semibold tracking-wider">Categoría</th>
+                    <th className="px-6 py-4 font-semibold tracking-wider">Precio (MXN)</th>
+                    <th className="px-6 py-4 font-semibold tracking-wider">Stock</th>
+                    <th className="px-6 py-4 font-semibold tracking-wider">Tallas</th>
+                    <th className="px-6 py-4 font-semibold tracking-wider">Estado</th>
+                    <th className="px-6 py-4 font-semibold tracking-wider text-right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredProducts.map((prod) => {
+                    const stock = prod.is_clothing ? Object.values(prod.stock_by_size || {}).reduce((a:any,b:any)=>a+b, 0) : prod.stock;
+                    return (
+                      <tr key={prod.id} className="border-b border-white/5 hover:bg-white/5 transition-all duration-200">
+                        <td className="px-6 py-4">
+                          <div className="w-12 h-12 bg-zinc-900 border border-white/10 rounded-lg overflow-hidden flex items-center justify-center shrink-0">
+                            {prod.image_url ? (
+                              <img src={prod.image_url} alt={prod.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <ImageIcon className="w-5 h-5 text-zinc-600" />
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="font-bold text-white block">{prod.name}</span>
+                          {prod.description && (
+                            <span className="text-zinc-500 text-xs line-clamp-1 max-w-[250px]">{prod.description}</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-zinc-400 font-medium">{prod.category_name || 'Sin Categoría'}</td>
+                        <td className="px-6 py-4 font-bold text-white">${parseFloat(prod.price).toFixed(2)}</td>
+                        <td className="px-6 py-4">
+                          <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                            stock === 0 
+                              ? 'bg-red-500/10 text-red-500 border border-red-500/20' 
+                              : stock <= 5 
+                              ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' 
+                              : 'bg-zinc-900 text-zinc-300'
+                          }`}>
+                            {stock} pzas
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-zinc-500 font-mono text-xs">{prod.sizes_available || 'N/A'}</td>
+                        <td className="px-6 py-4">
+                          {prod.is_active ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/10 text-green-500 border border-green-500/20">
+                              ACTIVO
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-zinc-800 text-zinc-500 border border-white/5">
+                              BORRADOR
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-right space-x-2 whitespace-nowrap">
+                          <button
+                            onClick={() => handleOpenEditModal(prod)}
+                            className="p-2 bg-zinc-850 hover:bg-zinc-800 text-zinc-300 hover:text-white rounded-lg transition-all"
+                            title="Editar Producto"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteProduct(prod.id, prod.name)}
+                            className="p-2 bg-red-650/10 hover:bg-red-600 text-red-500 hover:text-white rounded-lg transition-all"
+                            title="Eliminar Producto"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* MOBILE VIEW (CARDS) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:hidden">
+              {filteredProducts.map((prod) => {
+                const stock = prod.is_clothing ? Object.values(prod.stock_by_size || {}).reduce((a:any,b:any)=>a+b, 0) : prod.stock;
+                return (
+                  <div key={prod.id} className="bg-zinc-950 border border-white/5 rounded-xl p-4 flex flex-col space-y-4">
+                    <div className="flex gap-4">
+                      <div className="w-20 h-20 bg-zinc-900 border border-white/10 rounded-lg overflow-hidden flex items-center justify-center shrink-0">
                         {prod.image_url ? (
                           <img src={prod.image_url} alt={prod.name} className="w-full h-full object-cover" />
                         ) : (
-                          <ImageIcon className="w-5 h-5 text-zinc-600" />
+                          <ImageIcon className="w-6 h-6 text-zinc-600" />
                         )}
                       </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="font-bold text-white block">{prod.name}</span>
-                      {prod.description && (
-                        <span className="text-zinc-500 text-xs line-clamp-1 max-w-[250px]">{prod.description}</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-zinc-400 font-medium">{prod.category_name || 'Sin Categoría'}</td>
-                    <td className="px-6 py-4 font-bold text-white">${parseFloat(prod.price).toFixed(2)}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                        (prod.is_clothing ? Object.values(prod.stock_by_size || {}).reduce((a:any,b:any)=>a+b, 0) : prod.stock) === 0 
-                          ? 'bg-red-500/10 text-red-500 border border-red-500/20' 
-                          : (prod.is_clothing ? Object.values(prod.stock_by_size || {}).reduce((a:any,b:any)=>a+b, 0) : prod.stock) <= 5 
-                          ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' 
-                          : 'bg-zinc-900 text-zinc-300'
-                      }`}>
-                        {prod.is_clothing ? Object.values(prod.stock_by_size || {}).reduce((a:any,b:any)=>a+b, 0) : prod.stock} pzas
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-zinc-500 font-mono text-xs">{prod.sizes_available || 'N/A'}</td>
-                    <td className="px-6 py-4">
-                      {prod.is_active ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/10 text-green-500 border border-green-500/20">
-                          ACTIVO
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-white text-lg leading-tight truncate">{prod.name}</h3>
+                        <p className="text-red-400 font-black mt-1">${parseFloat(prod.price).toFixed(2)} MXN</p>
+                        <p className="text-zinc-500 text-xs mt-1 truncate">{prod.category_name || 'Sin Categoría'}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2 text-sm bg-zinc-900/50 p-3 rounded-lg border border-white/5">
+                      <div>
+                        <span className="text-zinc-500 text-xs block uppercase tracking-wider mb-0.5">Stock</span>
+                        <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                          stock === 0 
+                            ? 'bg-red-500/10 text-red-500' 
+                            : stock <= 5 
+                            ? 'bg-yellow-500/10 text-yellow-400' 
+                            : 'text-zinc-300'
+                        }`}>
+                          {stock} pzas
                         </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-zinc-800 text-zinc-500 border border-white/5">
-                          BORRADOR
+                      </div>
+                      <div>
+                        <span className="text-zinc-500 text-xs block uppercase tracking-wider mb-0.5">Estado</span>
+                        <span className={`text-xs font-bold ${prod.is_active ? 'text-green-400' : 'text-zinc-500'}`}>
+                          {prod.is_active ? 'ACTIVO' : 'BORRADOR'}
                         </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-right space-x-2 whitespace-nowrap">
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-2 border-t border-white/5">
                       <button
                         onClick={() => handleOpenEditModal(prod)}
-                        className="p-2 bg-zinc-850 hover:bg-zinc-800 text-zinc-300 hover:text-white rounded-lg transition-all"
-                        title="Editar Producto"
+                        className="flex-1 flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-white py-2 rounded-lg text-sm font-semibold transition-colors"
                       >
-                        <Edit2 className="w-4 h-4" />
+                        <Edit2 className="w-4 h-4" /> Editar
                       </button>
                       <button
                         onClick={() => handleDeleteProduct(prod.id, prod.name)}
-                        className="p-2 bg-red-650/10 hover:bg-red-600 text-red-500 hover:text-white rounded-lg transition-all"
-                        title="Eliminar Producto"
+                        className="flex items-center justify-center bg-red-500/10 hover:bg-red-600 text-red-500 hover:text-white p-2 rounded-lg transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
 
