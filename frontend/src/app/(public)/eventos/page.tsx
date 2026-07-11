@@ -4,14 +4,17 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, MapPin, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { eventsService } from '@/services/events.services';
-import { TicketSelectionModal } from '@/components/TicketSelectionModal';
+
+const generateSlug = (title: string) => {
+  return title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+};
 
 export default function EventosPage() {
+  const router = useRouter();
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedEvent, setSelectedEvent] = useState<any>(null);
-  const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -57,7 +60,7 @@ export default function EventosPage() {
               >
                 <div 
                   className="w-full aspect-[4/3] sm:aspect-video bg-zinc-800 relative overflow-hidden cursor-pointer shrink-0"
-                  onClick={() => { setSelectedEvent(event); setIsTicketModalOpen(true); }}
+                  onClick={() => router.push(`/eventos/${generateSlug(event.title)}`)}
                 >
                   <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" style={{ backgroundImage: `url(${event.banner_url})` }}></div>
                 </div>
@@ -80,12 +83,12 @@ export default function EventosPage() {
                     </p>
                   </div>
                   
-                  <div className="mt-8">
+                  <div className="mt-8 flex flex-col gap-3">
                     <button
-                      onClick={() => { setSelectedEvent(event); setIsTicketModalOpen(true); }}
+                      onClick={() => router.push(`/eventos/${generateSlug(event.title)}`)}
                       className="w-full py-4 bg-white text-black font-black uppercase tracking-widest text-sm rounded-xl hover:bg-zinc-200 transition-colors shadow-lg"
                     >
-                      Comprar Boletos
+                      Comprar Boletos / Ver Detalles
                     </button>
                   </div>
                 </div>
@@ -94,14 +97,7 @@ export default function EventosPage() {
           )}
         </div>
 
-        {selectedEvent && (
-          <TicketSelectionModal
-            isOpen={isTicketModalOpen}
-            onClose={() => setIsTicketModalOpen(false)}
-            eventId={selectedEvent.id}
-            event={selectedEvent}
-          />
-        )}
+        {/* Modal removido de aquí ya que ahora cada evento tiene su propia página */}
       </div>
     </div>
   );
