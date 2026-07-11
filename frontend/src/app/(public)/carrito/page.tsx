@@ -383,10 +383,12 @@ export default function CartPage() {
                     <span>Pago seguro. Acepta tarjeta, OXXO y transferencia.</span>
                   </div>
 
-                  <div className="flex items-start gap-2 bg-zinc-900 border border-[#009EE3]/20 rounded-xl p-3 text-xs text-zinc-400">
-                    <ShieldCheck className="w-4 h-4 text-[#009EE3] flex-shrink-0 mt-0.5" />
-                    <span>Serás redirigido a la pasarela oficial de <strong className="text-[#009EE3]">Mercado Pago</strong>. Tu tarjeta es procesada de forma encriptada y el dinero va directamente a la cuenta de SCW.</span>
-                  </div>
+                  {paymentMethod === 'MERCADOPAGO' && (
+                    <div className="flex items-start gap-2 bg-zinc-900 border border-[#009EE3]/20 rounded-xl p-3 text-xs text-zinc-400">
+                      <ShieldCheck className="w-4 h-4 text-[#009EE3] flex-shrink-0 mt-0.5" />
+                      <span>Serás redirigido a la pasarela oficial de <strong className="text-[#009EE3]">Mercado Pago</strong>. Tu tarjeta es procesada de forma encriptada y el dinero va directamente a la cuenta de SCW.</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
