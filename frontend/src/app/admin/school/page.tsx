@@ -376,7 +376,7 @@ export default function AdminSchoolPage() {
 
       {/* KPI summaries depending on the active tab */}
       {activeTab === 'payments' ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
           <div className="glass-panel p-5 relative overflow-hidden border border-white/5 hover:border-white/10 transition-colors">
             <div className="flex justify-between items-center">
               <div>
@@ -445,8 +445,8 @@ export default function AdminSchoolPage() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="glass-panel p-5 border border-white/5">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
+          <div className="glass-panel p-4 md:p-5 border border-white/5">
             <div className="flex justify-between items-center">
               <div>
                 <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Total Solicitudes Factory</p>
@@ -560,7 +560,9 @@ export default function AdminSchoolPage() {
               <p className="text-xs text-zinc-600 mt-1">Prueba a escribir otra búsqueda o cambia de filtro.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-xl border border-white/10 bg-zinc-950">
+            <>
+              {/* DESKTOP VIEW (TABLE) */}
+              <div className="hidden lg:block overflow-x-auto rounded-xl border border-white/10 bg-zinc-950">
               <table className="w-full text-left text-sm text-zinc-300">
                 <thead className="text-xs text-zinc-400 uppercase bg-zinc-900/60 border-b border-white/10">
                   <tr>
@@ -685,6 +687,107 @@ export default function AdminSchoolPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* MOBILE VIEW (CARDS) */}
+            <div className="lg:hidden flex flex-col gap-4">
+              {filteredStudents.map((student) => {
+                const isLoading = actionLoading[student.id] || false;
+                
+                return (
+                  <div key={student.id} className="bg-zinc-900 border border-white/10 rounded-xl p-4 flex flex-col gap-4 shadow-lg relative overflow-hidden">
+                    
+                    {/* Status indicator line */}
+                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${
+                      student.payment_status === 'UNPAID' ? 'bg-red-500' :
+                      student.payment_status === 'EXPIRING' ? 'bg-yellow-400' : 'bg-green-400'
+                    }`} />
+
+                    <div className="flex justify-between items-start ml-2">
+                      <div>
+                        <div className="text-xs text-zinc-500 font-mono mb-1">Folio #{student.id}</div>
+                        <h3 className="font-bold text-white text-base">{student.name}</h3>
+                        <p className="text-zinc-400 text-xs mt-0.5">{student.phone}</p>
+                      </div>
+                      
+                      <div>
+                        {student.payment_status === 'PAID' && (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold bg-green-500/10 text-green-400 border border-green-500/20">
+                            AL CORRIENTE
+                          </span>
+                        )}
+                        {student.payment_status === 'EXPIRING' && (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+                            POR VENCER
+                          </span>
+                        )}
+                        {student.payment_status === 'UNPAID' && (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold bg-red-500/10 text-red-400 border border-red-500/20">
+                            DEBE
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 ml-2 bg-black/20 rounded-lg p-3 border border-white/5">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold mb-1">Último Pago</p>
+                        <p className="text-xs text-zinc-300 font-medium">
+                          {student.last_payment_date ? new Date(student.last_payment_date).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }) : 'N/A'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold mb-1">Vence el</p>
+                        <p className="text-xs text-zinc-300 font-medium">
+                          {student.payment_due_date ? new Date(student.payment_due_date).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }) : 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="ml-2 grid grid-cols-2 gap-2 mt-2">
+                      {isLoading ? (
+                        <div className="col-span-2 flex justify-center items-center py-2 text-xs text-zinc-500">
+                          <Loader2 className="w-4 h-4 animate-spin text-red-500 mr-2" />
+                          Procesando...
+                        </div>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => handleRegisterPayment(student.id, student.name)}
+                            className="flex justify-center items-center py-2.5 bg-green-500 text-black hover:bg-green-400 font-bold rounded-lg text-xs transition-all"
+                          >
+                            Pagar
+                          </button>
+                          <button
+                            onClick={() => handleSendReminder(student.id, student.name)}
+                            className={`flex justify-center items-center gap-1 py-2.5 font-bold rounded-lg text-xs transition-all ${
+                              student.payment_status === 'UNPAID'
+                                ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                                : 'bg-zinc-800 text-zinc-300'
+                            }`}
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" />
+                            Avisar
+                          </button>
+                          <button
+                            onClick={() => handleOpenEditModal(student)}
+                            className="flex justify-center items-center py-2 bg-zinc-800 text-blue-400 font-bold rounded-lg text-xs border border-blue-500/20"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => handleDeleteEnrollment(student.id, student.name)}
+                            className="flex justify-center items-center py-2 bg-red-600/10 text-red-500 font-bold rounded-lg text-xs border border-red-600/20"
+                          >
+                            Eliminar
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            </>
           )}
         </div>
       ) : (
@@ -696,7 +799,94 @@ export default function AdminSchoolPage() {
             <p className="text-xs text-zinc-600 mt-1">Los aspirantes a SCW DOJO que se registren en la web pública saldrán aquí.</p>
           </div>
         ) : (
-          <AdminTable columns={requestColumns} data={enrollments} />
+          <>
+            <div className="hidden lg:block">
+              <AdminTable columns={requestColumns} data={enrollments} />
+            </div>
+            
+            {/* MOBILE VIEW (REQUEST CARDS) */}
+            <div className="lg:hidden flex flex-col gap-4">
+              {enrollments.map((req) => (
+                <div key={req.id} className="bg-zinc-900 border border-white/10 rounded-xl p-4 flex flex-col gap-4 shadow-lg relative overflow-hidden">
+                  <div className={`absolute left-0 top-0 bottom-0 w-1 ${
+                    req.status === 'PENDING' ? 'bg-yellow-400' :
+                    req.status === 'APPROVED' ? 'bg-green-400' : 'bg-red-500'
+                  }`} />
+
+                  <div className="flex justify-between items-start ml-2">
+                    <div>
+                      <div className="text-xs text-zinc-500 font-mono mb-1">Folio #{req.id}</div>
+                      <h3 className="font-bold text-white text-base">{req.name}</h3>
+                      <p className="text-zinc-400 text-xs mt-0.5">{req.phone}</p>
+                    </div>
+                    <div>
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold ${
+                        req.status === 'PENDING' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' :
+                        req.status === 'APPROVED' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+                        'bg-zinc-800 text-zinc-400 border border-zinc-700'
+                      }`}>
+                        {req.status === 'PENDING' ? 'PENDIENTE' : req.status === 'APPROVED' ? 'APROBADO' : 'RECHAZADO'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 ml-2 bg-black/20 rounded-lg p-3 border border-white/5">
+                    <div className="col-span-2 mb-1">
+                      <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold mb-1">Email</p>
+                      <p className="text-xs text-zinc-300 font-medium break-all">{req.email}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold mb-1">Edad</p>
+                      <p className="text-xs text-zinc-300 font-medium">{req.age} años</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold mb-1">Experiencia</p>
+                      <p className="text-xs text-zinc-300 font-medium truncate">
+                        {req.experience === 'NONE' ? 'Ninguna' :
+                         req.experience === 'BEGINNER' ? 'Principiante' :
+                         req.experience === 'INTERMEDIATE' ? 'Intermedio' :
+                         req.experience === 'ADVANCED' ? 'Avanzado' : req.experience}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="ml-2 grid grid-cols-2 gap-2 mt-2">
+                    {req.status === 'PENDING' ? (
+                      <>
+                        <button
+                          onClick={() => handleUpdateStatus(req.id, 'APPROVED')}
+                          className="flex justify-center items-center py-2.5 bg-green-500 text-black hover:bg-green-400 font-bold rounded-lg text-xs transition-all"
+                        >
+                          Aprobar
+                        </button>
+                        <button
+                          onClick={() => handleUpdateStatus(req.id, 'RECHAZADA')}
+                          className="flex justify-center items-center py-2.5 bg-red-600/10 text-red-500 font-bold rounded-lg text-xs border border-red-600/20"
+                        >
+                          Rechazar
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => handleOpenEditModal(req)}
+                          className="flex justify-center items-center py-2 bg-zinc-800 text-blue-400 font-bold rounded-lg text-xs border border-blue-500/20"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleDeleteEnrollment(req.id, req.name)}
+                          className="flex justify-center items-center py-2 bg-red-600/10 text-red-500 font-bold rounded-lg text-xs border border-red-600/20"
+                        >
+                          Eliminar
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )
       )}
 
