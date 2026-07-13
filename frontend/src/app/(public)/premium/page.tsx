@@ -46,96 +46,143 @@ export default function PremiumPage() {
 
   return (
     <div className="bg-black min-h-screen text-white pt-20">
-      {/* Hero */}
-      <section className="relative py-24 overflow-hidden border-b border-white/10">
-        <div className="absolute inset-0 bg-gradient-to-b from-red-900/20 to-black z-0"></div>
+      {/* Hero Section */}
+      <section className="relative py-32 overflow-hidden border-b border-red-900/30">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/40 via-black to-black z-0"></div>
+        <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
+        
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <PageBackButton />
         </div>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-6">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            className="text-5xl md:text-7xl font-black tracking-tight uppercase"
+        
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-12">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-950/50 border border-red-500/30 text-red-400 text-sm font-bold tracking-widest uppercase mb-6 shadow-[0_0_15px_rgba(220,38,38,0.3)]"
           >
-            SCW <span className="text-red-500">Premium</span>
+            <Lock className="w-4 h-4" /> VIP Access
+          </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+            className="text-6xl md:text-8xl font-black tracking-tighter uppercase"
+          >
+            SCW <span className="text-transparent bg-clip-text bg-gradient-to-b from-red-400 to-red-700">Premium</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
-            className="mt-6 text-xl text-zinc-400 max-w-2xl mx-auto"
+            className="mt-6 text-xl md:text-2xl text-zinc-300 max-w-3xl mx-auto font-light leading-relaxed"
           >
-            Acceso total al contenido detrás de escena, documentales exclusivos, y la videoteca histórica de la mejor lucha libre del mundo.
+            El lugar definitivo para el verdadero fan. Detrás de escena, documentales exclusivos y la bóveda histórica de SCW.
           </motion.p>
+          
           {isPremium && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
-              className="mt-6 inline-flex items-center gap-2 bg-red-600/20 border border-red-500/30 text-red-400 px-5 py-2 rounded-full text-sm font-bold uppercase tracking-widest"
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+              className="mt-10 inline-flex items-center gap-3 bg-gradient-to-r from-red-600 to-red-800 text-white px-8 py-4 rounded-full text-lg font-black uppercase tracking-widest shadow-[0_0_30px_rgba(220,38,38,0.5)]"
             >
-              <Video className="w-4 h-4" />
-              Acceso Premium Activo
+              <Video className="w-6 h-6" />
+              Suscripción Activa
             </motion.div>
           )}
         </div>
       </section>
 
-      {/* Pricing / CTA for non-members */}
+      {/* Pricing / VIP Card for non-members */}
       {!isAuthenticated && (
-        <section className="py-20 bg-zinc-950">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="glass-panel p-8 md:p-12 rounded-3xl text-center relative overflow-hidden border-red-500/30">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1 bg-gradient-to-r from-transparent via-red-500 to-transparent"></div>
-              <h2 className="text-3xl font-bold uppercase mb-4">{plan?.name || "Membresía Mensual VIP"}</h2>
-              <div className="flex justify-center items-baseline mb-8">
-                <span className="text-5xl font-black">${plan?.price ? Math.floor(plan.price) : '199'}</span>
-                <span className="text-zinc-400 ml-2">MXN / mes</span>
+        <section className="py-24 relative overflow-hidden">
+          <div className="absolute inset-0 bg-zinc-950"></div>
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <motion.div 
+              initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              className="bg-gradient-to-br from-zinc-900 via-black to-zinc-900 border border-zinc-800 p-1 md:p-1 rounded-3xl shadow-2xl relative group"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-red-600/0 via-red-600/20 to-red-600/0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 rounded-3xl"></div>
+              
+              <div className="bg-black/90 backdrop-blur-xl rounded-[23px] p-8 md:p-12 text-center relative overflow-hidden border border-white/5">
+                <div className="absolute -top-24 -right-24 w-48 h-48 bg-red-600/20 rounded-full blur-[50px]"></div>
+                
+                <h2 className="text-3xl font-black uppercase tracking-widest text-white mb-2">Pase VIP</h2>
+                <p className="text-zinc-400 mb-8 font-medium">{plan?.name || "Membresía Mensual"}</p>
+                
+                <div className="flex justify-center items-baseline mb-10">
+                  <span className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-zinc-400">
+                    ${plan?.price ? Math.floor(plan.price) : '199'}
+                  </span>
+                  <span className="text-zinc-500 ml-2 font-bold tracking-widest">MXN / MES</span>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left max-w-2xl mx-auto mb-12">
+                  {[
+                    'Acceso ilimitado al VOD', 
+                    'Transmisiones en vivo sin anuncios', 
+                    'Material exclusivo Backstage', 
+                    '15% de Descuento en Tienda'
+                  ].map((feature, i) => (
+                    <div key={i} className="flex items-center gap-3 bg-zinc-900/50 p-4 rounded-xl border border-white/5">
+                      <div className="bg-red-950/50 p-2 rounded-lg">
+                        <Check className="w-5 h-5 text-red-500" />
+                      </div>
+                      <span className="text-zinc-200 font-medium text-sm">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+                
+                <Link href="/register" className="inline-block w-full sm:w-auto px-12 py-5 bg-white hover:bg-zinc-200 text-black font-black uppercase tracking-[0.2em] transition-all rounded-full hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+                  Suscribirse Ahora
+                </Link>
               </div>
-              <ul className="space-y-4 text-left max-w-sm mx-auto mb-10">
-                {['Acceso ilimitado al catálogo VOD', 'Transmisiones en vivo sin anuncios', 'Contenido Backstage exclusivo', 'Descuento 15% en Tienda Oficial'].map((feature, i) => (
-                  <li key={i} className="flex items-center text-zinc-300">
-                    <Check className="w-5 h-5 text-red-500 mr-3 shrink-0" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/register" className="inline-block w-full sm:w-auto px-10 py-4 bg-red-600 hover:bg-red-700 text-white font-bold uppercase tracking-widest transition-colors rounded-xl">
-                Suscribirse Ahora
-              </Link>
-            </div>
+            </motion.div>
           </div>
         </section>
       )}
 
       {/* Video Catalog */}
-      <section className="py-24">
+      <section className="py-24 bg-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3 mb-12">
-            <h2 className="text-3xl font-bold uppercase">Catálogo Exclusivo</h2>
-            {!isPremium && <Lock className="w-6 h-6 text-zinc-500" />}
+          <div className="flex flex-col md:flex-row items-center justify-between mb-12 border-b border-white/10 pb-6">
+            <h2 className="text-3xl font-black uppercase tracking-tight flex items-center gap-4">
+              La Bóveda SCW
+              {!isPremium && <span className="bg-zinc-900 text-zinc-500 text-xs px-3 py-1 rounded-full border border-white/10 tracking-widest"><Lock className="w-3 h-3 inline mr-1 -mt-0.5" /> BLOQUEADO</span>}
+            </h2>
           </div>
 
           {loadingVideos ? (
-            <div className="text-zinc-500 py-12 text-center">Cargando videos...</div>
+            <div className="flex justify-center py-20">
+              <div className="w-12 h-12 border-t-2 border-red-600 rounded-full animate-spin"></div>
+            </div>
           ) : videos.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {videos.map((video, i) => {
-                const thumb = video.youtube_id ? `https://img.youtube.com/vi/${video.youtube_id}/hqdefault.jpg` : '';
+                const thumb = video.youtube_id ? `https://img.youtube.com/vi/${video.youtube_id}/maxresdefault.jpg` : (video.youtube_id ? `https://img.youtube.com/vi/${video.youtube_id}/hqdefault.jpg` : '');
                 const isLocked = !video.video_url;
 
                 if (isLocked) {
                   return (
                     <motion.div
                       key={video.id}
-                      initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                      className="group relative aspect-video bg-zinc-900 rounded-2xl overflow-hidden cursor-pointer border border-white/5"
+                      initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                      className="group relative bg-zinc-950 rounded-2xl overflow-hidden border border-white/5 cursor-not-allowed select-none"
                     >
-                      {thumb && <Image src={thumb} alt={video.title} fill className="object-cover transition-transform duration-500 group-hover:scale-105" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />}
-                      <div className="absolute inset-0 flex items-center justify-center transition-colors">
-                        <PlayCircle className="w-12 h-12 text-white/70 group-hover:text-white transition-colors drop-shadow-lg" />
+                      <div className="relative aspect-video">
+                        {thumb ? (
+                          <div className="absolute inset-0 bg-cover bg-center filter blur-md opacity-40 grayscale" style={{ backgroundImage: `url(${thumb})` }}></div>
+                        ) : (
+                          <div className="absolute inset-0 bg-zinc-900 flex items-center justify-center">
+                            <Video className="w-10 h-10 text-zinc-800" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <div className="w-16 h-16 rounded-full bg-black/80 flex items-center justify-center backdrop-blur-xl border border-white/10 shadow-2xl mb-4 group-hover:scale-110 transition-transform">
+                            <Lock className="w-8 h-8 text-zinc-400" />
+                          </div>
+                          <span className="text-zinc-400 font-bold tracking-widest uppercase text-xs">Exclusivo Premium</span>
+                        </div>
                       </div>
-                      <div className="absolute bottom-0 left-0 p-5 w-full bg-gradient-to-t from-black to-transparent">
-                        <h3 className="text-sm font-bold text-white line-clamp-1">{video.title}</h3>
-                        {video.description && <p className="text-xs text-zinc-400 mt-1 line-clamp-1">{video.description}</p>}
-                      </div>
-                      <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/80 flex items-center justify-center backdrop-blur-md border border-white/10 shadow-lg">
-                        <Lock className="w-4 h-4 text-zinc-400" />
+                      <div className="p-6">
+                        <div className="h-4 w-1/4 bg-zinc-800 rounded-full mb-3 opacity-50"></div>
+                        <h3 className="text-lg font-bold text-zinc-300 line-clamp-1 mb-2">{video.title}</h3>
+                        <div className="h-3 w-full bg-zinc-800/50 rounded-full mb-2"></div>
+                        <div className="h-3 w-2/3 bg-zinc-800/50 rounded-full"></div>
                       </div>
                     </motion.div>
                   );
@@ -147,57 +194,62 @@ export default function PremiumPage() {
                     href={video.video_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.08 }}
-                    className="group relative bg-zinc-950 border border-white/10 rounded-2xl overflow-hidden hover:border-red-500/50 transition-all"
+                    initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                    className="group relative bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 hover:border-red-500/50 transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_10px_30px_rgba(220,38,38,0.2)]"
                   >
-                    <div className="relative aspect-video bg-zinc-900">
+                    <div className="relative aspect-video bg-zinc-950 overflow-hidden">
                       {thumb ? (
-                        <Image src={thumb} alt={video.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" priority={i < 4} />
+                        <Image src={thumb} alt={video.title} fill className="object-cover group-hover:scale-110 group-hover:rotate-1 transition-all duration-700" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" priority={i < 3} />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <Video className="w-14 h-14 text-zinc-700" />
+                          <Video className="w-12 h-12 text-zinc-800" />
                         </div>
                       )}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-14 h-14 rounded-full bg-red-600/90 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
-                          <PlayCircle className="w-8 h-8 text-white" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 scale-75 group-hover:scale-100">
+                        <div className="w-16 h-16 rounded-full bg-red-600 flex items-center justify-center shadow-[0_0_20px_rgba(220,38,38,0.6)]">
+                          <PlayCircle className="w-8 h-8 text-white ml-1" />
                         </div>
                       </div>
-                      <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-black/70 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs text-white font-bold">
-                        <Video className="w-3.5 h-3.5 text-red-500" />
-                        YouTube
-                        <ExternalLink className="w-3 h-3 text-zinc-400" />
+                      <div className="absolute top-4 left-4 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded">
+                        PREMIUM
                       </div>
                     </div>
-                    {/* Info */}
-                    <div className="p-5">
-                      <h3 className="font-bold text-white group-hover:text-red-400 transition-colors">{video.title}</h3>
+                    <div className="p-6 relative">
+                      <h3 className="text-xl font-black text-white group-hover:text-red-400 transition-colors line-clamp-1 mb-2">{video.title}</h3>
                       {video.description && (
-                        <p className="text-zinc-500 text-sm mt-1.5 line-clamp-2">{video.description}</p>
+                        <p className="text-zinc-400 text-sm line-clamp-2 leading-relaxed">{video.description}</p>
                       )}
-                      <p className="text-zinc-600 text-xs mt-3">
-                        {video.release_date && new Date(video.release_date).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}
-                      </p>
+                      <div className="mt-4 flex items-center justify-between text-xs font-bold tracking-widest text-zinc-500 uppercase">
+                        <span>
+                          {video.release_date ? new Date(video.release_date).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }) : 'VOD'}
+                        </span>
+                        <span className="flex items-center gap-1 text-red-500">
+                          Ver en YouTube <ExternalLink className="w-3 h-3" />
+                        </span>
+                      </div>
                     </div>
                   </motion.a>
                 );
               })}
             </div>
           ) : (
-            <div className="text-zinc-500 py-12 text-center">No hay videos disponibles por el momento.</div>
+            <div className="text-zinc-500 py-12 text-center border border-white/5 rounded-2xl bg-zinc-950/50">
+              <p className="font-bold uppercase tracking-widest">No hay contenido disponible por el momento.</p>
+            </div>
           )}
 
           {isAuthenticated && !isPremium && (
-            <div className="mt-12 text-center">
-              <p className="text-zinc-500 mb-4">Tu cuenta no tiene acceso Premium activo.</p>
+            <div className="mt-16 bg-gradient-to-r from-zinc-900 to-zinc-950 border border-red-900/30 rounded-3xl p-8 md:p-12 text-center relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-red-600/10 rounded-full blur-[60px]"></div>
+              <Lock className="w-12 h-12 text-zinc-700 mx-auto mb-6" />
+              <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-4">Desbloquea La Bóveda SCW</h3>
+              <p className="text-zinc-400 max-w-xl mx-auto mb-8">Únete a SCW Premium para obtener acceso inmediato a todo el catálogo de videos y transmisiones en vivo.</p>
               <Link 
                 href="/premium/checkout"
-                className="inline-block px-8 py-3 bg-red-600 hover:bg-red-700 text-white font-bold uppercase tracking-widest rounded-xl transition-colors"
+                className="inline-block px-10 py-4 bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest rounded-full transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(220,38,38,0.4)]"
               >
-                Activar {plan?.name || "Membresía Premium"} (${plan?.price ? Math.floor(plan.price) : '199'})
+                Suscribirse por ${plan?.price ? Math.floor(plan.price) : '199'} MXN
               </Link>
             </div>
           )}
