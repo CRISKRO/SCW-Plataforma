@@ -87,11 +87,11 @@ export default function PatrocinadoresPage() {
                 {/* Logo Container */}
                 <div className="aspect-[4/3] w-full flex items-center justify-center p-8 relative overflow-hidden bg-black/40 border-b border-white/5">
                   {sponsor.image_url ? (
-                    <div className="relative w-full h-full bg-white rounded-2xl p-6 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform duration-700">
+                    <div className="relative w-full h-full flex items-center justify-center group-hover:scale-110 transition-transform duration-700">
                       <img 
                         src={sponsor.image_url} 
                         alt={sponsor.name}
-                        className="w-full h-full object-contain"
+                        className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]"
                       />
                     </div>
                   ) : (
