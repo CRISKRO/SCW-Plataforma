@@ -67,7 +67,7 @@ export default function UserDashboard() {
         setZipcode(user.zipcode || '');
       }
     }
-  }, [isAuthenticated, router, user]);
+  }, [isAuthenticated, router, user, mounted, isLoading]);
 
   const fetchOrders = async () => {
     try {
