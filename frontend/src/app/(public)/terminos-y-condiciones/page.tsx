@@ -9,7 +9,7 @@ export default function TerminosYCondicionesPage() {
     <div className="bg-black min-h-screen text-white pt-24 pb-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <PageBackButton />
-        <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tight mb-8 text-center">
+        <h1 className="text-4xl md:text-5xl font-black tracking-tighter uppercase mb-8 text-center text-transparent bg-clip-text bg-gradient-to-b from-red-400 to-red-700">
           Política Legal Integral
         </h1>
         <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 md:p-10 space-y-6 text-zinc-300">

@@ -47,7 +47,7 @@ export default function PremiumPage() {
   return (
     <div className="bg-black min-h-screen text-white pt-20">
       {/* Hero Section */}
-      <section className="relative py-32 overflow-hidden border-b border-red-900/30">
+      <section className="relative py-20 overflow-hidden border-b border-red-900/30">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/40 via-black to-black z-0"></div>
         <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
         
@@ -55,13 +55,7 @@ export default function PremiumPage() {
           <PageBackButton />
         </div>
         
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-12">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-950/50 border border-red-500/30 text-red-400 text-sm font-bold tracking-widest uppercase mb-6 shadow-[0_0_15px_rgba(220,38,38,0.3)]"
-          >
-            <Lock className="w-4 h-4" /> VIP Access
-          </motion.div>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-6">
           <motion.h1
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
             className="text-6xl md:text-8xl font-black tracking-tighter uppercase"

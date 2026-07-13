@@ -162,7 +162,7 @@ export default function RegisterPage() {
         className="max-w-md w-full space-y-6 glass-panel p-8 sm:p-10 z-10"
       >
         <div>
-          <h2 className="text-center text-3xl font-extrabold text-white tracking-tight">
+          <h2 className="text-center text-3xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-b from-red-400 to-red-700">
             Únete a SCW
           </h2>
           <p className="mt-2 text-center text-sm text-zinc-400">

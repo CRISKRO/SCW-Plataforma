@@ -151,8 +151,8 @@ export default function CartPage() {
         <PageBackButton />
 
         <div className="flex items-center gap-3 mb-12 border-b border-white/10 pb-6">
-          <ShoppingBag className="w-8 h-8" />
-          <h1 className="text-4xl font-black uppercase tracking-tight">Tu Carrito</h1>
+          <ShoppingBag className="w-8 h-8 text-red-500" />
+          <h1 className="text-4xl font-black tracking-tighter uppercase">Tu <span className="text-transparent bg-clip-text bg-gradient-to-b from-red-400 to-red-700">Carrito</span></h1>
         </div>
 
         {items.length === 0 ? (

@@ -50,9 +50,9 @@ export default function StorePage() {
           <div>
             <motion.h1 
               initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
-              className="text-3xl md:text-5xl font-black uppercase tracking-tight"
+              className="text-4xl md:text-6xl font-black tracking-tighter uppercase"
             >
-              Tienda <span className="text-red-500">Oficial</span>
+              Tienda <span className="text-transparent bg-clip-text bg-gradient-to-b from-red-400 to-red-700">Oficial</span>
             </motion.h1>
             <p className="mt-2 text-zinc-400">Encuentra los mejores productos originales de SCW con envío disponible a todo México.</p>
           </div>

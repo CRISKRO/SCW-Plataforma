@@ -207,7 +207,7 @@ function SuccessContent() {
             <CheckCircle2 className="w-14 h-14 text-green-500" />
           </div>
 
-          <h1 className="text-4xl font-black uppercase tracking-tight mb-2">¡Pago Exitoso!</h1>
+          <h1 className="text-4xl font-black tracking-tighter uppercase mb-2 text-transparent bg-clip-text bg-gradient-to-b from-red-400 to-red-700">¡Pago Exitoso!</h1>
           {orderId && <p className="text-zinc-500 text-sm mb-8">Orden #{orderId}</p>}
         </motion.div>
 

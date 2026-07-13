@@ -235,8 +235,8 @@ export default function EscuelaPage() {
       {/* Hero */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20 text-center">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-5xl md:text-8xl font-black uppercase tracking-tighter mb-6">
-            SCW <span className="text-red-600">DOJO</span>
+          <h1 className="text-5xl md:text-8xl font-black tracking-tighter uppercase mb-6">
+            SCW <span className="text-transparent bg-clip-text bg-gradient-to-b from-red-400 to-red-700">DOJO</span>
           </h1>
           <div className="text-lg md:text-xl text-zinc-400 font-light max-w-4xl mx-auto space-y-6 text-center">
             <p>

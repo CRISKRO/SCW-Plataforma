@@ -264,7 +264,7 @@ export default function UserDashboard() {
               {user?.first_name?.charAt(0) || 'U'}
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight leading-none text-white mb-1">{user?.first_name} {user?.last_name}</h1>
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tighter uppercase leading-none text-transparent bg-clip-text bg-gradient-to-b from-red-400 to-red-700 mb-1">{user?.first_name} {user?.last_name}</h1>
               <p className="text-zinc-400 text-sm">{user?.email}</p>
             </div>
           </div>

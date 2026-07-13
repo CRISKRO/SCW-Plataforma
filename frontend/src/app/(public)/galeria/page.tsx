@@ -34,9 +34,9 @@ export default function GaleriaPage() {
         <div className="text-center mb-16">
           <motion.h1 
             initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
-            className="text-5xl md:text-7xl font-black uppercase tracking-tight"
+            className="text-5xl md:text-7xl font-black tracking-tighter uppercase"
           >
-            Nuestra <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-800">Galería</span>
+            Nuestra <span className="text-transparent bg-clip-text bg-gradient-to-b from-red-400 to-red-700">Galería</span>
           </motion.h1>
           <p className="mt-4 text-zinc-400 max-w-2xl mx-auto">Las mejores fotografías tomadas en el ring. Capturando la esencia, el dolor y la gloria de SCW.</p>
         </div>

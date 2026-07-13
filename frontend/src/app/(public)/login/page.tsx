@@ -117,7 +117,7 @@ export default function LoginPage() {
         <div>
           <motion.h2 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
-            className="mt-2 text-center text-4xl font-extrabold text-white tracking-tight"
+            className="mt-2 text-center text-4xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-b from-red-400 to-red-700"
           >
             SCW
           </motion.h2>

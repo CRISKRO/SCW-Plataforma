@@ -82,9 +82,9 @@ export default function RosterPage() {
         <div className="text-center mb-16">
           <motion.h1 
             initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
-            className="text-5xl md:text-7xl font-black uppercase tracking-tight"
+            className="text-5xl md:text-7xl font-black tracking-tighter uppercase"
           >
-            SUPER ESTRELLAS <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-800">SCW</span>
+            SUPER ESTRELLAS <span className="text-transparent bg-clip-text bg-gradient-to-b from-red-400 to-red-700">SCW</span>
           </motion.h1>
           <p className="mt-4 text-zinc-400 max-w-2xl mx-auto">Conoce a los atletas y personajes que forman parte de SCW.</p>
         </div>
@@ -130,9 +130,9 @@ export default function RosterPage() {
             <div className="text-center mb-16 mt-12 border-t border-zinc-800 pt-16">
               <motion.h2 
                 initial={{ opacity: 0, y: -20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-                className="text-5xl md:text-7xl font-black uppercase tracking-tight"
+                className="text-5xl md:text-7xl font-black tracking-tighter uppercase"
               >
-                SCW <span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-400 to-zinc-600">Talento en desarrollo</span>
+                SCW <span className="text-transparent bg-clip-text bg-gradient-to-b from-red-400 to-red-700">Talento en desarrollo</span>
               </motion.h2>
               <p className="mt-4 text-zinc-400 max-w-2xl mx-auto">El futuro de SCW. Conoce a los talentos en formación de nuestra escuela.</p>
             </div>
