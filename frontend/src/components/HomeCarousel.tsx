@@ -590,7 +590,7 @@ const generateSlug = (title: string) => {
                           src={sponsor.image_url} 
                           alt={sponsor.name} 
                           fill 
-                          className="object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500"
+                          className="object-contain transition-all duration-500"
                           sizes="(max-width: 768px) 150px, 200px"
                         />
                       </div>
