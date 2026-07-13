@@ -18,6 +18,7 @@ import {
   ToggleRight,
   DollarSign
 } from 'lucide-react';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 
 export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState<'mercadopago' | 'email' | 'whatsapp' | 'registro'>('mercadopago');
@@ -130,17 +131,11 @@ export default function AdminSettingsPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-fade-in pb-16">
       {/* Encabezado */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-6">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-3">
-            <Settings className="w-8 h-8 text-red-500" />
-            Configuración del Sistema
-          </h1>
-          <p className="text-zinc-400 mt-2">
-            Administra credenciales, pasarelas de pago, correos de boletos y notificaciones en tiempo real.
-          </p>
-        </div>
-      </div>
+      <AdminPageHeader 
+        title="Configuración del Sistema"
+        subtitle="Administra credenciales, pasarelas de pago, correos de boletos y notificaciones en tiempo real."
+        icon={<Settings className="w-8 h-8 text-red-500" />}
+      />
 
       {/* Notificación Flotante/Alerta */}
       {notification && (

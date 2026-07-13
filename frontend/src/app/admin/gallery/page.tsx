@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, X, Trash2, Image as ImageIcon, Check } from 'lucide-react';
 import { galleryService } from '@/services/gallery.services';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 
 export default function AdminGalleryPage() {
   const [images, setImages] = useState<any[]>([]);
@@ -81,19 +82,13 @@ export default function AdminGalleryPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center bg-zinc-900/50 p-6 rounded-2xl border border-white/5">
-        <div>
-          <h1 className="text-2xl font-black uppercase tracking-widest text-white">Galería</h1>
-          <p className="text-zinc-400 mt-1">Gestiona las imágenes de la galería pública</p>
-        </div>
-        <button 
-          onClick={() => setShowForm(!showForm)}
-          className="bg-white text-black px-4 py-2 rounded-lg font-bold uppercase tracking-wider hover:bg-zinc-200 transition-colors flex items-center gap-2"
-        >
-          {showForm ? <X className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
-          {showForm ? 'Cancelar' : 'Nueva Imagen'}
-        </button>
-      </div>
+      <AdminPageHeader 
+        title="Galería"
+        subtitle="Gestiona las imágenes de la galería pública"
+        actionLabel={showForm ? 'Cancelar' : 'Nueva Imagen'}
+        actionOnClick={() => setShowForm(!showForm)}
+        actionIcon={showForm ? <X className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+      />
 
       {showForm && (
         <motion.div 

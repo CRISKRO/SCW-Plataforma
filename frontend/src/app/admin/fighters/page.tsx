@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
 import AdminTable from '@/components/admin/AdminTable';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import { eventsService } from '@/services/events.services';
 
 export default function AdminFightersPage() {
@@ -63,19 +64,13 @@ export default function AdminFightersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">Roster</h1>
-          <p className="text-zinc-400 mt-2">Gestiona a todos los luchadores de SCW.</p>
-        </div>
-        <Link 
-          href="/admin/fighters/form" 
-          className="flex items-center gap-2 bg-white text-black px-4 py-2 font-bold uppercase tracking-widest text-sm hover:bg-zinc-200 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Añadir Luchador
-        </Link>
-      </div>
+      <AdminPageHeader 
+        title="Roster"
+        subtitle="Gestiona a todos los luchadores de SCW."
+        actionLabel="Añadir Luchador"
+        actionHref="/admin/fighters/form"
+        actionIcon={<Plus className="w-4 h-4" />}
+      />
 
       {loading ? (
         <div className="text-zinc-500 py-8">Cargando roster...</div>

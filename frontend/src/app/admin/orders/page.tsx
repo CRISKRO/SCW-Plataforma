@@ -14,8 +14,8 @@ import {
   X,
   Printer,
   Ticket
-} from 'lucide-react';
 import api from '@/services/api';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 
 const STATUS_MAP: Record<string, { label: string, color: string, icon: any }> = {
   PENDING: { label: 'Pendiente', color: 'bg-zinc-800 text-zinc-400 border-zinc-700', icon: AlertCircle },
@@ -195,17 +195,11 @@ export default function AdminOrdersPage() {
   return (
     <div className="space-y-6 relative">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-4xl font-extrabold tracking-tight text-white bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-500 flex items-center gap-3">
-            <Package className="w-8 h-8 text-blue-500 animate-pulse" />
-            Gestión de Pedidos
-          </h1>
-          <p className="text-zinc-400 mt-2 text-base">
-            Administra los pedidos de mercancía física y boletos.
-          </p>
-        </div>
-      </div>
+      <AdminPageHeader 
+        title="Gestión de Pedidos"
+        subtitle="Administra los pedidos de mercancía física y boletos."
+        icon={<Package className="w-8 h-8 animate-pulse" />}
+      />
 
       {/* Tabs */}
       <div className="flex gap-4 border-b border-white/10 pb-4">

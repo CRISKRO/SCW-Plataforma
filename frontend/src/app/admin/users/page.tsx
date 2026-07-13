@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, Edit, Trash2 } from 'lucide-react';
 import AdminTable from '@/components/admin/AdminTable';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import { adminService } from '@/services/admin.services';
 
 const ROLE_TRANSLATIONS: Record<string, string> = {
@@ -131,12 +132,10 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">Usuarios</h1>
-          <p className="text-zinc-400 mt-2">Gestiona los permisos y roles de la comunidad SCW.</p>
-        </div>
-      </div>
+      <AdminPageHeader 
+        title="Usuarios"
+        subtitle="Gestiona los permisos y roles de la comunidad SCW."
+      />
 
       {loading ? (
         <div className="text-zinc-500 py-8">Cargando usuarios...</div>

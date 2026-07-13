@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Trash2, Edit, Video, Eye, EyeOff, Save, X, ExternalLink } from 'lucide-react';
 import Image from 'next/image';
 import { adminService } from '@/services/admin.services';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 
 function getYoutubeId(url: string): string | null {
   const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
@@ -153,22 +154,19 @@ export default function AdminPremiumPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
-            <Video className="w-8 h-8 text-red-500" />
-            Videos Premium
-          </h1>
-          <p className="text-zinc-400 mt-2">Gestiona los links de contenido exclusivo para miembros de YouTube.</p>
-        </div>
+      <AdminPageHeader 
+        title="Videos Premium"
+        subtitle="Gestiona los links de contenido exclusivo para miembros de YouTube."
+        icon={<Video className="w-8 h-8 text-red-500" />}
+      >
         <button
           onClick={openNew}
-          className="flex items-center gap-2 bg-white text-black px-5 py-2.5 rounded-lg font-bold uppercase tracking-widest hover:bg-zinc-200 transition-colors text-sm"
+          className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-800 text-white px-5 py-2.5 text-sm font-bold uppercase tracking-wider rounded-lg hover:from-red-500 hover:to-red-700 transition-all shadow-lg shadow-red-950/20 active:scale-95 transform w-full sm:w-auto justify-center"
         >
           <Plus className="w-4 h-4" />
           Agregar Video
         </button>
-      </div>
+      </AdminPageHeader>
 
       {/* Plan Config */}
       {plan && (

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AdminTable from '@/components/admin/AdminTable';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import { adminService } from '@/services/admin.services';
 
 export default function AdminFinancesPage() {
@@ -97,12 +98,10 @@ export default function AdminFinancesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">Finanzas y Ventas</h1>
-          <p className="text-zinc-400 mt-2">Monitorea los ingresos de la tienda SCW.</p>
-        </div>
-      </div>
+      <AdminPageHeader 
+        title="Finanzas y Ventas"
+        subtitle="Monitorea los ingresos de la tienda SCW."
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-zinc-900 border border-white/10 rounded-xl p-6">

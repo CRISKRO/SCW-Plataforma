@@ -6,7 +6,9 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { eventsService } from '@/services/events.services';
 import { adminService } from '@/services/admin.services';
+import { adminService } from '@/services/admin.services';
 import AdminSeatMap from '@/components/admin/AdminSeatMap';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 
 export default function AdminEventsPage() {
   const [events, setEvents] = useState<any[]>([]);
@@ -118,25 +120,14 @@ export default function AdminEventsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-4xl font-extrabold tracking-tight text-white bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-500 flex items-center gap-3">
-            <Calendar className="w-8 h-8 text-red-500" />
-            Eventos
-          </h1>
-          <p className="text-zinc-400 mt-2 text-base">
-            Gestiona carteleras, funciones, ubicaciones y boletos de SCW.
-          </p>
-        </div>
-        
-        <Link 
-          href="/admin/events/form" 
-          className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-800 text-white px-5 py-2.5 text-sm font-bold uppercase tracking-wider rounded-lg hover:from-red-500 hover:to-red-700 transition-all shadow-lg shadow-red-950/20 active:scale-95 transform whitespace-nowrap"
-        >
-          <Plus className="w-4 h-4" />
-          Nuevo Evento
-        </Link>
-      </div>
+      <AdminPageHeader 
+        title="Eventos"
+        subtitle="Gestiona carteleras, funciones, ubicaciones y boletos de SCW."
+        icon={<Calendar className="w-8 h-8" />}
+        actionLabel="Nuevo Evento"
+        actionHref="/admin/events/form"
+        actionIcon={<Plus className="w-4 h-4" />}
+      />
 
       {/* KPI Summaries */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">

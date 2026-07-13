@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AdminTable from '@/components/admin/AdminTable';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import { adminService } from '@/services/admin.services';
 import { 
   Users, 
@@ -330,21 +331,15 @@ export default function AdminSchoolPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-4xl font-extrabold tracking-tight text-white bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-500">
-            SCW DOJO (Alumnos)
-          </h1>
-          <p className="text-zinc-400 mt-2 text-base">
-            Gestiona inscripciones, mensualidades escolares y notificaciones a WhatsApp de la escuela de lucha.
-          </p>
-        </div>
-        
+      <AdminPageHeader 
+        title="SCW DOJO (Alumnos)"
+        subtitle="Gestiona inscripciones, mensualidades escolares y notificaciones a WhatsApp de la escuela de lucha."
+      >
         {/* Actions & Navigation */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full md:w-auto">
           <button
             onClick={handleOpenAddModal}
-            className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold rounded-lg bg-red-600 hover:bg-red-500 text-white transition-all w-full sm:w-auto shrink-0"
+            className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold rounded-lg bg-gradient-to-r from-red-600 to-red-800 text-white transition-all w-full sm:w-auto shrink-0 shadow-lg shadow-red-950/20 hover:from-red-500 hover:to-red-700 active:scale-95 transform uppercase tracking-wider"
           >
             <UserCheck className="w-4 h-4" />
             Registrar Alumno
@@ -377,7 +372,7 @@ export default function AdminSchoolPage() {
             </button>
           </div>
         </div>
-      </div>
+      </AdminPageHeader>
 
       {/* KPI summaries depending on the active tab */}
       {activeTab === 'payments' ? (

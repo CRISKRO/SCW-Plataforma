@@ -16,8 +16,8 @@ import {
   Package, 
   DollarSign, 
   ListOrdered
-} from 'lucide-react';
 import api from '@/services/api';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -225,35 +225,30 @@ export default function AdminProductsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-4xl font-extrabold tracking-tight text-white bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-500 flex items-center gap-3">
-            <ShoppingBag className="w-8 h-8 text-red-500 animate-pulse" />
-            Productos de la Tienda
-          </h1>
-          <p className="text-zinc-400 mt-2 text-base">
-            Administra los artículos de merch oficial de SCW, stock, precios, tallas e imágenes.
-          </p>
-        </div>
-        
-        <div className="flex gap-3">
+      <AdminPageHeader 
+        title="Productos de la Tienda"
+        subtitle="Administra los artículos de merch oficial de SCW, stock, precios, tallas e imágenes."
+        icon={<ShoppingBag className="w-8 h-8 animate-pulse" />}
+      >
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <button
             onClick={() => setIsCatModalOpen(true)}
-            className="flex items-center gap-2 border border-white/10 hover:border-white/20 text-zinc-300 hover:text-white px-4 py-2 text-sm font-semibold rounded-lg transition-all"
+            className="flex flex-1 justify-center items-center gap-2 border border-white/10 hover:border-white/20 text-zinc-300 hover:text-white px-4 py-2.5 text-sm font-semibold rounded-lg transition-all"
           >
             <Tag className="w-4 h-4" />
-            Gestionar Categorías
+            <span className="hidden sm:inline">Gestionar Categorías</span>
+            <span className="sm:hidden">Categorías</span>
           </button>
           
           <button
             onClick={handleOpenAddModal}
-            className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-800 text-white px-5 py-2.5 text-sm font-bold uppercase tracking-wider rounded-lg hover:from-red-500 hover:to-red-700 transition-all shadow-lg shadow-red-950/20 active:scale-95 transform"
+            className="flex flex-1 justify-center items-center gap-2 bg-gradient-to-r from-red-600 to-red-800 text-white px-5 py-2.5 text-sm font-bold uppercase tracking-wider rounded-lg hover:from-red-500 hover:to-red-700 transition-all shadow-lg shadow-red-950/20 active:scale-95 transform whitespace-nowrap"
           >
             <Plus className="w-4 h-4" />
             Nuevo Producto
           </button>
         </div>
-      </div>
+      </AdminPageHeader>
 
       {/* KPI summaries */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
