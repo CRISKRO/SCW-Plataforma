@@ -14,6 +14,7 @@ import {
   X,
   Printer,
   Ticket
+} from 'lucide-react';
 import api from '@/services/api';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 
