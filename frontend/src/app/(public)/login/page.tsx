@@ -8,6 +8,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { GoogleLogin } from '@react-oauth/google';
+import Image from 'next/image';
 
 import PageBackButton from '@/components/PageBackButton';
 
@@ -115,12 +116,12 @@ export default function LoginPage() {
         className="max-w-md w-full space-y-8 glass-panel p-10 z-10"
       >
         <div>
-          <motion.h2 
+          <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
-            className="mt-2 text-center text-4xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-b from-red-400 to-red-700"
+            className="flex justify-center mb-6"
           >
-            SCW
-          </motion.h2>
+            <Image src="/images/logo-scw.png" alt="SCW Logo" width={100} height={100} className="object-contain" />
+          </motion.div>
           <p className="mt-2 text-center text-sm text-zinc-400">
             Acceso al Sistema
           </p>

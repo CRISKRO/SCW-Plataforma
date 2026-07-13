@@ -87,14 +87,9 @@ export default function PremiumPage() {
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <motion.div 
               initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-              className="bg-gradient-to-br from-zinc-900 via-black to-zinc-900 border border-zinc-800 p-1 md:p-1 rounded-3xl shadow-2xl relative group"
+              className="bg-black border border-white/5 p-8 md:p-12 text-center rounded-3xl shadow-2xl relative"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-red-600/0 via-red-600/20 to-red-600/0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 rounded-3xl"></div>
-              
-              <div className="bg-black/90 backdrop-blur-xl rounded-[23px] p-8 md:p-12 text-center relative overflow-hidden border border-white/5">
-                <div className="absolute -top-24 -right-24 w-48 h-48 bg-red-600/20 rounded-full blur-[50px]"></div>
-                
-                <h2 className="text-3xl font-black uppercase tracking-widest text-white mb-2">Pase VIP</h2>
+                <h2 className="text-3xl font-black uppercase tracking-widest text-white mb-2">SCW Premium</h2>
                 <p className="text-zinc-400 mb-8 font-medium">{plan?.name || "Membresía Mensual"}</p>
                 
                 <div className="flex justify-center items-baseline mb-10">
@@ -123,7 +118,6 @@ export default function PremiumPage() {
                 <Link href="/register" className="inline-block w-full sm:w-auto px-12 py-5 bg-white hover:bg-zinc-200 text-black font-black uppercase tracking-[0.2em] transition-all rounded-full hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.2)]">
                   Suscribirse Ahora
                 </Link>
-              </div>
             </motion.div>
           </div>
         </section>
@@ -156,27 +150,34 @@ export default function PremiumPage() {
                       initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
                       className="group relative bg-zinc-950 rounded-2xl overflow-hidden border border-white/5 cursor-not-allowed select-none"
                     >
-                      <div className="relative aspect-video">
+                      <div className="relative aspect-video bg-zinc-950 overflow-hidden">
                         {thumb ? (
-                          <div className="absolute inset-0 bg-cover bg-center filter blur-md opacity-40 grayscale" style={{ backgroundImage: `url(${thumb})` }}></div>
+                          <Image src={thumb} alt={video.title} fill className="object-cover transition-all duration-700" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" priority={i < 3} />
                         ) : (
-                          <div className="absolute inset-0 bg-zinc-900 flex items-center justify-center">
-                            <Video className="w-10 h-10 text-zinc-800" />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <Video className="w-12 h-12 text-zinc-800" />
                           </div>
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <div className="w-16 h-16 rounded-full bg-black/80 flex items-center justify-center backdrop-blur-xl border border-white/10 shadow-2xl mb-4 group-hover:scale-110 transition-transform">
-                            <Lock className="w-8 h-8 text-zinc-400" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div className="absolute inset-0 flex items-center justify-center transition-all duration-300">
+                          <div className="w-16 h-16 rounded-full bg-black/80 flex items-center justify-center backdrop-blur-xl border border-white/10 shadow-2xl group-hover:scale-110 transition-transform">
+                            <Lock className="w-8 h-8 text-zinc-300" />
                           </div>
-                          <span className="text-zinc-400 font-bold tracking-widest uppercase text-xs">Exclusivo Premium</span>
+                        </div>
+                        <div className="absolute top-4 left-4 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded">
+                          PREMIUM
                         </div>
                       </div>
-                      <div className="p-6">
-                        <div className="h-4 w-1/4 bg-zinc-800 rounded-full mb-3 opacity-50"></div>
-                        <h3 className="text-lg font-bold text-zinc-300 line-clamp-1 mb-2">{video.title}</h3>
-                        <div className="h-3 w-full bg-zinc-800/50 rounded-full mb-2"></div>
-                        <div className="h-3 w-2/3 bg-zinc-800/50 rounded-full"></div>
+                      <div className="p-6 relative">
+                        <h3 className="text-xl font-black text-zinc-500 line-clamp-1 mb-2">{video.title}</h3>
+                        {video.description && (
+                          <p className="text-zinc-600 text-sm line-clamp-2 leading-relaxed">{video.description}</p>
+                        )}
+                        <div className="mt-4 flex items-center justify-between text-xs font-bold tracking-widest text-zinc-600 uppercase">
+                          <span>
+                            {video.release_date ? new Date(video.release_date).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }) : 'VOD'}
+                          </span>
+                        </div>
                       </div>
                     </motion.div>
                   );
