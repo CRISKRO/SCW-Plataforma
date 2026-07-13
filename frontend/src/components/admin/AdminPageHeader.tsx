@@ -18,7 +18,9 @@ export default function AdminPageHeader({
   icon,
   actionLabel,
   actionHref,
-  actionIcon
+  actionOnClick,
+  actionIcon,
+  children
 }: AdminPageHeaderProps) {
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
