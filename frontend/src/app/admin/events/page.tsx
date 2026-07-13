@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { eventsService } from '@/services/events.services';
 import { adminService } from '@/services/admin.services';
-import { adminService } from '@/services/admin.services';
 import AdminSeatMap from '@/components/admin/AdminSeatMap';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 
