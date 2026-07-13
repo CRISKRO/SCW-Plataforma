@@ -18,6 +18,8 @@ function getYoutubeThumbnail(url: string): string {
   return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : '';
 }
 
+import PageBackButton from '@/components/PageBackButton';
+
 export default function PremiumPage() {
   const { isAuthenticated, user } = useAuthStore();
   const [videos, setVideos] = useState<any[]>([]);
@@ -47,7 +49,10 @@ export default function PremiumPage() {
       {/* Hero */}
       <section className="relative py-24 overflow-hidden border-b border-white/10">
         <div className="absolute inset-0 bg-gradient-to-b from-red-900/20 to-black z-0"></div>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <PageBackButton />
+        </div>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-6">
           <motion.h1
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             className="text-5xl md:text-7xl font-black tracking-tight uppercase"

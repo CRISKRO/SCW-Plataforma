@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ZoomIn } from 'lucide-react';
 import { galleryService } from '@/services/gallery.services';
 
+import PageBackButton from '@/components/PageBackButton';
+
 export default function GaleriaPage() {
   const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
   const [photos, setPhotos] = useState<any[]>([]);
@@ -27,6 +29,7 @@ export default function GaleriaPage() {
   return (
     <div className="bg-black min-h-screen text-white pt-24 pb-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <PageBackButton />
         
         <div className="text-center mb-16">
           <motion.h1 

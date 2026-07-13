@@ -25,6 +25,8 @@ const EXPERIENCE_LABELS: Record<string, string> = {
 
 type Step = 'loading' | 'check' | 'verify_email' | 'form' | 'success' | 'already_enrolled';
 
+import PageBackButton from '@/components/PageBackButton';
+
 export default function EscuelaPage() {
   const { isAuthenticated, user } = useAuthStore();
   const [step, setStep] = useState<Step>('loading');
@@ -226,6 +228,9 @@ export default function EscuelaPage() {
 
   return (
     <div className="bg-black min-h-screen text-white pt-24 pb-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <PageBackButton />
+      </div>
 
       {/* Hero */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20 text-center">

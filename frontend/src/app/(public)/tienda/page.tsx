@@ -7,6 +7,7 @@ import { ShoppingCart, Eye, Truck, Ticket } from 'lucide-react';
 import api from '@/services/api';
 import { getRaffles, Raffle } from '@/services/raffles.services';
 import Image from 'next/image';
+import PageBackButton from '@/components/PageBackButton';
 
 export default function StorePage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -42,6 +43,7 @@ export default function StorePage() {
   return (
     <div className="bg-black min-h-screen text-white pt-24 pb-12 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <PageBackButton />
         
         {/* Header Banner - Mercado Libre Style Structure but Dark Mode */}
         <div className="bg-zinc-900 border border-white/5 rounded-2xl p-8 mb-12 flex flex-col md:flex-row items-center justify-between shadow-2xl">

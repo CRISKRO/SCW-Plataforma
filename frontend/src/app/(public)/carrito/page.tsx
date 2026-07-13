@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
 import api from '@/services/api';
+import PageBackButton from '@/components/PageBackButton';
 
 export default function CartPage() {
   const router = useRouter();
@@ -147,6 +148,7 @@ export default function CartPage() {
   return (
     <div className="bg-black min-h-screen text-white pt-24 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <PageBackButton />
 
         <div className="flex items-center gap-3 mb-12 border-b border-white/10 pb-6">
           <ShoppingBag className="w-8 h-8" />

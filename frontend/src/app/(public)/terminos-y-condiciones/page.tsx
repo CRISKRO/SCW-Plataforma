@@ -2,10 +2,13 @@
 
 import React from 'react';
 
+import PageBackButton from '@/components/PageBackButton';
+
 export default function TerminosYCondicionesPage() {
   return (
     <div className="bg-black min-h-screen text-white pt-24 pb-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <PageBackButton />
         <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tight mb-8 text-center">
           Política Legal Integral
         </h1>

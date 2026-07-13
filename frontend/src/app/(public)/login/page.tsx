@@ -9,6 +9,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { GoogleLogin } from '@react-oauth/google';
 
+import PageBackButton from '@/components/PageBackButton';
+
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -99,6 +101,9 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      <div className="absolute top-24 left-4 sm:left-8 z-20">
+        <PageBackButton />
+      </div>
       {/* Background glow effects */}
       <div className="absolute top-[-20%] left-[-10%] w-96 h-96 bg-zinc-800 rounded-full mix-blend-screen filter blur-[100px] opacity-30"></div>
       <div className="absolute bottom-[-20%] right-[-10%] w-96 h-96 bg-zinc-800 rounded-full mix-blend-screen filter blur-[100px] opacity-30"></div>

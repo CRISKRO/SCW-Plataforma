@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import { Shield, ExternalLink, MapPin, Phone, Loader2 } from 'lucide-react';
 import { eventsService } from '@/services/events.services';
 
+import PageBackButton from '@/components/PageBackButton';
+
 export default function PatrocinadoresPage() {
   const [sponsors, setSponsors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,6 +38,7 @@ export default function PatrocinadoresPage() {
   return (
     <main className="min-h-screen bg-black pt-32 pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <PageBackButton />
         
         {/* Header Section */}
         <div className="text-center max-w-3xl mx-auto mb-16">

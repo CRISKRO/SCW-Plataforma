@@ -6,6 +6,8 @@ import { getRaffle, Raffle, RaffleTicket } from '@/services/raffles.services';
 import Image from 'next/image';
 import { useCartStore } from '@/store/cartStore';
 
+import PageBackButton from '@/components/PageBackButton';
+
 export default function RaffleDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -80,6 +82,7 @@ export default function RaffleDetailPage() {
   return (
     <div className="bg-black min-h-screen pt-24 pb-12">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <PageBackButton />
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
           <div className="relative h-80 md:h-full min-h-[300px] bg-zinc-900 rounded-2xl overflow-hidden border border-white/10">

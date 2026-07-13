@@ -8,6 +8,7 @@ import { useCartStore } from '@/store/cartStore';
 import { useToastStore } from '@/store/toastStore';
 import Image from 'next/image';
 import api from '@/services/api';
+import PageBackButton from '@/components/PageBackButton';
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -94,10 +95,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         
         {/* ML Style Breadcrumb & Back */}
         <div className="flex items-center gap-4 text-sm text-zinc-400 mb-6">
-          <Link href="/tienda" className="flex items-center gap-1 hover:text-[#3483fa] transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-            Volver al listado
-          </Link>
+          <PageBackButton href="/tienda" label="Volver al listado" className="mb-0" />
           <span>|</span>
           <Link href="/tienda" className="hover:text-[#3483fa] transition-colors">Tienda Oficial</Link>
           <span>{'>'}</span>

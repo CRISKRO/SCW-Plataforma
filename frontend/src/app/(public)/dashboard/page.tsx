@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { paymentService } from '@/services/payments.services';
 import api from '@/services/api';
 import QRCode from 'react-qr-code';
+import PageBackButton from '@/components/PageBackButton';
 
 export default function UserDashboard() {
   const { user, isAuthenticated, isLoading, logout, updateUser } = useAuthStore();
@@ -254,6 +255,7 @@ export default function UserDashboard() {
   return (
     <div className="bg-black min-h-screen text-white pt-24 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <PageBackButton />
 
         {/* Header Perfil */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 pt-4">

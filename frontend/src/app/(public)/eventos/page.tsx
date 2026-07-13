@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { eventsService } from '@/services/events.services';
 
+import PageBackButton from '@/components/PageBackButton';
+
 const generateSlug = (title: string) => {
   return title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
 };
@@ -33,6 +35,7 @@ export default function EventosPage() {
   return (
     <div className="bg-black min-h-screen text-white pt-24 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <PageBackButton />
         
         <div className="text-center mb-16">
           <motion.h1 

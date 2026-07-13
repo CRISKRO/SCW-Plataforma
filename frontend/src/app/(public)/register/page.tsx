@@ -16,6 +16,8 @@ const envWhatsappUrl = typeof process !== 'undefined' && process.env?.NEXT_PUBLI
 
 // URL de render eliminada porque ahora usamos la API de Meta vía el backend de Django
 
+import PageBackButton from '@/components/PageBackButton';
+
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
     first_name: '',
@@ -146,6 +148,9 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black px-4 sm:px-6 lg:px-8 relative overflow-hidden py-12">
+      <div className="absolute top-24 left-4 sm:left-8 z-20">
+        <PageBackButton />
+      </div>
       {/* Background glow effects */}
       <div className="absolute top-[10%] right-[-10%] w-96 h-96 bg-zinc-800 rounded-full mix-blend-screen filter blur-[100px] opacity-30"></div>
       <div className="absolute bottom-[10%] left-[-10%] w-96 h-96 bg-zinc-800 rounded-full mix-blend-screen filter blur-[100px] opacity-30"></div>
