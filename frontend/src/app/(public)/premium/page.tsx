@@ -47,7 +47,7 @@ export default function PremiumPage() {
   return (
     <div className="bg-black min-h-screen text-white pt-20">
       {/* Hero Section */}
-      <section className="relative py-20 overflow-hidden border-b border-red-900/30">
+      <section className="relative pt-6 pb-12 overflow-hidden border-b border-red-900/30">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/40 via-black to-black z-0"></div>
         <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
         
@@ -82,8 +82,7 @@ export default function PremiumPage() {
 
       {/* Pricing / VIP Card for non-members */}
       {!isAuthenticated && (
-        <section className="py-24 relative overflow-hidden">
-          <div className="absolute inset-0 bg-zinc-950"></div>
+        <section className="py-24 relative overflow-hidden bg-black">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <motion.div 
               initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
@@ -115,7 +114,7 @@ export default function PremiumPage() {
                   ))}
                 </div>
                 
-                <Link href="/register" className="inline-block w-full sm:w-auto px-12 py-5 bg-white hover:bg-zinc-200 text-black font-black uppercase tracking-[0.2em] transition-all rounded-full hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+                <Link href="/register" className="inline-flex justify-center w-full sm:w-auto px-8 py-3 bg-white text-black hover:bg-zinc-200 font-bold uppercase tracking-widest transition-colors rounded-xl mt-4">
                   Suscribirse Ahora
                 </Link>
             </motion.div>

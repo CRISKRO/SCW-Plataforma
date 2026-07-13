@@ -45,8 +45,8 @@ export default function StorePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <PageBackButton />
         
-        {/* Header Banner - Mercado Libre Style Structure but Dark Mode */}
-        <div className="bg-zinc-900 border border-white/5 rounded-2xl p-8 mb-12 flex flex-col md:flex-row items-center justify-between shadow-2xl">
+        {/* Header Banner */}
+        <div className="mb-12 flex flex-col md:flex-row items-center justify-between">
           <div>
             <motion.h1 
               initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
