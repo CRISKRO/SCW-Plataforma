@@ -15,6 +15,7 @@ const navItems = [
   { name: 'Resultados', href: '/#resultados' },
   { name: 'Dojo', href: '/escuela' },
   { name: 'Tienda', href: '/tienda' },
+  { name: 'Sponsors', href: '/patrocinadores' },
 ];
 
 export default function Navbar() {
