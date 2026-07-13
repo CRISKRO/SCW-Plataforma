@@ -133,4 +133,5 @@ export default function AdminTable({ columns, data, onDelete, editUrlPrefix, ext
         ))}
       </div>
     </div>
+  );
 }
