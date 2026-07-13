@@ -61,6 +61,8 @@ export default function AdminRafflesPage() {
     }
   ];
 
+  const activeRaffle = raffles.find(r => r.is_active);
+
   return (
     <div className="space-y-6">
       <AdminPageHeader 
