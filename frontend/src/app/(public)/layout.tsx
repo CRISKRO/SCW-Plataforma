@@ -1,6 +1,5 @@
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import MobileBottomNav from '@/components/MobileBottomNav';
 import FloatingLogo from '@/components/FloatingLogo';
 
 export default function PublicLayout({
@@ -12,11 +11,10 @@ export default function PublicLayout({
     <>
       <Navbar />
       <FloatingLogo />
-      <main className="min-h-screen pb-16 md:pb-0">
+      <main className="min-h-screen">
         {children}
       </main>
       <Footer />
-      <MobileBottomNav />
     </>
   );
 }

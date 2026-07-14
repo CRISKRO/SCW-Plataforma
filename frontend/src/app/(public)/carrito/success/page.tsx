@@ -253,7 +253,7 @@ function SuccessContent() {
                         <img 
                           src="/images/logo-scw.png" 
                           alt="SCW Logo" 
-                          className="absolute w-12 h-12 object-contain drop-shadow-md bg-white rounded-full p-1 border border-zinc-200"
+                          className="absolute w-14 h-14 object-contain drop-shadow-xl bg-white rounded-full p-0.5 border border-zinc-200"
                         />
                       </div>
                     </div>
