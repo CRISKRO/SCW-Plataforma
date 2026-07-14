@@ -102,7 +102,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   });
 
   return (
-    <div className="flex h-screen bg-black text-white relative overflow-hidden">
+    <div className="flex min-h-screen bg-black text-white relative">
       {/* Backdrop oscuro para dispositivos móviles */}
       {isSidebarOpen && (
         <div 
@@ -111,10 +111,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         />
       )}
 
-      {/* Sidebar - Oculto con animación de traslación en móviles y visible en escritorio */}
+      {/* Sidebar - Oculto con animación en móviles, sticky en escritorio */}
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 border-r border-white/10 bg-zinc-950 flex flex-col transform ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } md:translate-x-0 md:relative md:flex transition-transform duration-300 ease-in-out`}>
+      } md:translate-x-0 md:sticky md:top-0 md:h-screen transition-transform duration-300 ease-in-out`}>
         
         {/* Encabezado lateral */}
         <div className="h-16 flex items-center justify-between px-6 border-b border-white/10 flex-shrink-0">
@@ -177,9 +177,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Área de Contenido Principal */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-black">
+      <main className="flex-1 flex flex-col min-w-0 bg-black">
         {/* Barra superior con botón hamburguesa móvil */}
-        <header className="h-16 flex items-center justify-between px-6 md:px-8 border-b border-white/10 bg-zinc-950/50 backdrop-blur-md flex-shrink-0">
+        <header className="sticky top-0 z-30 h-16 flex items-center justify-between px-6 md:px-8 border-b border-white/10 bg-zinc-950/80 backdrop-blur-md flex-shrink-0">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setIsSidebarOpen(true)}
@@ -199,7 +199,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </header>
         
         {/* Contenido Dinámico de la Página con paddings responsivos */}
-        <div className="flex-1 overflow-auto p-4 md:p-8">
+        <div className="p-4 md:p-8 flex-1">
           {children}
         </div>
       </main>
