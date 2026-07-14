@@ -391,11 +391,19 @@ export default function UserDashboard() {
                             {isTicket && order.status === 'PAID' && item.ticket_hash && (
                               <div className="mt-4 bg-white p-4 rounded-xl flex flex-col items-center self-center w-full max-w-xs">
                                 <div className="bg-white p-2 rounded">
-                                  <QRCode
-                                    id={`qr-${item.id}`}
-                                    value={JSON.stringify({ scw: true, order: order.id, item: item.id, code: item.ticket_hash })}
-                                    size={160}
-                                  />
+                                  <div className="relative flex items-center justify-center">
+                                    <QRCode
+                                      id={`qr-${item.id}`}
+                                      value={JSON.stringify({ scw: true, order: order.id, item: item.id, code: item.ticket_hash })}
+                                      size={160}
+                                      level="H"
+                                    />
+                                    <img 
+                                      src="/images/logo-scw.png" 
+                                      alt="SCW Logo" 
+                                      className="absolute w-10 h-10 object-contain drop-shadow-md bg-white rounded-full p-1 border border-zinc-200"
+                                    />
+                                  </div>
                                 </div>
                                 <p className="text-black font-bold mt-3 text-xs uppercase tracking-widest text-center">Código de Acceso</p>
                                 <button

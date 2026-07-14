@@ -322,17 +322,31 @@ const generateSlug = (title: string) => {
                     className="block flex-shrink-0 relative mx-auto lg:mx-0 w-[280px] sm:w-[320px] lg:w-[450px]"
                   >
                     <div className={`absolute -inset-4 sm:-inset-8 blur-2xl sm:blur-3xl rounded-full ${slide.type === 'raffle' ? 'bg-yellow-500/20' : 'bg-red-600/15'}`} />
-                    <div className="relative w-full">
-                      <Image
-                        src={slide.image}
-                        alt={slide.title}
-                        width={800}
-                        height={1200}
-                        className={`w-full h-auto object-contain rounded-sm border shadow-2xl ${slide.type === 'raffle' ? 'border-yellow-500/30' : 'border-white/10'}`}
-                        priority={currentSlide === 0}
-                      />
-                      <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${slide.type === 'raffle' ? 'bg-gradient-to-b from-yellow-400 to-amber-600' : 'bg-red-600'}`} />
-                    </div>
+                    {slide.cta && slide.cta[0] && slide.cta[0].href ? (
+                      <Link href={slide.cta[0].href} className="relative w-full block group cursor-pointer">
+                        <Image
+                          src={slide.image}
+                          alt={slide.title}
+                          width={800}
+                          height={1200}
+                          className={`w-full h-auto object-contain rounded-sm border shadow-2xl group-hover:opacity-90 transition-opacity ${slide.type === 'raffle' ? 'border-yellow-500/30' : 'border-white/10'}`}
+                          priority={currentSlide === 0}
+                        />
+                        <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${slide.type === 'raffle' ? 'bg-gradient-to-b from-yellow-400 to-amber-600' : 'bg-red-600'}`} />
+                      </Link>
+                    ) : (
+                      <div className="relative w-full">
+                        <Image
+                          src={slide.image}
+                          alt={slide.title}
+                          width={800}
+                          height={1200}
+                          className={`w-full h-auto object-contain rounded-sm border shadow-2xl ${slide.type === 'raffle' ? 'border-yellow-500/30' : 'border-white/10'}`}
+                          priority={currentSlide === 0}
+                        />
+                        <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${slide.type === 'raffle' ? 'bg-gradient-to-b from-yellow-400 to-amber-600' : 'bg-red-600'}`} />
+                      </div>
+                    )}
                   </motion.div>
                 ) : (
                   <div className="block flex-shrink-0 lg:hidden h-[20vh] sm:h-[30vh] w-full" aria-hidden="true" />
