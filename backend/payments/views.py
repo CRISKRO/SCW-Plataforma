@@ -137,6 +137,7 @@ class OrderItemInputSerializer(serializers.Serializer):
 class CreateOrderSerializer(serializers.Serializer):
     contact_email = serializers.EmailField()
     contact_phone = serializers.CharField(max_length=20, allow_blank=True, required=False)
+    contact_name = serializers.CharField(max_length=255, allow_blank=True, required=False)
     
     # Shipping fields
     shipping_address = serializers.CharField(max_length=255, allow_blank=True, required=False)
@@ -146,7 +147,7 @@ class CreateOrderSerializer(serializers.Serializer):
     shipping_cost = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, default=0.00)
     
     payment_method = serializers.CharField(max_length=20, required=False, default='MERCADOPAGO')
-    transfer_receipt = serializers.ImageField(required=False, allow_null=True)
+    transfer_receipt = serializers.FileField(required=False, allow_null=True)
     
     items = serializers.JSONField(required=False) # Fallback handling in view
 
@@ -254,6 +255,7 @@ class CreateOrderView(APIView):
                 user=user,
                 contact_email=data.get('contact_email', ''),
                 contact_phone=data.get('contact_phone', ''),
+                contact_name=data.get('contact_name', ''),
                 shipping_address=data.get('shipping_address', ''),
                 shipping_city=data.get('shipping_city', ''),
                 shipping_state=data.get('shipping_state', ''),

@@ -16,6 +16,7 @@ export default function CartPage() {
   const [mounted, setMounted] = useState(false);
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [contactName, setContactName] = useState('');
 
   // Shipping states
   const [address, setAddress] = useState('');
@@ -44,6 +45,9 @@ export default function CartPage() {
     window.scrollTo(0, 0);
     if (user?.email) setEmail(user.email);
     if (user?.phone_number) setPhone(user.phone_number);
+    if (user) {
+      setContactName(`${user.first_name || ''} ${user.last_name || ''}`.trim());
+    }
     if (user?.address) setAddress(user.address);
     if (user?.city) setCity(user.city);
     if (user?.state) setState(user.state);
@@ -67,6 +71,10 @@ export default function CartPage() {
 
     if (!email) {
       alert("Por favor ingresa tu correo electrónico.");
+      return;
+    }
+    if (!contactName) {
+      alert("Por favor ingresa tu nombre completo.");
       return;
     }
     if (!phone) {
@@ -104,6 +112,7 @@ export default function CartPage() {
       const payload: any = {
         contact_email: email,
         contact_phone: phone,
+        contact_name: contactName,
         items: JSON.stringify(orderItems),
         payment_method: paymentMethod
       };
@@ -242,6 +251,16 @@ export default function CartPage() {
                 {/* Datos de Contacto */}
                 <div className="space-y-4 pt-4 border-t border-white/10">
                   <h3 className="font-bold uppercase text-sm">Datos de Contacto</h3>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-widest text-zinc-500">Nombre completo</label>
+                    <input
+                      type="text"
+                      placeholder="Tu nombre completo"
+                      value={contactName}
+                      onChange={(e) => setContactName(e.target.value)}
+                      className="w-full bg-black border border-white/20 p-3 rounded-xl text-white focus:outline-none focus:border-[#009EE3] transition-colors text-sm"
+                    />
+                  </div>
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase tracking-widest text-zinc-500">Correo para confirmación</label>
                     <input

@@ -20,11 +20,12 @@ class Order(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='orders', on_delete=models.SET_NULL, null=True, blank=True)
     contact_email = models.EmailField(_('email de contacto'))
     contact_phone = models.CharField(_('teléfono de contacto'), max_length=20, blank=True)
+    contact_name = models.CharField(_('nombre de contacto'), max_length=255, blank=True, default='')
 
     total_amount = models.DecimalField(_('total (MXN)'), max_digits=10, decimal_places=2)
     status = models.CharField(_('estado'), max_length=15, choices=Status.choices, default=Status.PENDING)
     payment_method = models.CharField(_('método de pago'), max_length=20, choices=PaymentMethod.choices, default=PaymentMethod.MERCADOPAGO)
-    transfer_receipt = models.ImageField(_('comprobante de transferencia'), upload_to='receipts/', null=True, blank=True)
+    transfer_receipt = models.FileField(_('comprobante de transferencia'), upload_to='receipts/', null=True, blank=True)
     mp_preference_id = models.CharField(_('MercadoPago Preference ID'), max_length=255, blank=True)
     mp_payment_id = models.CharField(_('MercadoPago Payment ID'), max_length=255, blank=True)
     
