@@ -389,13 +389,15 @@ export default function AdminEventsPage() {
 
       {/* COURTESY MODAL */}
       {isCourtesyModalOpen && selectedEvent && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }} 
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-zinc-950 border border-white/10 rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl relative my-8"
-          >
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 to-yellow-600"></div>
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity" onClick={() => setIsCourtesyModalOpen(false)} />
+          <div className="flex min-h-full items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }} 
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-zinc-950 border border-white/10 rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl relative my-8"
+            >
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 to-yellow-600"></div>
             
             {/* Modal Title */}
             <div className="flex justify-between items-center px-6 py-5 border-b border-white/10 bg-zinc-900/50">
@@ -512,6 +514,7 @@ export default function AdminEventsPage() {
               </div>
             </form>
           </motion.div>
+          </div>
         </div>
       )}
     </div>
