@@ -26,6 +26,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 
 const sidebarItems = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -103,31 +104,14 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-black text-white relative">
-      {/* Backdrop oscuro para dispositivos móviles */}
-      {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 md:hidden transition-all duration-300"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar - Oculto con animación en móviles, sticky en escritorio */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-64 border-r border-white/10 bg-zinc-950 flex flex-col transform ${
-        isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } md:translate-x-0 md:sticky md:top-0 md:h-screen transition-transform duration-300 ease-in-out`}>
+      {/* Sidebar - Solo en escritorio */}
+      <aside className="hidden md:flex sticky top-0 h-screen w-64 flex-col border-r border-white/10 bg-zinc-950 z-50">
         
         {/* Encabezado lateral */}
-        <div className="h-16 flex items-center justify-between px-6 border-b border-white/10 flex-shrink-0">
+        <div className="h-16 flex items-center px-6 border-b border-white/10 flex-shrink-0">
           <h1 className="text-xl font-bold tracking-widest uppercase bg-clip-text bg-gradient-to-r from-white to-zinc-400">
             SCW Admin
           </h1>
-          <button 
-            onClick={() => setIsSidebarOpen(false)}
-            className="p-1.5 text-zinc-400 hover:text-white md:hidden rounded-lg hover:bg-white/5 transition-all"
-            aria-label="Cerrar menú"
-          >
-            <X className="w-5 h-5" />
-          </button>
         </div>
 
         {/* Botón para regresar al sitio público / Inicio */}
@@ -178,24 +162,76 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
       {/* Área de Contenido Principal */}
       <main className="flex-1 flex flex-col min-w-0 bg-black">
-        {/* Barra superior con botón hamburguesa móvil */}
-        <header className="sticky top-0 z-30 h-16 flex items-center justify-between px-6 md:px-8 border-b border-white/10 bg-zinc-950/80 backdrop-blur-md flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setIsSidebarOpen(true)}
-              className="p-2 -ml-2 text-zinc-400 hover:text-white md:hidden rounded-lg hover:bg-white/5 transition-all"
-              aria-label="Abrir menú"
-            >
-              <Menu className="w-6 h-6" />
-            </button>
-            <h2 className="text-lg font-medium text-zinc-200">Panel de Control</h2>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <div className="w-8 h-8 rounded-full bg-zinc-800 border border-white/20 flex items-center justify-center">
-              <span className="text-xs font-bold">{user?.role?.slice(0, 2).toUpperCase() || 'AD'}</span>
+        {/* Barra superior */}
+        <header className="sticky top-0 z-40 w-full flex flex-col">
+          <div className="h-16 flex items-center justify-between px-4 md:px-8 border-b border-white/10 bg-zinc-950/90 backdrop-blur-md flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-bold text-zinc-200 md:hidden tracking-widest uppercase">SCW Admin</h2>
+              <h2 className="text-lg font-medium text-zinc-200 hidden md:block">Panel de Control</h2>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <div className="hidden md:flex w-8 h-8 rounded-full bg-zinc-800 border border-white/20 items-center justify-center">
+                <span className="text-xs font-bold">{user?.role?.slice(0, 2).toUpperCase() || 'AD'}</span>
+              </div>
+              
+              {/* Mobile menu button */}
+              <div className="md:hidden flex items-center">
+                <button
+                  onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                  className="text-zinc-300 hover:text-white focus:outline-none p-1 -mr-2"
+                >
+                  {isSidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                </button>
+              </div>
             </div>
           </div>
+
+          {/* Mobile Menu Dropdown */}
+          {isSidebarOpen && (
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="md:hidden absolute top-16 left-0 w-full bg-black/95 backdrop-blur-xl border-b border-white/10 shadow-2xl max-h-[calc(100vh-4rem)] overflow-y-auto z-40"
+            >
+              <div className="px-2 pt-2 pb-6 space-y-1 sm:px-3">
+                <Link 
+                  href="/" 
+                  className="flex items-center gap-3 text-red-400 block px-3 py-4 text-base font-medium uppercase tracking-widest border-b border-white/5"
+                  onClick={() => setIsSidebarOpen(false)}
+                >
+                  <Home className="w-5 h-5" /> Regresar al Inicio
+                </Link>
+
+                {filteredSidebarItems.map((item) => {
+                  const isActive = pathname === item.href || (pathname.startsWith(`${item.href}/`) && item.href !== '/admin');
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={`flex items-center gap-3 block px-3 py-4 text-base font-medium uppercase tracking-widest border-b border-white/5 ${
+                        isActive ? 'text-white' : 'text-zinc-400 hover:text-white'
+                      }`}
+                      onClick={() => setIsSidebarOpen(false)}
+                    >
+                      <Icon className="w-5 h-5" /> {item.name}
+                    </Link>
+                  );
+                })}
+
+                <button
+                  onClick={() => {
+                    setIsSidebarOpen(false);
+                    handleLogout();
+                  }}
+                  className="flex items-center gap-3 w-full text-red-500 block px-3 py-4 text-base font-medium uppercase tracking-widest border-b border-white/5 text-left"
+                >
+                  <LogOut className="w-5 h-5" /> Cerrar Sesión
+                </button>
+              </div>
+            </motion.div>
+          )}
         </header>
         
         {/* Contenido Dinámico de la Página con paddings responsivos */}

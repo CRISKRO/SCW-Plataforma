@@ -267,9 +267,11 @@ const generateSlug = (title: string) => {
                   </h1>
                 )}
 
-                <p className={`text-sm sm:text-base md:text-xl font-light max-w-xl mb-4 md:mb-10 line-clamp-none ${slide.type === 'raffle' ? 'text-yellow-100/80' : 'text-zinc-300'}`}>
-                  {slide.subtitle}
-                </p>
+                {slide.type !== 'event' && (
+                  <p className={`text-sm sm:text-base md:text-xl font-light max-w-xl mb-4 md:mb-10 line-clamp-none ${slide.type === 'raffle' ? 'text-yellow-100/80' : 'text-zinc-300'}`}>
+                    {slide.subtitle}
+                  </p>
+                )}
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 md:gap-4">
                   {(slide.cta || []).map((btn: any) => {
