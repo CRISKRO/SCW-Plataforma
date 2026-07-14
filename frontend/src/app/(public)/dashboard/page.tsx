@@ -236,9 +236,11 @@ export default function UserDashboard() {
         const textToShare = encodeURIComponent(`¡Aquí está mi boleto de SCW para ${item.product_name}! Acabo de descargar la imagen en mi dispositivo para enviarla.`);
         window.open(`https://wa.me/?text=${textToShare}`, '_blank');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error sharing QR:", error);
-      alert("Hubo un error al intentar compartir la imagen. Asegúrate de darle permisos a tu navegador.");
+      if (error.name !== 'AbortError') {
+        alert("Hubo un error al intentar compartir la imagen. Asegúrate de darle permisos a tu navegador.");
+      }
     }
   };
 
