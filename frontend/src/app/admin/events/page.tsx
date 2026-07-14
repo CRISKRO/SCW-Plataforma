@@ -19,7 +19,8 @@ export default function AdminEventsPage() {
   const [isCourtesyModalOpen, setIsCourtesyModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [eventZones, setEventZones] = useState<any[]>([]);
-  const [selectedSeat, setSelectedSeat] = useState<string>('');
+  const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
+  const [quantityGeneral, setQuantityGeneral] = useState(0);
   const [courtesyEmail, setCourtesyEmail] = useState('');
   const [courtesyName, setCourtesyName] = useState('');
   const [loadingCourtesy, setLoadingCourtesy] = useState(false);
@@ -57,7 +58,8 @@ export default function AdminEventsPage() {
     setSelectedEvent(event);
     setCourtesyEmail('');
     setCourtesyName('');
-    setSelectedSeat('');
+    setSelectedSeats([]);
+    setQuantityGeneral(0);
     setEventZones([]);
     setIsCourtesyModalOpen(true);
     setLoadingZones(true);
@@ -74,15 +76,16 @@ export default function AdminEventsPage() {
 
   const handleGrantCourtesy = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedSeat || !courtesyEmail) {
-      alert("Por favor selecciona un asiento e ingresa el correo.");
+    if ((selectedSeats.length === 0 && quantityGeneral <= 0) || !courtesyEmail) {
+      alert("Por favor selecciona asientos o indica cantidad general, e ingresa el correo.");
       return;
     }
     setLoadingCourtesy(true);
     try {
       await adminService.generateCourtesyTicket({
         event_id: selectedEvent.id,
-        seat_id: parseInt(selectedSeat),
+        seat_ids: selectedSeats,
+        quantity_general: quantityGeneral,
         email: courtesyEmail,
         name: courtesyName
       });
@@ -425,10 +428,39 @@ export default function AdminEventsPage() {
                   ) : (
                     <AdminSeatMap 
                       zones={eventZones} 
-                      selectedSeatId={selectedSeat ? parseInt(selectedSeat) : null} 
-                      onSelectSeat={(id) => setSelectedSeat(id.toString())} 
+                      selectedSeatIds={selectedSeats} 
+                      onToggleSeat={(id) => {
+                        setSelectedSeats(prev => 
+                          prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
+                        )
+                      }} 
                     />
                   )}
+                  
+                  {/* Controles para Entradas Generales */}
+                  <div className="mt-4 flex flex-col sm:flex-row items-center justify-between bg-black p-4 rounded-xl border border-white/5">
+                    <div>
+                      <h4 className="text-sm font-bold text-white mb-1">Boletos Generales</h4>
+                      <p className="text-xs text-zinc-400">Si deseas agregar entradas de tipo general (sin asiento)</p>
+                    </div>
+                    <div className="flex items-center gap-3 mt-3 sm:mt-0">
+                      <button 
+                        type="button" 
+                        onClick={() => setQuantityGeneral(Math.max(0, quantityGeneral - 1))}
+                        className="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center text-white hover:bg-zinc-800"
+                      >
+                        -
+                      </button>
+                      <span className="text-white font-bold text-lg min-w-[20px] text-center">{quantityGeneral}</span>
+                      <button 
+                        type="button" 
+                        onClick={() => setQuantityGeneral(quantityGeneral + 1)}
+                        className="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center text-white hover:bg-zinc-800"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
                   {!loadingZones && eventZones.length > 0 && eventZones.every(z => z.seats.filter((s:any) => s.is_available).length === 0) && (
                     <p className="text-xs text-red-500 mt-2 text-center font-bold">⚠️ Todos los asientos de este evento están ocupados.</p>
                   )}
@@ -472,10 +504,10 @@ export default function AdminEventsPage() {
                 </button>
                 <button 
                   type="submit" 
-                  disabled={loadingCourtesy || !selectedSeat}
+                  disabled={loadingCourtesy || (selectedSeats.length === 0 && quantityGeneral <= 0)}
                   className="flex-1 py-3 px-4 rounded-xl font-bold uppercase tracking-wider text-sm text-black bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-yellow-900/20 flex justify-center items-center gap-2"
                 >
-                  {loadingCourtesy ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Gift className="w-5 h-5" /> Enviar Boleto</>}
+                  {loadingCourtesy ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Gift className="w-5 h-5" /> Enviar Boleto{selectedSeats.length + quantityGeneral > 1 ? 's' : ''}</>}
                 </button>
               </div>
             </form>

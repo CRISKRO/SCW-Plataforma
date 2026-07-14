@@ -5,11 +5,11 @@ import { Minus, Plus as PlusIcon } from 'lucide-react';
 
 interface AdminSeatMapProps {
   zones: any[];
-  selectedSeatId: number | null;
-  onSelectSeat: (seatId: number) => void;
+  selectedSeatIds: number[];
+  onToggleSeat: (seatId: number) => void;
 }
 
-export default function AdminSeatMap({ zones, selectedSeatId, onSelectSeat }: AdminSeatMapProps) {
+export default function AdminSeatMap({ zones, selectedSeatIds, onToggleSeat }: AdminSeatMapProps) {
   const [scale, setScale] = useState(1);
   const [minScale, setMinScale] = useState(0.6);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -162,7 +162,7 @@ export default function AdminSeatMap({ zones, selectedSeatId, onSelectSeat }: Ad
             <div key={rowName} className={`flex items-center justify-center gap-0.5 ${isVertical ? 'flex-col' : 'flex-row'}`}>
               <div className={`flex gap-0.5 ${isVertical ? 'flex-col' : 'flex-row'}`}>
                 {zone.groupedSeats[rowName].map((seat: any) => {
-                  const isSelected = selectedSeatId === seat.id;
+                  const isSelected = selectedSeatIds.includes(seat.id);
                   const displayNumber = getDisplayNumber(zone.zone_type, seat.seat_number);
                   const isAvailable = seat.is_available && !seat.is_locked;
                   return (
@@ -170,7 +170,7 @@ export default function AdminSeatMap({ zones, selectedSeatId, onSelectSeat }: Ad
                       <button
                         type="button"
                         disabled={!isAvailable}
-                        onClick={() => onSelectSeat(seat.id)}
+                        onClick={() => onToggleSeat(seat.id)}
                         className={`w-5 h-5 md:w-6 md:h-6 rounded-sm flex items-center justify-center text-[9px] md:text-[10px] font-bold transition-all shadow-sm 
                         ${!isAvailable ? 'bg-zinc-900 text-zinc-600 border border-zinc-800 opacity-50 cursor-not-allowed' 
                           : isSelected ? 'bg-red-600/90 text-white border border-red-500 scale-110 z-10 shadow-[0_0_10px_rgba(239,68,68,0.6)]' 
