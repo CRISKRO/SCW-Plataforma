@@ -1,6 +1,5 @@
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import FloatingLogo from '@/components/FloatingLogo';
 
 export default function PublicLayout({
   children,
@@ -10,7 +9,6 @@ export default function PublicLayout({
   return (
     <>
       <Navbar />
-      <FloatingLogo />
       <main className="min-h-screen">
         {children}
       </main>
