@@ -189,7 +189,11 @@ export default function UserDashboard() {
       const svg = document.getElementById(`qr-${item.id}`);
       if (!svg) return;
       
-      const svgData = new XMLSerializer().serializeToString(svg);
+      const svgClone = svg.cloneNode(true) as SVGSVGElement;
+      svgClone.setAttribute("width", "800");
+      svgClone.setAttribute("height", "800");
+      
+      const svgData = new XMLSerializer().serializeToString(svgClone);
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
       const img = new Image();
@@ -200,14 +204,14 @@ export default function UserDashboard() {
         img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
       });
       
-      // Añadir margen blanco alrededor del QR
-      canvas.width = img.width + 40;
-      canvas.height = img.height + 40;
+      const MARGIN = 80; 
+      canvas.width = 800 + (MARGIN * 2);
+      canvas.height = 800 + (MARGIN * 2);
       
       if (ctx) {
         ctx.fillStyle = "white";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 20, 20);
+        ctx.drawImage(img, MARGIN, MARGIN);
         
         const logoImg = new Image();
         logoImg.crossOrigin = "Anonymous";
@@ -218,9 +222,9 @@ export default function UserDashboard() {
         });
         
         if (logoImg.width > 0) {
-          const logoSize = img.width * 0.40; 
-          const logoX = 20 + (img.width - logoSize) / 2;
-          const logoY = 20 + (img.height - logoSize) / 2;
+          const logoSize = 800 * 0.40; 
+          const logoX = MARGIN + (800 - logoSize) / 2;
+          const logoY = MARGIN + (800 - logoSize) / 2;
           
           ctx.beginPath();
           ctx.arc(logoX + logoSize/2, logoY + logoSize/2, logoSize/2, 0, 2 * Math.PI);
