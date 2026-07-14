@@ -208,6 +208,27 @@ export default function UserDashboard() {
         ctx.fillStyle = "white";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 20, 20);
+        
+        const logoImg = new Image();
+        logoImg.crossOrigin = "Anonymous";
+        await new Promise((resolve) => {
+          logoImg.onload = resolve;
+          logoImg.onerror = resolve; 
+          logoImg.src = "/images/logo-scw.png";
+        });
+        
+        if (logoImg.width > 0) {
+          const logoSize = img.width * 0.40; 
+          const logoX = 20 + (img.width - logoSize) / 2;
+          const logoY = 20 + (img.height - logoSize) / 2;
+          
+          ctx.beginPath();
+          ctx.arc(logoX + logoSize/2, logoY + logoSize/2, logoSize/2, 0, 2 * Math.PI);
+          ctx.fillStyle = "white";
+          ctx.fill();
+          
+          ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
+        }
       }
       
       const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, "image/png"));
@@ -401,7 +422,7 @@ export default function UserDashboard() {
                                     <img 
                                       src="/images/logo-scw.png" 
                                       alt="SCW Logo" 
-                                      className="absolute w-12 h-12 object-contain drop-shadow-xl bg-white rounded-full p-0.5 border border-zinc-200"
+                                      className="absolute w-16 h-16 object-contain drop-shadow-xl bg-white rounded-full p-0.5 border border-zinc-200"
                                     />
                                   </div>
                                 </div>

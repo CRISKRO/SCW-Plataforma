@@ -8,6 +8,7 @@ import json
 import os
 from io import BytesIO
 from django.conf import settings
+from PIL import Image
 
 
 def get_ticket_hash(order_id: int, item_id: int) -> str:
@@ -39,7 +40,30 @@ def generate_ticket_qr(order_id: int, item_id: int, item_name: str) -> BytesIO:
     qr.add_data(payload)
     qr.make(fit=True)
 
-    img = qr.make_image(fill_color="#000000", back_color="#FFFFFF")
+    img = qr.make_image(fill_color="#000000", back_color="#FFFFFF").convert('RGB')
+    
+    # Add logo to the center of the QR code
+    logo_path = os.path.join(settings.BASE_DIR, '..', 'frontend', 'public', 'images', 'logo-scw.png')
+    
+    if os.path.exists(logo_path):
+        try:
+            logo = Image.open(logo_path)
+            qr_width, qr_height = img.size
+            logo_size = int(qr_width * 0.35) 
+            logo = logo.resize((logo_size, logo_size), Image.Resampling.LANCZOS)
+            
+            pos = ((qr_width - logo_size) // 2, (qr_height - logo_size) // 2)
+            
+            logo_bg = Image.new('RGB', (logo_size, logo_size), 'white')
+            if 'A' in logo.getbands():
+                logo_bg.paste(logo, (0,0), mask=logo)
+            else:
+                logo_bg.paste(logo, (0,0))
+                
+            img.paste(logo_bg, pos)
+        except Exception as e:
+            # Fallback to normal QR if logo fails
+            print(f"Failed to add logo to QR: {e}")
 
     buffer = BytesIO()
     img.save(buffer, format='PNG')
