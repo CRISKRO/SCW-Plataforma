@@ -329,12 +329,13 @@ fun ScannerTab(baseUrl: String, token: String) {
         Button(
             onClick = {
                 val options = ScanOptions()
+                options.setCaptureActivity(PortraitCaptureActivity::class.java)
                 options.setDesiredBarcodeFormats(ScanOptions.QR_CODE)
                 options.setPrompt("Escanea el código QR del boleto")
                 options.setCameraId(0)
                 options.setBeepEnabled(true)
                 options.setBarcodeImageEnabled(false)
-                options.setOrientationLocked(false)
+                options.setOrientationLocked(true)
                 scanLauncher.launch(options)
             },
             modifier = Modifier
@@ -458,7 +459,9 @@ fun BoxOfficeTab(baseUrl: String, token: String) {
 fun EventsBoxOffice(baseUrl: String, token: String) {
     var events by remember { mutableStateOf<List<BoxOfficeEvent>>(emptyList()) }
     var selectedEvent by remember { mutableStateOf<BoxOfficeEvent?>(null) }
+    var showMap by remember { mutableStateOf(false) }
     var seatToSell by remember { mutableStateOf<Pair<BoxOfficeZone, BoxOfficeSeat>?>(null) }
+    var generalZoneToSell by remember { mutableStateOf<BoxOfficeZone?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMsg by remember { mutableStateOf("") }
     
@@ -547,6 +550,43 @@ fun EventsBoxOffice(baseUrl: String, token: String) {
         )
     }
 
+    if (generalZoneToSell != null) {
+        val zone = generalZoneToSell!!
+        AlertDialog(
+            onDismissRequest = { generalZoneToSell = null },
+            containerColor = SCWSurface,
+            titleContentColor = SCWTextWhite,
+            textContentColor = SCWTextWhite,
+            title = { Text("Confirmar Venta", fontWeight = FontWeight.Bold) },
+            text = { Text("¿Deseas vender un boleto General por $${zone.price} MXN?") },
+            confirmButton = {
+                Button(
+                    colors = ButtonDefaults.buttonColors(containerColor = SCWGreen, contentColor = SCWTextWhite),
+                    onClick = {
+                    generalZoneToSell = null
+                    isLoading = true
+                    coroutineScope.launch {
+                        try {
+                            val api = ApiClient.getService(baseUrl)
+                            val res = api.sellBoxOfficeTicket(token, SellRequest(event_id = selectedEvent!!.id, zone_id = zone.id))
+                            if (res.isSuccessful && res.body() != null) {
+                                val body = res.body()!!
+                                if (body.success) {
+                                    val qrContent = "{\"scw\":true,\"order\":${body.order_id},\"item\":${body.item_id},\"code\":\"${body.code}\"}"
+                                    try {
+                                        qrBitmap = BarcodeEncoder().encodeBitmap(qrContent, BarcodeFormat.QR_CODE, 600, 600)
+                                        sellResultText = "${body.event_title}\n${body.seat_info}\nTotal: $${body.price}"
+                                    } catch (e: Exception) { errorMsg = "Error generando QR" }
+                                } else { errorMsg = body.error ?: "Error desconocido" }
+                            } else { errorMsg = "Error al vender: ${res.code()}" }
+                        } catch (e: Exception) { errorMsg = "Error de red: ${e.message}" } finally { isLoading = false }
+                    }
+                }) { Text("Confirmar y Cobrar", fontWeight = FontWeight.Bold) }
+            },
+            dismissButton = { TextButton(onClick = { generalZoneToSell = null }) { Text("Cancelar", color = SCWTextGray) } }
+        )
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
         Text("VENTA EN EFECTIVO", fontSize = 20.sp, fontWeight = FontWeight.Black, color = SCWTextWhite, letterSpacing = 1.sp)
         Spacer(modifier = Modifier.height(16.dp))
@@ -573,11 +613,57 @@ fun EventsBoxOffice(baseUrl: String, token: String) {
                     }
                 }
             }
-        } else {
+        } else if (!showMap) {
             Button(
                 colors = ButtonDefaults.buttonColors(containerColor = SCWDarkGray, contentColor = SCWTextWhite),
                 onClick = { selectedEvent = null }
             ) { Text("← Volver a Eventos") }
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(selectedEvent!!.title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = SCWTextWhite)
+            Text("Selecciona el tipo de boleto a vender:", color = SCWTextGray)
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            val generalZone = selectedEvent!!.zones.find { it.name.contains("General", true) }
+            val numberedZones = selectedEvent!!.zones.filter { !it.name.contains("General", true) }
+            
+            if (generalZone != null) {
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).clickable {
+                        generalZoneToSell = generalZone
+                    },
+                    colors = CardDefaults.cardColors(containerColor = SCWGlass),
+                    shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, SCWBorder)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text("General", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = SCWTextWhite)
+                        Text("Vender un boleto sin asiento asignado", color = SCWTextGray)
+                        Text("$${generalZone.price} MXN", color = SCWRed, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top=8.dp))
+                    }
+                }
+            }
+            
+            if (numberedZones.isNotEmpty()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).clickable { showMap = true },
+                    colors = CardDefaults.cardColors(containerColor = SCWGlass),
+                    shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, SCWBorder)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text("Primera / Segunda Fila", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = SCWTextWhite)
+                        Text("Seleccionar un asiento numerado en el mapa", color = SCWTextGray)
+                        if (numberedZones.isNotEmpty()) {
+                            Text("$${numberedZones[0].price} MXN", color = SCWRed, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top=8.dp))
+                        }
+                    }
+                }
+            }
+        } else {
+            Button(
+                colors = ButtonDefaults.buttonColors(containerColor = SCWDarkGray, contentColor = SCWTextWhite),
+                onClick = { showMap = false }
+            ) { Text("← Volver a Opciones") }
             Spacer(modifier = Modifier.height(16.dp))
             Text(selectedEvent!!.title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = SCWTextWhite)
             Text("Selecciona un asiento del mapa", color = SCWTextGray)
@@ -603,7 +689,7 @@ fun EventsBoxOffice(baseUrl: String, token: String) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 // NORTE
                                 val norte = selectedEvent!!.zones.find { it.name.contains("NORTE", ignoreCase = true) }
-                                if (norte != null) ZoneView(norte) { seat -> seatToSell = Pair(norte, seat) }
+                                if (norte != null) ZoneView(norte, reverseRows = true) { seat -> seatToSell = Pair(norte, seat) }
                                 
                                 Spacer(modifier = Modifier.height(4.dp))
                                 

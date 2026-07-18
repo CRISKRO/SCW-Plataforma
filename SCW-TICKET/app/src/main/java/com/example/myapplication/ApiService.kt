@@ -48,7 +48,8 @@ data class BoxOfficeEvent(
 
 data class SellRequest(
     val event_id: Int,
-    val seat_id: Int
+    val seat_id: Int? = null,
+    val zone_id: Int? = null
 )
 
 data class SellResponse(

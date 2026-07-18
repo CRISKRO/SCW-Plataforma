@@ -1093,12 +1093,12 @@ class BoxOfficeEventsView(APIView):
                         "is_available": s.is_available
                     })
 
-                if available_seats > 0:
+                if available_seats > 0 or zone.zone_type == 'GENERAL':
                     zones_data.append({
                         "id": zone.id,
                         "name": zone.get_zone_type_display(),
                         "price": str(zone.price),
-                        "available_seats": available_seats,
+                        "available_seats": available_seats if zone.zone_type != 'GENERAL' else 999,
                         "seats": seats_data
                     })
             if zones_data:
@@ -1122,26 +1122,37 @@ class BoxOfficeSellView(APIView):
 
         event_id = request.data.get('event_id')
         seat_id = request.data.get('seat_id')
+        zone_id = request.data.get('zone_id')
 
-        if not event_id or not seat_id:
-            return Response({"error": "Faltan datos de asiento o evento."}, status=400)
+        if not event_id:
+            return Response({"error": "Falta event_id."}, status=400)
+            
+        if not seat_id and not zone_id:
+            return Response({"error": "Faltan datos de asiento o zona."}, status=400)
 
-        from tickets.models import Seat
+        from tickets.models import Seat, EventZone
         from payments.models import Order, OrderItem
         from payments.qr import get_ticket_hash
         from django.db import transaction
 
         try:
             with transaction.atomic():
-                seat = Seat.objects.select_for_update().get(id=seat_id, zone__event_id=event_id)
-                if not seat.is_available:
-                    return Response({"error": "Este asiento ya no está disponible."}, status=400)
-                
-                zone = seat.zone
-                
-                # Bloquear asiento
-                seat.is_available = False
-                seat.save()
+                if seat_id:
+                    seat = Seat.objects.select_for_update().get(id=seat_id, zone__event_id=event_id)
+                    if not seat.is_available:
+                        return Response({"error": "Este asiento ya no está disponible."}, status=400)
+                    zone = seat.zone
+                    seat.is_available = False
+                    seat.save()
+                    product_name = f"Boleto Taquilla - {seat}"
+                    seat_info = f"{zone.get_zone_type_display()} - Fila {seat.row_name} Asiento {seat.display_number}"
+                else:
+                    zone = EventZone.objects.get(id=zone_id, event_id=event_id)
+                    if zone.zone_type != 'GENERAL':
+                        return Response({"error": "Debe proporcionar seat_id para zonas numeradas."}, status=400)
+                    seat = None
+                    product_name = f"Boleto Taquilla - General ({zone.event.title})"
+                    seat_info = "GENERAL (Sin asiento asignado)"
 
                 # Crear orden de venta en efectivo
                 order = Order.objects.create(
@@ -1154,7 +1165,7 @@ class BoxOfficeSellView(APIView):
                 
                 item = OrderItem.objects.create(
                     order=order,
-                    product_name=f"Boleto Taquilla - {seat}",
+                    product_name=product_name,
                     quantity=1,
                     price=zone.price,
                     event=zone.event,
@@ -1168,7 +1179,7 @@ class BoxOfficeSellView(APIView):
                 "order_id": order.id,
                 "item_id": item.id,
                 "code": code,
-                "seat_info": f"{zone.get_zone_type_display()} - Fila {seat.row_name} Asiento {seat.display_number}",
+                "seat_info": seat_info,
                 "price": str(zone.price),
                 "event_title": zone.event.title
             })
