@@ -49,9 +49,9 @@ export default function PatrocinadoresPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-5xl md:text-7xl font-black tracking-tighter uppercase leading-none mb-6"
+            className="text-4xl md:text-5xl lg:text-7xl font-black tracking-tighter uppercase leading-tight md:leading-none mb-6 break-words"
           >
-            Nuestros <span className="text-transparent bg-clip-text bg-gradient-to-b from-red-400 to-red-700">Patrocinadores</span>
+            Nuestros <br className="sm:hidden" /><span className="text-transparent bg-clip-text bg-gradient-to-b from-red-400 to-red-700 inline-block">Patrocinadores</span>
           </motion.h1>
           
           <motion.p 

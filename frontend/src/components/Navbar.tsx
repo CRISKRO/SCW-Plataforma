@@ -82,13 +82,13 @@ export default function Navbar() {
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-center space-x-8">
+          <div className="hidden lg:block">
+            <div className="ml-4 lg:ml-6 flex items-center space-x-2 lg:space-x-4 xl:space-x-8">
               {navItems.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="text-zinc-300 hover:text-white px-3 py-2 text-sm font-medium uppercase tracking-widest transition-colors relative group"
+                  className="text-zinc-300 hover:text-white px-2 xl:px-3 py-2 text-xs xl:text-sm font-medium uppercase tracking-widest transition-colors relative group whitespace-nowrap"
                 >
                   {item.name}
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-white transition-all group-hover:w-full"></span>
@@ -111,15 +111,15 @@ export default function Navbar() {
             </Link>
 
             {/* Desktop Auth */}
-            <div className="hidden md:flex items-center space-x-6">
+            <div className="hidden lg:flex items-center space-x-4 xl:space-x-6">
               {isAuthenticated ? (
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-4 xl:gap-6">
                   {['SUPERADMIN', 'ADMIN', 'STAFF', 'REPORTER'].includes(user?.role || '') && (
-                    <Link href="/admin" className="text-red-500 hover:text-red-400 text-sm font-bold uppercase tracking-widest transition-colors flex items-center gap-1">
+                    <Link href="/admin" className="text-red-500 hover:text-red-400 text-xs xl:text-sm font-bold uppercase tracking-widest transition-colors flex items-center gap-1 whitespace-nowrap">
                       [Panel Admin]
                     </Link>
                   )}
-                  <Link href="/dashboard" className="flex items-center gap-2 text-sm font-medium text-white hover:text-zinc-300 transition-colors">
+                  <Link href="/dashboard" className="flex items-center gap-2 text-xs xl:text-sm font-medium text-white hover:text-zinc-300 transition-colors whitespace-nowrap">
                     <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center font-bold">
                       {user?.first_name?.charAt(0) || 'U'}
                     </div>
@@ -139,7 +139,7 @@ export default function Navbar() {
             </div>
 
             {/* Mobile menu button */}
-            <div className="md:hidden flex items-center">
+            <div className="lg:hidden flex items-center">
               <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="text-zinc-300 hover:text-white focus:outline-none"
@@ -156,7 +156,7 @@ export default function Navbar() {
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="md:hidden bg-black/95 backdrop-blur-xl border-b border-white/10"
+          className="lg:hidden bg-black/95 backdrop-blur-xl border-b border-white/10"
         >
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             {navItems.map((item) => (
