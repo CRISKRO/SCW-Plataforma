@@ -49,18 +49,31 @@ data class BoxOfficeEvent(
 data class SellRequest(
     val event_id: Int,
     val seat_id: Int? = null,
-    val zone_id: Int? = null
+    val seat_ids: List<Int>? = null,
+    val zone_id: Int? = null,
+    val quantity: Int? = null
+)
+
+data class SoldTicket(
+    val item_id: Int,
+    val code: String,
+    val seat_info: String,
+    val price: String,
+    val event_title: String
 )
 
 data class SellResponse(
     val success: Boolean,
-    val order_id: Int?,
-    val item_id: Int?,
-    val code: String?,
-    val seat_info: String?,
-    val price: String?,
-    val event_title: String?,
-    val error: String?
+    val order_id: Int,
+    val tickets: List<SoldTicket>? = null,
+    val total: String? = null,
+    // Retrocompatibility
+    val item_id: Int? = null,
+    val code: String? = null,
+    val seat_info: String? = null,
+    val price: String? = null,
+    val event_title: String? = null,
+    val error: String? = null
 )
 
 // Raffle Models

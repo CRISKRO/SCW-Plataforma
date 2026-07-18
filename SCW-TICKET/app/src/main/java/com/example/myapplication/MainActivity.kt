@@ -53,8 +53,7 @@ import java.io.File
 import java.io.FileOutputStream
 import androidx.compose.material.icons.filled.Share
 
-fun createReceiptBitmap(qr: Bitmap, text: String): Bitmap {
-    val textLines = text.split("\n")
+fun createMultiReceiptBitmap(items: List<Pair<Bitmap, String>>, totalText: String): Bitmap {
     val textPaint = Paint().apply {
         color = android.graphics.Color.BLACK
         textSize = 30f
@@ -64,23 +63,40 @@ fun createReceiptBitmap(qr: Bitmap, text: String): Bitmap {
     
     val padding = 40
     val lineHeight = 40
-    val textHeight = textLines.size * lineHeight
     val width = 600
-    val height = padding + textHeight + padding + qr.height + padding
     
-    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+    var totalHeight = padding
+    
+    for (item in items) {
+        val lines = item.second.split("\n")
+        totalHeight += lines.size * lineHeight + padding + item.first.height + padding
+    }
+    
+    val totalLines = totalText.split("\n")
+    totalHeight += totalLines.size * lineHeight + padding
+    
+    val bitmap = Bitmap.createBitmap(width, totalHeight, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
     canvas.drawColor(android.graphics.Color.WHITE)
     
-    var y = padding.toFloat() + 30f // baseline
-    for (line in textLines) {
-        val x = width / 2f
-        canvas.drawText(line, x, y, textPaint)
-        y += lineHeight
+    var y = padding.toFloat() + 30f
+    for (item in items) {
+        val lines = item.second.split("\n")
+        for (line in lines) {
+            canvas.drawText(line, width / 2f, y, textPaint)
+            y += lineHeight
+        }
+        val qrX = (width - item.first.width) / 2f
+        canvas.drawBitmap(item.first, qrX, y - 30f + padding.toFloat(), null)
+        y += item.first.height + padding * 2
     }
     
-    val qrX = (width - qr.width) / 2f
-    canvas.drawBitmap(qr, qrX, y - 30f + padding.toFloat(), null)
+    textPaint.textSize = 40f
+    textPaint.typeface = android.graphics.Typeface.DEFAULT_BOLD
+    for (line in totalLines) {
+        canvas.drawText(line, width / 2f, y, textPaint)
+        y += lineHeight + 10
+    }
     
     return bitmap
 }
@@ -503,13 +519,15 @@ fun EventsBoxOffice(baseUrl: String, token: String) {
     var events by remember { mutableStateOf<List<BoxOfficeEvent>>(emptyList()) }
     var selectedEvent by remember { mutableStateOf<BoxOfficeEvent?>(null) }
     var showMap by remember { mutableStateOf(false) }
-    var seatToSell by remember { mutableStateOf<Pair<BoxOfficeZone, BoxOfficeSeat>?>(null) }
+    val selectedSeats = remember { androidx.compose.runtime.mutableStateListOf<BoxOfficeSeat>() }
+    var confirmSaleVisible by remember { mutableStateOf(false) }
     var generalZoneToSell by remember { mutableStateOf<BoxOfficeZone?>(null) }
+    var generalQuantity by remember { androidx.compose.runtime.mutableIntStateOf(1) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMsg by remember { mutableStateOf("") }
     
-    var qrBitmap by remember { mutableStateOf<Bitmap?>(null) }
-    var sellResultText by remember { mutableStateOf("") }
+    var qrBitmaps by remember { mutableStateOf<List<Pair<Bitmap, String>>?>(null) }
+    var sellResultTotal by remember { mutableStateOf("") }
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -534,39 +552,45 @@ fun EventsBoxOffice(baseUrl: String, token: String) {
 
     LaunchedEffect(Unit) { loadEvents() }
 
-    if (qrBitmap != null) {
+    if (qrBitmaps != null) {
         Column(
             modifier = Modifier.fillMaxSize().padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Text("¡Venta Exitosa!", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = SCWGreen, modifier = Modifier.padding(bottom = 8.dp))
-            Text(sellResultText, fontSize = 18.sp, textAlign = TextAlign.Center, color = SCWTextWhite)
+            Text(sellResultTotal, fontSize = 18.sp, textAlign = TextAlign.Center, color = SCWTextWhite)
             Spacer(modifier = Modifier.height(24.dp))
-            Image(bitmap = qrBitmap!!.asImageBitmap(), contentDescription = "Boleto QR", modifier = Modifier.size(300.dp).background(Color.White).padding(8.dp))
+            if (qrBitmaps!!.isNotEmpty()) {
+                Image(bitmap = qrBitmaps!![0].first.asImageBitmap(), contentDescription = "Boleto QR", modifier = Modifier.size(300.dp).background(Color.White).padding(8.dp))
+                if (qrBitmaps!!.size > 1) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("+ ${qrBitmaps!!.size - 1} boletos más", color = SCWTextGray, fontSize = 14.sp)
+                }
+            }
             Spacer(modifier = Modifier.height(32.dp))
             
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxWidth()) {
                 Button(
                     modifier = Modifier.weight(1f).height(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = SCWDarkGray, contentColor = Color.White),
+                    colors = ButtonDefaults.buttonColors(containerColor = SCWDarkGray, contentColor = androidx.compose.ui.graphics.Color.White),
                     onClick = {
-                        val receipt = createReceiptBitmap(qrBitmap!!, sellResultText)
+                        val receipt = createMultiReceiptBitmap(qrBitmaps!!, sellResultTotal)
                         PrintHelper(context).apply {
                             scaleMode = PrintHelper.SCALE_MODE_FIT
-                        }.printBitmap("Boleto SCW", receipt)
+                        }.printBitmap("Boletos SCW", receipt)
                     }
                 ) { Text("Imprimir", fontWeight = FontWeight.Bold) }
                 
                 Button(
                     modifier = Modifier.weight(1f).height(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = SCWDarkGray, contentColor = Color.White),
+                    colors = ButtonDefaults.buttonColors(containerColor = SCWDarkGray, contentColor = androidx.compose.ui.graphics.Color.White),
                     onClick = {
-                        val receipt = createReceiptBitmap(qrBitmap!!, sellResultText)
+                        val receipt = createMultiReceiptBitmap(qrBitmaps!!, sellResultTotal)
                         try {
                             val imagesDir = File(context.cacheDir, "images")
                             imagesDir.mkdirs()
-                            val file = File(imagesDir, "ticket.png")
+                            val file = File(imagesDir, "tickets.png")
                             val out = FileOutputStream(file)
                             receipt.compress(Bitmap.CompressFormat.PNG, 100, out)
                             out.flush()
@@ -578,7 +602,7 @@ fun EventsBoxOffice(baseUrl: String, token: String) {
                                 putExtra(Intent.EXTRA_STREAM, uri)
                                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                             }
-                            context.startActivity(Intent.createChooser(intent, "Compartir Boleto"))
+                            context.startActivity(Intent.createChooser(intent, "Compartir Boletos"))
                         } catch (e: Exception) {
                             errorMsg = "Error al compartir: ${e.message}"
                         }
@@ -590,7 +614,7 @@ fun EventsBoxOffice(baseUrl: String, token: String) {
             
             Button(
                 colors = ButtonDefaults.buttonColors(containerColor = SCWRed, contentColor = SCWTextWhite),
-                onClick = { qrBitmap = null; selectedEvent = null; loadEvents() }, 
+                onClick = { qrBitmaps = null; selectedEvent = null; loadEvents() }, 
                 modifier = Modifier.fillMaxWidth().height(50.dp)
             ) {
                 Text("Siguiente Venta", fontWeight = FontWeight.Bold)
@@ -599,77 +623,99 @@ fun EventsBoxOffice(baseUrl: String, token: String) {
         return
     }
 
-    if (seatToSell != null) {
-        val (zone, seat) = seatToSell!!
+    if (confirmSaleVisible) {
         AlertDialog(
-            onDismissRequest = { seatToSell = null },
+            onDismissRequest = { confirmSaleVisible = false },
             containerColor = SCWSurface,
             titleContentColor = SCWTextWhite,
             textContentColor = SCWTextWhite,
             title = { Text("Confirmar Venta", fontWeight = FontWeight.Bold) },
-            text = { Text("¿Deseas vender el asiento de la zona ${zone.name}, Fila ${seat.row} - ${seat.number} por $${zone.price} MXN?") },
+            text = { Text("¿Deseas vender ${selectedSeats.size} asientos numerados?") },
             confirmButton = {
                 Button(
                     colors = ButtonDefaults.buttonColors(containerColor = SCWGreen, contentColor = SCWTextWhite),
                     onClick = {
-                    seatToSell = null
+                    confirmSaleVisible = false
                     isLoading = true
                     coroutineScope.launch {
                         try {
                             val api = ApiClient.getService(baseUrl)
-                            val res = api.sellBoxOfficeTicket(token, SellRequest(selectedEvent!!.id, seat.id))
+                            val res = api.sellBoxOfficeTicket(token, SellRequest(event_id = selectedEvent!!.id, seat_ids = selectedSeats.map { it.id }))
                             if (res.isSuccessful && res.body() != null) {
                                 val body = res.body()!!
-                                if (body.success) {
-                                    val qrContent = "{\"scw\":true,\"order\":${body.order_id},\"item\":${body.item_id},\"code\":\"${body.code}\"}"
-                                    try {
-                                        qrBitmap = BarcodeEncoder().encodeBitmap(qrContent, BarcodeFormat.QR_CODE, 600, 600)
-                                        sellResultText = "${body.event_title}\n${body.seat_info}\nTotal: $${body.price}"
-                                    } catch (e: Exception) { errorMsg = "Error generando QR" }
+                                if (body.success && body.tickets != null) {
+                                    val newBitmaps = mutableListOf<Pair<Bitmap, String>>()
+                                    for (ticket in body.tickets) {
+                                        val qrContent = "{\"scw\":true,\"order\":${body.order_id},\"item\":${ticket.item_id},\"code\":\"${ticket.code}\"}"
+                                        try {
+                                            val bmp = BarcodeEncoder().encodeBitmap(qrContent, BarcodeFormat.QR_CODE, 600, 600)
+                                            newBitmaps.add(Pair(bmp, "${ticket.event_title}\n${ticket.seat_info}\n$${ticket.price}"))
+                                        } catch (e: Exception) {}
+                                    }
+                                    qrBitmaps = newBitmaps
+                                    sellResultTotal = "Total: $${body.total} MXN"
+                                    selectedSeats.clear()
                                 } else { errorMsg = body.error ?: "Error desconocido" }
                             } else { errorMsg = "Error al vender: ${res.code()}" }
                         } catch (e: Exception) { errorMsg = "Error de red: ${e.message}" } finally { isLoading = false }
                     }
                 }) { Text("Confirmar y Cobrar", fontWeight = FontWeight.Bold) }
             },
-            dismissButton = { TextButton(onClick = { seatToSell = null }) { Text("Cancelar", color = SCWTextGray) } }
+            dismissButton = { TextButton(onClick = { confirmSaleVisible = false }) { Text("Cancelar", color = SCWTextGray) } }
         )
     }
 
     if (generalZoneToSell != null) {
         val zone = generalZoneToSell!!
         AlertDialog(
-            onDismissRequest = { generalZoneToSell = null },
+            onDismissRequest = { generalZoneToSell = null; generalQuantity = 1 },
             containerColor = SCWSurface,
             titleContentColor = SCWTextWhite,
             textContentColor = SCWTextWhite,
-            title = { Text("Confirmar Venta", fontWeight = FontWeight.Bold) },
-            text = { Text("¿Deseas vender un boleto General por $${zone.price} MXN?") },
+            title = { Text("Vender General", fontWeight = FontWeight.Bold) },
+            text = { 
+                Column {
+                    Text("¿Cuántos boletos generales deseas vender?")
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
+                        Button(onClick = { if (generalQuantity > 1) generalQuantity-- }, colors = ButtonDefaults.buttonColors(containerColor = SCWDarkGray)) { Text("-") }
+                        Text("$generalQuantity", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = SCWTextWhite, modifier = Modifier.padding(horizontal = 24.dp))
+                        Button(onClick = { if (generalQuantity < 10) generalQuantity++ }, colors = ButtonDefaults.buttonColors(containerColor = SCWDarkGray)) { Text("+") }
+                    }
+                }
+            },
             confirmButton = {
                 Button(
                     colors = ButtonDefaults.buttonColors(containerColor = SCWGreen, contentColor = SCWTextWhite),
                     onClick = {
                     generalZoneToSell = null
+                    val qty = generalQuantity
+                    generalQuantity = 1
                     isLoading = true
                     coroutineScope.launch {
                         try {
                             val api = ApiClient.getService(baseUrl)
-                            val res = api.sellBoxOfficeTicket(token, SellRequest(event_id = selectedEvent!!.id, zone_id = zone.id))
+                            val res = api.sellBoxOfficeTicket(token, SellRequest(event_id = selectedEvent!!.id, zone_id = zone.id, quantity = qty))
                             if (res.isSuccessful && res.body() != null) {
                                 val body = res.body()!!
-                                if (body.success) {
-                                    val qrContent = "{\"scw\":true,\"order\":${body.order_id},\"item\":${body.item_id},\"code\":\"${body.code}\"}"
-                                    try {
-                                        qrBitmap = BarcodeEncoder().encodeBitmap(qrContent, BarcodeFormat.QR_CODE, 600, 600)
-                                        sellResultText = "${body.event_title}\n${body.seat_info}\nTotal: $${body.price}"
-                                    } catch (e: Exception) { errorMsg = "Error generando QR" }
+                                if (body.success && body.tickets != null) {
+                                    val newBitmaps = mutableListOf<Pair<Bitmap, String>>()
+                                    for (ticket in body.tickets) {
+                                        val qrContent = "{\"scw\":true,\"order\":${body.order_id},\"item\":${ticket.item_id},\"code\":\"${ticket.code}\"}"
+                                        try {
+                                            val bmp = BarcodeEncoder().encodeBitmap(qrContent, BarcodeFormat.QR_CODE, 600, 600)
+                                            newBitmaps.add(Pair(bmp, "${ticket.event_title}\n${ticket.seat_info}\n$${ticket.price}"))
+                                        } catch (e: Exception) {}
+                                    }
+                                    qrBitmaps = newBitmaps
+                                    sellResultTotal = "Total: $${body.total} MXN"
                                 } else { errorMsg = body.error ?: "Error desconocido" }
                             } else { errorMsg = "Error al vender: ${res.code()}" }
                         } catch (e: Exception) { errorMsg = "Error de red: ${e.message}" } finally { isLoading = false }
                     }
                 }) { Text("Confirmar y Cobrar", fontWeight = FontWeight.Bold) }
             },
-            dismissButton = { TextButton(onClick = { generalZoneToSell = null }) { Text("Cancelar", color = SCWTextGray) } }
+            dismissButton = { TextButton(onClick = { generalZoneToSell = null; generalQuantity = 1 }) { Text("Cancelar", color = SCWTextGray) } }
         )
     }
 
@@ -768,34 +814,34 @@ fun EventsBoxOffice(baseUrl: String, token: String) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             // OESTE
                             val oeste = selectedEvent!!.zones.find { it.name.contains("OESTE", ignoreCase = true) }
-                            if (oeste != null) ZoneView(oeste, isVertical = true, reverseRows = true) { seat -> seatToSell = Pair(oeste, seat) }
+                            if (oeste != null) ZoneView(oeste, selectedSeats, isVertical = true, reverseRows = true) { seat -> if (selectedSeats.contains(seat)) selectedSeats.remove(seat) else selectedSeats.add(seat) }
                             
                             Spacer(modifier = Modifier.width(32.dp))
                             
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 // NORTE
                                 val norte = selectedEvent!!.zones.find { it.name.contains("NORTE", ignoreCase = true) }
-                                if (norte != null) ZoneView(norte, reverseRows = true) { seat -> seatToSell = Pair(norte, seat) }
+                                if (norte != null) ZoneView(norte, selectedSeats, reverseRows = true) { seat -> if (selectedSeats.contains(seat)) selectedSeats.remove(seat) else selectedSeats.add(seat) }
                                 
                                 Spacer(modifier = Modifier.height(4.dp))
                                 
                                 // RING
-                                Box(modifier = Modifier.size(200.dp).background(Color(0xFF111111)).border(4.dp, SCWRed).padding(8.dp), contentAlignment = Alignment.Center) {
-                                    Text("RING SCW", fontWeight = FontWeight.Black, color = Color.White, fontSize = 24.sp, letterSpacing = 2.sp)
+                                Box(modifier = Modifier.size(200.dp).background(androidx.compose.ui.graphics.Color(0xFF111111)).border(4.dp, SCWRed).padding(8.dp), contentAlignment = Alignment.Center) {
+                                    Text("RING SCW", fontWeight = FontWeight.Black, color = androidx.compose.ui.graphics.Color.White, fontSize = 24.sp, letterSpacing = 2.sp)
                                 }
                                 
                                 Spacer(modifier = Modifier.height(4.dp))
                                 
                                 // SUR
                                 val sur = selectedEvent!!.zones.find { it.name.contains("SUR", ignoreCase = true) }
-                                if (sur != null) ZoneView(sur) { seat -> seatToSell = Pair(sur, seat) }
+                                if (sur != null) ZoneView(sur, selectedSeats) { seat -> if (selectedSeats.contains(seat)) selectedSeats.remove(seat) else selectedSeats.add(seat) }
                             }
                             
                             Spacer(modifier = Modifier.width(32.dp))
                             
                             // ESTE
                             val este = selectedEvent!!.zones.find { it.name.contains("ESTE", ignoreCase = true) }
-                            if (este != null) ZoneView(este, isVertical = true) { seat -> seatToSell = Pair(este, seat) }
+                            if (este != null) ZoneView(este, selectedSeats, isVertical = true) { seat -> if (selectedSeats.contains(seat)) selectedSeats.remove(seat) else selectedSeats.add(seat) }
                         }
                         
                         // OTHERS
@@ -803,8 +849,18 @@ fun EventsBoxOffice(baseUrl: String, token: String) {
                         others.forEach { zone ->
                             Spacer(modifier = Modifier.height(32.dp))
                             Text(zone.name, fontWeight = FontWeight.Bold, color = SCWTextWhite)
-                            ZoneView(zone) { seat -> seatToSell = Pair(zone, seat) }
+                            ZoneView(zone, selectedSeats) { seat -> if (selectedSeats.contains(seat)) selectedSeats.remove(seat) else selectedSeats.add(seat) }
                         }
+                    }
+                }
+                
+                if (selectedSeats.isNotEmpty()) {
+                    Button(
+                        onClick = { confirmSaleVisible = true },
+                        modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp).fillMaxWidth(0.9f).height(56.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = SCWRed, contentColor = SCWTextWhite)
+                    ) {
+                        Text("Vender ${selectedSeats.size} boletos", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     }
                 }
             }
@@ -813,7 +869,7 @@ fun EventsBoxOffice(baseUrl: String, token: String) {
 }
 
 @Composable
-fun ZoneView(zone: BoxOfficeZone, isVertical: Boolean = false, reverseRows: Boolean = false, onSeatClick: (BoxOfficeSeat) -> Unit) {
+fun ZoneView(zone: BoxOfficeZone, selectedSeats: List<BoxOfficeSeat>, isVertical: Boolean = false, reverseRows: Boolean = false, onSeatClick: (BoxOfficeSeat) -> Unit) {
     val isReverse = zone.name.contains("SUR", ignoreCase = true)
     
     val seatsByRow = zone.seats.groupBy { it.row ?: "?" }.mapValues { entry ->
@@ -847,14 +903,18 @@ fun ZoneView(zone: BoxOfficeZone, isVertical: Boolean = false, reverseRows: Bool
                         Text(rowName, fontWeight = FontWeight.Bold, modifier = Modifier.height(20.dp), fontSize = 10.sp, color = SCWTextGray)
                         Spacer(modifier = Modifier.height(2.dp))
                         seats.forEach { seat ->
+                            val isSelected = seat in selectedSeats
+                            val bgColor = if (isSelected) androidx.compose.ui.graphics.Color(0xFF3B82F6) else if (seat.is_available) SCWGreen else SCWSurface
+                            val borderColor = if (isSelected) androidx.compose.ui.graphics.Color(0xFF3B82F6) else if (seat.is_available) SCWGreen else SCWBorder
+                            val textColor = if (isSelected) androidx.compose.ui.graphics.Color.White else if (seat.is_available) SCWBlack else SCWTextGray
                             Box(
                                 modifier = Modifier.size(24.dp).padding(1.dp)
-                                    .background(if (seat.is_available) SCWGreen else SCWSurface, RoundedCornerShape(4.dp))
-                                    .border(1.dp, if (seat.is_available) SCWGreen else SCWBorder, RoundedCornerShape(4.dp))
+                                    .background(bgColor, RoundedCornerShape(4.dp))
+                                    .border(1.dp, borderColor, RoundedCornerShape(4.dp))
                                     .clickable(enabled = seat.is_available) { onSeatClick(seat) },
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(getDisplayNumber(zone.name, seat.number).toString(), color = if (seat.is_available) SCWBlack else SCWTextGray, fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                                Text(getDisplayNumber(zone.name, seat.number).toString(), color = textColor, fontSize = 8.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -866,14 +926,18 @@ fun ZoneView(zone: BoxOfficeZone, isVertical: Boolean = false, reverseRows: Bool
                     Text(rowName, fontWeight = FontWeight.Bold, modifier = Modifier.width(20.dp), fontSize = 10.sp, color = SCWTextGray)
                     Spacer(modifier = Modifier.width(2.dp))
                     seats.forEach { seat ->
+                        val isSelected = seat in selectedSeats
+                        val bgColor = if (isSelected) androidx.compose.ui.graphics.Color(0xFF3B82F6) else if (seat.is_available) SCWGreen else SCWSurface
+                        val borderColor = if (isSelected) androidx.compose.ui.graphics.Color(0xFF3B82F6) else if (seat.is_available) SCWGreen else SCWBorder
+                        val textColor = if (isSelected) androidx.compose.ui.graphics.Color.White else if (seat.is_available) SCWBlack else SCWTextGray
                         Box(
                             modifier = Modifier.size(24.dp).padding(1.dp)
-                                .background(if (seat.is_available) SCWGreen else SCWSurface, RoundedCornerShape(4.dp))
-                                .border(1.dp, if (seat.is_available) SCWGreen else SCWBorder, RoundedCornerShape(4.dp))
+                                .background(bgColor, RoundedCornerShape(4.dp))
+                                .border(1.dp, borderColor, RoundedCornerShape(4.dp))
                                 .clickable(enabled = seat.is_available) { onSeatClick(seat) },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(getDisplayNumber(zone.name, seat.number).toString(), color = if (seat.is_available) SCWBlack else SCWTextGray, fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                            Text(getDisplayNumber(zone.name, seat.number).toString(), color = textColor, fontSize = 8.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }

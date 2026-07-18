@@ -1121,13 +1121,19 @@ class BoxOfficeSellView(APIView):
             return Response({"error": "No autorizado."}, status=403)
 
         event_id = request.data.get('event_id')
-        seat_id = request.data.get('seat_id')
+        seat_ids = request.data.get('seat_ids', [])
         zone_id = request.data.get('zone_id')
+        quantity = request.data.get('quantity', 1)
+        
+        # Retrocompatibilidad
+        seat_id = request.data.get('seat_id')
+        if seat_id and not seat_ids:
+            seat_ids = [seat_id]
 
         if not event_id:
             return Response({"error": "Falta event_id."}, status=400)
             
-        if not seat_id and not zone_id:
+        if not seat_ids and not zone_id:
             return Response({"error": "Faltan datos de asiento o zona."}, status=400)
 
         from tickets.models import Seat, EventZone
@@ -1137,55 +1143,82 @@ class BoxOfficeSellView(APIView):
 
         try:
             with transaction.atomic():
-                if seat_id:
-                    seat = Seat.objects.select_for_update().get(id=seat_id, zone__event_id=event_id)
-                    if not seat.is_available:
-                        return Response({"error": "Este asiento ya no está disponible."}, status=400)
-                    zone = seat.zone
-                    seat.is_available = False
-                    seat.save()
-                    product_name = f"Boleto Taquilla - {seat}"
-                    seat_info = f"{zone.get_zone_type_display()} - Fila {seat.row_name} Asiento {seat.display_number}"
+                total_amount = 0
+                items_data = []
+                
+                from events.models import Event
+                event = Event.objects.get(id=event_id)
+                
+                if seat_ids:
+                    seats = Seat.objects.select_for_update().filter(id__in=seat_ids, zone__event_id=event_id)
+                    if len(seats) != len(seat_ids):
+                        return Response({"error": "Algunos asientos son inválidos o no pertenecen a este evento."}, status=400)
+                        
+                    for seat in seats:
+                        if not seat.is_available:
+                            return Response({"error": f"El asiento {seat.display_number} ya no está disponible."}, status=400)
+                        
+                        seat.is_available = False
+                        seat.save()
+                        
+                        total_amount += seat.zone.price
+                        items_data.append({
+                            'product_name': f"Boleto Taquilla - {seat}",
+                            'price': seat.zone.price,
+                            'event': seat.zone.event,
+                            'seat': seat,
+                            'seat_info': f"{seat.zone.get_zone_type_display()} - Fila {seat.row_name} Asiento {seat.display_number}",
+                        })
                 else:
                     zone = EventZone.objects.get(id=zone_id, event_id=event_id)
                     if zone.zone_type != 'GENERAL':
-                        return Response({"error": "Debe proporcionar seat_id para zonas numeradas."}, status=400)
-                    seat = None
-                    product_name = f"Boleto Taquilla - General ({zone.event.title})"
-                    seat_info = "GENERAL (Sin asiento asignado)"
+                        return Response({"error": "Debe proporcionar seat_ids para zonas numeradas."}, status=400)
+                    
+                    for _ in range(quantity):
+                        total_amount += zone.price
+                        items_data.append({
+                            'product_name': f"Boleto Taquilla - General ({zone.event.title})",
+                            'price': zone.price,
+                            'event': zone.event,
+                            'seat': None,
+                            'seat_info': "GENERAL (Sin asiento asignado)"
+                        })
 
                 # Crear orden de venta en efectivo
                 order = Order.objects.create(
                     user=request.user if request.user.is_authenticated else None,
                     contact_email="taquilla@scw.com",
-                    total_amount=zone.price,
+                    total_amount=total_amount,
                     status=Order.Status.PAID,
                     payment_method='TRANSFER'
                 )
                 
-                item = OrderItem.objects.create(
-                    order=order,
-                    product_name=product_name,
-                    quantity=1,
-                    price=zone.price,
-                    event=zone.event,
-                    seat=seat
-                )
-
-            code = get_ticket_hash(order.id, item.id)
+                response_tickets = []
+                for data in items_data:
+                    item = OrderItem.objects.create(
+                        order=order,
+                        product_name=data['product_name'],
+                        quantity=1,
+                        price=data['price'],
+                        event=data['event'],
+                        seat=data['seat']
+                    )
+                    code = get_ticket_hash(order.id, item.id)
+                    response_tickets.append({
+                        "item_id": item.id,
+                        "code": code,
+                        "seat_info": data['seat_info'],
+                        "price": str(data['price']),
+                        "event_title": data['event'].title
+                    })
 
             return Response({
                 "success": True,
                 "order_id": order.id,
-                "item_id": item.id,
-                "code": code,
-                "seat_info": seat_info,
-                "price": str(zone.price),
-                "event_title": zone.event.title
+                "tickets": response_tickets,
+                "total": str(total_amount)
             })
 
-        except Seat.DoesNotExist:
-            return Response({"error": "Asiento inválido."}, status=404)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
 
