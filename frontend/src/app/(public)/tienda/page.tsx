@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { ShoppingCart, Eye, Truck, Ticket } from 'lucide-react';
-import api from '@/services/api';
+import api, { getMediaUrl } from '@/services/api';
 import { getRaffles, Raffle } from '@/services/raffles.services';
 import Image from 'next/image';
 import PageBackButton from '@/components/PageBackButton';
@@ -145,7 +145,7 @@ export default function StorePage() {
                   {/* Image Area - White background like ML to make product pop, even in dark mode */}
                   <div className="relative aspect-square bg-white flex items-center justify-center overflow-hidden">
                     {product.image_url ? (
-                      <img src={product.image_url} alt={product.name} className="w-full h-full object-cover mix-blend-multiply transition-transform duration-500 group-hover:scale-105" />
+                      <img src={getMediaUrl(product.image_url)} alt={product.name} className="w-full h-full object-cover mix-blend-multiply transition-transform duration-500 group-hover:scale-105" />
                     ) : (
                       <div className="text-zinc-300 font-bold uppercase tracking-widest text-xs">Sin Imagen</div>
                     )}

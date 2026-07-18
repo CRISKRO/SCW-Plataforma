@@ -19,6 +19,17 @@ const api = axios.create({
   baseURL: API_URL,
 });
 
+export const getMediaUrl = (url?: string | null) => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  
+  // Get the base host without /api
+  const host = API_URL.replace(/\/api\/?$/, '');
+  return `${host}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
 // Interceptor to add the JWT token to requests
 api.interceptors.request.use(
   (config) => {

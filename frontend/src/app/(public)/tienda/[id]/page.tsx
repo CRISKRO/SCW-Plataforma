@@ -7,7 +7,7 @@ import { ShoppingCart, ShieldCheck, Trophy, Truck, ArrowLeft } from 'lucide-reac
 import { useCartStore } from '@/store/cartStore';
 import { useToastStore } from '@/store/toastStore';
 import Image from 'next/image';
-import api from '@/services/api';
+import api, { getMediaUrl } from '@/services/api';
 import PageBackButton from '@/components/PageBackButton';
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -52,7 +52,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       name: product.name,
       price: parseFloat(product.price),
       quantity: 1,
-      image_url: product.image_url || 'bg-zinc-800',
+      image_url: getMediaUrl(product.image_url) || 'bg-zinc-800',
       size: selectedSize || 'N/A',
       requires_shipping: !product.free_shipping,
     });
@@ -112,7 +112,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             <div className="relative w-full aspect-square md:aspect-[4/3] bg-white flex items-center justify-center border-b md:border-b-0 md:border-r border-white/5 overflow-hidden">
               {product.image_url ? (
                 <Image 
-                  src={product.image_url} 
+                  src={getMediaUrl(product.image_url)} 
                   alt={product.name} 
                   fill
                   className="object-cover md:object-contain mix-blend-multiply p-0 md:p-8"
