@@ -83,12 +83,12 @@ export default function Navbar() {
 
           {/* Desktop Menu */}
           <div className="hidden lg:block">
-            <div className="ml-2 lg:ml-4 xl:ml-6 flex items-center space-x-1 lg:space-x-2 xl:space-x-4 2xl:space-x-8">
+            <div className="ml-2 lg:ml-4 2xl:ml-8 flex items-center space-x-1 lg:space-x-2 2xl:space-x-8">
               {navItems.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="text-zinc-300 hover:text-white px-1.5 lg:px-2 py-2 text-[10px] lg:text-xs xl:text-sm font-medium uppercase tracking-widest transition-colors relative group whitespace-nowrap"
+                  className="text-zinc-300 hover:text-white px-1.5 lg:px-2 2xl:px-3 py-2 text-[10px] lg:text-[11px] 2xl:text-sm font-medium uppercase tracking-widest transition-colors relative group whitespace-nowrap"
                 >
                   {item.name}
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-white transition-all group-hover:w-full"></span>
@@ -111,16 +111,16 @@ export default function Navbar() {
             </Link>
 
             {/* Desktop Auth */}
-            <div className="hidden lg:flex items-center space-x-2 xl:space-x-4">
+            <div className="hidden lg:flex items-center space-x-2 2xl:space-x-6">
               {isAuthenticated ? (
-                <div className="flex items-center gap-2 xl:gap-4">
+                <div className="flex items-center gap-2 2xl:gap-6">
                   {['SUPERADMIN', 'ADMIN', 'STAFF', 'REPORTER'].includes(user?.role || '') && (
-                    <Link href="/admin" className="text-red-500 hover:text-red-400 text-[10px] lg:text-xs xl:text-sm font-bold uppercase tracking-widest transition-colors flex items-center gap-1 whitespace-nowrap">
+                    <Link href="/admin" className="text-red-500 hover:text-red-400 text-[10px] lg:text-[11px] 2xl:text-sm font-bold uppercase tracking-widest transition-colors flex items-center gap-1 whitespace-nowrap">
                       [Panel Admin]
                     </Link>
                   )}
-                  <Link href="/dashboard" className="flex items-center gap-2 text-[10px] lg:text-xs xl:text-sm font-medium text-white hover:text-zinc-300 transition-colors whitespace-nowrap">
-                    <div className="w-7 h-7 xl:w-8 xl:h-8 rounded-full bg-white text-black flex items-center justify-center font-bold text-xs">
+                  <Link href="/dashboard" className="flex items-center gap-2 text-[10px] lg:text-[11px] 2xl:text-sm font-medium text-white hover:text-zinc-300 transition-colors whitespace-nowrap">
+                    <div className="w-7 h-7 2xl:w-8 2xl:h-8 rounded-full bg-white text-black flex items-center justify-center font-bold text-xs">
                       {user?.first_name?.charAt(0) || 'U'}
                     </div>
                     {user?.first_name}
