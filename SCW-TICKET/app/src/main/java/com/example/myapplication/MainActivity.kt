@@ -42,6 +42,48 @@ import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+import android.content.Intent
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Rect
+import android.net.Uri
+import androidx.core.content.FileProvider
+import androidx.print.PrintHelper
+import java.io.File
+import java.io.FileOutputStream
+import androidx.compose.material.icons.filled.Share
+
+fun createReceiptBitmap(qr: Bitmap, text: String): Bitmap {
+    val textLines = text.split("\n")
+    val textPaint = Paint().apply {
+        color = android.graphics.Color.BLACK
+        textSize = 30f
+        isAntiAlias = true
+        textAlign = Paint.Align.CENTER
+    }
+    
+    val padding = 40
+    val lineHeight = 40
+    val textHeight = textLines.size * lineHeight
+    val width = 600
+    val height = padding + textHeight + padding + qr.height + padding
+    
+    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    canvas.drawColor(android.graphics.Color.WHITE)
+    
+    var y = padding.toFloat() + 30f // baseline
+    for (line in textLines) {
+        val x = width / 2f
+        canvas.drawText(line, x, y, textPaint)
+        y += lineHeight
+    }
+    
+    val qrX = (width - qr.width) / 2f
+    canvas.drawBitmap(qr, qrX, y - 30f + padding.toFloat(), null)
+    
+    return bitmap
+}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -457,6 +499,7 @@ fun BoxOfficeTab(baseUrl: String, token: String) {
 
 @Composable
 fun EventsBoxOffice(baseUrl: String, token: String) {
+    val context = LocalContext.current
     var events by remember { mutableStateOf<List<BoxOfficeEvent>>(emptyList()) }
     var selectedEvent by remember { mutableStateOf<BoxOfficeEvent?>(null) }
     var showMap by remember { mutableStateOf(false) }
@@ -502,6 +545,49 @@ fun EventsBoxOffice(baseUrl: String, token: String) {
             Spacer(modifier = Modifier.height(24.dp))
             Image(bitmap = qrBitmap!!.asImageBitmap(), contentDescription = "Boleto QR", modifier = Modifier.size(300.dp).background(Color.White).padding(8.dp))
             Spacer(modifier = Modifier.height(32.dp))
+            
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    modifier = Modifier.weight(1f).height(50.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = SCWDarkGray, contentColor = Color.White),
+                    onClick = {
+                        val receipt = createReceiptBitmap(qrBitmap!!, sellResultText)
+                        PrintHelper(context).apply {
+                            scaleMode = PrintHelper.SCALE_MODE_FIT
+                        }.printBitmap("Boleto SCW", receipt)
+                    }
+                ) { Text("Imprimir", fontWeight = FontWeight.Bold) }
+                
+                Button(
+                    modifier = Modifier.weight(1f).height(50.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = SCWDarkGray, contentColor = Color.White),
+                    onClick = {
+                        val receipt = createReceiptBitmap(qrBitmap!!, sellResultText)
+                        try {
+                            val imagesDir = File(context.cacheDir, "images")
+                            imagesDir.mkdirs()
+                            val file = File(imagesDir, "ticket.png")
+                            val out = FileOutputStream(file)
+                            receipt.compress(Bitmap.CompressFormat.PNG, 100, out)
+                            out.flush()
+                            out.close()
+                            
+                            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+                            val intent = Intent(Intent.ACTION_SEND).apply {
+                                type = "image/png"
+                                putExtra(Intent.EXTRA_STREAM, uri)
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            context.startActivity(Intent.createChooser(intent, "Compartir Boleto"))
+                        } catch (e: Exception) {
+                            errorMsg = "Error al compartir: ${e.message}"
+                        }
+                    }
+                ) { Text("Compartir", fontWeight = FontWeight.Bold) }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
             Button(
                 colors = ButtonDefaults.buttonColors(containerColor = SCWRed, contentColor = SCWTextWhite),
                 onClick = { qrBitmap = null; selectedEvent = null; loadEvents() }, 
