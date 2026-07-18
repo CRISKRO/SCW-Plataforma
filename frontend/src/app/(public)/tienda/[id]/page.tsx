@@ -219,15 +219,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               </button>
             </div>
 
-            {/* Guarantees ML Style */}
-            <div className="mt-8 space-y-4 pt-6 border-t border-white/10">
-              <div className="flex gap-3">
-                <ShieldCheck className="w-5 h-5 text-zinc-400 shrink-0" />
-                <p className="text-sm text-zinc-400 leading-snug">
-                  <span className="text-[#3483fa]">Compra Protegida</span>, recibe el producto que esperabas o te devolvemos tu dinero.
-                </p>
-            </div>
-            </div>
+            {/* Guarantees ML Style - Removed per request */}
 
           </div>
         </div>

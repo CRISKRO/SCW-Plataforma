@@ -523,10 +523,10 @@ export default function AdminProductsPage() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }} 
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-zinc-950 border border-white/10 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl"
+            className="bg-zinc-950 border border-white/10 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col"
           >
             {/* Modal Title */}
-            <div className="flex justify-between items-center px-6 py-4 border-b border-white/10 bg-zinc-900/50">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-white/10 bg-zinc-900/50 shrink-0">
               <h2 className="text-xl font-bold uppercase tracking-wider text-white">
                 {editingProduct ? 'Editar Producto' : 'Añadir Nuevo Producto'}
               </h2>
@@ -536,7 +536,7 @@ export default function AdminProductsPage() {
             </div>
 
             {/* Modal Form */}
-            <form onSubmit={handleSaveProduct} className="p-6 space-y-6">
+            <form onSubmit={handleSaveProduct} className="p-6 space-y-6 overflow-y-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Image Upload Area */}
                 <div className="space-y-2">
