@@ -40,6 +40,7 @@ export default function AdminFightersPage() {
 
   const columns = [
     { key: 'id', label: 'ID' },
+    { key: 'order', label: 'Orden' },
     { key: 'name', label: 'Nombre' },
     { key: 'social_network', label: 'Red Social' },
     { 

@@ -29,6 +29,7 @@ export default function FighterFormPage() {
     height_cm: '',
     is_active: true,
     is_student: false,
+    order: 0,
   });
   
   const [imageUrl, setImageUrl] = useState('');
@@ -53,6 +54,7 @@ export default function FighterFormPage() {
             height_cm: data.height_cm || '',
             is_active: data.is_active !== undefined ? data.is_active : true,
             is_student: data.is_student !== undefined ? data.is_student : false,
+            order: data.order !== undefined ? data.order : 0,
           });
           if (data.image_url) {
             setImageUrl(data.image_url);
@@ -107,6 +109,7 @@ export default function FighterFormPage() {
       if (formData.height_cm) data.append('height_cm', formData.height_cm);
       data.append('is_active', String(formData.is_active));
       data.append('is_student', String(formData.is_student));
+      data.append('order', String(formData.order));
       
       if (imageFile) {
         data.append('image', imageFile);
@@ -168,6 +171,21 @@ export default function FighterFormPage() {
               onChange={handleChange}
               className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
               placeholder="Ej. El ídolo de los niños"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-white uppercase tracking-widest">Orden (Prioridad)</label>
+            <input
+              type="number"
+              name="order"
+              value={formData.order}
+              onChange={handleChange}
+              min="0"
+              className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
+              placeholder="Ej. 1"
             />
           </div>
         </div>

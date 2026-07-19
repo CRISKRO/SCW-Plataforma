@@ -23,6 +23,7 @@ export default function SponsorFormPage() {
     description: '',
     url: '',
     is_active: true,
+    order: 0,
   });
   
   const [imageUrl, setImageUrl] = useState('');
@@ -41,6 +42,7 @@ export default function SponsorFormPage() {
             description: data.description || '',
             url: data.url || '',
             is_active: data.is_active !== undefined ? data.is_active : true,
+            order: data.order !== undefined ? data.order : 0,
           });
           if (data.image_url) {
             setImageUrl(data.image_url);
@@ -97,6 +99,7 @@ export default function SponsorFormPage() {
       data.append('description', formData.description);
       data.append('url', formData.url);
       data.append('is_active', String(formData.is_active));
+      data.append('order', String(formData.order));
       
       if (imageFile) {
         data.append('image', imageFile);
@@ -163,6 +166,19 @@ export default function SponsorFormPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-white uppercase tracking-widest">Orden (Prioridad)</label>
+            <input
+              type="number"
+              name="order"
+              value={formData.order}
+              onChange={handleChange}
+              min="0"
+              className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
+              placeholder="Ej. 1"
+            />
+          </div>
+
           <div className="space-y-2">
             <label className="text-sm font-bold text-white uppercase tracking-widest">Teléfono</label>
             <input

@@ -40,6 +40,7 @@ export default function AdminSponsorsPage() {
 
   const columns = [
     { key: 'id', label: 'ID' },
+    { key: 'order', label: 'Orden' },
     { key: 'name', label: 'Nombre' },
     { key: 'contact', label: 'Contacto' },
     { key: 'phone', label: 'Teléfono' },
