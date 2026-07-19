@@ -77,3 +77,20 @@ class SeatViewSet(viewsets.ModelViewSet):
             seat.save()
             
         return Response({"status": "locked"})
+        
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
+    def unlock_seats(self, request):
+        seat_ids = request.data.get('seat_ids', [])
+        session_id = request.data.get('session_id')
+        
+        if not seat_ids or not session_id:
+            return Response({"error": "seat_ids y session_id son requeridos"}, status=400)
+            
+        seats = Seat.objects.filter(id__in=seat_ids)
+        for seat in seats:
+            if seat.locked_by_session == session_id:
+                seat.locked_at = None
+                seat.locked_by_session = None
+                seat.save(update_fields=['locked_at', 'locked_by_session'])
+                
+        return Response({"status": "unlocked"})

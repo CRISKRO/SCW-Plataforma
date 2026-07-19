@@ -346,6 +346,7 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
           image_url: event.banner_url || '',
           size: `${ZONE_LABELS[seat.zoneType] || seat.zoneType} · Fila ${seat.rowName} - Asiento ${seat.seatNumber}`,
           seat_id: seat.seatId,
+          session_id: sessionId,
         });
       });
       setSelectedSeats([]);

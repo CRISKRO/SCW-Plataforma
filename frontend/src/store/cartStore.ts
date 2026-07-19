@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import api from '@/services/api';
 
 export interface CartItem {
   id: number;
@@ -12,6 +13,7 @@ export interface CartItem {
   event_id?: number;
   raffle_ticket_id?: number;
   requires_shipping?: boolean;
+  session_id?: string;
 }
 
 interface CartState {
@@ -48,6 +50,14 @@ export const useCartStore = create<CartState>()(
         });
       },
       removeItem: (id, size) => {
+        const itemToRemove = get().items.find((item) => item.id === id && item.size === size);
+        if (itemToRemove?.seat_id && itemToRemove?.session_id) {
+          api.post('/tickets/seats/unlock_seats/', {
+            seat_ids: [itemToRemove.seat_id],
+            session_id: itemToRemove.session_id
+          }).catch(err => console.error("Failed to unlock seat:", err));
+        }
+
         set((state) => ({
           items: state.items.filter(
             (item) => !(item.id === id && item.size === size)
@@ -63,7 +73,27 @@ export const useCartStore = create<CartState>()(
           ),
         }));
       },
-      clearCart: () => set({ items: [] }),
+      clearCart: () => {
+        const itemsToUnlock = get().items.filter(item => item.seat_id && item.session_id);
+        
+        if (itemsToUnlock.length > 0) {
+          // Agrupar por session_id si hubiera varios, aunque normalmente es uno solo
+          const sessionMap = new Map<string, number[]>();
+          itemsToUnlock.forEach(item => {
+            if (!sessionMap.has(item.session_id!)) sessionMap.set(item.session_id!, []);
+            sessionMap.get(item.session_id!)!.push(item.seat_id!);
+          });
+          
+          sessionMap.forEach((seatIds, sessionId) => {
+            api.post('/tickets/seats/unlock_seats/', {
+              seat_ids: seatIds,
+              session_id: sessionId
+            }).catch(err => console.error("Failed to unlock seats on clearCart:", err));
+          });
+        }
+        
+        set({ items: [] });
+      },
       getTotalItems: () => {
         return get().items.reduce((total, item) => total + item.quantity, 0);
       },
