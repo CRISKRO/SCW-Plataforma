@@ -137,7 +137,7 @@ export default function AdminSchoolPage() {
               const experienceStr = student.experience === 'BEGINNER' ? 'Principiante' : student.experience === 'INTERMEDIATE' ? 'Intermedio' : 'Avanzado';
               const message = 
                 `🎉 *¡SCW DOJO — Felicitaciones, has sido Admitido!* 🥊\n\n` +
-                `Hola *${student.user.first_name}*,\n\n` +
+                `Hola *${student.name.split(' ')[0]}*,\n\n` +
                 `Nos complace informarte que tu solicitud de inscripción a SCW DOJO ha sido **APROBADA** por la administración. ¡Ya eres parte oficial del equipo! 🥊⚡\n\n` +
                 `📍 *Nivel de Experiencia:* ${experienceStr}\n\n` +
                 `Te esperamos en tu primera sesión de entrenamiento. ¡Prepárate para darlo todo en el ring! ⚡🥊\n\n` +

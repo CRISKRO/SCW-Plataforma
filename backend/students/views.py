@@ -50,7 +50,27 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         instance = serializer.save()
+        
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        password = self.request.data.get('password')
+        
         if instance.status == 'APPROVED':
+            user, created = User.objects.get_or_create(
+                email=instance.email,
+                defaults={
+                    'first_name': instance.name.split()[0] if instance.name else '',
+                    'last_name': " ".join(instance.name.split()[1:]) if instance.name and len(instance.name.split()) > 1 else '',
+                    'role': 'STUDENT',
+                    'phone_number': instance.phone
+                }
+            )
+            if user.role == 'USER':
+                user.role = 'STUDENT'
+            if password:
+                user.set_password(password)
+            user.save()
+            
             self.send_admission_whatsapp(instance)
             self.send_admission_email(instance)
 
@@ -86,6 +106,26 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         original_status = instance.status
         updated_instance = serializer.save()
+        
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        password = self.request.data.get('password')
+        
+        if updated_instance.status == 'APPROVED':
+            user, created = User.objects.get_or_create(
+                email=updated_instance.email,
+                defaults={
+                    'first_name': updated_instance.name.split()[0] if updated_instance.name else '',
+                    'last_name': " ".join(updated_instance.name.split()[1:]) if updated_instance.name and len(updated_instance.name.split()) > 1 else '',
+                    'role': 'STUDENT',
+                    'phone_number': updated_instance.phone
+                }
+            )
+            if user.role == 'USER':
+                user.role = 'STUDENT'
+            if password:
+                user.set_password(password)
+            user.save()
         
         if original_status != 'APPROVED' and updated_instance.status == 'APPROVED':
             # Cobrar inscripción + mensualidad
