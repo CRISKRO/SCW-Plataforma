@@ -3,7 +3,8 @@ from .models import Fighter, Event, Match, Chronicle, Sponsor
 
 @admin.register(Fighter)
 class FighterAdmin(admin.ModelAdmin):
-    list_display = ('name', 'nickname', 'instagram', 'is_active')
+    list_display = ('name', 'order', 'nickname', 'instagram', 'is_active')
+    list_editable = ('order',)
     list_filter = ('is_active',)
     search_fields = ('name', 'nickname')
 
@@ -31,6 +32,7 @@ class ChronicleAdmin(admin.ModelAdmin):
 
 @admin.register(Sponsor)
 class SponsorAdmin(admin.ModelAdmin):
-    list_display = ('name', 'contact', 'phone', 'is_active', 'created_at')
+    list_display = ('name', 'order', 'contact', 'phone', 'is_active', 'created_at')
+    list_editable = ('order',)
     search_fields = ('name', 'contact', 'phone', 'description')
     list_filter = ('is_active', 'created_at')

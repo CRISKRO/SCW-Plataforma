@@ -17,8 +17,10 @@ class Fighter(models.Model):
     image = models.ImageField(_('foto del luchador'), upload_to='fighters/', blank=True, null=True)
     is_active = models.BooleanField(_('activo'), default=True)
     is_student = models.BooleanField(_('es alumno'), default=False)
+    order = models.PositiveIntegerField(_('orden'), default=0)
 
     class Meta:
+        ordering = ['order', 'name']
         verbose_name = 'Luchador'
         verbose_name_plural = 'Luchadores'
 
@@ -114,10 +116,11 @@ class Sponsor(models.Model):
     url = models.URLField(_('enlace/página web'), blank=True)
     image = models.ImageField(_('imagen/logo'), upload_to='sponsors/', blank=True, null=True)
     is_active = models.BooleanField(_('activo'), default=True)
+    order = models.PositiveIntegerField(_('orden'), default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['order', '-created_at']
         verbose_name = 'Patrocinador'
         verbose_name_plural = 'Patrocinadores'
 
