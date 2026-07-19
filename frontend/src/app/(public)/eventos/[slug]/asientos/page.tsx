@@ -293,8 +293,45 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
     setSelectedSeats(prev => prev.filter(s => s.seatId !== seatId));
   };
 
+  const validateOrphanSeats = (): boolean => {
+    for (const zone of parsedZones) {
+      if (!zone.groupedSeats) continue;
+      for (const rowName of Object.keys(zone.groupedSeats)) {
+        const seats = zone.groupedSeats[rowName];
+        if (!seats || seats.length === 0) continue;
+        
+        // Sort seats physically by seat_number
+        const sortedSeats = [...seats].sort((a: any, b: any) => a.seat_number - b.seat_number);
+        
+        const states = sortedSeats.map((seat: any) => {
+          if (isSeatSelected(seat.id)) return 'S';
+          if (!seat.is_available || seat.is_locked) return 'U';
+          return 'E';
+        });
+        
+        for (let i = 0; i < states.length; i++) {
+          if (states[i] === 'E') {
+            const left = i === 0 ? 'U' : states[i - 1];
+            const right = i === states.length - 1 ? 'U' : states[i + 1];
+            
+            if ((left === 'U' || left === 'S') && (right === 'U' || right === 'S')) {
+              // It's an orphan. Did the user create it? (Is at least one neighbor 'S'?)
+              if (left === 'S' || right === 'S') {
+                useToastStore.getState().addToast(`No puedes dejar un solo asiento vacío aislado en la fila ${rowName}. Por favor selecciona asientos contiguos o deja al menos 2 libres.`, 'error');
+                return false;
+              }
+            }
+          }
+        }
+      }
+    }
+    return true;
+  };
+
   const handleConfirm = async () => {
     if (!event || !actualEventId) return;
+    if (!validateOrphanSeats()) return;
+    
     try {
       setLoading(true);
       const seatIds = selectedSeats.map(s => s.seatId);

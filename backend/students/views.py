@@ -71,6 +71,20 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
                 user.set_password(password)
             user.save()
             
+            # Cobrar inscripción + mensualidad inicial
+            from api.models import get_active_config
+            try:
+                config = get_active_config()
+                tuition_fee = config.tuition_fee
+                enrollment_fee = config.enrollment_fee
+            except:
+                tuition_fee = 500.00
+                enrollment_fee = 250.00
+                
+            instance.outstanding_balance = tuition_fee + enrollment_fee
+            instance.payment_status = 'UNPAID'
+            instance.save(update_fields=['outstanding_balance', 'payment_status'])
+            
             self.send_admission_whatsapp(instance)
             self.send_admission_email(instance)
 
