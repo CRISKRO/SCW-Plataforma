@@ -16,20 +16,32 @@ export interface CartItem {
   session_id?: string;
 }
 
+export interface AppliedCoupon {
+  code: string;
+  discount_type: string;
+  discount_value: number;
+  discount_amount: number;
+}
+
 interface CartState {
   items: CartItem[];
+  appliedCoupon: AppliedCoupon | null;
   addItem: (item: CartItem) => void;
   removeItem: (id: number, size?: string) => void;
   updateQuantity: (id: number, quantity: number, size?: string) => void;
   clearCart: () => void;
   getTotalItems: () => number;
   getTotalPrice: () => number;
+  applyCoupon: (coupon: AppliedCoupon) => void;
+  removeCoupon: () => void;
+  getDiscountAmount: () => number;
 }
 
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
+      appliedCoupon: null,
       addItem: (newItem) => {
         set((state) => {
           const existingItem = state.items.find(
@@ -92,7 +104,7 @@ export const useCartStore = create<CartState>()(
           });
         }
         
-        set({ items: [] });
+        set({ items: [], appliedCoupon: null });
       },
       getTotalItems: () => {
         return get().items.reduce((total, item) => total + item.quantity, 0);
@@ -102,6 +114,21 @@ export const useCartStore = create<CartState>()(
           (total, item) => total + Number(item.price) * item.quantity,
           0
         );
+      },
+      applyCoupon: (coupon) => {
+        set({ appliedCoupon: coupon });
+      },
+      removeCoupon: () => {
+        set({ appliedCoupon: null });
+      },
+      getDiscountAmount: () => {
+        const coupon = get().appliedCoupon;
+        if (!coupon) return 0;
+        const subtotal = get().getTotalPrice();
+        if (coupon.discount_type === 'PERCENTAGE') {
+          return Math.min((subtotal * coupon.discount_value) / 100, subtotal);
+        }
+        return Math.min(coupon.discount_value, subtotal);
       },
     }),
     {

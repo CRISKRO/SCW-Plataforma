@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Trash2, ShoppingBag, CreditCard, ShieldCheck, Lock, Loader2 } from 'lucide-react';
+import { Trash2, ShoppingBag, CreditCard, ShieldCheck, Lock, Loader2, Ticket, Tag, Check, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/cartStore';
@@ -30,8 +30,25 @@ export default function CartPage() {
 
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
+  // Coupon states
+  const [couponInput, setCouponInput] = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [couponSuccess, setCouponSuccess] = useState<string | null>(null);
+
   const [loading, setLoading] = useState(false);
-  const { items, removeItem, updateQuantity, getTotalPrice, getTotalItems, clearCart } = useCartStore();
+  const { 
+    items, 
+    removeItem, 
+    updateQuantity, 
+    getTotalPrice, 
+    getTotalItems, 
+    clearCart, 
+    appliedCoupon, 
+    applyCoupon, 
+    removeCoupon, 
+    getDiscountAmount 
+  } = useCartStore();
 
   const hasMerch = items.some(i => {
     if (i.requires_shipping !== undefined) {
@@ -66,6 +83,39 @@ export default function CartPage() {
     };
     fetchConfig();
   }, [user]);
+
+  const handleApplyCoupon = async () => {
+    if (!couponInput.trim()) return;
+    setCouponLoading(true);
+    setCouponError(null);
+    setCouponSuccess(null);
+    try {
+      const res = await api.post('/payments/coupons/validate/', {
+        code: couponInput.trim(),
+        subtotal: getTotalPrice()
+      });
+      if (res.data.valid) {
+        applyCoupon({
+          code: res.data.code,
+          discount_type: res.data.discount_type,
+          discount_value: parseFloat(res.data.discount_value),
+          discount_amount: res.data.discount_amount
+        });
+        setCouponSuccess(res.data.message || '¡Cupón aplicado exitosamente!');
+        setCouponInput('');
+      }
+    } catch (err: any) {
+      console.error("Coupon validation error:", err);
+      setCouponError(err.response?.data?.message || 'El cupón no es válido o ya expiró.');
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const discountAmount = getDiscountAmount();
+  const subtotal = getTotalPrice();
+  const subtotalAfterDiscount = Math.max(0, subtotal - discountAmount);
+  const finalTotal = subtotalAfterDiscount + (hasMerch ? shippingCost : 0);
 
   const handleCheckout = async () => {
 
@@ -114,7 +164,8 @@ export default function CartPage() {
         contact_phone: phone,
         contact_name: contactName,
         items: JSON.stringify(orderItems),
-        payment_method: paymentMethod
+        payment_method: paymentMethod,
+        coupon_code: appliedCoupon ? appliedCoupon.code : ''
       };
 
       if (hasMerch) {
@@ -233,6 +284,17 @@ export default function CartPage() {
                       <span>Subtotal ({getTotalItems()} artículo{getTotalItems() !== 1 ? 's' : ''})</span>
                       <span>${getTotalPrice().toFixed(2)}</span>
                     </div>
+
+                    {appliedCoupon && (
+                      <div className="flex justify-between text-green-400 font-medium">
+                        <span className="flex items-center gap-1.5">
+                          <Tag className="w-3.5 h-3.5" />
+                          Descuento ({appliedCoupon.code})
+                        </span>
+                        <span>-${discountAmount.toFixed(2)}</span>
+                      </div>
+                    )}
+
                     <div className="flex justify-between">
                       <span>Envío</span>
                       {hasMerch ? (
@@ -242,9 +304,65 @@ export default function CartPage() {
                       )}
                     </div>
                   </div>
+
+                  {/* Campo de Cupón de Descuento */}
+                  <div className="mt-5 pt-4 border-t border-white/10 space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-widest text-zinc-400 flex items-center gap-1.5">
+                      <Ticket className="w-4 h-4 text-red-500" /> ¿Tienes un cupón de descuento?
+                    </label>
+
+                    {appliedCoupon ? (
+                      <div className="flex items-center justify-between p-3 bg-green-950/40 border border-green-500/30 rounded-xl text-xs">
+                        <div className="flex items-center gap-2 text-green-300 font-bold uppercase">
+                          <Check className="w-4 h-4 text-green-400" />
+                          <span>{appliedCoupon.code} aplicado</span>
+                          <span className="text-zinc-400 font-normal">(-${discountAmount.toFixed(2)})</span>
+                        </div>
+                        <button
+                          onClick={removeCoupon}
+                          className="text-zinc-400 hover:text-red-400 p-1 transition-colors"
+                          title="Remover cupón"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="CÓDIGO DE CUPÓN"
+                          value={couponInput}
+                          onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleApplyCoupon();
+                            }
+                          }}
+                          className="flex-1 bg-black border border-white/20 px-3 py-2 rounded-xl text-white uppercase text-xs focus:outline-none focus:border-red-500 transition-colors font-mono tracking-wider"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleApplyCoupon}
+                          disabled={couponLoading || !couponInput.trim()}
+                          className="bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase transition-colors flex items-center gap-1.5"
+                        >
+                          {couponLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Aplicar'}
+                        </button>
+                      </div>
+                    )}
+
+                    {couponError && (
+                      <p className="text-xs text-red-400 font-medium">{couponError}</p>
+                    )}
+                    {couponSuccess && (
+                      <p className="text-xs text-green-400 font-medium">{couponSuccess}</p>
+                    )}
+                  </div>
+
                   <div className="border-t border-white/10 pt-4 mt-4 flex justify-between items-end">
                     <span className="font-bold">Total</span>
-                    <span className="text-3xl font-black">${(getTotalPrice() + (hasMerch ? shippingCost : 0)).toFixed(2)} <span className="text-sm font-normal text-zinc-500">MXN</span></span>
+                    <span className="text-3xl font-black">${finalTotal.toFixed(2)} <span className="text-sm font-normal text-zinc-500">MXN</span></span>
                   </div>
                 </div>
 
@@ -393,7 +511,7 @@ export default function CartPage() {
                       ) : (
                         <>
                           {paymentMethod === 'TRANSFER' ? <ShoppingBag className="w-5 h-5" /> : <CreditCard className="w-5 h-5" />}
-                          {paymentMethod === 'TRANSFER' ? 'Enviar Comprobante' : `Pagar $${(getTotalPrice() + (hasMerch ? shippingCost : 0)).toFixed(2)} con Mercado Pago`}
+                          {paymentMethod === 'TRANSFER' ? 'Enviar Comprobante' : `Pagar $${finalTotal.toFixed(2)} con Mercado Pago`}
                         </>
                       )}
                     </button>

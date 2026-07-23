@@ -4,6 +4,61 @@ from django.utils.translation import gettext_lazy as _
 from merch.models import Product
 
 
+from django.utils import timezone
+from decimal import Decimal
+
+
+class Coupon(models.Model):
+    class DiscountType(models.TextChoices):
+        PERCENTAGE = 'PERCENTAGE', _('Porcentaje (%)')
+        FIXED = 'FIXED', _('Monto Fijo ($)')
+
+    code = models.CharField(_('código'), max_length=50, unique=True)
+    discount_type = models.CharField(_('tipo de descuento'), max_length=15, choices=DiscountType.choices, default=DiscountType.PERCENTAGE)
+    discount_value = models.DecimalField(_('valor de descuento'), max_digits=10, decimal_places=2)
+    min_purchase_amount = models.DecimalField(_('compra mínima (MXN)'), max_digits=10, decimal_places=2, default=0.00)
+    max_discount_amount = models.DecimalField(_('descuento máximo (MXN)'), max_digits=10, decimal_places=2, null=True, blank=True)
+    max_uses = models.PositiveIntegerField(_('usos máximos'), null=True, blank=True)
+    uses_count = models.PositiveIntegerField(_('usos acumulados'), default=0)
+    valid_from = models.DateTimeField(_('válido desde'), null=True, blank=True)
+    valid_until = models.DateTimeField(_('válido hasta'), null=True, blank=True)
+    is_active = models.BooleanField(_('activo'), default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Cupón'
+        verbose_name_plural = 'Cupones'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.code} ({self.get_discount_type_display()} {self.discount_value})"
+
+    def is_valid(self, subtotal=0):
+        now = timezone.now()
+        if not self.is_active:
+            return False, "El cupón no está activo."
+        if self.valid_from and now < self.valid_from:
+            return False, "El cupón aún no está vigente."
+        if self.valid_until and now > self.valid_until:
+            return False, "El cupón ha expirado."
+        if self.max_uses is not None and self.uses_count >= self.max_uses:
+            return False, "El cupón ha alcanzado el límite de usos."
+        if Decimal(str(subtotal)) < self.min_purchase_amount:
+            return False, f"La compra mínima para este cupón es de ${self.min_purchase_amount:.2f} MXN."
+        return True, "Cupón válido."
+
+    def calculate_discount(self, subtotal):
+        subtotal_dec = Decimal(str(subtotal))
+        if self.discount_type == self.DiscountType.PERCENTAGE:
+            discount = (subtotal_dec * Decimal(str(self.discount_value))) / Decimal('100.00')
+            if self.max_discount_amount and discount > self.max_discount_amount:
+                discount = Decimal(str(self.max_discount_amount))
+        else:
+            discount = Decimal(str(self.discount_value))
+
+        return min(discount, subtotal_dec)
+
+
 class Order(models.Model):
     class Status(models.TextChoices):
         PENDING = 'PENDING', _('Pendiente')
@@ -23,6 +78,8 @@ class Order(models.Model):
     contact_name = models.CharField(_('nombre de contacto'), max_length=255, blank=True, default='')
 
     total_amount = models.DecimalField(_('total (MXN)'), max_digits=10, decimal_places=2)
+    coupon = models.ForeignKey(Coupon, related_name='orders', on_delete=models.SET_NULL, null=True, blank=True)
+    discount_amount = models.DecimalField(_('descuento (MXN)'), max_digits=10, decimal_places=2, default=0.00)
     status = models.CharField(_('estado'), max_length=15, choices=Status.choices, default=Status.PENDING)
     payment_method = models.CharField(_('método de pago'), max_length=20, choices=PaymentMethod.choices, default=PaymentMethod.MERCADOPAGO)
     transfer_receipt = models.FileField(_('comprobante de transferencia'), upload_to='receipts/', null=True, blank=True)

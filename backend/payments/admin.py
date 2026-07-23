@@ -1,5 +1,11 @@
 from django.contrib import admin
-from .models import Order, OrderItem
+from .models import Order, OrderItem, Coupon
+
+@admin.register(Coupon)
+class CouponAdmin(admin.ModelAdmin):
+    list_display = ('code', 'discount_type', 'discount_value', 'min_purchase_amount', 'uses_count', 'max_uses', 'is_active', 'valid_until')
+    list_filter = ('discount_type', 'is_active', 'created_at')
+    search_fields = ('code',)
 
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
@@ -8,7 +14,7 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('id', 'contact_email', 'total_amount', 'status', 'created_at')
+    list_display = ('id', 'contact_email', 'total_amount', 'coupon', 'discount_amount', 'status', 'created_at')
     list_filter = ('status', 'created_at')
     search_fields = ('contact_email', 'mp_payment_id')
     inlines = [OrderItemInline]

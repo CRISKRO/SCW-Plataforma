@@ -5,14 +5,16 @@ from .views import (
     VerifyPaymentView, ValidateTicketView, WebhookView, MyOrdersView, 
     TestEmailView, ApproveTransferView, BoxOfficeEventsView, BoxOfficeSellView,
     BoxOfficeRafflesView, BoxOfficeSellRaffleView, BoxOfficeDojoStudentView, BoxOfficeDojoPaymentView,
-    GenerateCourtesyTicketView
+    GenerateCourtesyTicketView, CouponViewSet, ValidateCouponView
 )
 
 router = DefaultRouter()
 router.register(r'orders', OrderViewSet, basename='order')
+router.register(r'coupons', CouponViewSet, basename='coupon')
 
 urlpatterns = [
     path('create-order/', CreateOrderView.as_view(), name='create-order'),
+    path('coupons/validate/', ValidateCouponView.as_view(), name='validate-coupon'),
     path('public-key/', MPPublicKeyView.as_view(), name='mp-public-key'),
     path('process-card/', ProcessCardPaymentView.as_view(), name='process-card'),
     path('verify/', VerifyPaymentView.as_view(), name='verify-payment'),

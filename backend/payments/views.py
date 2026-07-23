@@ -4,9 +4,9 @@ from rest_framework import serializers, status, viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAdminUser
-from .models import Order, OrderItem
+from .models import Order, OrderItem, Coupon
 from merch.models import Product
-from .serializers import OrderSerializer
+from .serializers import OrderSerializer, CouponSerializer
 from api.models import get_active_config
 
 def send_order_emails_safely(order):
@@ -39,6 +39,52 @@ def send_order_emails_safely(order):
             send_new_merch_admin_email(order)
         except Exception as e:
             print("Email error (admin merch alert):", e)
+
+
+class CouponViewSet(viewsets.ModelViewSet):
+    queryset = Coupon.objects.all()
+    serializer_class = CouponSerializer
+    permission_classes = [IsAdminUser]
+
+
+class ValidateCouponView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        from decimal import Decimal
+        code = request.data.get('code', '').strip().upper()
+        subtotal = request.data.get('subtotal', 0)
+
+        if not code:
+            return Response({'valid': False, 'message': 'Por favor ingresa un código de cupón.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            coupon = Coupon.objects.get(code__iexact=code)
+        except Coupon.DoesNotExist:
+            return Response({'valid': False, 'message': 'El cupón ingresado no existe.'}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            subtotal_dec = Decimal(str(subtotal))
+        except (ValueError, TypeError):
+            subtotal_dec = Decimal('0.00')
+
+        valid, message = coupon.is_valid(subtotal=subtotal_dec)
+        if not valid:
+            return Response({'valid': False, 'message': message}, status=status.HTTP_400_BAD_REQUEST)
+
+        discount_amount = coupon.calculate_discount(subtotal_dec)
+        final_subtotal = max(Decimal('0.00'), subtotal_dec - discount_amount)
+
+        return Response({
+            'valid': True,
+            'code': coupon.code,
+            'discount_type': coupon.discount_type,
+            'discount_value': str(coupon.discount_value),
+            'discount_amount': float(discount_amount),
+            'final_subtotal': float(final_subtotal),
+            'message': '¡Cupón aplicado correctamente!'
+        }, status=status.HTTP_200_OK)
+
 
 class ApproveTransferView(APIView):
     """Allows admins to approve transfer orders directly via a secure email link."""
@@ -118,20 +164,17 @@ class MPPublicKeyView(APIView):
     def get(self, request):
         config = get_active_config()
         public_key = config.mercadopago_public_key if config.mercadopago_public_key else settings.MERCADOPAGO_PUBLIC_KEY
-        return Response({
-            "public_key": public_key,
-            "shipping_cost": config.shipping_cost,
-            "registration_method": config.registration_method
-        })
+        shipping_cost = config.shipping_cost if hasattr(config, 'shipping_cost') else 0.00
+        return Response({'public_key': public_key, 'shipping_cost': str(shipping_cost)})
 
 class OrderItemInputSerializer(serializers.Serializer):
     product_id = serializers.IntegerField(required=False, allow_null=True)
     seat_id = serializers.IntegerField(required=False, allow_null=True)
     event_id = serializers.IntegerField(required=False, allow_null=True)
-    name = serializers.CharField(max_length=200, required=False, allow_blank=True)
-    price = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
-    quantity = serializers.IntegerField(min_value=1)
-    size = serializers.CharField(max_length=100, allow_blank=True, required=False)
+    quantity = serializers.IntegerField(default=1)
+    price = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, default=0.00)
+    size = serializers.CharField(max_length=100, allow_blank=True, required=False, default='')
+    name = serializers.CharField(max_length=200, required=False, default='')
     raffle_ticket_id = serializers.IntegerField(required=False, allow_null=True)
 
 class CreateOrderSerializer(serializers.Serializer):
@@ -148,6 +191,7 @@ class CreateOrderSerializer(serializers.Serializer):
     
     payment_method = serializers.CharField(max_length=20, required=False, default='MERCADOPAGO')
     transfer_receipt = serializers.FileField(required=False, allow_null=True)
+    coupon_code = serializers.CharField(max_length=50, required=False, allow_blank=True)
     
     items = serializers.JSONField(required=False) # Fallback handling in view
 
@@ -222,7 +266,7 @@ class CreateOrderView(APIView):
                     except RaffleTicket.DoesNotExist:
                         return Response({"error": f"Raffle ticket {item['raffle_ticket_id']} not found or already sold."}, status=status.HTTP_400_BAD_REQUEST)
                 
-                total_amount += price * item['quantity']
+                total_amount += float(price) * item['quantity']
                 
                 order_items_data.append({
                     'product': product,
@@ -234,6 +278,22 @@ class CreateOrderView(APIView):
                     'price': price,
                     'size': item.get('size', '')
                 })
+
+            from decimal import Decimal
+            coupon_obj = None
+            discount_amount = Decimal('0.00')
+            raw_coupon_code = data.get('coupon_code', '').strip()
+            if raw_coupon_code:
+                try:
+                    c = Coupon.objects.get(code__iexact=raw_coupon_code)
+                    valid, msg = c.is_valid(subtotal=Decimal(str(total_amount)))
+                    if valid:
+                        coupon_obj = c
+                        discount_amount = c.calculate_discount(Decimal(str(total_amount)))
+                    else:
+                        return Response({"error": f"Cupón no válido: {msg}"}, status=status.HTTP_400_BAD_REQUEST)
+                except Coupon.DoesNotExist:
+                    return Response({"error": "El cupón ingresado no existe."}, status=status.HTTP_400_BAD_REQUEST)
 
             # Create Order
             user = request.user if request.user.is_authenticated else None
@@ -248,8 +308,9 @@ class CreateOrderView(APIView):
                     user.zipcode = data.get('shipping_zipcode', '')
                 user.save()
 
-            from decimal import Decimal
             shipping_cost_val = Decimal(str(data.get('shipping_cost', 0)))
+            subtotal_after_discount = max(Decimal('0.00'), Decimal(str(total_amount)) - discount_amount)
+            final_order_total = subtotal_after_discount + shipping_cost_val
             
             order = Order.objects.create(
                 user=user,
@@ -261,13 +322,21 @@ class CreateOrderView(APIView):
                 shipping_state=data.get('shipping_state', ''),
                 shipping_zipcode=data.get('shipping_zipcode', ''),
                 shipping_cost=shipping_cost_val,
-                total_amount=Decimal(str(total_amount)) + shipping_cost_val,
+                coupon=coupon_obj,
+                discount_amount=discount_amount,
+                total_amount=final_order_total,
                 status=Order.Status.PENDING,
                 payment_method=data.get('payment_method', 'MERCADOPAGO'),
                 transfer_receipt=data.get('transfer_receipt')
             )
 
+            if coupon_obj:
+                coupon_obj.uses_count += 1
+                coupon_obj.save(update_fields=['uses_count'])
+
             mp_items = []
+            discount_ratio = (subtotal_after_discount / Decimal(str(total_amount))) if total_amount > 0 else Decimal('1.00')
+
             for item_data in order_items_data:
                 order_item = OrderItem.objects.create(
                     order=order,
@@ -283,8 +352,6 @@ class CreateOrderView(APIView):
                 if item_data.get('raffle_ticket'):
                     rt = item_data['raffle_ticket']
                     rt.order_item = order_item
-                    # We might want to temporarily block it so others don't buy it at the same time
-                    # But for now we just link it. MP can handle concurrent failures later or we just hope people are fast.
                     rt.save()
                 
                 config = get_active_config()
@@ -292,16 +359,19 @@ class CreateOrderView(APIView):
                 
                 # Merch products need commission added at checkout. Tickets already include it.
                 if item_data.get('product'):
-                    price_with_commission = round(float(item_data['price']) * (1 + commission), 2)
+                    base_price = float(item_data['price']) * (1 + commission)
                 else:
-                    price_with_commission = float(item_data['price'])
+                    base_price = float(item_data['price'])
+                
+                # Apply discount ratio to mp unit price
+                price_with_commission_and_discount = round(base_price * float(discount_ratio), 2)
                 
                 size_str = f"({item_data['size']})" if item_data['size'] else ""
                 mp_items.append({
                     "title": f"{item_data['product_name']} {size_str}".strip(),
                     "quantity": item_data['quantity'],
                     "currency_id": "MXN",
-                    "unit_price": price_with_commission
+                    "unit_price": price_with_commission_and_discount
                 })
 
             shipping_cost = data.get('shipping_cost', 0)
