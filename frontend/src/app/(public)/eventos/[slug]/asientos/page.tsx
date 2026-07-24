@@ -566,8 +566,8 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
                           <div className="absolute bottom-2 left-2 w-6 h-6 bg-zinc-900 -rotate-45 transform -translate-x-1 translate-y-1 rounded-sm z-10"></div>
                           <div className="absolute -bottom-2 -right-2 w-5 h-5 bg-red-600 rounded-full shadow-lg border-2 border-black z-20"></div>
                           <div className="absolute bottom-2 right-2 w-6 h-6 bg-zinc-900 -rotate-45 transform translate-x-1 translate-y-1 rounded-sm z-10"></div>
-                          <div className="relative flex items-center justify-center w-24 h-24 border-4 border-zinc-400/50 rounded-full">
-                            <span className="text-zinc-400/80 font-black text-4xl tracking-tighter select-none">SCW</span>
+                          <div className="relative flex items-center justify-center w-24 h-24 border-4 border-zinc-400/50 rounded-full p-2 bg-black/10">
+                            <img src="/images/logo-scw.png" alt="SCW Logo" className="w-16 h-16 object-contain drop-shadow-md select-none pointer-events-none opacity-90" />
                           </div>
                         </div>
 

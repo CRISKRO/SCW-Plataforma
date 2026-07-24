@@ -248,8 +248,8 @@ export default function AdminSeatMap({ zones, selectedSeatIds, onToggleSeat }: A
                     <div className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-blue-600 rounded-full border border-black z-20"></div>
                     <div className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-blue-600 rounded-full border border-black z-20"></div>
                     <div className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-red-600 rounded-full border border-black z-20"></div>
-                    <div className="relative flex items-center justify-center w-12 h-12 border-2 border-zinc-400/50 rounded-full">
-                      <span className="text-zinc-400/80 font-black text-xl tracking-tighter select-none">SCW</span>
+                    <div className="relative flex items-center justify-center w-12 h-12 border-2 border-zinc-400/50 rounded-full p-1 bg-black/10">
+                      <img src="/images/logo-scw.png" alt="SCW Logo" className="w-8 h-8 object-contain drop-shadow-md select-none pointer-events-none opacity-90" />
                     </div>
                   </div>
                   <div className="flex-1 flex justify-start pl-6 relative">
