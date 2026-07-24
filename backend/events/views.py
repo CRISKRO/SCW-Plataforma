@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from rest_framework.permissions import BasePermission, SAFE_METHODS
-from .models import Fighter, Event, Match, Chronicle, Sponsor
-from .serializers import FighterSerializer, EventSerializer, MatchSerializer, ChronicleSerializer, SponsorSerializer
+from .models import Fighter, Event, Match, Chronicle, Sponsor, EventPost
+from .serializers import FighterSerializer, EventSerializer, MatchSerializer, ChronicleSerializer, SponsorSerializer, EventPostSerializer
 
 class IsAdminOrReadOnly(BasePermission):
     """Allow anyone to read; only admin/staff users can write."""
@@ -37,4 +37,9 @@ class ChronicleViewSet(viewsets.ModelViewSet):
 class SponsorViewSet(viewsets.ModelViewSet):
     queryset = Sponsor.objects.all()
     serializer_class = SponsorSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+class EventPostViewSet(viewsets.ModelViewSet):
+    queryset = EventPost.objects.select_related('event').all()
+    serializer_class = EventPostSerializer
     permission_classes = [IsAdminOrReadOnly]

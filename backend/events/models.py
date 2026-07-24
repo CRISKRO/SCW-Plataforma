@@ -132,3 +132,27 @@ class Sponsor(models.Model):
         if self.image and hasattr(self.image, 'url'):
             return self.image.url
         return ''
+
+
+class EventPost(models.Model):
+    title = models.CharField(_('título del post/promo'), max_length=200, blank=True)
+    image = models.ImageField(_('imagen del post'), upload_to='event_posts/')
+    event = models.ForeignKey(Event, related_name='posts', on_delete=models.CASCADE, verbose_name=_('evento asociado'))
+    is_active = models.BooleanField(_('activo'), default=True)
+    order = models.PositiveIntegerField(_('orden'), default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', '-created_at']
+        verbose_name = 'Post de Evento'
+        verbose_name_plural = 'Posts de Eventos'
+
+    def __str__(self):
+        return self.title or f"Post para {self.event.title}"
+
+    @property
+    def image_url(self):
+        if self.image and hasattr(self.image, 'url'):
+            return self.image.url
+        return ''
+

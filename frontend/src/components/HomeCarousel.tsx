@@ -99,21 +99,22 @@ interface HomeCarouselProps {
   premiumVideos: any[];
   sponsors?: any[];
   raffles?: any[];
+  eventPosts?: any[];
 }
 
-export default function HomeCarousel({ events, upcomingEvents, roster, chronicles, premiumVideos, sponsors = [], raffles = [] }: HomeCarouselProps) {
+export default function HomeCarousel({ events, upcomingEvents, roster, chronicles, premiumVideos, sponsors = [], raffles = [], eventPosts = [] }: HomeCarouselProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slides, setSlides] = useState<any[]>(staticSlides);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const generateSlug = (title: string) => {
+    if (!title) return '';
+    return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+  };
+
   useEffect(() => {
     let dynamicSlides: any[] = [];
-    
-const generateSlug = (title: string) => {
-  if (!title) return '';
-  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-};
 
     if (upcomingEvents && upcomingEvents.length > 0) {
       const eventSlides = upcomingEvents.map((ev: any) => ({
@@ -588,6 +589,50 @@ const generateSlug = (title: string) => {
         </div>
       </section>
       
+      {/* Cartelera Promocional (Posts de Eventos) Section */}
+      {eventPosts && eventPosts.length > 0 && (
+        <section className="py-12 lg:py-16 bg-black relative border-t border-white/5">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight">Cartelera Promocional</h2>
+            <p className="text-zinc-500 mt-2">Haz clic en cualquier cartel para ir directamente a la compra de boletos del evento.</p>
+          </div>
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className={`grid grid-cols-1 ${eventPosts.length > 1 ? 'md:grid-cols-2 lg:grid-cols-3' : 'max-w-xl mx-auto'} gap-8 justify-center items-stretch`}>
+              {eventPosts.map((post: any) => {
+                const slug = post.event_title ? generateSlug(post.event_title) : '';
+                const targetHref = slug ? `/eventos/${slug}` : '/eventos';
+
+                return (
+                  <Link key={post.id} href={targetHref} className="block group">
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      transition={{ duration: 0.3 }}
+                      className="relative h-full rounded-2xl overflow-hidden bg-zinc-900 border border-white/10 group-hover:border-red-500/80 shadow-2xl transition-all flex flex-col justify-between"
+                    >
+                      <img 
+                        src={post.image_url} 
+                        alt={post.title || post.event_title} 
+                        className="w-full h-auto object-cover"
+                      />
+                      <div className="p-4 bg-gradient-to-t from-black via-zinc-950/90 to-transparent flex items-center justify-between gap-2 border-t border-white/5">
+                        <div>
+                          <p className="text-xs text-red-500 font-bold uppercase tracking-wider">Evento Asociado</p>
+                          <p className="text-sm font-black uppercase text-white truncate">{post.event_title}</p>
+                        </div>
+                        <span className="bg-red-600 group-hover:bg-red-500 text-white text-[11px] font-black uppercase tracking-widest px-3 py-2 rounded-xl shadow-lg flex items-center gap-1.5 flex-shrink-0 transition-colors">
+                          <Ticket className="w-3.5 h-3.5" /> Boletos
+                        </span>
+                      </div>
+                    </motion.div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Patrocinadores Section */}
       {sponsors && sponsors.length > 0 && (
         <section className="py-16 bg-black relative border-t border-white/5 overflow-hidden">

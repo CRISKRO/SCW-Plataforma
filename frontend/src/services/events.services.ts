@@ -99,5 +99,30 @@ export const eventsService = {
   deleteSponsor: async (id: number) => {
     const response = await api.delete(`/events/sponsors/${id}/`);
     return response.data;
+  },
+
+  getEventPosts: async () => {
+    const response = await api.get('/events/posts/');
+    return response.data;
+  },
+
+  getEventPostDetails: async (id: number) => {
+    const response = await api.get(`/events/posts/${id}/`);
+    return response.data;
+  },
+
+  createEventPost: async (data: any) => {
+    const response = await api.post('/events/posts/', data);
+    return response.data;
+  },
+
+  updateEventPost: async (id: number, data: any) => {
+    const response = await api.patch(`/events/posts/${id}/`, data);
+    return response.data;
+  },
+
+  deleteEventPost: async (id: number) => {
+    const response = await api.delete(`/events/posts/${id}/`);
+    return response.data;
   }
 };

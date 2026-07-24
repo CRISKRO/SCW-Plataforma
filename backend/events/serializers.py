@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Fighter, Event, Match, Chronicle, Sponsor
+from .models import Fighter, Event, Match, Chronicle, Sponsor, EventPost
 
 
 class FighterSerializer(serializers.ModelSerializer):
@@ -88,3 +88,26 @@ class SponsorSerializer(serializers.ModelSerializer):
         if obj.image and request:
             return request.build_absolute_uri(obj.image.url)
         return ''
+
+
+class EventPostSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField(read_only=True)
+    event_title = serializers.CharField(source='event.title', read_only=True)
+    event_date = serializers.DateTimeField(source='event.date_time', read_only=True)
+    event_location = serializers.CharField(source='event.location', read_only=True)
+
+    class Meta:
+        model = EventPost
+        fields = ['id', 'title', 'image', 'image_url', 'event', 'event_title', 'event_date', 'event_location', 'is_active', 'order', 'created_at']
+        extra_kwargs = {
+            'title': {'required': False, 'allow_blank': True},
+        }
+
+    def get_image_url(self, obj):
+        request = self.context.get('request')
+        if obj.image and request:
+            return request.build_absolute_uri(obj.image.url)
+        elif obj.image:
+            return obj.image.url
+        return ''
+

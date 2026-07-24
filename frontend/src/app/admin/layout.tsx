@@ -22,7 +22,8 @@ import {
   Newspaper,
   Star,
   Gift,
-  Ticket
+  Ticket,
+  Image as ImageIcon
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
@@ -32,6 +33,7 @@ import { motion } from 'framer-motion';
 const sidebarItems = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Eventos', href: '/admin/events', icon: CalendarDays },
+  { name: 'Posts de Eventos', href: '/admin/event-posts', icon: ImageIcon },
   { name: 'Luchadores', href: '/admin/fighters', icon: Trophy },
   { name: 'Usuarios', href: '/admin/users', icon: Users },
   { name: 'Productos', href: '/admin/products', icon: ShoppingBag },
