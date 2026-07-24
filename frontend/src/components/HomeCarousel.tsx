@@ -416,26 +416,27 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
             <div className="col-span-4 text-center text-zinc-500 py-12">Roster no disponible.</div>
           ) : (
             roster.map((fighter: any, i: number) => (
-              <motion.div
-                key={fighter.id}
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="group relative aspect-[3/4] bg-zinc-900 overflow-hidden cursor-pointer transition-all duration-500"
-              >
-                <div className="absolute inset-0 bg-zinc-800">
-                  <Image src={fighter.image_url || '/images/logoring.webp'} alt={fighter.name} fill className="object-cover" sizes="(max-width: 768px) 50vw, 25vw" />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+              <Link key={fighter.id} href="/roster" className="block group">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className="relative aspect-[3/4] bg-zinc-900 overflow-hidden cursor-pointer transition-all duration-500 rounded-xl"
+                >
+                  <div className="absolute inset-0 bg-zinc-800">
+                    <Image src={fighter.image_url || '/images/logoring.webp'} alt={fighter.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 50vw, 25vw" />
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 
-                <div className="absolute bottom-0 left-0 p-4 w-full transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                  <SocialLinks fighter={fighter} />
-                  <h3 className="text-xl font-black uppercase tracking-tighter">
-                    {fighter.name}
-                  </h3>
-                </div>
-              </motion.div>
+                  <div className="absolute bottom-0 left-0 p-4 w-full transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                    <SocialLinks fighter={fighter} />
+                    <h3 className="text-xl font-black uppercase tracking-tighter">
+                      {fighter.name}
+                    </h3>
+                  </div>
+                </motion.div>
+              </Link>
             ))
           )}
         </div>
@@ -446,6 +447,50 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
           </Link>
         </div>
       </section>
+
+      {/* Cartelera Promocional (Posts de Eventos) Section */}
+      {eventPosts && eventPosts.length > 0 && (
+        <section className="py-12 lg:py-16 bg-black relative border-t border-white/5">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight">Cartelera Promocional</h2>
+            <p className="text-zinc-500 mt-2">Haz clic en cualquier cartel para ir directamente a la compra de boletos del evento.</p>
+          </div>
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className={`grid grid-cols-1 ${eventPosts.length > 1 ? 'md:grid-cols-2 lg:grid-cols-3' : 'max-w-xl mx-auto'} gap-8 justify-center items-stretch`}>
+              {eventPosts.map((post: any) => {
+                const slug = post.event_title ? generateSlug(post.event_title) : '';
+                const targetHref = slug ? `/eventos/${slug}` : '/eventos';
+
+                return (
+                  <Link key={post.id} href={targetHref} className="block group">
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      transition={{ duration: 0.3 }}
+                      className="relative h-full rounded-2xl overflow-hidden bg-zinc-900 border border-white/10 group-hover:border-red-500/80 shadow-2xl transition-all flex flex-col justify-between"
+                    >
+                      <img 
+                        src={post.image_url} 
+                        alt={post.title || post.event_title} 
+                        className="w-full h-auto object-cover"
+                      />
+                      <div className="p-4 bg-gradient-to-t from-black via-zinc-950/90 to-transparent flex items-center justify-between gap-2 border-t border-white/5">
+                        <div>
+                          <p className="text-xs text-red-500 font-bold uppercase tracking-wider">Evento Asociado</p>
+                          <p className="text-sm font-black uppercase text-white truncate">{post.event_title}</p>
+                        </div>
+                        <span className="bg-red-600 group-hover:bg-red-500 text-white text-[11px] font-black uppercase tracking-widest px-3 py-2 rounded-xl shadow-lg flex items-center gap-1.5 flex-shrink-0 transition-colors">
+                          <Ticket className="w-3.5 h-3.5" /> Boletos
+                        </span>
+                      </div>
+                    </motion.div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Upcoming Events Section */}
       <section className="py-12 lg:py-16 bg-black relative border-t border-white/5">
@@ -589,50 +634,6 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
         </div>
       </section>
       
-      {/* Cartelera Promocional (Posts de Eventos) Section */}
-      {eventPosts && eventPosts.length > 0 && (
-        <section className="py-12 lg:py-16 bg-black relative border-t border-white/5">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight">Cartelera Promocional</h2>
-            <p className="text-zinc-500 mt-2">Haz clic en cualquier cartel para ir directamente a la compra de boletos del evento.</p>
-          </div>
-
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className={`grid grid-cols-1 ${eventPosts.length > 1 ? 'md:grid-cols-2 lg:grid-cols-3' : 'max-w-xl mx-auto'} gap-8 justify-center items-stretch`}>
-              {eventPosts.map((post: any) => {
-                const slug = post.event_title ? generateSlug(post.event_title) : '';
-                const targetHref = slug ? `/eventos/${slug}` : '/eventos';
-
-                return (
-                  <Link key={post.id} href={targetHref} className="block group">
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      transition={{ duration: 0.3 }}
-                      className="relative h-full rounded-2xl overflow-hidden bg-zinc-900 border border-white/10 group-hover:border-red-500/80 shadow-2xl transition-all flex flex-col justify-between"
-                    >
-                      <img 
-                        src={post.image_url} 
-                        alt={post.title || post.event_title} 
-                        className="w-full h-auto object-cover"
-                      />
-                      <div className="p-4 bg-gradient-to-t from-black via-zinc-950/90 to-transparent flex items-center justify-between gap-2 border-t border-white/5">
-                        <div>
-                          <p className="text-xs text-red-500 font-bold uppercase tracking-wider">Evento Asociado</p>
-                          <p className="text-sm font-black uppercase text-white truncate">{post.event_title}</p>
-                        </div>
-                        <span className="bg-red-600 group-hover:bg-red-500 text-white text-[11px] font-black uppercase tracking-widest px-3 py-2 rounded-xl shadow-lg flex items-center gap-1.5 flex-shrink-0 transition-colors">
-                          <Ticket className="w-3.5 h-3.5" /> Boletos
-                        </span>
-                      </div>
-                    </motion.div>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* Patrocinadores Section */}
       {sponsors && sponsors.length > 0 && (
         <section className="py-16 bg-black relative border-t border-white/5 overflow-hidden">
