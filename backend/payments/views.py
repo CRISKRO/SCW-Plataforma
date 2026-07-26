@@ -1499,7 +1499,7 @@ class BoxOfficeDojoPaymentView(APIView):
             return Response({"error": str(e)}, status=500)
 
 class GenerateCourtesyTicketView(APIView):
-    """Genera boletos de cortesía gratuitos y los envía por correo."""
+    """Genera boletos de cortesía o emisión directa de boletos (ventas) y los envía por correo con QR."""
     permission_classes = [IsAdminUser]
 
     def post(self, request):
@@ -1510,7 +1510,10 @@ class GenerateCourtesyTicketView(APIView):
             
         quantity_general = int(request.data.get('quantity_general', 0))
         email = request.data.get('email')
-        name = request.data.get('name', 'Cortesía SCW')
+        raw_name = request.data.get('name', '')
+        
+        is_courtesy = request.data.get('is_courtesy', True)
+        payment_method = request.data.get('payment_method', 'COURTESY' if is_courtesy else 'TRANSFER')
 
         if not event_id or not email:
             return Response({"error": "Faltan datos de evento o correo."}, status=400)
@@ -1518,23 +1521,20 @@ class GenerateCourtesyTicketView(APIView):
         if not seat_ids and quantity_general <= 0:
             return Response({"error": "Debes seleccionar asientos o indicar cantidad general."}, status=400)
 
-        from tickets.models import Seat
+        from tickets.models import Seat, EventZone
         from events.models import Event
         from django.db import transaction
+        from decimal import Decimal
 
         try:
             with transaction.atomic():
                 event = Event.objects.get(id=event_id)
+                general_zone = None
+                if quantity_general > 0:
+                    general_zone = EventZone.objects.filter(event=event, zone_type='GENERAL').first()
 
-                # Crear orden de cortesía
-                order = Order.objects.create(
-                    user=request.user,
-                    contact_email=email,
-                    contact_name=name,
-                    total_amount=0,
-                    status=Order.Status.PAID,
-                    payment_method='TRANSFER'
-                )
+                total_amount = Decimal('0.00')
+                items_to_create = []
 
                 if seat_ids:
                     seats = Seat.objects.select_for_update().filter(id__in=seat_ids, zone__event_id=event_id)
@@ -1545,32 +1545,65 @@ class GenerateCourtesyTicketView(APIView):
                         if not seat.is_available:
                             return Response({"error": f"El asiento {seat.display_number} ya no está disponible."}, status=400)
                         
-                        seat.is_available = False
-                        seat.save()
+                        price = Decimal('0.00') if is_courtesy else Decimal(str(seat.zone.price))
+                        total_amount += price
+                        prefix = "Boleto CORTESÍA" if is_courtesy else "Boleto"
+                        p_name = f"{prefix}: {seat.zone.zone_type} - Fila {seat.row_name} Asiento {seat.display_number}"
 
-                        OrderItem.objects.create(
-                            order=order,
-                            product_name=f"Boleto CORTESÍA: {seat.zone.zone_type} - Fila {seat.row_name} Asiento {seat.display_number}",
-                            quantity=1,
-                            price=0,
-                            event=event,
-                            seat=seat
-                        )
+                        items_to_create.append({
+                            'product_name': p_name,
+                            'quantity': 1,
+                            'price': price,
+                            'event': event,
+                            'seat': seat,
+                            'size': f"Fila {seat.row_name} - Asiento {seat.display_number}"
+                        })
 
                 if quantity_general > 0:
+                    gen_price = Decimal('0.00') if is_courtesy else (Decimal(str(general_zone.price)) if general_zone else Decimal('0.00'))
+                    prefix = "Boleto CORTESÍA" if is_courtesy else "Boleto"
                     for _ in range(quantity_general):
-                        OrderItem.objects.create(
-                            order=order,
-                            product_name="Boleto CORTESÍA: GENERAL",
-                            quantity=1,
-                            price=0,
-                            event=event,
-                            seat=None
-                        )
+                        total_amount += gen_price
+                        items_to_create.append({
+                            'product_name': f"{prefix}: GENERAL",
+                            'quantity': 1,
+                            'price': gen_price,
+                            'event': event,
+                            'seat': None,
+                            'size': 'General'
+                        })
+
+                contact_name = raw_name.strip() if raw_name.strip() else ("Cortesía SCW" if is_courtesy else "Cliente SCW")
+
+                # Crear orden pagada
+                order = Order.objects.create(
+                    user=request.user if request.user.is_authenticated else None,
+                    contact_email=email,
+                    contact_name=contact_name,
+                    total_amount=total_amount,
+                    status=Order.Status.PAID,
+                    payment_method=payment_method
+                )
+
+                for item_data in items_to_create:
+                    if item_data['seat']:
+                        item_data['seat'].is_available = False
+                        item_data['seat'].save()
+
+                    OrderItem.objects.create(
+                        order=order,
+                        product_name=item_data['product_name'],
+                        quantity=item_data['quantity'],
+                        price=item_data['price'],
+                        event=item_data['event'],
+                        seat=item_data['seat'],
+                        size=item_data['size']
+                    )
                 
             # Fuera de la transacción enviamos el correo
             send_order_emails_safely(order)
-            return Response({"success": True, "message": "Boletos de cortesía generados y enviados."})
+            msg = "Boletos de cortesía generados y enviados." if is_courtesy else "Boletos emitidos y enviados correctamente."
+            return Response({"success": True, "message": msg, "order_id": order.id})
             
         except Event.DoesNotExist:
             return Response({"error": "Evento no encontrado."}, status=404)

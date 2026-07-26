@@ -71,6 +71,8 @@ class Order(models.Model):
     class PaymentMethod(models.TextChoices):
         MERCADOPAGO = 'MERCADOPAGO', _('MercadoPago')
         TRANSFER = 'TRANSFER', _('Transferencia Bancaria')
+        BOX_OFFICE = 'BOX_OFFICE', _('Taquilla')
+        COURTESY = 'COURTESY', _('Cortesía')
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='orders', on_delete=models.SET_NULL, null=True, blank=True)
     contact_email = models.EmailField(_('email de contacto'))

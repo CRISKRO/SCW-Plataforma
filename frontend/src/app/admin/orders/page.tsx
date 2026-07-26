@@ -325,6 +325,21 @@ export default function AdminOrdersPage() {
     };
   }, [filteredOrders, selectedEventId, selectedEventObj]);
 
+  const renderPaymentBadge = (method: string) => {
+    switch (method) {
+      case 'MERCADOPAGO':
+        return <span className="text-[10px] bg-sky-500/20 text-sky-400 border border-sky-500/30 px-1.5 py-0.5 rounded font-bold uppercase mt-1 inline-block">MercadoPago</span>;
+      case 'TRANSFER':
+        return <span className="text-[10px] bg-purple-500/20 text-purple-400 border border-purple-500/30 px-1.5 py-0.5 rounded font-bold uppercase mt-1 inline-block">Transferencia</span>;
+      case 'BOX_OFFICE':
+        return <span className="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded font-bold uppercase mt-1 inline-block">Taquilla</span>;
+      case 'COURTESY':
+        return <span className="text-[10px] bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 px-1.5 py-0.5 rounded font-bold uppercase mt-1 inline-block">Cortesía</span>;
+      default:
+        return method ? <span className="text-[10px] bg-zinc-800 text-zinc-400 border border-zinc-700 px-1.5 py-0.5 rounded font-bold uppercase mt-1 inline-block">{method}</span> : null;
+    }
+  };
+
   return (
     <div className="space-y-6 relative pb-12">
       {/* Header */}
@@ -528,7 +543,7 @@ export default function AdminOrdersPage() {
                       <td className="px-6 py-4">
                         <div className="text-sm text-white font-medium">{order.contact_email}</div>
                         {order.contact_phone && <div className="text-xs text-zinc-500">{order.contact_phone}</div>}
-                        {order.payment_method === 'TRANSFER' && <span className="text-[10px] bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded font-bold uppercase mt-1 inline-block">Transferencia</span>}
+                        {renderPaymentBadge(order.payment_method)}
                       </td>
                       <td className="px-6 py-4">
                         <div className="space-y-1">
@@ -603,11 +618,7 @@ export default function AdminOrdersPage() {
                     {order.contact_phone && (
                       <p className="text-[11px] text-zinc-400 mt-0.5">{order.contact_phone}</p>
                     )}
-                    {order.payment_method === 'TRANSFER' && (
-                      <span className="text-[9px] bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded font-bold uppercase mt-1 inline-block">
-                        Transferencia
-                      </span>
-                    )}
+                    {renderPaymentBadge(order.payment_method)}
                   </div>
 
                   {/* Items List */}
@@ -723,28 +734,41 @@ export default function AdminOrdersPage() {
                 )}
                 
                 {/* Payment Info */}
-                {selectedOrder.payment_method === 'TRANSFER' && (
-                  <div>
-                    <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-3 border-b border-white/10 pb-2">
-                      Información de Pago
-                    </h3>
-                    <div className="bg-zinc-900 border border-white/5 rounded-xl p-4">
-                      <p className="text-sm font-bold text-white mb-2">Pago por Transferencia Bancaria</p>
-                      {selectedOrder.transfer_receipt ? (
-                        <a 
-                          href={selectedOrder.transfer_receipt} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-colors mt-1"
-                        >
-                          Ver Comprobante
-                        </a>
-                      ) : (
-                        <p className="text-xs text-red-400 font-medium">No se subió comprobante.</p>
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-3 border-b border-white/10 pb-2">
+                    Método de Pago
+                  </h3>
+                  <div className="bg-zinc-900 border border-white/5 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-bold text-white">
+                          {selectedOrder.payment_method === 'MERCADOPAGO' ? 'MercadoPago (Tarjeta/OXXO)' : 
+                           selectedOrder.payment_method === 'TRANSFER' ? 'Transferencia Bancaria' : 
+                           selectedOrder.payment_method === 'BOX_OFFICE' ? 'Venta Directa / Taquilla' : 
+                           selectedOrder.payment_method === 'COURTESY' ? 'Boleto de Cortesía ($0)' : 
+                           selectedOrder.payment_method}
+                        </p>
+                        {renderPaymentBadge(selectedOrder.payment_method)}
+                      </div>
+                      {selectedOrder.payment_method === 'TRANSFER' && (
+                        <div className="mt-2">
+                          {selectedOrder.transfer_receipt ? (
+                            <a 
+                              href={selectedOrder.transfer_receipt} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-colors"
+                            >
+                              Ver Comprobante
+                            </a>
+                          ) : (
+                            <p className="text-xs text-red-400 font-medium">No se subió comprobante.</p>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
-                )}
+                </div>
 
                 {/* Items */}
                 <div>

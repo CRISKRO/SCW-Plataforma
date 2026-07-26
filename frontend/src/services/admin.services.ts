@@ -90,7 +90,15 @@ export const adminService = {
     const response = await api.patch(`/tickets/seats/${id}/`, data);
     return response.data;
   },
-  generateCourtesyTicket: async (data: { event_id: number, seat_ids?: number[], quantity_general?: number, email: string, name?: string }) => {
+  generateCourtesyTicket: async (data: { 
+    event_id: number, 
+    seat_ids?: number[], 
+    quantity_general?: number, 
+    email: string, 
+    name?: string,
+    is_courtesy?: boolean,
+    payment_method?: string
+  }) => {
     const res = await api.post('/payments/courtesy-ticket/', data);
     return res.data;
   },

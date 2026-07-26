@@ -23,6 +23,8 @@ export default function AdminEventsPage() {
   const [quantityGeneral, setQuantityGeneral] = useState(0);
   const [courtesyEmail, setCourtesyEmail] = useState('');
   const [courtesyName, setCourtesyName] = useState('');
+  const [isCourtesy, setIsCourtesy] = useState(true);
+  const [paymentMethod, setPaymentMethod] = useState<'TRANSFER' | 'BOX_OFFICE'>('TRANSFER');
   const [loadingCourtesy, setLoadingCourtesy] = useState(false);
   const [loadingZones, setLoadingZones] = useState(false);
 
@@ -58,9 +60,10 @@ export default function AdminEventsPage() {
     setSelectedEvent(event);
     setCourtesyEmail('');
     setCourtesyName('');
+    setIsCourtesy(true);
+    setPaymentMethod('TRANSFER');
     setSelectedSeats([]);
     setQuantityGeneral(0);
-    setEventZones([]);
     setIsCourtesyModalOpen(true);
     setLoadingZones(true);
     try {
@@ -87,13 +90,16 @@ export default function AdminEventsPage() {
         seat_ids: selectedSeats,
         quantity_general: quantityGeneral,
         email: courtesyEmail,
-        name: courtesyName
+        name: courtesyName,
+        is_courtesy: isCourtesy,
+        payment_method: isCourtesy ? 'COURTESY' : paymentMethod
       });
-      alert('✅ Boleto de cortesía generado y enviado con éxito.');
+      const msg = isCourtesy ? '✅ Boleto de cortesía generado y enviado con éxito.' : '✅ Boleto emitido y enviado con éxito como Venta Registrada.';
+      alert(msg);
       setIsCourtesyModalOpen(false);
     } catch (error: any) {
-      console.error("Error granting courtesy ticket:", error);
-      alert(error?.response?.data?.error || 'Hubo un error al generar la cortesía.');
+      console.error("Error granting ticket:", error);
+      alert(error?.response?.data?.error || 'Hubo un error al generar el boleto.');
     } finally {
       setLoadingCourtesy(false);
     }
@@ -402,11 +408,13 @@ export default function AdminEventsPage() {
             {/* Modal Title */}
             <div className="flex justify-between items-center px-6 py-5 border-b border-white/10 bg-zinc-900/50">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
-                  <Gift className="w-5 h-5 text-yellow-500" />
+                <div className={`p-2 rounded-lg border ${isCourtesy ? 'bg-yellow-500/10 border-yellow-500/20' : 'bg-blue-500/10 border-blue-500/20'}`}>
+                  {isCourtesy ? <Gift className="w-5 h-5 text-yellow-500" /> : <Ticket className="w-5 h-5 text-blue-400" />}
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold uppercase tracking-wider text-white leading-tight">Otorgar Cortesía</h2>
+                  <h2 className="text-lg font-bold uppercase tracking-wider text-white leading-tight">
+                    {isCourtesy ? 'Otorgar Cortesía' : 'Venta Directa / Emisión de Boleto'}
+                  </h2>
                   <p className="text-xs text-zinc-500 truncate max-w-[250px] md:max-w-md">{selectedEvent.title}</p>
                 </div>
               </div>
@@ -419,6 +427,54 @@ export default function AdminEventsPage() {
             <form onSubmit={handleGrantCourtesy} className="p-6 space-y-6">
               
               <div className="space-y-6">
+
+                {/* Tipo de Emisión: Cortesía vs Venta Directa */}
+                <div className="grid grid-cols-2 gap-2 bg-black p-1.5 rounded-xl border border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => setIsCourtesy(true)}
+                    className={`py-2.5 px-3 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+                      isCourtesy
+                        ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20'
+                        : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+                    }`}
+                  >
+                    <Gift className="w-4 h-4" />
+                    Cortesía ($0 Gratuito)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsCourtesy(false)}
+                    className={`py-2.5 px-3 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+                      !isCourtesy
+                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
+                        : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+                    }`}
+                  >
+                    <Ticket className="w-4 h-4" />
+                    Venta Directa (Con Costo)
+                  </button>
+                </div>
+
+                {!isCourtesy && (
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="text-xs text-blue-300">
+                      <p className="font-bold mb-0.5">🎟️ Registro de Venta Directa con Costo Real</p>
+                      <p className="text-zinc-400">El boleto se emitirá con el costo oficial de su zona y aparecerá contabilizado en el historial de ingresos.</p>
+                    </div>
+                    <div className="flex items-center gap-2 whitespace-nowrap shrink-0">
+                      <label className="text-xs font-bold uppercase tracking-wider text-zinc-300">Pago:</label>
+                      <select
+                        value={paymentMethod}
+                        onChange={(e: any) => setPaymentMethod(e.target.value)}
+                        className="bg-zinc-900 border border-white/10 text-xs text-white rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold"
+                      >
+                        <option value="TRANSFER">Transferencia Bancaria</option>
+                        <option value="BOX_OFFICE">Taquilla / Efectivo</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
                 
                 {/* Admin Seat Map Component */}
                 <div className="bg-zinc-950 p-2 rounded-xl border border-white/5">
@@ -470,26 +526,26 @@ export default function AdminEventsPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                  <label className="block text-xs font-bold uppercase tracking-widest text-zinc-400">Correo Electrónico del Invitado</label>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-zinc-400">Correo Electrónico del Destinatario</label>
                   <input 
                     required 
                     type="email" 
                     value={courtesyEmail} 
                     onChange={(e) => setCourtesyEmail(e.target.value)} 
-                    className="w-full bg-black border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-yellow-500/50 transition-all placeholder-zinc-700" 
+                    className="w-full bg-black border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500/50 transition-all placeholder-zinc-700" 
                     placeholder="ejemplo@correo.com"
                   />
                   <p className="text-xs text-zinc-500">Aquí se enviará el boleto digital con código QR.</p>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-bold uppercase tracking-widest text-zinc-400">Nombre del Invitado (Opcional)</label>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-zinc-400">Nombre del Cliente / Destinatario (Opcional)</label>
                   <input 
                     type="text" 
                     value={courtesyName} 
                     onChange={(e) => setCourtesyName(e.target.value)} 
-                    className="w-full bg-black border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-yellow-500/50 transition-all placeholder-zinc-700" 
-                    placeholder="Ej: Patrocinador X, Invitado Especial"
+                    className="w-full bg-black border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500/50 transition-all placeholder-zinc-700" 
+                    placeholder="Ej: Juan Pérez, Patrocinador X"
                   />
                 </div>
               </div>
@@ -507,9 +563,20 @@ export default function AdminEventsPage() {
                 <button 
                   type="submit" 
                   disabled={loadingCourtesy || (selectedSeats.length === 0 && quantityGeneral <= 0)}
-                  className="flex-1 py-3 px-4 rounded-xl font-bold uppercase tracking-wider text-sm text-black bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-yellow-900/20 flex justify-center items-center gap-2"
+                  className={`flex-1 py-3 px-4 rounded-xl font-bold uppercase tracking-wider text-sm transition-all shadow-lg flex justify-center items-center gap-2 ${
+                    isCourtesy
+                      ? 'text-black bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 shadow-yellow-900/20'
+                      : 'text-white bg-blue-600 hover:bg-blue-500 shadow-blue-900/20'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
-                  {loadingCourtesy ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Gift className="w-5 h-5" /> Enviar Boleto{selectedSeats.length + quantityGeneral > 1 ? 's' : ''}</>}
+                  {loadingCourtesy ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <>
+                      {isCourtesy ? <Gift className="w-5 h-5" /> : <Ticket className="w-5 h-5" />}
+                      {isCourtesy ? 'Enviar Cortesía' : 'Emitir y Enviar Venta'} ({selectedSeats.length + quantityGeneral})
+                    </>
+                  )}
                 </button>
               </div>
             </form>
