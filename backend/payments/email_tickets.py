@@ -6,39 +6,39 @@ import base64
 from email.mime.image import MIMEImage
 from django.core.mail import EmailMultiAlternatives, get_connection
 from django.conf import settings
-from .qr import generate_ticket_qr
+from .qr import generate_group_ticket_qr, group_order_items
 from api.models import get_active_config
 
 
 def send_ticket_email(order):
     """
-    Send a ticket confirmation email with QR codes for each item in the order.
+    Send a ticket confirmation email with grouped QR codes (1 QR code per contiguous block/area).
     """
-    # Only process items that are tickets (have seats or are named Boleto)
-    items = order.items.filter(event__isnull=False)
+    groups = group_order_items(order)
     
-    if not items.exists():
+    if not groups:
         return False
 
     # Build QR attachments
     qr_images = []
     items_html = ""
-    for item in items:
-        qr_buf = generate_ticket_qr(order.id, item.id, item.product_name)
+    for group in groups:
+        qr_buf = generate_group_ticket_qr(order.id, group['item_ids'], group['title'])
         qr_b64 = base64.b64encode(qr_buf.read()).decode()
-        cid_str = f"qr_{item.id}@scw.boletos"
+        cid_str = f"qr_{group['group_id']}@scw.boletos"
         qr_images.append({
-            'item': item,
+            'group': group,
             'b64': qr_b64,
             'cid': cid_str
         })
+        qty_badge = f"{group['quantity']} Boleto{'s' if group['quantity'] > 1 else ''}"
         items_html += f"""
         <div style="background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:20px;margin-bottom:20px;text-align:center;">
-          <p style="color:#aaa;font-size:12px;text-transform:uppercase;letter-spacing:2px;margin:0 0 4px;">Boleto</p>
-          <h3 style="color:#fff;margin:0 0 4px;font-size:18px;">{item.product_name}</h3>
-          {'<p style="color:#888;font-size:13px;margin:0 0 16px;">' + item.size + '</p>' if item.size else '<div style="margin-bottom:16px;"></div>'}
-          <img src="cid:{cid_str}" width="200" height="200" alt="QR Boleto" style="border-radius:8px;"/>
-          <p style="color:#666;font-size:11px;margin:12px 0 0;">Presenta este código en la entrada</p>
+          <p style="color:#e00;font-size:11px;text-transform:uppercase;letter-spacing:2px;margin:0 0 4px;font-weight:bold;">{qty_badge}</p>
+          <h3 style="color:#fff;margin:0 0 4px;font-size:18px;">{group['title']}</h3>
+          <p style="color:#22c55e;font-size:14px;font-weight:bold;margin:0 0 16px;">{group['subtitle']}</p>
+          <img src="cid:{cid_str}" width="220" height="220" alt="QR Boleto" style="border-radius:8px;"/>
+          <p style="color:#888;font-size:11px;margin:12px 0 0;">Presenta este código en la entrada (Válido para {qty_badge})</p>
         </div>
         """
 
@@ -68,8 +68,8 @@ def send_ticket_email(order):
           <ol style="color:#aaa;font-size:13px;line-height:2;margin:0;padding-left:20px;">
             <li>Guarda este correo o toma captura de pantalla de los códigos QR.</li>
             <li>Preséntalo en la entrada del evento.</li>
-            <li>El personal escaneará tu código para darte acceso.</li>
-            <li>Cada código es de uso único e intransferible.</li>
+            <li>Cada código QR corresponde al bloque o zona indicada (ej: Asientos 1 al 10).</li>
+            <li>El personal escaneará tu código para darte acceso a ti y a tus acompañantes.</li>
           </ol>
         </div>
 
@@ -103,10 +103,10 @@ def send_ticket_email(order):
 
     # Attach QR images inline
     for qr in qr_images:
-        qr_buf = generate_ticket_qr(order.id, qr['item'].id, qr['item'].product_name)
+        qr_buf = generate_group_ticket_qr(order.id, qr['group']['item_ids'], qr['group']['title'])
         img = MIMEImage(qr_buf.read(), _subtype='png')
         img.add_header('Content-ID', f"<{qr['cid']}>")
-        img.add_header('Content-Disposition', 'inline', filename=f"boleto_{qr['item'].id}.png")
+        img.add_header('Content-Disposition', 'inline', filename=f"boletos_{qr['group']['group_id']}.png")
         email.attach(img)
 
     connection = None

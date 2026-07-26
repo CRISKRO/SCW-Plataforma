@@ -909,34 +909,75 @@ class ValidateTicketView(APIView):
         if not (request.user.is_staff or scanner_token == expected_token):
             return Response({"valid": False, "message": "No autorizado para escanear."}, status=403)
 
-        from .qr import validate_ticket_code
+        from .qr import validate_ticket_code, validate_group_ticket_code, group_order_items
         order_id = request.data.get('order_id')
         item_id = request.data.get('item_id')
+        items_ids = request.data.get('items', [])
         code = request.data.get('code')
 
-        if not all([order_id, item_id, code]):
+        if not order_id or not code or (not item_id and not items_ids):
             return Response({"valid": False, "message": "Datos incompletos."}, status=400)
 
+        try:
+            order = Order.objects.get(id=int(order_id))
+        except Order.DoesNotExist:
+            return Response({"valid": False, "message": "Orden no encontrada."}, status=404)
+
+        if order.status != Order.Status.PAID:
+            return Response({"valid": False, "message": "Esta orden no ha sido pagada."})
+
+        # Match against grouped items in order
+        groups = group_order_items(order)
+        target_group = None
+
+        if items_ids:
+            target_group = next((g for g in groups if set(g['item_ids']) == set(items_ids)), None)
+
+        if not target_group and item_id:
+            target_group = next((g for g in groups if int(item_id) in g['item_ids']), None)
+
+        if target_group:
+            if not validate_group_ticket_code(int(order_id), target_group['item_ids'], code):
+                return Response({"valid": False, "message": "❌ Código de grupo inválido."})
+
+            group_items = target_group['items']
+            if all(it.is_scanned for it in group_items):
+                return Response({"valid": False, "message": "❌ Este grupo de boletos ya fue registrado/escaneado."})
+
+            # Check event expiry
+            first_event = group_items[0].event
+            if first_event and first_event.date_time < timezone.now():
+                return Response({"valid": False, "message": "❌ Evento caducado/pasado."})
+
+            now = timezone.now()
+            for it in group_items:
+                it.is_scanned = True
+                it.scanned_at = now
+                it.save()
+
+            qty = target_group['quantity']
+            return Response({
+                "valid": True, 
+                "message": f"✅ Acceso autorizado ({qty} boleto{'s' if qty > 1 else ''})", 
+                "item": target_group['title'], 
+                "size": target_group['subtitle']
+            })
+
+        # Fallback for single item scan
         try:
             item = OrderItem.objects.get(id=int(item_id), order__id=int(order_id))
         except OrderItem.DoesNotExist:
             return Response({"valid": False, "message": "Boleto no encontrado."}, status=404)
 
-        if item.order.status != Order.Status.PAID:
-            return Response({"valid": False, "message": "Esta orden no ha sido pagada."})
-
         if not validate_ticket_code(int(order_id), int(item_id), code):
             return Response({"valid": False, "message": "❌ Código inválido."})
 
-        # Check if already scanned
         if item.is_scanned:
             return Response({"valid": False, "message": "❌ Boleto ya registrado."})
 
-        # Check if event is passed (if linked)
         if item.event and item.event.date_time < timezone.now():
             return Response({"valid": False, "message": "❌ Evento caducado/pasado."})
 
-        # Mark as scanned
         item.is_scanned = True
         item.scanned_at = timezone.now()
         item.save()
