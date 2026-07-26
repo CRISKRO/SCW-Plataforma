@@ -18,9 +18,22 @@ class CouponSerializer(serializers.ModelSerializer):
 
 class OrderItemSerializer(serializers.ModelSerializer):
     ticket_hash = serializers.CharField(read_only=True)
+    event_title = serializers.CharField(source='event.title', read_only=True, default=None)
+    seat_details = serializers.SerializerMethodField()
+
     class Meta:
         model = OrderItem
         fields = '__all__'
+
+    def get_seat_details(self, obj):
+        if obj.seat:
+            return {
+                'id': obj.seat.id,
+                'row_name': obj.seat.row_name,
+                'seat_number': obj.seat.seat_number,
+                'zone_type': obj.seat.zone.zone_type if obj.seat.zone else None
+            }
+        return None
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
