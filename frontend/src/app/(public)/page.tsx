@@ -1,28 +1,33 @@
 import HomeCarousel from '@/components/HomeCarousel';
 
-async function safeFetch(url: string) {
+async function safeFetchJson(url: string) {
   try {
     const res = await fetch(url, { next: { revalidate: 10 } });
-    if (res.ok) return res;
-  } catch (err) {
-    console.error(`Fetch HTTPS error for ${url}:`, err);
+    if (res && res.ok) {
+      return await res.json();
+    }
+  } catch {
+    // Ignore fetch errors during build time
   }
 
   if (url.startsWith('https://')) {
     const httpUrl = url.replace('https://', 'http://');
     try {
       const res = await fetch(httpUrl, { next: { revalidate: 10 } });
-      if (res.ok) return res;
-    } catch (err) {
-      console.error(`Fetch HTTP fallback error for ${httpUrl}:`, err);
+      if (res && res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // Ignore HTTP fallback errors during build time
     }
   }
+
   return null;
 }
 
 export default async function Home() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://renescw.pythonanywhere.com/api';
-  
+
   let eventsData = [];
   let fightersData = [];
   let chroniclesData = [];
@@ -33,27 +38,25 @@ export default async function Home() {
 
   try {
     const [eventsRes, fightersRes, chroniclesRes, videosRes, sponsorsRes, rafflesRes, postsRes] = await Promise.all([
-      safeFetch(`${apiUrl}/events/events/`),
-      safeFetch(`${apiUrl}/events/fighters/`),
-      safeFetch(`${apiUrl}/events/chronicles/`),
-      safeFetch(`${apiUrl}/premium/videos/`),
-      safeFetch(`${apiUrl}/events/sponsors/`),
-      safeFetch(`${apiUrl}/raffles/`),
-      safeFetch(`${apiUrl}/events/posts/`),
+      safeFetchJson(`${apiUrl}/events/events/`),
+      safeFetchJson(`${apiUrl}/events/fighters/`),
+      safeFetchJson(`${apiUrl}/events/chronicles/`),
+      safeFetchJson(`${apiUrl}/premium/videos/`),
+      safeFetchJson(`${apiUrl}/events/sponsors/`),
+      safeFetchJson(`${apiUrl}/raffles/`),
+      safeFetchJson(`${apiUrl}/events/posts/`),
     ]);
 
-    if (eventsRes && eventsRes.ok) eventsData = await eventsRes.json();
-    if (fightersRes && fightersRes.ok) fightersData = await fightersRes.json();
-    if (chroniclesRes && chroniclesRes.ok) chroniclesData = await chroniclesRes.json();
-    if (videosRes && videosRes.ok) {
-      const vData = await videosRes.json();
-      premiumVideos = vData.data || vData || [];
+    if (eventsRes && Array.isArray(eventsRes)) eventsData = eventsRes;
+    if (fightersRes && Array.isArray(fightersRes)) fightersData = fightersRes;
+    if (chroniclesRes && Array.isArray(chroniclesRes)) chroniclesData = chroniclesRes;
+    if (videosRes) {
+      premiumVideos = videosRes.data || (Array.isArray(videosRes) ? videosRes : []);
     }
-    if (sponsorsRes && sponsorsRes.ok) sponsorsData = await sponsorsRes.json();
-    if (rafflesRes && rafflesRes.ok) rafflesData = await rafflesRes.json();
-    if (postsRes && postsRes.ok) {
-      const pData = await postsRes.json();
-      eventPostsData = pData.results || pData || [];
+    if (sponsorsRes && Array.isArray(sponsorsRes)) sponsorsData = sponsorsRes;
+    if (rafflesRes && Array.isArray(rafflesRes)) rafflesData = rafflesRes;
+    if (postsRes) {
+      eventPostsData = postsRes.results || (Array.isArray(postsRes) ? postsRes : []);
     }
   } catch (error) {
     console.error("Error fetching data for Home Server Component:", error);
@@ -83,4 +86,5 @@ export default async function Home() {
     </main>
   );
 }
+
 
