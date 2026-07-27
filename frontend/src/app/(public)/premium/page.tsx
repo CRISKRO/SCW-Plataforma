@@ -154,7 +154,7 @@ export default function PremiumPage() {
           ) : videos.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {videos.map((video, i) => {
-                const thumb = video.youtube_id ? `https://img.youtube.com/vi/${video.youtube_id}/maxresdefault.jpg` : (video.youtube_id ? `https://img.youtube.com/vi/${video.youtube_id}/hqdefault.jpg` : '');
+                const thumb = video.video_url ? getYoutubeThumbnail(video.video_url) : (video.youtube_id ? `https://i.ytimg.com/vi/${video.youtube_id}/hqdefault.jpg` : '');
                 const isLocked = !video.video_url;
 
                 if (isLocked) {

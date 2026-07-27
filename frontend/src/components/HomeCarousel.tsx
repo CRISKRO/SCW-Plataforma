@@ -25,6 +25,24 @@ const TikTokIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5v3a3 3 0 0 1-3-3"/></svg>
 );
 
+function getYoutubeId(url: string): string | null {
+  if (!url || typeof url !== 'string') return null;
+  const vMatch = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+  if (vMatch && vMatch[1]) return vMatch[1];
+  const pathMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|shorts\/|live\/|v\/|watch\/))([a-zA-Z0-9_-]{11})/i);
+  if (pathMatch && pathMatch[1]) return pathMatch[1];
+  if (url.toLowerCase().includes('youtu')) {
+    const fallbackMatch = url.match(/([a-zA-Z0-9_-]{11})/);
+    if (fallbackMatch && fallbackMatch[1]) return fallbackMatch[1];
+  }
+  return null;
+}
+
+function getYoutubeThumbnail(url: string): string {
+  const id = getYoutubeId(url);
+  return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : '';
+}
+
 const SocialLinks = ({ fighter }: { fighter: any }) => {
   const links = [
     { url: fighter.instagram, icon: <InstagramIcon />, name: 'Instagram' },
@@ -673,24 +691,27 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
           <div className="text-center w-full max-w-4xl mx-auto">
             <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight mb-4">¿Quieres ver más acción?</h2>
             <p className="text-zinc-500 mb-8 max-w-2xl mx-auto">Disfruta de contenido exclusivo en nuestra plataforma SCW Premium.</p>
-            <div className={`grid grid-cols-1 ${premiumVideos.length > 1 ? 'md:grid-cols-2' : ''} gap-6 mb-8`}>
-              {premiumVideos.length > 0 ? (
-                premiumVideos.map((video: any, idx: number) => (
-                  <Link key={idx} href="/premium" className="block relative aspect-video w-full rounded-xl overflow-hidden group border border-white/10 hover:border-red-500/50 transition-colors bg-zinc-900">
-                    <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors z-10"></div>
-                    {video.youtube_id ? (
-                      <Image src={`https://img.youtube.com/vi/${video.youtube_id}/hqdefault.jpg`} alt={video.title || "SCW Premium"} fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
-                    ) : (
-                      <Image src="/images/scwpremium.webp" alt="SCW Premium" fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
-                    )}
-                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center">
-                      <div className="w-14 h-14 rounded-full bg-red-600/90 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg mb-3">
-                        <PlayCircle className="w-8 h-8 text-white" />
+            <div className={`grid grid-cols-1 ${localVideos.length > 1 ? 'md:grid-cols-2' : ''} gap-6 mb-8`}>
+              {localVideos.length > 0 ? (
+                localVideos.map((video: any, idx: number) => {
+                  const thumb = video.video_url ? getYoutubeThumbnail(video.video_url) : (video.youtube_id ? `https://i.ytimg.com/vi/${video.youtube_id}/hqdefault.jpg` : '');
+                  return (
+                    <Link key={idx} href="/premium" className="block relative aspect-video w-full rounded-xl overflow-hidden group border border-white/10 hover:border-red-500/50 transition-colors bg-zinc-900">
+                      <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors z-10"></div>
+                      {thumb ? (
+                        <Image src={thumb} alt={video.title || "SCW Premium"} fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
+                      ) : (
+                        <Image src="/images/scwpremium.webp" alt="SCW Premium" fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
+                      )}
+                      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center">
+                        <div className="w-14 h-14 rounded-full bg-red-600/90 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg mb-3">
+                          <PlayCircle className="w-8 h-8 text-white" />
+                        </div>
+                        <span className="bg-black/80 backdrop-blur-md text-white font-black uppercase tracking-widest px-4 py-2 rounded text-xs shadow-xl border border-white/10">Explora Premium</span>
                       </div>
-                      <span className="bg-black/80 backdrop-blur-md text-white font-black uppercase tracking-widest px-4 py-2 rounded text-xs shadow-xl border border-white/10">Explora Premium</span>
-                    </div>
-                  </Link>
-                ))
+                    </Link>
+                  );
+                })
               ) : (
                 <Link href="/premium" className="block relative aspect-video w-full max-w-md mx-auto rounded-xl overflow-hidden group border border-white/10 hover:border-red-500/50 transition-colors bg-zinc-900">
                   <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors z-10"></div>
