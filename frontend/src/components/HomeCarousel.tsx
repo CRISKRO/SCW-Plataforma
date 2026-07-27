@@ -329,21 +329,35 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
 
 
 
-                {slide.type === 'event' && (slide.location || slide.date) && (
-                  <div className="inline-flex flex-wrap items-center gap-x-3 gap-y-1.5 bg-black/60 backdrop-blur-md border border-white/15 text-zinc-200 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-xl mb-6 lg:mb-8">
-                    {slide.location && (
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-red-500 shrink-0" />
-                        <span>{slide.location}</span>
+                {slide.type === 'event' && (
+                  <div className="w-[280px] sm:w-[320px] lg:w-[440px] bg-black/60 backdrop-blur-md border border-white/15 p-4 sm:p-5 rounded-2xl shadow-2xl mb-6 lg:mb-8 text-left space-y-3">
+                    {/* Badge Próximo Evento */}
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 bg-red-600/90 text-white text-[11px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md shadow-red-950/40">
+                        <Ticket className="w-3.5 h-3.5" />
+                        Próximo Evento
+                      </span>
+                    </div>
+
+                    {/* Fecha y Hora */}
+                    {slide.date && (
+                      <div className="flex flex-col gap-1 text-zinc-100 font-bold text-sm sm:text-base border-t border-white/10 pt-2.5">
+                        <div className="flex items-center gap-2 capitalize">
+                          <Calendar className="w-4 h-4 text-red-500 shrink-0" />
+                          <span>{new Date(slide.date).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-red-400 font-black text-xs sm:text-sm tracking-wider uppercase pl-6">
+                          <Clock className="w-3.5 h-3.5 text-red-400" />
+                          <span>Hora: {new Date(slide.date).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+                        </div>
                       </div>
                     )}
-                    {slide.location && slide.date && (
-                      <span className="text-zinc-500 hidden sm:inline">•</span>
-                    )}
-                    {slide.date && (
-                      <div className="flex items-center gap-2 text-red-400 font-extrabold uppercase tracking-wider">
-                        <Clock className="w-4 h-4 shrink-0" />
-                        <span>{new Date(slide.date).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+
+                    {/* Ubicación */}
+                    {slide.location && (
+                      <div className="flex items-center gap-2 text-zinc-300 font-medium text-xs sm:text-sm pt-2 border-t border-white/10">
+                        <MapPin className="w-4 h-4 text-red-500 shrink-0" />
+                        <span>{slide.location}</span>
                       </div>
                     )}
                   </div>
@@ -416,15 +430,15 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 30 }}
                     transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
-                    className="block flex-shrink-0 relative mx-auto lg:mx-0 w-[320px] sm:w-[400px] md:w-[480px] lg:w-[560px] xl:w-[620px]"
+                    className="block flex-shrink-0 relative mx-auto lg:mx-0 w-[280px] sm:w-[320px] lg:w-[440px]"
                   >
-                    {/* Ambient Glow matching exact poster dimensions */}
-                    <div className="absolute inset-0 blur-2xl rounded-sm opacity-70 pointer-events-none overflow-hidden">
+                    {/* Ambient Glow using blurred poster colors */}
+                    <div className="absolute -inset-6 sm:-inset-10 blur-3xl rounded-3xl opacity-80 pointer-events-none overflow-hidden">
                       <Image 
                         src={slide.image} 
                         alt="" 
                         fill 
-                        className="object-cover blur-2xl scale-100 saturate-200 brightness-110" 
+                        className="object-cover blur-3xl scale-125 saturate-200 brightness-110" 
                         unoptimized 
                       />
                     </div>
