@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronRight, ChevronLeft, Calendar, MapPin, Ticket, PlayCircle } from 'lucide-react';
 import { TicketSelectionModal } from '@/components/TicketSelectionModal';
-import { getMediaUrl } from '@/services/api';
+import api, { getMediaUrl } from '@/services/api';
 import { eventsService } from '@/services/events.services';
 
 const InstagramIcon = () => (
@@ -177,9 +177,14 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
           const results = pData.results || (Array.isArray(pData) ? pData : []);
           if (results.length > 0) setLocalPosts(results.filter((p: any) => p.is_active));
         }
+        if (!premiumVideos || premiumVideos.length === 0) {
+          const vRes = await api.get('/premium/videos/').catch(() => null);
+          if (vRes && vRes.data) {
+            const vList = Array.isArray(vRes.data) ? vRes.data : (vRes.data.data || []);
+            if (vList.length > 0) setLocalVideos(vList.slice(0, 2));
+          }
+        }
       } catch (e) {
-        console.error("Client fallback fetch error:", e);
-      }
     };
     fetchFallback();
   }, [events, upcomingEvents, roster, chronicles, premiumVideos, sponsors, eventPosts]);
@@ -694,7 +699,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
             <div className={`grid grid-cols-1 ${localVideos.length > 1 ? 'md:grid-cols-2' : ''} gap-6 mb-8`}>
               {localVideos.length > 0 ? (
                 localVideos.map((video: any, idx: number) => {
-                  const thumb = video.video_url ? getYoutubeThumbnail(video.video_url) : (video.youtube_id ? `https://i.ytimg.com/vi/${video.youtube_id}/hqdefault.jpg` : '');
+                  const thumb = video.youtube_id ? `https://i.ytimg.com/vi/${video.youtube_id}/hqdefault.jpg` : (video.video_url ? getYoutubeThumbnail(video.video_url) : '');
                   return (
                     <Link key={idx} href="/premium" className="block relative aspect-video w-full rounded-xl overflow-hidden group border border-white/10 hover:border-red-500/50 transition-colors bg-zinc-900">
                       <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors z-10"></div>

@@ -15,9 +15,21 @@ class PremiumVideoSerializer(serializers.ModelSerializer):
 
     def get_youtube_id(self, obj):
         import re
-        if obj.video_url:
-            match = re.search(r'(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})', obj.video_url)
-            return match.group(1) if match else None
+        if not obj.video_url:
+            return None
+        # 1. Match ?v= or &v= parameter anywhere in the query string
+        v_match = re.search(r'[?&]v=([a-zA-Z0-9_-]{11})', obj.video_url)
+        if v_match:
+            return v_match.group(1)
+        # 2. Match path-based formats (live/, shorts/, embed/, v/, watch/, youtu.be/)
+        path_match = re.search(r'(?:youtu\.be\/|youtube\.com\/(?:embed\/|shorts\/|live\/|v\/|watch\/))([a-zA-Z0-9_-]{11})', obj.video_url, re.IGNORECASE)
+        if path_match:
+            return path_match.group(1)
+        # 3. Fallback for any 11-char ID in a YouTube link
+        if 'youtu' in obj.video_url.lower():
+            fallback_match = re.search(r'([a-zA-Z0-9_-]{11})', obj.video_url)
+            if fallback_match:
+                return fallback_match.group(1)
         return None
 
     def to_representation(self, instance):
