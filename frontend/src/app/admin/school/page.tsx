@@ -35,6 +35,12 @@ export default function AdminSchoolPage() {
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<any>(null);
+  
+  // Payment / Abono modal states
+  const [paymentModalStudent, setPaymentModalStudent] = useState<any>(null);
+  const [paymentType, setPaymentType] = useState<'FULL' | 'CUSTOM'>('FULL');
+  const [customAmount, setCustomAmount] = useState<string>('');
+  const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -160,35 +166,33 @@ export default function AdminSchoolPage() {
     }
   };
 
-  const handleRegisterPayment = async (studentId: number, studentName: string) => {
-    if (confirm(`¿Registrar pago mensual para el alumno "${studentName}"?\nSe actualizará su vencimiento (+30 días) y se enviará una confirmación automática por WhatsApp.`)) {
-      try {
-        setActionLoading(prev => ({ ...prev, [studentId]: true }));
-        const response = await adminService.registerStudentPayment(studentId);
-        
-        // Update local state with new student data
-        setEnrollments(enrollments.map(e => e.id === studentId ? { 
-          ...e, 
-          payment_status: response.data.payment_status,
-          last_payment_date: response.data.last_payment_date,
-          payment_due_date: response.data.payment_due_date
-        } : e));
+  const handleRegisterPayment = async (studentId: number, studentName: string, amount?: number) => {
+    try {
+      setActionLoading(prev => ({ ...prev, [studentId]: true }));
+      const response = await adminService.registerStudentPayment(studentId, amount);
+      
+      // Update local state with new student data
+      setEnrollments(enrollments.map(e => e.id === studentId ? { 
+        ...e, 
+        payment_status: response.data.payment_status,
+        last_payment_date: response.data.last_payment_date,
+        payment_due_date: response.data.payment_due_date,
+        outstanding_balance: response.data.outstanding_balance
+      } : e));
 
-        let whatsappSentSuccessfully = response.whatsapp_sent;
+      let whatsappSentSuccessfully = response.whatsapp_sent;
+      const actionLabel = amount ? `Abono de $${amount.toFixed(2)} MXN` : 'Pago mensual';
 
-        // Eliminado: Bloque de fallback a Render directo desde el navegador
-
-        if (whatsappSentSuccessfully) {
-          alert(`✅ Pago registrado con éxito.\n📲 Se envió la confirmación de pago por WhatsApp a ${studentName}.`);
-        } else {
-          alert(`⚠️ Pago registrado con éxito en el sistema.\n❌ Sin embargo, el mensaje por WhatsApp no pudo enviarse vía Meta. Asegúrate de que las credenciales de Facebook estén configuradas en Administración.`);
-        }
-      } catch (error: any) {
-        console.error("Error registering payment:", error);
-        alert(error?.response?.data?.error || "Error al registrar el pago mensual.");
-      } finally {
-        setActionLoading(prev => ({ ...prev, [studentId]: false }));
+      if (whatsappSentSuccessfully) {
+        alert(`✅ ${actionLabel} registrado con éxito.\n📲 Se envió la confirmación por WhatsApp a ${studentName}.`);
+      } else {
+        alert(`✅ ${actionLabel} registrado con éxito en el sistema.`);
       }
+    } catch (error: any) {
+      console.error("Error registering payment:", error);
+      alert(error?.response?.data?.error || "Error al registrar el pago mensual.");
+    } finally {
+      setActionLoading(prev => ({ ...prev, [studentId]: false }));
     }
   };
 
@@ -376,7 +380,7 @@ export default function AdminSchoolPage() {
 
       {/* KPI summaries depending on the active tab */}
       {activeTab === 'payments' ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
           <div className="glass-panel p-5 relative overflow-hidden border border-white/5 hover:border-white/10 transition-colors">
             <div className="flex justify-between items-center">
               <div>
@@ -441,6 +445,23 @@ export default function AdminSchoolPage() {
             </div>
             <div className="mt-3 text-xs text-zinc-500">
               Requieren recordatorio urgente
+            </div>
+          </div>
+
+          <div className="glass-panel p-5 relative overflow-hidden border border-white/5 hover:border-white/10 transition-colors col-span-2 lg:col-span-1">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Saldo por Cobrar</p>
+                <p className="text-2xl sm:text-3xl font-black text-amber-400 mt-1.5">
+                  ${activeStudents.reduce((acc, curr) => acc + Math.max(0, parseFloat(curr.outstanding_balance || '0')), 0).toFixed(2)}
+                </p>
+              </div>
+              <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                <DollarSign className="w-6 h-6 text-amber-400" />
+              </div>
+            </div>
+            <div className="mt-3 text-xs text-zinc-500">
+              Suma de abonos pendientes
             </div>
           </div>
         </div>
@@ -569,6 +590,7 @@ export default function AdminSchoolPage() {
                     <th className="px-6 py-4 font-semibold tracking-wider">Folio</th>
                     <th className="px-6 py-4 font-semibold tracking-wider">Nombre Completo</th>
                     <th className="px-6 py-4 font-semibold tracking-wider">Teléfono / WhatsApp</th>
+                    <th className="px-6 py-4 font-semibold tracking-wider">Saldo / Abonos</th>
                     <th className="px-6 py-4 font-semibold tracking-wider">Último Pago</th>
                     <th className="px-6 py-4 font-semibold tracking-wider">Vencimiento Mensual</th>
                     <th className="px-6 py-4 font-semibold tracking-wider">Estado Pago</th>
@@ -578,6 +600,7 @@ export default function AdminSchoolPage() {
                 <tbody>
                   {filteredStudents.map((student) => {
                     const isLoading = actionLoading[student.id] || false;
+                    const bal = parseFloat(student.outstanding_balance || '0');
                     
                     return (
                       <tr 
@@ -590,6 +613,22 @@ export default function AdminSchoolPage() {
                           <span className="text-zinc-500 text-xs">Email: {student.email}</span>
                         </td>
                         <td className="px-6 py-4 font-medium text-zinc-400">{student.phone}</td>
+                        <td className="px-6 py-4">
+                          {bal === 0 ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
+                              $0.00 (Liquidado)
+                            </span>
+                          ) : bal > 0 ? (
+                            <div className="space-y-0.5">
+                              <span className="text-xs font-black text-amber-400 block">${bal.toFixed(2)} pendiente</span>
+                              <span className="text-[10px] text-zinc-400 block font-medium">Abonos activos</span>
+                            </div>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold text-sky-400 bg-sky-500/10 border border-sky-500/20">
+                              A favor: ${Math.abs(bal).toFixed(2)}
+                            </span>
+                          )}
+                        </td>
                         <td className="px-6 py-4">
                           {student.last_payment_date ? (
                             <span className="text-zinc-300 font-medium bg-zinc-900 border border-white/5 px-2 py-1 rounded text-xs">
@@ -643,9 +682,9 @@ export default function AdminSchoolPage() {
                           ) : (
                             <>
                               <button
-                                onClick={() => handleRegisterPayment(student.id, student.name)}
+                                onClick={() => setPaymentModalStudent(student)}
                                 className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-500 text-black hover:bg-green-400 font-bold rounded-lg text-xs transition-all transform active:scale-95 shadow-md shadow-green-950/10"
-                                title="Registrar pago del alumno y enviar confirmación por WhatsApp"
+                                title="Registrar abono o pago mensual del alumno"
                               >
                                 Registrar Pago
                               </button>
@@ -728,7 +767,13 @@ export default function AdminSchoolPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 ml-2 bg-black/20 rounded-lg p-3 border border-white/5">
+                    <div className="grid grid-cols-3 gap-2 ml-2 bg-black/20 rounded-lg p-3 border border-white/5">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold mb-1">Saldo / Abono</p>
+                        <p className={`text-xs font-black ${parseFloat(student.outstanding_balance || 0) > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                          ${parseFloat(student.outstanding_balance || 0).toFixed(2)}
+                        </p>
+                      </div>
                       <div>
                         <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold mb-1">Último Pago</p>
                         <p className="text-xs text-zinc-300 font-medium">
@@ -752,10 +797,10 @@ export default function AdminSchoolPage() {
                       ) : (
                         <>
                           <button
-                            onClick={() => handleRegisterPayment(student.id, student.name)}
+                            onClick={() => setPaymentModalStudent(student)}
                             className="flex justify-center items-center py-2.5 bg-green-500 text-black hover:bg-green-400 font-bold rounded-lg text-xs transition-all"
                           >
-                            Pagar
+                            Registrar Pago / Abono
                           </button>
                           <button
                             onClick={() => handleSendReminder(student.id, student.name)}
@@ -969,6 +1014,125 @@ export default function AdminSchoolPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* REGISTRAR PAGO / ABONO MODAL */}
+      {paymentModalStudent && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-zinc-950 border border-white/10 p-6 rounded-2xl w-full max-w-md relative shadow-2xl">
+            <div className="flex justify-between items-center mb-4 pb-3 border-b border-white/10">
+              <div>
+                <h2 className="text-lg font-extrabold text-white">Registrar Pago / Abono</h2>
+                <p className="text-xs text-zinc-400 mt-0.5">{paymentModalStudent.name}</p>
+              </div>
+              <button onClick={() => setPaymentModalStudent(null)} className="text-zinc-400 hover:text-white p-1 rounded-lg">
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Summary */}
+              <div className="bg-zinc-900 border border-white/5 p-4 rounded-xl space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-zinc-400 font-medium">Saldo Pendiente Actual:</span>
+                  <span className={`font-black ${parseFloat(paymentModalStudent.outstanding_balance || 0) > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                    ${parseFloat(paymentModalStudent.outstanding_balance || 0).toFixed(2)} MXN
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-zinc-400 font-medium">Próximo Vencimiento:</span>
+                  <span className="text-zinc-200 font-semibold">
+                    {paymentModalStudent.payment_due_date ? new Date(paymentModalStudent.payment_due_date).toLocaleDateString('es-MX') : 'No configurado'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Payment Type Selection */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">Tipo de Operación</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPaymentType('FULL');
+                      setCustomAmount('');
+                    }}
+                    className={`p-3 rounded-xl text-xs font-bold border transition-all text-center ${
+                      paymentType === 'FULL'
+                        ? 'bg-green-500/20 text-green-400 border-green-500/40 shadow-lg shadow-green-950/20'
+                        : 'bg-zinc-900 text-zinc-400 border-white/5 hover:bg-zinc-800'
+                    }`}
+                  >
+                    🎉 Liquidar Mensualidad
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPaymentType('CUSTOM');
+                      setCustomAmount(paymentModalStudent.outstanding_balance > 0 ? paymentModalStudent.outstanding_balance : '300');
+                    }}
+                    className={`p-3 rounded-xl text-xs font-bold border transition-all text-center ${
+                      paymentType === 'CUSTOM'
+                        ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 shadow-lg shadow-amber-950/20'
+                        : 'bg-zinc-900 text-zinc-400 border-white/5 hover:bg-zinc-800'
+                    }`}
+                  >
+                    💵 Registrar Abono
+                  </button>
+                </div>
+              </div>
+
+              {paymentType === 'CUSTOM' && (
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1">Monto del Abono (MXN)</label>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 font-bold">$</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="1"
+                      value={customAmount}
+                      onChange={(e) => setCustomAmount(e.target.value)}
+                      placeholder="Ej. 200.00"
+                      className="w-full bg-zinc-900 border border-white/10 rounded-xl py-2.5 pl-8 pr-4 text-sm text-white font-bold focus:outline-none focus:border-green-500"
+                    />
+                  </div>
+                  <p className="text-[11px] text-zinc-500 mt-1">Este dinero se abonará al saldo pendiente del alumno.</p>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setPaymentModalStudent(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  disabled={isSubmittingPayment}
+                  onClick={async () => {
+                    const amountVal = paymentType === 'CUSTOM' ? parseFloat(customAmount) : undefined;
+                    if (paymentType === 'CUSTOM' && (!amountVal || amountVal <= 0)) {
+                      alert("Por favor ingresa un monto válido para el abono.");
+                      return;
+                    }
+                    setIsSubmittingPayment(true);
+                    await handleRegisterPayment(paymentModalStudent.id, paymentModalStudent.name, amountVal);
+                    setIsSubmittingPayment(false);
+                    setPaymentModalStudent(null);
+                  }}
+                  className="px-5 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-green-500 text-black hover:bg-green-400 transition-all flex items-center gap-1.5 shadow-lg shadow-green-950/20 disabled:opacity-50"
+                >
+                  {isSubmittingPayment && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>Confirmar Pago</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

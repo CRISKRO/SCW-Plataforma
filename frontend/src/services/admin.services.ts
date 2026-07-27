@@ -60,8 +60,9 @@ export const adminService = {
     const response = await api.patch(`/students/enrollments/${id}/`, { status });
     return response.data;
   },
-  registerStudentPayment: async (id: number) => {
-    const response = await api.post(`/students/enrollments/${id}/register_payment/`);
+  registerStudentPayment: async (id: number, amount?: number) => {
+    const payload = amount ? { amount } : {};
+    const response = await api.post(`/students/enrollments/${id}/register_payment/`, payload);
     return response.data;
   },
   sendStudentPaymentReminder: async (id: number) => {
