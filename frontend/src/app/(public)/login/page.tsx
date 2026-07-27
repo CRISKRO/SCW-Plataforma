@@ -58,7 +58,10 @@ export default function LoginPage() {
         router.push('/dashboard');
       }
     } catch (err: any) {
-      setError('Error al autenticar con Google. ' + (err.response?.data?.error || ''));
+      const errorMsg = typeof err.response?.data?.error === 'string'
+        ? err.response.data.error
+        : (err.response?.data?.detail || err.message || 'Intenta de nuevo.');
+      setError('Error al autenticar con Google. ' + errorMsg);
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  skipTrailingSlashRedirect: true,
   images: {
     unoptimized: true,
     remotePatterns: [
@@ -17,12 +18,8 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: '/api/:path*/',
-        destination: 'https://renescw.pythonanywhere.com/api/:path*/',
-      },
-      {
         source: '/api/:path*',
-        destination: 'https://renescw.pythonanywhere.com/api/:path*/',
+        destination: 'https://renescw.pythonanywhere.com/api/:path*',
       },
     ];
   },
