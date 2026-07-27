@@ -2,6 +2,8 @@ import { Metadata, ResolvingMetadata } from 'next'
 import EventDetailClient from './EventDetailClient'
 import { eventsService } from '@/services/events.services'
 
+export const revalidate = 300; // Cache event pages for 5 minutes on Vercel Edge CDN
+
 type Props = {
   params: Promise<{ slug: string }>
 }

@@ -1,8 +1,10 @@
 import HomeCarousel from '@/components/HomeCarousel';
 
+export const revalidate = 300; // Cache page for 5 minutes on Vercel Edge CDN
+
 async function safeFetchJson(url: string) {
   try {
-    const res = await fetch(url, { next: { revalidate: 10 } });
+    const res = await fetch(url, { next: { revalidate: 300 } });
     if (res && res.ok) {
       return await res.json();
     }
@@ -13,7 +15,7 @@ async function safeFetchJson(url: string) {
   if (url.startsWith('https://')) {
     const httpUrl = url.replace('https://', 'http://');
     try {
-      const res = await fetch(httpUrl, { next: { revalidate: 10 } });
+      const res = await fetch(httpUrl, { next: { revalidate: 300 } });
       if (res && res.ok) {
         return await res.json();
       }
