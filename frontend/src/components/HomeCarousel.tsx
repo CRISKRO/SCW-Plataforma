@@ -329,32 +329,6 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
 
 
 
-                {slide.type === 'event' && (
-                  <div className="w-[300px] sm:w-[380px] md:w-[460px] lg:w-[500px] xl:w-[540px] max-w-full bg-black/60 backdrop-blur-md border border-white/15 p-4 sm:p-5 rounded-2xl shadow-2xl mb-6 lg:mb-8 text-left space-y-3">
-                    {/* Fecha y Hora */}
-                    {slide.date && (
-                      <div className="flex flex-col gap-1.5 text-zinc-100 font-bold text-sm sm:text-base">
-                        <div className="flex items-center gap-2 capitalize text-white">
-                          <Calendar className="w-4 h-4 text-red-500 shrink-0" />
-                          <span>{new Date(slide.date).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-red-400 font-black text-xs sm:text-sm tracking-wider uppercase pl-6">
-                          <Clock className="w-3.5 h-3.5 text-red-400" />
-                          <span>Hora: {new Date(slide.date).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Ubicación */}
-                    {slide.location && (
-                      <div className="flex items-center gap-2 text-zinc-300 font-medium text-xs sm:text-sm pt-2.5 border-t border-white/10">
-                        <MapPin className="w-4 h-4 text-red-500 shrink-0" />
-                        <span>{slide.location}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-
                 {slide.type !== 'event' && (
                   <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-6xl xl:text-7xl font-black tracking-tighter uppercase leading-none mb-2 md:mb-6">
                     {slide.title.split(' ').map((word: string, i: number) => (
@@ -422,7 +396,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 30 }}
                     transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
-                    className="block flex-shrink-0 relative mx-auto lg:mx-0 w-[300px] sm:w-[380px] md:w-[460px] lg:w-[500px] xl:w-[540px] max-w-full"
+                    className="block flex-shrink-0 relative mx-auto lg:mx-0 w-[320px] sm:w-[420px] md:w-[520px] lg:w-[580px] xl:w-[640px] max-w-full"
                   >
                     {/* Ambient Glow using blurred poster colors */}
                     <div className="absolute -inset-6 sm:-inset-10 blur-3xl rounded-3xl opacity-80 pointer-events-none overflow-hidden">
@@ -441,7 +415,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                           alt={slide.title}
                           width={800}
                           height={1200}
-                          className={`w-full h-auto max-h-[65vh] object-contain rounded-sm border shadow-2xl group-hover:opacity-90 transition-opacity ${slide.type === 'raffle' ? 'border-yellow-500/30' : 'border-white/10'}`}
+                          className="w-full h-auto max-h-[75vh] object-contain shadow-2xl group-hover:scale-[1.01] transition-transform duration-300"
                           priority={currentSlide === 0}
                         />
                       </Link>
@@ -452,7 +426,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                           alt={slide.title}
                           width={800}
                           height={1200}
-                          className={`w-full h-auto max-h-[65vh] object-contain rounded-sm border shadow-2xl ${slide.type === 'raffle' ? 'border-yellow-500/30' : 'border-white/10'}`}
+                          className="w-full h-auto max-h-[75vh] object-contain shadow-2xl"
                           priority={currentSlide === 0}
                         />
                       </div>
