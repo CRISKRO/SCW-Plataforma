@@ -330,19 +330,11 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
 
 
                 {slide.type === 'event' && (
-                  <div className="w-[280px] sm:w-[320px] lg:w-[440px] bg-black/60 backdrop-blur-md border border-white/15 p-4 sm:p-5 rounded-2xl shadow-2xl mb-6 lg:mb-8 text-left space-y-3">
-                    {/* Badge Próximo Evento */}
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 bg-red-600/90 text-white text-[11px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md shadow-red-950/40">
-                        <Ticket className="w-3.5 h-3.5" />
-                        Próximo Evento
-                      </span>
-                    </div>
-
+                  <div className="w-[300px] sm:w-[380px] md:w-[460px] lg:w-[500px] xl:w-[540px] max-w-full bg-black/60 backdrop-blur-md border border-white/15 p-4 sm:p-5 rounded-2xl shadow-2xl mb-6 lg:mb-8 text-left space-y-3">
                     {/* Fecha y Hora */}
                     {slide.date && (
-                      <div className="flex flex-col gap-1 text-zinc-100 font-bold text-sm sm:text-base border-t border-white/10 pt-2.5">
-                        <div className="flex items-center gap-2 capitalize">
+                      <div className="flex flex-col gap-1.5 text-zinc-100 font-bold text-sm sm:text-base">
+                        <div className="flex items-center gap-2 capitalize text-white">
                           <Calendar className="w-4 h-4 text-red-500 shrink-0" />
                           <span>{new Date(slide.date).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}</span>
                         </div>
@@ -355,7 +347,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
 
                     {/* Ubicación */}
                     {slide.location && (
-                      <div className="flex items-center gap-2 text-zinc-300 font-medium text-xs sm:text-sm pt-2 border-t border-white/10">
+                      <div className="flex items-center gap-2 text-zinc-300 font-medium text-xs sm:text-sm pt-2.5 border-t border-white/10">
                         <MapPin className="w-4 h-4 text-red-500 shrink-0" />
                         <span>{slide.location}</span>
                       </div>
@@ -430,7 +422,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 30 }}
                     transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
-                    className="block flex-shrink-0 relative mx-auto lg:mx-0 w-[280px] sm:w-[320px] lg:w-[440px]"
+                    className="block flex-shrink-0 relative mx-auto lg:mx-0 w-[300px] sm:w-[380px] md:w-[460px] lg:w-[500px] xl:w-[540px] max-w-full"
                   >
                     {/* Ambient Glow using blurred poster colors */}
                     <div className="absolute -inset-6 sm:-inset-10 blur-3xl rounded-3xl opacity-80 pointer-events-none overflow-hidden">
@@ -443,24 +435,24 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                       />
                     </div>
                     {slide.cta && slide.cta[0] && slide.cta[0].href ? (
-                      <Link href={slide.cta[0].href} className="relative w-full block group cursor-pointer">
+                      <Link href={slide.cta[0].href} className="relative w-full block group cursor-pointer flex justify-center">
                         <Image
                           src={slide.image}
                           alt={slide.title}
                           width={800}
                           height={1200}
-                          className={`w-full h-auto object-contain rounded-sm border shadow-2xl group-hover:opacity-90 transition-opacity ${slide.type === 'raffle' ? 'border-yellow-500/30' : 'border-white/10'}`}
+                          className={`w-full h-auto max-h-[65vh] object-contain rounded-sm border shadow-2xl group-hover:opacity-90 transition-opacity ${slide.type === 'raffle' ? 'border-yellow-500/30' : 'border-white/10'}`}
                           priority={currentSlide === 0}
                         />
                       </Link>
                     ) : (
-                      <div className="relative w-full">
+                      <div className="relative w-full flex justify-center">
                         <Image
                           src={slide.image}
                           alt={slide.title}
                           width={800}
                           height={1200}
-                          className={`w-full h-auto object-contain rounded-sm border shadow-2xl ${slide.type === 'raffle' ? 'border-yellow-500/30' : 'border-white/10'}`}
+                          className={`w-full h-auto max-h-[65vh] object-contain rounded-sm border shadow-2xl ${slide.type === 'raffle' ? 'border-yellow-500/30' : 'border-white/10'}`}
                           priority={currentSlide === 0}
                         />
                       </div>
