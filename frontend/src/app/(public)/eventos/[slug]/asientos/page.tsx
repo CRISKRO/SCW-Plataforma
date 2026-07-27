@@ -600,33 +600,34 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50"
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100]"
               onClick={() => setShowConfirmPanel(false)}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 24 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 24 }}
-              className="fixed inset-0 flex items-center justify-center z-50 px-4"
+              className="fixed inset-0 flex items-center justify-center z-[101] p-4 sm:p-6"
             >
-              <div className="bg-zinc-950 border border-white/10 rounded-3xl p-8 max-w-lg w-full shadow-2xl">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-2xl font-black uppercase tracking-tight text-white">
+              <div className="bg-zinc-950 border border-white/10 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl max-h-[85vh] flex flex-col my-auto relative">
+                <div className="flex justify-between items-center mb-4 shrink-0">
+                  <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white">
                     Confirmar Compra
                   </h3>
                   <button
                     onClick={() => setShowConfirmPanel(false)}
-                    className="text-zinc-500 hover:text-white transition-colors"
+                    className="text-zinc-500 hover:text-white transition-colors p-1"
                   >
                     <X className="w-6 h-6" />
                   </button>
                 </div>
 
-                <p className="text-zinc-400 text-sm mb-6 uppercase tracking-widest font-bold">{event.title}</p>
+                <p className="text-zinc-400 text-xs sm:text-sm mb-4 uppercase tracking-widest font-bold shrink-0">{event.title}</p>
 
-                <ul className="space-y-3 mb-6">
+                {/* Lista de asientos con scroll interno */}
+                <ul className="space-y-3 mb-4 overflow-y-auto pr-1.5 flex-1 min-h-0 custom-scrollbar">
                   {selectedSeats.map(seat => (
-                    <li key={seat.seatId} className="flex justify-between items-center bg-zinc-900 rounded-xl px-4 py-3">
+                    <li key={seat.seatId} className="flex justify-between items-center bg-zinc-900 border border-white/5 rounded-xl px-4 py-3 shrink-0">
                       <div>
                         <p className="font-bold text-white text-sm">
                           {ZONE_LABELS[seat.zoneType] || seat.zoneType}
@@ -642,7 +643,8 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
                             removeSeat(seat.seatId);
                             if (selectedSeats.length <= 1) setShowConfirmPanel(false);
                           }}
-                          className="text-zinc-600 hover:text-red-500 transition-colors"
+                          className="text-zinc-600 hover:text-red-500 transition-colors p-1"
+                          title="Eliminar asiento"
                         >
                           <Minus className="w-4 h-4" />
                         </button>
@@ -651,23 +653,24 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
                   ))}
                 </ul>
 
-                <div className="border-t border-white/10 pt-4 pb-6 flex justify-between font-bold text-lg">
+                {/* Footer fijo con total a pagar y botones de acción */}
+                <div className="border-t border-white/10 pt-4 pb-4 flex justify-between items-center font-bold text-base sm:text-lg shrink-0">
                   <span className="text-zinc-400">Total a pagar</span>
-                  <span className="text-white">${totalPrice.toFixed(2)} <span className="text-sm text-zinc-500 font-normal">MXN</span></span>
+                  <span className="text-white font-black">${totalPrice.toFixed(2)} <span className="text-xs sm:text-sm text-zinc-500 font-normal">MXN</span></span>
                 </div>
 
-                <div className="flex gap-4">
+                <div className="flex gap-3 sm:gap-4 shrink-0">
                   <button
                     onClick={() => setShowConfirmPanel(false)}
-                    className="flex-1 border border-white/10 text-zinc-400 hover:text-white hover:border-white/30 font-bold uppercase tracking-widest py-3 rounded-xl transition-colors"
+                    className="flex-1 border border-white/10 text-zinc-400 hover:text-white hover:border-white/30 font-bold text-xs sm:text-sm uppercase tracking-widest py-3 rounded-xl transition-colors"
                   >
                     Seguir Eligiendo
                   </button>
                   <button
                     onClick={handleConfirm}
-                    className="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold uppercase tracking-widest py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold text-xs sm:text-sm uppercase tracking-widest py-3 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-red-950/40"
                   >
-                    <ShoppingCart className="w-5 h-5" />
+                    <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
                     Comprar Ahora
                   </button>
                 </div>
