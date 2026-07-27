@@ -327,21 +327,33 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
             >
               <div className="w-full max-w-2xl flex-shrink-0 text-center lg:text-left flex flex-col items-center lg:items-start">
 
-                {slide.date && (
-                  <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 mb-2 lg:mb-6">
-                    <span className="inline-flex items-center gap-1.5 bg-red-600/90 backdrop-blur-sm text-white text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-full">
-                      <Ticket className="w-3 h-3" />
-                      Próximo Evento
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 text-zinc-200 text-[10px] sm:text-sm font-semibold bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/10">
-                      <Calendar className="w-3 h-3 text-red-400" />
-                      {new Date(slide.date).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}
-                    </span>
-                    {slide.location && (
-                      <span className="inline-flex items-center gap-1.5 text-zinc-200 text-[10px] sm:text-sm font-semibold bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/10">
-                        <MapPin className="w-3 h-3 text-red-400" />
-                        {slide.location}
+                {slide.type === 'event' && slide.date && (
+                  <div className="bg-black/50 backdrop-blur-md border border-white/10 p-5 rounded-2xl mb-6 lg:mb-8 text-left space-y-3.5 shadow-2xl max-w-md w-full">
+                    {/* Badge Próximo Evento */}
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 bg-red-600 text-white text-[11px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md shadow-red-950/40">
+                        <Ticket className="w-3.5 h-3.5" />
+                        Próximo Evento
                       </span>
+                    </div>
+
+                    {/* Fecha y Hora */}
+                    <div className="flex items-center gap-3 text-zinc-100 font-bold text-sm sm:text-base">
+                      <Calendar className="w-4.5 h-4.5 text-red-500 shrink-0" />
+                      <span className="capitalize">
+                        {new Date(slide.date).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}
+                        <span className="text-zinc-400 font-medium ml-2">
+                          · {new Date(slide.date).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                        </span>
+                      </span>
+                    </div>
+
+                    {/* Ubicación / Sede */}
+                    {slide.location && (
+                      <div className="flex items-center gap-3 text-zinc-300 font-semibold text-xs sm:text-sm pt-2.5 border-t border-white/10">
+                        <MapPin className="w-4.5 h-4.5 text-red-500 shrink-0" />
+                        <span>{slide.location}</span>
+                      </div>
                     )}
                   </div>
                 )}
