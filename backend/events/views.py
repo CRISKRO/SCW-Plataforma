@@ -20,9 +20,14 @@ class FighterViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
 
 class EventViewSet(viewsets.ModelViewSet):
-    queryset = Event.objects.prefetch_related('matches__fighters').all()
     serializer_class = EventSerializer
     permission_classes = [IsAdminOrReadOnly]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user and user.is_authenticated and (user.is_staff or getattr(user, 'role', None) in ['ADMIN', 'SUPERADMIN']):
+            return Event.objects.prefetch_related('matches__fighters').all()
+        return Event.objects.filter(status__in=['SCHEDULED', 'LIVE', 'COMPLETED']).prefetch_related('matches__fighters')
 
 class MatchViewSet(viewsets.ModelViewSet):
     queryset = Match.objects.all()
@@ -40,6 +45,11 @@ class SponsorViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
 
 class EventPostViewSet(viewsets.ModelViewSet):
-    queryset = EventPost.objects.select_related('event').all()
     serializer_class = EventPostSerializer
     permission_classes = [IsAdminOrReadOnly]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user and user.is_authenticated and (user.is_staff or getattr(user, 'role', None) in ['ADMIN', 'SUPERADMIN']):
+            return EventPost.objects.select_related('event').all()
+        return EventPost.objects.filter(is_active=True, event__status__in=['SCHEDULED', 'LIVE', 'COMPLETED']).select_related('event')

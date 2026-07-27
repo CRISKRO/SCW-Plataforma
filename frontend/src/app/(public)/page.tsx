@@ -1,10 +1,10 @@
 import HomeCarousel from '@/components/HomeCarousel';
 
-export const revalidate = 0; // Don't lock in stale empty results on Edge CDN
+export const revalidate = 60; // Cache on Vercel Edge CDN for 60 seconds for instant 20ms page loads
 
 async function safeFetchJson(url: string) {
   try {
-    const res = await fetch(url, { cache: 'no-store' });
+    const res = await fetch(url, { next: { revalidate: 60 } });
     if (res && res.ok) {
       return await res.json();
     }
@@ -15,7 +15,7 @@ async function safeFetchJson(url: string) {
   if (url.startsWith('https://')) {
     const httpUrl = url.replace('https://', 'http://');
     try {
-      const res = await fetch(httpUrl, { cache: 'no-store' });
+      const res = await fetch(httpUrl, { next: { revalidate: 60 } });
       if (res && res.ok) {
         return await res.json();
       }
@@ -64,14 +64,15 @@ export default async function Home() {
     console.error("Error fetching data for Home Server Component:", error);
   }
 
-  const upcomingEvents = eventsData.slice(0, 5);
-  const events = eventsData.slice(0, 3);
+  const publishedEvents = eventsData.filter((ev: any) => ev.status !== 'DRAFT');
+  const upcomingEvents = publishedEvents.slice(0, 5);
+  const events = publishedEvents.slice(0, 3);
   const roster = fightersData.slice(0, 4);
   const chronicles = chroniclesData.slice(0, 3);
   premiumVideos = premiumVideos.slice(0, 2);
   const sponsors = sponsorsData.filter((s: any) => s.is_active);
   const activeRaffles = rafflesData.filter((r: any) => r.is_active);
-  const activeEventPosts = eventPostsData.filter((p: any) => p.is_active);
+  const activeEventPosts = eventPostsData.filter((p: any) => p.is_active && p.event_status !== 'DRAFT');
 
   return (
     <main>

@@ -137,8 +137,9 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
         if (!upcomingEvents || upcomingEvents.length === 0) {
           const evData = await eventsService.getEvents();
           if (Array.isArray(evData) && evData.length > 0) {
-            setLocalEvents(evData.slice(0, 3));
-            setLocalUpcoming(evData.slice(0, 5));
+            const published = evData.filter((ev: any) => ev.status !== 'DRAFT');
+            setLocalEvents(published.slice(0, 3));
+            setLocalUpcoming(published.slice(0, 5));
           }
         }
         if (!roster || roster.length === 0) {
