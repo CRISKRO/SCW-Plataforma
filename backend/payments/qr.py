@@ -32,7 +32,51 @@ def generate_ticket_qr(order_id: int, item_id: int, item_name: str) -> BytesIO:
     Generate a QR code image for a single ticket.
     Returns a BytesIO object containing the PNG image.
     """
-    return generate_group_ticket_qr(order_id, [item_id], item_name)
+    ticket_hash = get_ticket_hash(order_id, item_id)
+    payload = json.dumps({
+        "scw": True,
+        "order": order_id,
+        "item": item_id,
+        "code": ticket_hash
+    })
+
+    qr = qrcode.QRCode(
+        version=2,
+        error_correction=qrcode.constants.ERROR_CORRECT_H,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(payload)
+    qr.make(fit=True)
+
+    img = qr.make_image(fill_color="#000000", back_color="#FFFFFF").convert('RGB')
+    
+    logo_path = os.path.join(settings.BASE_DIR, '..', 'frontend', 'public', 'images', 'logo-scw.png')
+    
+    if os.path.exists(logo_path):
+        try:
+            logo = Image.open(logo_path)
+            qr_width, qr_height = img.size
+            logo_size = int(qr_width * 0.35) 
+            logo = logo.resize((logo_size, logo_size), Image.Resampling.LANCZOS)
+            
+            pos = ((qr_width - logo_size) // 2, (qr_height - logo_size) // 2)
+            
+            logo_bg = Image.new('RGB', (logo_size, logo_size), 'white')
+            if 'A' in logo.getbands():
+                logo_bg.paste(logo, (0,0), mask=logo)
+            else:
+                logo_bg.paste(logo, (0,0))
+                
+            img.paste(logo_bg, pos)
+        except Exception as e:
+            print(f"Failed to add logo to QR: {e}")
+
+    buffer = BytesIO()
+    img.save(buffer, format='PNG')
+    buffer.seek(0)
+    return buffer
+
 
 
 def generate_group_ticket_qr(order_id: int, item_ids: list, group_title: str) -> BytesIO:

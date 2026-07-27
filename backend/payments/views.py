@@ -926,15 +926,48 @@ class ValidateTicketView(APIView):
         if order.status != Order.Status.PAID:
             return Response({"valid": False, "message": "Esta orden no ha sido pagada."})
 
-        # Match against grouped items in order
+        # 1. Single item scan (primary flow for 1 QR per seat)
+        if item_id and not items_ids:
+            try:
+                item = OrderItem.objects.get(id=int(item_id), order__id=int(order_id))
+            except OrderItem.DoesNotExist:
+                return Response({"valid": False, "message": "Boleto no encontrado."}, status=404)
+
+            # Check single ticket code validation
+            if not validate_ticket_code(int(order_id), int(item_id), code):
+                # Fallback check if it was scanned with a group code
+                if not validate_group_ticket_code(int(order_id), [int(item_id)], code):
+                    return Response({"valid": False, "message": "❌ Código inválido."})
+
+            if item.is_scanned:
+                return Response({"valid": False, "message": "❌ Este boleto ya fue registrado/escaneado."})
+
+            if item.event and item.event.date_time < timezone.now():
+                return Response({"valid": False, "message": "❌ Evento caducado/pasado."})
+
+            item.is_scanned = True
+            item.scanned_at = timezone.now()
+            item.save()
+
+            seat_info = ""
+            if item.seat and item.seat.zone:
+                seat_info = f"{item.seat.zone.get_zone_type_display()} · Fila {item.seat.row_name} · Asiento {item.seat.display_number}"
+            elif item.size:
+                seat_info = item.size
+
+            return Response({
+                "valid": True,
+                "message": "✅ Acceso autorizado",
+                "item": item.product_name,
+                "size": seat_info or item.size
+            })
+
+        # 2. Group items scan (fallback / legacy flow for group QRs)
         groups = group_order_items(order)
         target_group = None
 
         if items_ids:
             target_group = next((g for g in groups if set(g['item_ids']) == set(items_ids)), None)
-
-        if not target_group and item_id:
-            target_group = next((g for g in groups if int(item_id) in g['item_ids']), None)
 
         if target_group:
             if not validate_group_ticket_code(int(order_id), target_group['item_ids'], code):
@@ -963,26 +996,8 @@ class ValidateTicketView(APIView):
                 "size": target_group['subtitle']
             })
 
-        # Fallback for single item scan
-        try:
-            item = OrderItem.objects.get(id=int(item_id), order__id=int(order_id))
-        except OrderItem.DoesNotExist:
-            return Response({"valid": False, "message": "Boleto no encontrado."}, status=404)
+        return Response({"valid": False, "message": "Boleto o grupo no encontrado."}, status=404)
 
-        if not validate_ticket_code(int(order_id), int(item_id), code):
-            return Response({"valid": False, "message": "❌ Código inválido."})
-
-        if item.is_scanned:
-            return Response({"valid": False, "message": "❌ Boleto ya registrado."})
-
-        if item.event and item.event.date_time < timezone.now():
-            return Response({"valid": False, "message": "❌ Evento caducado/pasado."})
-
-        item.is_scanned = True
-        item.scanned_at = timezone.now()
-        item.save()
-
-        return Response({"valid": True, "message": "✅ Acceso autorizado", "item": item.product_name, "size": item.size})
 
 
 class WebhookView(APIView):

@@ -6,39 +6,50 @@ import base64
 from email.mime.image import MIMEImage
 from django.core.mail import EmailMultiAlternatives, get_connection
 from django.conf import settings
-from .qr import generate_group_ticket_qr, group_order_items
+from .qr import generate_ticket_qr
 from api.models import get_active_config
 
 
 def send_ticket_email(order):
     """
-    Send a ticket confirmation email with grouped QR codes (1 QR code per contiguous block/area).
+    Send a ticket confirmation email with an individual QR code per seat / ticket.
     """
-    groups = group_order_items(order)
+    ticket_items = list(order.items.filter(event__isnull=False))
     
-    if not groups:
+    if not ticket_items:
         return False
 
     # Build QR attachments
     qr_images = []
     items_html = ""
-    for group in groups:
-        qr_buf = generate_group_ticket_qr(order.id, group['item_ids'], group['title'])
+    for item in ticket_items:
+        title = item.product_name if item.product_name else (item.event.title if item.event else "Boleto SCW")
+        
+        if item.seat and item.seat.zone:
+            seat_info = f"{item.seat.zone.get_zone_type_display()} · Fila {item.seat.row_name} · Asiento {item.seat.display_number}"
+        elif item.size:
+            seat_info = item.size
+        else:
+            seat_info = "Entrada General"
+
+        qr_buf = generate_ticket_qr(order.id, item.id, title)
         qr_b64 = base64.b64encode(qr_buf.read()).decode()
-        cid_str = f"qr_{group['group_id']}@scw.boletos"
+        cid_str = f"qr_item_{item.id}@scw.boletos"
         qr_images.append({
-            'group': group,
+            'item': item,
+            'title': title,
+            'seat_info': seat_info,
             'b64': qr_b64,
             'cid': cid_str
         })
-        qty_badge = f"{group['quantity']} Boleto{'s' if group['quantity'] > 1 else ''}"
+        
         items_html += f"""
         <div style="background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:20px;margin-bottom:20px;text-align:center;">
-          <p style="color:#e00;font-size:11px;text-transform:uppercase;letter-spacing:2px;margin:0 0 4px;font-weight:bold;">{qty_badge}</p>
-          <h3 style="color:#fff;margin:0 0 4px;font-size:18px;">{group['title']}</h3>
-          <p style="color:#22c55e;font-size:14px;font-weight:bold;margin:0 0 16px;">{group['subtitle']}</p>
+          <p style="color:#e00;font-size:11px;text-transform:uppercase;letter-spacing:2px;margin:0 0 4px;font-weight:bold;">1 Boleto</p>
+          <h3 style="color:#fff;margin:0 0 4px;font-size:18px;">{title}</h3>
+          <p style="color:#22c55e;font-size:14px;font-weight:bold;margin:0 0 16px;">{seat_info}</p>
           <img src="cid:{cid_str}" width="220" height="220" alt="QR Boleto" style="border-radius:8px;"/>
-          <p style="color:#888;font-size:11px;margin:12px 0 0;">Presenta este código en la entrada (Válido para {qty_badge})</p>
+          <p style="color:#888;font-size:11px;margin:12px 0 0;">Presenta este código en la entrada (Válido para 1 acceso)</p>
         </div>
         """
 
@@ -66,10 +77,10 @@ def send_ticket_email(order):
         <div style="background:#111;border:1px solid #222;border-radius:12px;padding:20px;margin-bottom:24px;">
           <h3 style="color:#fff;font-size:14px;text-transform:uppercase;letter-spacing:2px;margin:0 0 12px;">Instrucciones</h3>
           <ol style="color:#aaa;font-size:13px;line-height:2;margin:0;padding-left:20px;">
-            <li>Guarda este correo o toma captura de pantalla de los códigos QR.</li>
+            <li>Guarda este correo o toma captura de pantalla de cada código QR.</li>
+            <li>Cada código QR corresponde a un asiento o boleto individual.</li>
             <li>Preséntalo en la entrada del evento.</li>
-            <li>Cada código QR corresponde al bloque o zona indicada (ej: Asientos 1 al 10).</li>
-            <li>El personal escaneará tu código para darte acceso a ti y a tus acompañantes.</li>
+            <li>El personal escaneará cada código para darte acceso a ti y a tus acompañantes.</li>
           </ol>
         </div>
 
@@ -103,10 +114,10 @@ def send_ticket_email(order):
 
     # Attach QR images inline
     for qr in qr_images:
-        qr_buf = generate_group_ticket_qr(order.id, qr['group']['item_ids'], qr['group']['title'])
+        qr_buf = generate_ticket_qr(order.id, qr['item'].id, qr['title'])
         img = MIMEImage(qr_buf.read(), _subtype='png')
         img.add_header('Content-ID', f"<{qr['cid']}>")
-        img.add_header('Content-Disposition', 'inline', filename=f"boletos_{qr['group']['group_id']}.png")
+        img.add_header('Content-Disposition', 'inline', filename=f"boleto_{qr['item'].id}.png")
         email.attach(img)
 
     connection = None
@@ -122,3 +133,4 @@ def send_ticket_email(order):
     email.connection = connection
     email.send(fail_silently=False)
     return True
+
