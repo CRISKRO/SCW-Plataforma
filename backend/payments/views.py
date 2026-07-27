@@ -558,7 +558,23 @@ class OrderViewSet(viewsets.ModelViewSet):
                     send_order_emails_safely(instance)
                 except Exception as mail_err:
                     print("Email error simulating PAID status:", mail_err)
-            elif instance.status in ['PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']:
+            elif instance.status == 'CANCELLED':
+                # Liberar asientos si la orden fue cancelada y ninguna otra orden pagada los ocupa
+                for item in instance.items.all():
+                    if getattr(item, 'seat', None):
+                        other_paid_order = OrderItem.objects.filter(
+                            seat=item.seat,
+                            order__status=Order.Status.PAID
+                        ).exclude(order=instance).exists()
+                        if not other_paid_order:
+                            item.seat.is_available = True
+                            item.seat.save()
+                try:
+                    from .email_orders import send_status_update_email
+                    send_status_update_email(instance)
+                except Exception as e:
+                    print("Error sending status update email:", e)
+            elif instance.status in ['PROCESSING', 'SHIPPED', 'DELIVERED']:
                 try:
                     from .email_orders import send_status_update_email
                     send_status_update_email(instance)
@@ -1035,6 +1051,8 @@ class ValidateTicketView(APIView):
             return Response({"valid": False, "message": "Orden no encontrada."}, status=404)
 
         if order.status != Order.Status.PAID:
+            if order.status == Order.Status.CANCELLED:
+                return Response({"valid": False, "message": "❌ Esta orden fue CANCELADA. Boleto no válido."})
             return Response({"valid": False, "message": "Esta orden no ha sido pagada."})
 
         # 1. Single item scan (primary flow for 1 QR per seat)
