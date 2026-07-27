@@ -185,6 +185,8 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
           }
         }
       } catch (e) {
+        console.error("Client fallback fetch error:", e);
+      }
     };
     fetchFallback();
   }, [events, upcomingEvents, roster, chronicles, premiumVideos, sponsors, eventPosts]);
