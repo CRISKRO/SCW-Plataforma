@@ -116,13 +116,41 @@ class ApproveTransferView(APIView):
         if order.payment_method != 'TRANSFER':
             return HttpResponse("Esta orden no es de transferencia.")
 
+        # Verificar si algún asiento de esta orden ya fue vendido en otra orden pagada
+        conflicting_seats = []
+        for item in order.items.all():
+            if getattr(item, 'seat', None):
+                already_sold = OrderItem.objects.filter(
+                    seat=item.seat,
+                    order__status=Order.Status.PAID
+                ).exclude(order=order).exists()
+                
+                if not item.seat.is_available or already_sold:
+                    conflicting_seats.append(f"Fila {item.seat.row_name} - Asiento {item.seat.display_number}")
+
+        if conflicting_seats:
+            seats_str = ", ".join(conflicting_seats)
+            html = f"""
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="UTF-8"><title>Error al Aprobar Transferencia</title></head>
+            <body style="background:#000;color:#fff;font-family:sans-serif;text-align:center;padding:50px;">
+                <h1 style="color:#ef4444;">⚠️ No se puede aprobar la Orden #{order.id}</h1>
+                <p style="font-size:18px;margin-top:20px;">Uno o más asientos de esta orden ya fueron vendidos en otra orden pagada:</p>
+                <p style="font-size:20px;font-weight:bold;color:#fca5a5;margin:20px 0;">{seats_str}</p>
+                <p style="color:#aaa;">Para evitar sobreventa de boletos, la orden no fue aprobada. Ponte en contacto con el cliente para reasignar sus asientos o cancelar la orden.</p>
+            </body>
+            </html>
+            """
+            return HttpResponse(html, status=400)
+
         # Approve order
         order.status = Order.Status.PAID
         order.save()
 
         # Deduct seats and stock
         for item in order.items.all():
-            if getattr(item, 'seat', None) and item.seat.is_available:
+            if getattr(item, 'seat', None):
                 item.seat.is_available = False
                 item.seat.save()
             if item.product:
@@ -247,8 +275,36 @@ class CreateOrderView(APIView):
                     try:
                         seat = Seat.objects.get(id=item['seat_id'])
                         event_obj = seat.zone.event
+
+                        if not seat.is_available:
+                            return Response({
+                                "error": f"El asiento {seat.display_number} (Fila {seat.row_name}) ya fue vendido y no está disponible."
+                            }, status=status.HTTP_400_BAD_REQUEST)
+
+                        # Verificar si el asiento pertenece a una orden ya pagada
+                        paid_item = OrderItem.objects.filter(
+                            seat=seat,
+                            order__status=Order.Status.PAID
+                        ).first()
+                        if paid_item:
+                            return Response({
+                                "error": f"El asiento {seat.display_number} (Fila {seat.row_name}) ya fue pagado en otra orden."
+                            }, status=status.HTTP_400_BAD_REQUEST)
+
+                        # Verificar si el asiento pertenece a una orden de transferencia/pago pendiente activa
+                        pending_item = OrderItem.objects.filter(
+                            seat=seat,
+                            order__status=Order.Status.PENDING
+                        ).exclude(order__status=Order.Status.CANCELLED).first()
+                        if pending_item:
+                            return Response({
+                                "error": f"El asiento {seat.display_number} (Fila {seat.row_name}) se encuentra reservado en una orden pendiente de confirmación."
+                            }, status=status.HTTP_400_BAD_REQUEST)
+
                     except Seat.DoesNotExist:
-                        pass
+                        return Response({
+                            "error": f"El asiento seleccionado no existe."
+                        }, status=status.HTTP_400_BAD_REQUEST)
                         
                 if item.get('event_id') and not event_obj:
                     from events.models import Event
@@ -452,13 +508,32 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         old_status = serializer.instance.status
+        new_status = serializer.validated_data.get('status', old_status)
+
+        if old_status != new_status and new_status == 'PAID':
+            conflicting_items = []
+            for item in serializer.instance.items.all():
+                if getattr(item, 'seat', None):
+                    already_sold = OrderItem.objects.filter(
+                        seat=item.seat,
+                        order__status=Order.Status.PAID
+                    ).exclude(order=serializer.instance).exists()
+
+                    if not item.seat.is_available or already_sold:
+                        conflicting_items.append(f"Fila {item.seat.row_name} - Asiento {item.seat.display_number}")
+
+            if conflicting_items:
+                raise serializers.ValidationError({
+                    "status": f"No se puede marcar como PAGADA. Los siguientes asientos ya fueron vendidos en otra orden pagada: {', '.join(conflicting_items)}"
+                })
+
         instance = serializer.save()
         if old_status != instance.status:
             if instance.status == 'PAID':
                 # Simular lógica de webhook: enviar recibo/boleto y descontar asientos
                 try:
                     for item in instance.items.all():
-                        if getattr(item, 'seat', None) and item.seat.is_available:
+                        if getattr(item, 'seat', None):
                             item.seat.is_available = False
                             item.seat.save()
                         if item.product:
@@ -539,8 +614,34 @@ class ProcessCardPaymentView(APIView):
                 try:
                     seat = Seat.objects.get(id=item['seat_id'])
                     event_obj = seat.zone.event
+
+                    if not seat.is_available:
+                        return Response({
+                            "error": f"El asiento {seat.display_number} (Fila {seat.row_name}) ya fue vendido."
+                        }, status=status.HTTP_400_BAD_REQUEST)
+
+                    paid_item = OrderItem.objects.filter(
+                        seat=seat,
+                        order__status=Order.Status.PAID
+                    ).first()
+                    if paid_item:
+                        return Response({
+                            "error": f"El asiento {seat.display_number} (Fila {seat.row_name}) ya fue pagado en otra orden."
+                        }, status=status.HTTP_400_BAD_REQUEST)
+
+                    pending_item = OrderItem.objects.filter(
+                        seat=seat,
+                        order__status=Order.Status.PENDING
+                    ).exclude(order__status=Order.Status.CANCELLED).first()
+                    if pending_item:
+                        return Response({
+                            "error": f"El asiento {seat.display_number} (Fila {seat.row_name}) se encuentra reservado en una orden pendiente."
+                        }, status=status.HTTP_400_BAD_REQUEST)
+
                 except Seat.DoesNotExist:
-                    pass
+                    return Response({
+                        "error": f"El asiento seleccionado no existe."
+                    }, status=status.HTTP_400_BAD_REQUEST)
 
             if item.get('event_id') and not event_obj:
                 from events.models import Event
