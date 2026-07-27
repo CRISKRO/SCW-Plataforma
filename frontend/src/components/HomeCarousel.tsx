@@ -327,37 +327,20 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
             >
               <div className="w-full max-w-2xl flex-shrink-0 text-center lg:text-left flex flex-col items-center lg:items-start">
 
-                {slide.type === 'event' && slide.date && (
-                  <div className="mb-6 lg:mb-8 text-center lg:text-left flex flex-col items-center lg:items-start space-y-3">
-                    {/* Live Badge */}
-                    <div className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-red-400 bg-red-600/10 border border-red-500/30 px-3.5 py-1.5 rounded-full shadow-lg shadow-red-950/20">
-                      <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-                      <Ticket className="w-3.5 h-3.5" />
-                      <span>Próximo Evento</span>
-                    </div>
-
-                    {/* Fecha Impactante */}
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-black text-white uppercase tracking-tight leading-none drop-shadow-md capitalize">
-                      {new Date(slide.date).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}
-                    </h2>
-
-                    {/* Hora y Ubicación */}
-                    <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-4 gap-y-2 text-sm sm:text-base font-bold text-zinc-300">
-                      <div className="flex items-center gap-1.5 text-red-400">
-                        <Clock className="w-4 h-4" />
+                {slide.type === 'event' && (
+                  <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 mb-6 lg:mb-8">
+                    {slide.date && (
+                      <span className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-white bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
+                        <Clock className="w-4 h-4 text-red-500" />
                         <span>{new Date(slide.date).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
-                      </div>
-
-                      {slide.location && (
-                        <>
-                          <span className="text-zinc-600 hidden sm:inline">•</span>
-                          <div className="flex items-center gap-1.5 text-zinc-300">
-                            <MapPin className="w-4 h-4 text-red-500 shrink-0" />
-                            <span>{slide.location}</span>
-                          </div>
-                        </>
-                      )}
-                    </div>
+                      </span>
+                    )}
+                    {slide.location && (
+                      <span className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-zinc-200 bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
+                        <MapPin className="w-4 h-4 text-red-500 shrink-0" />
+                        <span>{slide.location}</span>
+                      </span>
+                    )}
                   </div>
                 )}
 
