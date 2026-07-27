@@ -137,6 +137,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Disable trailing slash redirects in Django to prevent proxy loop with Next.js
+APPEND_SLASH = False
+
 # CORS Config
 CORS_ALLOW_ALL_ORIGINS = True # Change to specific origins in production
 CORS_ALLOW_CREDENTIALS = True
