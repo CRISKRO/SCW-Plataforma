@@ -9,13 +9,28 @@ import { useAuthStore } from '@/store/authStore';
 import api from '@/services/api';
 
 function getYoutubeId(url: string): string | null {
-  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
-  return match ? match[1] : null;
+  if (!url || typeof url !== 'string') return null;
+
+  // 1. Match ?v= or &v= parameter anywhere in the query string
+  const vMatch = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+  if (vMatch && vMatch[1]) return vMatch[1];
+
+  // 2. Match path-based formats (live/, shorts/, embed/, v/, watch/, youtu.be/)
+  const pathMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|shorts\/|live\/|v\/|watch\/))([a-zA-Z0-9_-]{11})/i);
+  if (pathMatch && pathMatch[1]) return pathMatch[1];
+
+  // 3. Fallback for any 11-char ID in YouTube link
+  if (url.toLowerCase().includes('youtu')) {
+    const fallbackMatch = url.match(/([a-zA-Z0-9_-]{11})/);
+    if (fallbackMatch && fallbackMatch[1]) return fallbackMatch[1];
+  }
+
+  return null;
 }
 
 function getYoutubeThumbnail(url: string): string {
   const id = getYoutubeId(url);
-  return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : '';
+  return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : '';
 }
 
 import PageBackButton from '@/components/PageBackButton';
