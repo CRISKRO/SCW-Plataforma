@@ -22,13 +22,17 @@ const api = axios.create({
 export const getMediaUrl = (url?: string | null) => {
   if (!url) return '';
   
-  // If the backend returned an absolute URL (like http://renescw.pythonanywhere.com/media/...)
-  // We MUST force https to avoid mixed content errors on Vercel
-  if (url.startsWith('http://') && url.includes('pythonanywhere.com')) {
-    return url.replace('http://', 'https://');
+  if (url.startsWith('data:')) return url;
+
+  // If the backend returned an absolute PythonAnywhere URL, ensure proper protocol
+  if (url.includes('pythonanywhere.com')) {
+    if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+      return url.replace('http://', 'https://');
+    }
+    return url;
   }
 
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+  if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
   
