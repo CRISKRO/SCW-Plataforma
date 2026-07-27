@@ -329,40 +329,23 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
 
 
 
-                {slide.type === 'event' && (
-                  <div className="mb-6 lg:mb-8 text-center lg:text-left space-y-3">
-                    {/* Badge Próximo Evento */}
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-600/20 border border-red-500/30 text-red-400 text-xs font-black uppercase tracking-widest shadow-md">
-                      <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-                      <Ticket className="w-3.5 h-3.5" />
-                      <span>Próximo Evento</span>
-                    </div>
-
-                    {/* Fecha */}
-                    {slide.date && (
-                      <div className="text-xl sm:text-2xl md:text-3xl font-black uppercase text-white tracking-tight capitalize">
-                        {new Date(slide.date).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                {slide.type === 'event' && (slide.location || slide.date) && (
+                  <div className="inline-flex flex-wrap items-center gap-x-3 gap-y-1.5 bg-black/60 backdrop-blur-md border border-white/15 text-zinc-200 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-xl mb-6 lg:mb-8">
+                    {slide.location && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-4 h-4 text-red-500 shrink-0" />
+                        <span>{slide.location}</span>
                       </div>
                     )}
-
-                    {/* Fila de Hora y Sede */}
-                    <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-1">
-                      {/* Badge de Hora */}
-                      {slide.date && (
-                        <div className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-800 text-white px-3.5 py-1.5 rounded-lg font-black text-xs sm:text-sm shadow-md shadow-red-950/50 uppercase tracking-wider">
-                          <Clock className="w-4 h-4 text-white" />
-                          <span>Hora: {new Date(slide.date).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
-                        </div>
-                      )}
-
-                      {/* Badge de Ubicación */}
-                      {slide.location && (
-                        <div className="flex items-center gap-2 bg-zinc-900/90 border border-white/15 text-zinc-200 px-3.5 py-1.5 rounded-lg font-semibold text-xs sm:text-sm shadow-md">
-                          <MapPin className="w-4 h-4 text-red-500 shrink-0" />
-                          <span>{slide.location}</span>
-                        </div>
-                      )}
-                    </div>
+                    {slide.location && slide.date && (
+                      <span className="text-zinc-500 hidden sm:inline">•</span>
+                    )}
+                    {slide.date && (
+                      <div className="flex items-center gap-2 text-red-400 font-extrabold uppercase tracking-wider">
+                        <Clock className="w-4 h-4 shrink-0" />
+                        <span>{new Date(slide.date).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+                      </div>
+                    )}
                   </div>
                 )}
 
