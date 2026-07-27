@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronRight, ChevronLeft, Calendar, MapPin, Ticket, PlayCircle } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Calendar, MapPin, Ticket, PlayCircle, Clock } from 'lucide-react';
 import { TicketSelectionModal } from '@/components/TicketSelectionModal';
 import api, { getMediaUrl } from '@/services/api';
 import { eventsService } from '@/services/events.services';
@@ -328,33 +328,36 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
               <div className="w-full max-w-2xl flex-shrink-0 text-center lg:text-left flex flex-col items-center lg:items-start">
 
                 {slide.type === 'event' && slide.date && (
-                  <div className="bg-black/50 backdrop-blur-md border border-white/10 p-5 rounded-2xl mb-6 lg:mb-8 text-left space-y-3.5 shadow-2xl max-w-md w-full">
-                    {/* Badge Próximo Evento */}
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 bg-red-600 text-white text-[11px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md shadow-red-950/40">
-                        <Ticket className="w-3.5 h-3.5" />
-                        Próximo Evento
-                      </span>
+                  <div className="mb-6 lg:mb-8 text-center lg:text-left flex flex-col items-center lg:items-start space-y-3">
+                    {/* Live Badge */}
+                    <div className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-red-400 bg-red-600/10 border border-red-500/30 px-3.5 py-1.5 rounded-full shadow-lg shadow-red-950/20">
+                      <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                      <Ticket className="w-3.5 h-3.5" />
+                      <span>Próximo Evento</span>
                     </div>
 
-                    {/* Fecha y Hora */}
-                    <div className="flex items-center gap-3 text-zinc-100 font-bold text-sm sm:text-base">
-                      <Calendar className="w-4.5 h-4.5 text-red-500 shrink-0" />
-                      <span className="capitalize">
-                        {new Date(slide.date).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}
-                        <span className="text-zinc-400 font-medium ml-2">
-                          · {new Date(slide.date).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}
-                        </span>
-                      </span>
-                    </div>
+                    {/* Fecha Impactante */}
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-black text-white uppercase tracking-tight leading-none drop-shadow-md capitalize">
+                      {new Date(slide.date).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}
+                    </h2>
 
-                    {/* Ubicación / Sede */}
-                    {slide.location && (
-                      <div className="flex items-center gap-3 text-zinc-300 font-semibold text-xs sm:text-sm pt-2.5 border-t border-white/10">
-                        <MapPin className="w-4.5 h-4.5 text-red-500 shrink-0" />
-                        <span>{slide.location}</span>
+                    {/* Hora y Ubicación */}
+                    <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-4 gap-y-2 text-sm sm:text-base font-bold text-zinc-300">
+                      <div className="flex items-center gap-1.5 text-red-400">
+                        <Clock className="w-4 h-4" />
+                        <span>{new Date(slide.date).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
                       </div>
-                    )}
+
+                      {slide.location && (
+                        <>
+                          <span className="text-zinc-600 hidden sm:inline">•</span>
+                          <div className="flex items-center gap-1.5 text-zinc-300">
+                            <MapPin className="w-4 h-4 text-red-500 shrink-0" />
+                            <span>{slide.location}</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 )}
 
