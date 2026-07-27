@@ -17,13 +17,24 @@ export default function EventDetailClient({ event }: { event: any }) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mt-8">
           <motion.div 
             initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
-            className="w-full bg-zinc-900 rounded-3xl overflow-hidden shadow-2xl shadow-black/50 border border-white/10 flex items-center justify-center"
+            className="w-full relative rounded-3xl overflow-visible"
           >
-            <img 
-              src={getMediaUrl(event.banner_url)}
-              alt={`Póster oficial de ${event.title}`}
-              className="w-full h-auto object-contain"
-            />
+            {/* Ambient Poster Glow */}
+            <div className="absolute -inset-4 blur-3xl rounded-3xl opacity-70 pointer-events-none overflow-hidden">
+              <img 
+                src={getMediaUrl(event.banner_url)} 
+                alt="" 
+                className="w-full h-full object-cover blur-3xl scale-125 saturate-200 brightness-110" 
+              />
+            </div>
+
+            <div className="relative z-10 w-full bg-zinc-900 rounded-3xl overflow-hidden shadow-2xl shadow-black/80 border border-white/10 flex items-center justify-center">
+              <img 
+                src={getMediaUrl(event.banner_url)}
+                alt={`Póster oficial de ${event.title}`}
+                className="w-full h-auto object-contain"
+              />
+            </div>
           </motion.div>
 
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>

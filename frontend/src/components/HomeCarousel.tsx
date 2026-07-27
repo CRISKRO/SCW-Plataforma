@@ -234,10 +234,22 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
             transition={{ duration: 1, ease: "easeInOut" }}
             className="absolute inset-0 z-0"
           >
-            {slide.id ? (
+            {slide.image ? (
               <>
-                <div className="absolute inset-0 bg-zinc-950" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_left,_#18181b_0%,_#000_60%)]" />
+                <div className="absolute inset-0 bg-black" />
+                {/* Dynamic Ambient Poster Color Backdrop with heavy blur */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-50 sm:opacity-60">
+                  <Image 
+                    src={slide.image} 
+                    alt="" 
+                    fill 
+                    priority={currentSlide === 0} 
+                    className="object-cover blur-[90px] sm:blur-[120px] scale-150 saturate-200 brightness-90" 
+                    unoptimized 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/30" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-black via-black/30 to-black/60" />
+                </div>
               </>
             ) : (
               <>
@@ -377,7 +389,16 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                     transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
                     className="block flex-shrink-0 relative mx-auto lg:mx-0 w-[280px] sm:w-[320px] lg:w-[450px]"
                   >
-                    <div className={`absolute -inset-4 sm:-inset-8 blur-2xl sm:blur-3xl rounded-full ${slide.type === 'raffle' ? 'bg-yellow-500/20' : 'bg-red-600/15'}`} />
+                    {/* Ambient Glow using blurred poster colors */}
+                    <div className="absolute -inset-6 sm:-inset-10 blur-3xl rounded-3xl opacity-80 pointer-events-none overflow-hidden">
+                      <Image 
+                        src={slide.image} 
+                        alt="" 
+                        fill 
+                        className="object-cover blur-3xl scale-125 saturate-200 brightness-110" 
+                        unoptimized 
+                      />
+                    </div>
                     {slide.cta && slide.cta[0] && slide.cta[0].href ? (
                       <Link href={slide.cta[0].href} className="relative w-full block group cursor-pointer">
                         <Image
