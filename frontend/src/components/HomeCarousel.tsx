@@ -329,6 +329,43 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
 
 
 
+                {slide.type === 'event' && (
+                  <div className="mb-6 lg:mb-8 text-center lg:text-left space-y-3">
+                    {/* Badge Próximo Evento */}
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-600/20 border border-red-500/30 text-red-400 text-xs font-black uppercase tracking-widest shadow-md">
+                      <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                      <Ticket className="w-3.5 h-3.5" />
+                      <span>Próximo Evento</span>
+                    </div>
+
+                    {/* Fecha */}
+                    {slide.date && (
+                      <div className="text-xl sm:text-2xl md:text-3xl font-black uppercase text-white tracking-tight capitalize">
+                        {new Date(slide.date).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                      </div>
+                    )}
+
+                    {/* Fila de Hora y Sede */}
+                    <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-1">
+                      {/* Badge de Hora */}
+                      {slide.date && (
+                        <div className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-800 text-white px-3.5 py-1.5 rounded-lg font-black text-xs sm:text-sm shadow-md shadow-red-950/50 uppercase tracking-wider">
+                          <Clock className="w-4 h-4 text-white" />
+                          <span>Hora: {new Date(slide.date).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+                        </div>
+                      )}
+
+                      {/* Badge de Ubicación */}
+                      {slide.location && (
+                        <div className="flex items-center gap-2 bg-zinc-900/90 border border-white/15 text-zinc-200 px-3.5 py-1.5 rounded-lg font-semibold text-xs sm:text-sm shadow-md">
+                          <MapPin className="w-4 h-4 text-red-500 shrink-0" />
+                          <span>{slide.location}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {slide.type !== 'event' && (
                   <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-6xl xl:text-7xl font-black tracking-tighter uppercase leading-none mb-2 md:mb-6">
                     {slide.title.split(' ').map((word: string, i: number) => (
@@ -396,7 +433,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 30 }}
                     transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
-                    className="block flex-shrink-0 relative mx-auto lg:mx-0 w-[280px] sm:w-[320px] lg:w-[450px]"
+                    className="block flex-shrink-0 relative mx-auto lg:mx-0 w-[320px] sm:w-[400px] md:w-[480px] lg:w-[560px] xl:w-[620px]"
                   >
                     {/* Ambient Glow using blurred poster colors */}
                     <div className="absolute -inset-6 sm:-inset-10 blur-3xl rounded-3xl opacity-80 pointer-events-none overflow-hidden">
