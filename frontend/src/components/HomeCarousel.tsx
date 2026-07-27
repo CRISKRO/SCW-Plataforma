@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { ChevronRight, ChevronLeft, Calendar, MapPin, Ticket, PlayCircle } from 'lucide-react';
 import { TicketSelectionModal } from '@/components/TicketSelectionModal';
 import { getMediaUrl } from '@/services/api';
+import { eventsService } from '@/services/events.services';
 
 const InstagramIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
@@ -109,21 +110,71 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const [localEvents, setLocalEvents] = useState<any[]>(events || []);
+  const [localUpcoming, setLocalUpcoming] = useState<any[]>(upcomingEvents || []);
+  const [localRoster, setLocalRoster] = useState<any[]>(roster || []);
+  const [localChronicles, setLocalChronicles] = useState<any[]>(chronicles || []);
+  const [localVideos, setLocalVideos] = useState<any[]>(premiumVideos || []);
+  const [localSponsors, setLocalSponsors] = useState<any[]>(sponsors || []);
+  const [localPosts, setLocalPosts] = useState<any[]>(eventPosts || []);
+
   const generateSlug = (title: string) => {
     if (!title) return '';
     return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
   };
 
   useEffect(() => {
+    if (events && events.length > 0) setLocalEvents(events);
+    if (upcomingEvents && upcomingEvents.length > 0) setLocalUpcoming(upcomingEvents);
+    if (roster && roster.length > 0) setLocalRoster(roster);
+    if (chronicles && chronicles.length > 0) setLocalChronicles(chronicles);
+    if (premiumVideos && premiumVideos.length > 0) setLocalVideos(premiumVideos);
+    if (sponsors && sponsors.length > 0) setLocalSponsors(sponsors);
+    if (eventPosts && eventPosts.length > 0) setLocalPosts(eventPosts);
+
+    const fetchFallback = async () => {
+      try {
+        if (!upcomingEvents || upcomingEvents.length === 0) {
+          const evData = await eventsService.getEvents();
+          if (Array.isArray(evData) && evData.length > 0) {
+            setLocalEvents(evData.slice(0, 3));
+            setLocalUpcoming(evData.slice(0, 5));
+          }
+        }
+        if (!roster || roster.length === 0) {
+          const fData = await eventsService.getFighters();
+          if (Array.isArray(fData) && fData.length > 0) setLocalRoster(fData.slice(0, 4));
+        }
+        if (!chronicles || chronicles.length === 0) {
+          const cData = await eventsService.getChronicles();
+          if (Array.isArray(cData) && cData.length > 0) setLocalChronicles(cData.slice(0, 3));
+        }
+        if (!sponsors || sponsors.length === 0) {
+          const sData = await eventsService.getSponsors();
+          if (Array.isArray(sData) && sData.length > 0) setLocalSponsors(sData.filter((s: any) => s.is_active));
+        }
+        if (!eventPosts || eventPosts.length === 0) {
+          const pData = await eventsService.getEventPosts();
+          const results = pData.results || (Array.isArray(pData) ? pData : []);
+          if (results.length > 0) setLocalPosts(results.filter((p: any) => p.is_active));
+        }
+      } catch (e) {
+        console.error("Client fallback fetch error:", e);
+      }
+    };
+    fetchFallback();
+  }, [events, upcomingEvents, roster, chronicles, premiumVideos, sponsors, eventPosts]);
+
+  useEffect(() => {
     let dynamicSlides: any[] = [];
 
-    if (upcomingEvents && upcomingEvents.length > 0) {
-      const eventSlides = upcomingEvents.map((ev: any) => ({
+    if (localUpcoming && localUpcoming.length > 0) {
+      const eventSlides = localUpcoming.map((ev: any) => ({
         id: ev.id,
         type: 'event',
         title: ev.title,
         subtitle: `${ev.location}`,
-        image: ev.banner_url || '/images/logoring.webp',
+        image: getMediaUrl(ev.banner_url) || '/images/logoring.webp',
         date: ev.date_time,
         location: ev.location,
         cta: [
@@ -140,7 +191,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
         type: 'raffle',
         title: r.title,
         subtitle: r.description,
-        image: r.image || '/images/logoring.webp',
+        image: getMediaUrl(r.image) || '/images/logoring.webp',
         date: null,
         location: null,
         cta: [
@@ -155,7 +206,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
     } else {
       setSlides(staticSlides);
     }
-  }, [upcomingEvents, raffles]);
+  }, [localUpcoming, raffles]);
 
   // Auto-play carousel
   useEffect(() => {
@@ -413,10 +464,10 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-4">
-          {roster.length === 0 ? (
+          {localRoster.length === 0 ? (
             <div className="col-span-4 text-center text-zinc-500 py-12">Roster no disponible.</div>
           ) : (
-            roster.map((fighter: any, i: number) => (
+            localRoster.map((fighter: any, i: number) => (
               <Link key={fighter.id} href="/roster" className="block group">
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -450,7 +501,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
       </section>
 
       {/* Cartelera Promocional (Posts de Eventos) Section */}
-      {eventPosts && eventPosts.length > 0 && (
+      {localPosts && localPosts.length > 0 && (
         <section className="py-12 lg:py-16 bg-black relative border-t border-white/5">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight">Cartelera Promocional</h2>
@@ -458,8 +509,8 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
           </div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className={`grid grid-cols-1 ${eventPosts.length > 1 ? 'md:grid-cols-2 lg:grid-cols-3' : 'max-w-xl mx-auto'} gap-8 justify-center items-stretch`}>
-              {eventPosts.map((post: any) => {
+            <div className={`grid grid-cols-1 ${localPosts.length > 1 ? 'md:grid-cols-2 lg:grid-cols-3' : 'max-w-xl mx-auto'} gap-8 justify-center items-stretch`}>
+              {localPosts.map((post: any) => {
                 const slug = post.event_title ? generateSlug(post.event_title) : '';
                 const targetHref = slug ? `/eventos/${slug}` : '/eventos';
 
@@ -507,10 +558,10 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {events.length === 0 ? (
+            {localEvents.length === 0 ? (
               <div className="col-span-3 text-center text-zinc-500 py-12">No hay eventos programados.</div>
             ) : (
-              events.map((event: any, i: number) => (
+              localEvents.map((event: any, i: number) => (
                 <Link key={event.id} href={`/eventos`} className="block">
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -551,7 +602,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
       </section>
 
       {/* Resultados Section */}
-      {chronicles && chronicles.length > 0 && (
+      {localChronicles && localChronicles.length > 0 && (
         <section id="resultados" className="py-12 lg:py-16 bg-black relative border-t border-white/5">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight">Resultados</h2>
@@ -559,7 +610,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
           </div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            {chronicles.map((chronicle: any, i: number) => (
+            {localChronicles.map((chronicle: any, i: number) => (
               <motion.div
                 key={chronicle.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -636,7 +687,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
       </section>
       
       {/* Patrocinadores Section */}
-      {sponsors && sponsors.length > 0 && (
+      {localSponsors && localSponsors.length > 0 && (
         <section className="py-16 bg-black relative border-t border-white/5 overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-12">
             <h2 className="text-2xl font-black uppercase tracking-widest text-zinc-500">Patrocinadores Oficiales</h2>
@@ -644,7 +695,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
           
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24">
-              {sponsors.map((sponsor: any) => {
+              {localSponsors.map((sponsor: any) => {
                 const SponsorContent = (
                   <div className="flex flex-col items-center justify-center">
                     {sponsor.image_url ? (
