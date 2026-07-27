@@ -1,11 +1,27 @@
 import HomeCarousel from '@/components/HomeCarousel';
 
-export default async function Home() {
-  // Try to fetch data on the server side
-  // In Next.js App Router, fetch can be cached, but we'll use a standard fetch 
-  // pointing to the API URL or fallback to empty arrays if backend is unreachable at build/render time.
+async function safeFetch(url: string) {
+  try {
+    const res = await fetch(url, { next: { revalidate: 10 } });
+    if (res.ok) return res;
+  } catch (err) {
+    console.error(`Fetch HTTPS error for ${url}:`, err);
+  }
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+  if (url.startsWith('https://')) {
+    const httpUrl = url.replace('https://', 'http://');
+    try {
+      const res = await fetch(httpUrl, { next: { revalidate: 10 } });
+      if (res.ok) return res;
+    } catch (err) {
+      console.error(`Fetch HTTP fallback error for ${httpUrl}:`, err);
+    }
+  }
+  return null;
+}
+
+export default async function Home() {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://renescw.pythonanywhere.com/api';
   
   let eventsData = [];
   let fightersData = [];
@@ -16,15 +32,14 @@ export default async function Home() {
   let eventPostsData: any[] = [];
 
   try {
-    // We use next: { revalidate: 10 } to cache these responses for 10 seconds
     const [eventsRes, fightersRes, chroniclesRes, videosRes, sponsorsRes, rafflesRes, postsRes] = await Promise.all([
-      fetch(`${apiUrl}/events/events/`, { next: { revalidate: 10 } }).catch(() => null),
-      fetch(`${apiUrl}/events/fighters/`, { next: { revalidate: 10 } }).catch(() => null),
-      fetch(`${apiUrl}/events/chronicles/`, { next: { revalidate: 10 } }).catch(() => null),
-      fetch(`${apiUrl}/premium/videos/`, { next: { revalidate: 10 } }).catch(() => null),
-      fetch(`${apiUrl}/events/sponsors/`, { next: { revalidate: 10 } }).catch(() => null),
-      fetch(`${apiUrl}/raffles/`, { next: { revalidate: 10 } }).catch(() => null),
-      fetch(`${apiUrl}/events/posts/`, { next: { revalidate: 10 } }).catch(() => null),
+      safeFetch(`${apiUrl}/events/events/`),
+      safeFetch(`${apiUrl}/events/fighters/`),
+      safeFetch(`${apiUrl}/events/chronicles/`),
+      safeFetch(`${apiUrl}/premium/videos/`),
+      safeFetch(`${apiUrl}/events/sponsors/`),
+      safeFetch(`${apiUrl}/raffles/`),
+      safeFetch(`${apiUrl}/events/posts/`),
     ]);
 
     if (eventsRes && eventsRes.ok) eventsData = await eventsRes.json();
@@ -68,3 +83,4 @@ export default async function Home() {
     </main>
   );
 }
+
