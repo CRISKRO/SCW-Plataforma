@@ -20,6 +20,7 @@ class FighterViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
 
 class EventViewSet(viewsets.ModelViewSet):
+    queryset = Event.objects.all()
     serializer_class = EventSerializer
     permission_classes = [IsAdminOrReadOnly]
 
@@ -45,6 +46,7 @@ class SponsorViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
 
 class EventPostViewSet(viewsets.ModelViewSet):
+    queryset = EventPost.objects.all()
     serializer_class = EventPostSerializer
     permission_classes = [IsAdminOrReadOnly]
 
