@@ -51,6 +51,7 @@ const SocialLinks = ({ fighter, inCard = true }: { fighter: any, inCard?: boolea
 };
 
 import PageBackButton from '@/components/PageBackButton';
+import { getMediaUrl } from '@/services/api';
 
 export default function RosterPage() {
   const [fighters, setFighters] = useState<any[]>([]);
@@ -104,7 +105,7 @@ export default function RosterPage() {
                 onClick={() => setSelectedFighter(fighter)}
                 className="group relative aspect-[3/4] bg-zinc-900 overflow-hidden rounded-xl border border-white/5 hover:border-zinc-500 transition-all duration-300 cursor-pointer"
               >
-                <div className="absolute inset-0 bg-cover bg-center transition-all duration-700 group-hover:scale-105" style={{ backgroundImage: `url(${fighter.image_url})` }}></div>
+                <div className="absolute inset-0 bg-cover bg-center transition-all duration-700 group-hover:scale-105" style={{ backgroundImage: `url(${getMediaUrl(fighter.image_url)})` }}></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>
                 
                 <div className="absolute bottom-0 left-0 p-5 w-full transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
@@ -145,13 +146,12 @@ export default function RosterPage() {
                   <motion.div 
                     key={fighter.id}
                     initial={{ opacity: 0, scale: 0.95 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
+                    animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: i * 0.05 }}
                     onClick={() => setSelectedFighter(fighter)}
                     className="group relative aspect-[3/4] bg-zinc-900 overflow-hidden rounded-xl border border-white/5 hover:border-zinc-500 transition-all duration-300 cursor-pointer"
                   >
-                    <div className="absolute inset-0 bg-cover bg-center transition-all duration-700 group-hover:scale-105" style={{ backgroundImage: `url(${fighter.image_url})` }}></div>
+                    <div className="absolute inset-0 bg-cover bg-center transition-all duration-700 group-hover:scale-105" style={{ backgroundImage: `url(${getMediaUrl(fighter.image_url)})` }}></div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>
                     
                     <div className="absolute bottom-0 left-0 p-5 w-full transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">

@@ -24,21 +24,17 @@ export const getMediaUrl = (url?: string | null) => {
   
   if (url.startsWith('data:')) return url;
 
-  // If the backend returned an absolute PythonAnywhere URL, ensure proper protocol
-  if (url.includes('pythonanywhere.com')) {
-    if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
-      return url.replace('http://', 'https://');
-    }
-    return url;
+  // Convert any /media/ URL to a local relative route handled by Next.js proxy rewrite
+  const mediaIndex = url.indexOf('/media/');
+  if (mediaIndex !== -1) {
+    return url.substring(mediaIndex);
   }
 
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
   
-  // Get the base host without /api
-  const host = API_URL.replace(/\/api\/?$/, '');
-  return `${host}${url.startsWith('/') ? '' : '/'}${url}`;
+  return url.startsWith('/') ? url : `/${url}`;
 };
 
 // Interceptor to add the JWT token to requests

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronRight, ChevronLeft, Calendar, MapPin, Ticket, PlayCircle } from 'lucide-react';
 import { TicketSelectionModal } from '@/components/TicketSelectionModal';
+import { getMediaUrl } from '@/services/api';
 
 const InstagramIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
@@ -425,7 +426,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                   className="relative aspect-[3/4] bg-zinc-900 overflow-hidden cursor-pointer transition-all duration-500 rounded-xl"
                 >
                   <div className="absolute inset-0 bg-zinc-800">
-                    <Image src={fighter.image_url || '/images/logoring.webp'} alt={fighter.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 50vw, 25vw" />
+                    <Image src={getMediaUrl(fighter.image_url) || '/images/logoring.webp'} alt={fighter.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 50vw, 25vw" />
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 
@@ -470,7 +471,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                       className="relative h-full rounded-2xl overflow-hidden bg-zinc-900 border border-white/10 group-hover:border-red-500/80 shadow-2xl transition-all flex flex-col justify-between"
                     >
                       <img 
-                        src={post.image_url} 
+                        src={getMediaUrl(post.image_url)} 
                         alt={post.title || post.event_title} 
                         className="w-full h-auto object-cover"
                       />
@@ -519,7 +520,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                     className="group relative h-96 bg-zinc-900 overflow-hidden cursor-pointer"
                   >
                     <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-105">
-                      <Image src={event.banner_url || '/images/logoring.webp'} alt={event.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 33vw" />
+                      <Image src={getMediaUrl(event.banner_url) || '/images/logoring.webp'} alt={event.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 33vw" />
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-black/20" />
 
@@ -570,7 +571,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                 {chronicle.image_url && (
                   <div className="relative w-full bg-zinc-800 flex justify-center items-center overflow-hidden">
                     <Image 
-                      src={chronicle.image_url} 
+                      src={getMediaUrl(chronicle.image_url)} 
                       alt={chronicle.title} 
                       width={800} 
                       height={600} 
@@ -649,7 +650,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                     {sponsor.image_url ? (
                       <div className="relative w-32 h-20 sm:w-40 sm:h-24 transition-all duration-300 group-hover:scale-110">
                         <Image 
-                          src={sponsor.image_url} 
+                          src={getMediaUrl(sponsor.image_url)} 
                           alt={sponsor.name} 
                           fill 
                           className="object-contain transition-all duration-500"
