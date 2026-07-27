@@ -327,22 +327,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
             >
               <div className="w-full max-w-2xl flex-shrink-0 text-center lg:text-left flex flex-col items-center lg:items-start">
 
-                {slide.type === 'event' && (
-                  <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 mb-6 lg:mb-8">
-                    {slide.date && (
-                      <span className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-white bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
-                        <Clock className="w-4 h-4 text-red-500" />
-                        <span>{new Date(slide.date).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
-                      </span>
-                    )}
-                    {slide.location && (
-                      <span className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-zinc-200 bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
-                        <MapPin className="w-4 h-4 text-red-500 shrink-0" />
-                        <span>{slide.location}</span>
-                      </span>
-                    )}
-                  </div>
-                )}
+
 
                 {slide.type !== 'event' && (
                   <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-6xl xl:text-7xl font-black tracking-tighter uppercase leading-none mb-2 md:mb-6">

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, ChevronLeft } from 'lucide-react';
+import { Calendar, MapPin, ChevronLeft, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { TicketSelectionModal } from '@/components/TicketSelectionModal';
 import { getMediaUrl } from '@/services/api';
@@ -38,9 +38,15 @@ export default function EventDetailClient({ event }: { event: any }) {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-            <div className="flex items-center gap-2 text-red-500 text-sm font-bold uppercase tracking-widest mb-4">
-              <Calendar className="w-5 h-5" />
-              {new Date(event.date_time).toLocaleDateString()}
+            <div className="flex flex-wrap items-center gap-3 text-red-500 text-sm font-bold uppercase tracking-widest mb-4">
+              <span className="flex items-center gap-2">
+                <Calendar className="w-5 h-5" />
+                {new Date(event.date_time).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-white bg-red-600/90 px-3 py-1 rounded-full text-xs font-black shadow-md shadow-red-950/40">
+                <Clock className="w-3.5 h-3.5" />
+                {new Date(event.date_time).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}
+              </span>
             </div>
             
             <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tight mb-4">{event.title}</h1>

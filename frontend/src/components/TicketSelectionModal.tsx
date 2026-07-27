@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Ticket, ChevronRight, Loader2, Minus, Plus } from 'lucide-react';
+import { X, Ticket, ChevronRight, Loader2, Minus, Plus, Calendar, MapPin, Clock } from 'lucide-react';
 import api from '@/services/api';
 import { useCartStore } from '@/store/cartStore';
 
@@ -16,7 +16,10 @@ interface EventZone {
 interface Event {
   id: number;
   title: string;
-  banner_url: string;
+  banner_url?: string;
+  date_time?: string;
+  date?: string;
+  location?: string;
 }
 
 interface TicketSelectionModalProps {
@@ -108,15 +111,38 @@ export function TicketSelectionModal({ isOpen, onClose, eventId, event }: Ticket
           
           <div className="p-6">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center text-red-500">
+              <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center text-red-500 shrink-0">
                 <Ticket size={24} />
               </div>
-              <h2 className="text-2xl font-bold text-white">Comprar Boletos</h2>
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-white leading-tight">Comprar Boletos</h2>
+                <p className="text-xs text-zinc-400 font-medium">{event.title}</p>
+              </div>
             </div>
-            
-            <p className="text-zinc-400 mb-6 text-sm">
-              Selecciona el tipo de boleto que deseas comprar para <strong>{event.title}</strong>.
-            </p>
+
+            {/* Fecha, Hora Exacta y Ubicación */}
+            {((event.date_time || event.date || event.location)) && (
+              <div className="bg-zinc-800/80 border border-zinc-700/60 p-3 rounded-xl mb-4 space-y-1.5 text-xs shadow-inner">
+                {(event.date_time || event.date) && (
+                  <div className="flex items-center justify-between gap-2 text-zinc-200 font-semibold">
+                    <span className="flex items-center gap-1.5 capitalize">
+                      <Calendar className="w-3.5 h-3.5 text-red-400 shrink-0" />
+                      {new Date(event.date_time || event.date || '').toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-white bg-red-600/90 px-2 py-0.5 rounded-md font-bold text-[11px] shrink-0 shadow-sm">
+                      <Clock className="w-3 h-3 text-white" />
+                      {new Date(event.date_time || event.date || '').toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                    </span>
+                  </div>
+                )}
+                {event.location && (
+                  <div className="flex items-center gap-1.5 text-zinc-400 font-medium pt-1 border-t border-white/5">
+                    <MapPin className="w-3.5 h-3.5 text-red-400 shrink-0" />
+                    <span>{event.location}</span>
+                  </div>
+                )}
+              </div>
+            )}
             
             {isLoading ? (
               <div className="flex justify-center py-8">
