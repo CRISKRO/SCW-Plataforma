@@ -445,7 +445,7 @@ class CreateOrderView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class OrderViewSet(viewsets.ModelViewSet):
-    queryset = Order.objects.all().order_by('-created_at')
+    queryset = Order.objects.select_related('coupon', 'user').prefetch_related('items__event', 'items__seat__zone').all().order_by('-created_at')
     serializer_class = OrderSerializer
     permission_classes = [IsAdminUser]
 

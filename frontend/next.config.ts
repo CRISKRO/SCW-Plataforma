@@ -18,15 +18,15 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/:path*/',
-        destination: 'http://renescw.pythonanywhere.com/api/:path*/',
+        destination: 'https://renescw.pythonanywhere.com/api/:path*/',
       },
       {
         source: '/api/:path*',
-        destination: 'http://renescw.pythonanywhere.com/api/:path*/',
+        destination: 'https://renescw.pythonanywhere.com/api/:path*/',
       },
       {
         source: '/media/:path*',
-        destination: 'http://renescw.pythonanywhere.com/media/:path*',
+        destination: 'https://renescw.pythonanywhere.com/media/:path*',
       },
     ];
   },

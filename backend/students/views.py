@@ -112,8 +112,14 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         # Recalcular dinámicamente los estados de pago de todos los alumnos activos al listarlos
         approved_students = Enrollment.objects.filter(status='APPROVED')
-        for student in approved_students:
-            student.update_dynamic_payment_status()
+        if approved_students.exists():
+            from api.models import get_active_config
+            try:
+                config = get_active_config()
+            except Exception:
+                config = None
+            for student in approved_students:
+                student.update_dynamic_payment_status(config=config)
         return super().list(request, *args, **kwargs)
 
     def perform_update(self, serializer):

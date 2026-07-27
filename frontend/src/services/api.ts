@@ -15,7 +15,7 @@ const isDevelopment = typeof process !== 'undefined' && process.env.NODE_ENV ===
 const isServer = typeof window === 'undefined';
 
 const defaultProdUrl = isServer 
-  ? 'http://renescw.pythonanywhere.com/api' 
+  ? 'https://renescw.pythonanywhere.com/api' 
   : '/api';
 
 const API_URL = isDevelopment 

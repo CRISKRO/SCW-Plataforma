@@ -10,7 +10,7 @@ type Props = {
 
 async function getEventBySlug(slug: string) {
   try {
-    const res = await fetch('http://renescw.pythonanywhere.com/api/events/events/', { next: { revalidate: 300 } });
+    const res = await fetch('https://renescw.pythonanywhere.com/api/events/events/', { next: { revalidate: 300 } });
     if (!res.ok) return null;
     const events = await res.json();
     if (!Array.isArray(events)) return null;
