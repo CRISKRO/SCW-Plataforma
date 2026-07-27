@@ -234,11 +234,11 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
             transition={{ duration: 1, ease: "easeInOut" }}
             className="absolute inset-0 z-0"
           >
-            {slide.image ? (
+            {slide.id && slide.image ? (
               <>
                 <div className="absolute inset-0 bg-black" />
-                {/* Dynamic Ambient Poster Color Backdrop with heavy blur */}
-                <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-50 sm:opacity-60">
+                {/* Dynamic Ambient Poster Color Backdrop with heavy blur for event/raffle posters */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40 sm:opacity-50">
                   <Image 
                     src={slide.image} 
                     alt="" 
@@ -253,6 +253,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
               </>
             ) : (
               <>
+                {/* Static Slides Background Image (Tienda, Premium, Dojo) */}
                 <div className="hidden md:block absolute inset-0">
                   <Image 
                     src={slide.image} 
@@ -260,7 +261,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                     fill 
                     priority={currentSlide === 0} 
                     className="object-cover" 
-                    style={{ filter: 'brightness(0.35)' }} 
+                    style={{ filter: 'brightness(0.4)' }} 
                   />
                 </div>
                 <div className="block md:hidden absolute inset-0">
@@ -270,7 +271,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                     fill 
                     priority={currentSlide === 0} 
                     className="object-cover" 
-                    style={{ filter: 'brightness(0.35)' }} 
+                    style={{ filter: 'brightness(0.4)' }} 
                   />
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
@@ -307,12 +308,12 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                       <Ticket className="w-3 h-3" />
                       Próximo Evento
                     </span>
-                    <span className="inline-flex items-center gap-1.5 text-zinc-300 text-[10px] sm:text-sm font-medium bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/10">
+                    <span className="inline-flex items-center gap-1.5 text-zinc-200 text-[10px] sm:text-sm font-semibold bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/10">
                       <Calendar className="w-3 h-3 text-red-400" />
                       {new Date(slide.date).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}
                     </span>
                     {slide.location && (
-                      <span className="inline-flex items-center gap-1.5 text-zinc-300 text-[10px] sm:text-sm font-medium bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/10">
+                      <span className="inline-flex items-center gap-1.5 text-zinc-200 text-[10px] sm:text-sm font-semibold bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/10">
                         <MapPin className="w-3 h-3 text-red-400" />
                         {slide.location}
                       </span>
@@ -325,7 +326,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                     {slide.title.split(' ').map((word: string, i: number) => (
                       <span key={i}>
                         {i === slide.title.split(' ').length - 1
-                          ? <span className={`text-transparent bg-clip-text bg-gradient-to-r ${slide.type === 'raffle' ? 'from-yellow-400 to-amber-600' : 'from-white to-zinc-500'}`}>{word}</span>
+                          ? <span className={`text-transparent bg-clip-text bg-gradient-to-r ${slide.type === 'raffle' ? 'from-yellow-400 to-amber-600' : 'from-white to-zinc-400'}`}>{word}</span>
                           : <span>{word} </span>
                         }
                       </span>
@@ -334,7 +335,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                 )}
 
                 {slide.type !== 'event' && (
-                  <p className={`text-sm sm:text-base md:text-xl font-light max-w-xl mb-4 md:mb-10 line-clamp-none ${slide.type === 'raffle' ? 'text-yellow-100/80' : 'text-zinc-300'}`}>
+                  <p className={`text-sm sm:text-base md:text-xl font-medium max-w-xl mb-4 md:mb-10 line-clamp-none ${slide.type === 'raffle' ? 'text-yellow-100' : 'text-zinc-100'}`}>
                     {slide.subtitle}
                   </p>
                 )}
@@ -409,7 +410,6 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                           className={`w-full h-auto object-contain rounded-sm border shadow-2xl group-hover:opacity-90 transition-opacity ${slide.type === 'raffle' ? 'border-yellow-500/30' : 'border-white/10'}`}
                           priority={currentSlide === 0}
                         />
-                        <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${slide.type === 'raffle' ? 'bg-gradient-to-b from-yellow-400 to-amber-600' : 'bg-red-600'}`} />
                       </Link>
                     ) : (
                       <div className="relative w-full">
@@ -421,7 +421,6 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                           className={`w-full h-auto object-contain rounded-sm border shadow-2xl ${slide.type === 'raffle' ? 'border-yellow-500/30' : 'border-white/10'}`}
                           priority={currentSlide === 0}
                         />
-                        <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${slide.type === 'raffle' ? 'bg-gradient-to-b from-yellow-400 to-amber-600' : 'bg-red-600'}`} />
                       </div>
                     )}
                   </motion.div>
