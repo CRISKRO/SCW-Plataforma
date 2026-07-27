@@ -26,7 +26,7 @@ async function safeFetchJson(url: string) {
 }
 
 export default async function Home() {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://renescw.pythonanywhere.com/api';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://renescw.pythonanywhere.com/api';
 
   let eventsData = [];
   let fightersData = [];

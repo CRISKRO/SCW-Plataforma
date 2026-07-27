@@ -8,12 +8,11 @@ const envApiUrl = typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_
   ? process.env.NEXT_PUBLIC_API_URL
   : undefined;
 
-// Si estamos en desarrollo, forzamos la ruta del backend local (así evitamos que apunte a producción por error)
+// Si estamos en desarrollo, forzamos la ruta del backend local. En producción usamos la ruta relativa '/api' para proxy por Vercel
 const isDevelopment = typeof process !== 'undefined' && process.env.NODE_ENV === 'development';
-const fallbackProductionUrl = 'https://renescw.pythonanywhere.com/api';
 const API_URL = isDevelopment 
   ? `${browserOrigin.replace(/:\d+$/, '')}:8000/api` 
-  : (envApiUrl || fallbackProductionUrl);
+  : '/api';
 
 const api = axios.create({
   baseURL: API_URL,

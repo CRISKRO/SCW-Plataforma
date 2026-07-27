@@ -17,6 +17,10 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
+        source: '/api/:path*',
+        destination: 'http://renescw.pythonanywhere.com/api/:path*',
+      },
+      {
         source: '/media/:path*',
         destination: 'http://renescw.pythonanywhere.com/media/:path*',
       },
