@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Calendar, MapPin, ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
 import { TicketSelectionModal } from '@/components/TicketSelectionModal';
+import { getMediaUrl } from '@/services/api';
 
 export default function EventDetailClient({ event }: { event: any }) {
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
@@ -19,7 +20,7 @@ export default function EventDetailClient({ event }: { event: any }) {
             className="w-full bg-zinc-900 rounded-3xl overflow-hidden shadow-2xl shadow-black/50 border border-white/10 flex items-center justify-center"
           >
             <img 
-              src={event.banner_url}
+              src={getMediaUrl(event.banner_url)}
               alt={`Póster oficial de ${event.title}`}
               className="w-full h-auto object-contain"
             />

@@ -10,16 +10,18 @@ type Props = {
 
 async function getEventBySlug(slug: string) {
   try {
-    const events = await eventsService.getEvents()
-    if (!Array.isArray(events)) return null
+    const res = await fetch('http://renescw.pythonanywhere.com/api/events/events/', { next: { revalidate: 300 } });
+    if (!res.ok) return null;
+    const events = await res.json();
+    if (!Array.isArray(events)) return null;
     return events.find((e: any) => {
-      if (!e || !e.title) return false
+      if (!e || !e.title) return false;
       const genSlug = e.title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
       return genSlug === slug || e.id.toString() === slug;
-    })
+    });
   } catch (error) {
-    console.error("Error fetching event for SSR:", error)
-    return null
+    console.error("Error fetching event for SSR:", error);
+    return null;
   }
 }
 
