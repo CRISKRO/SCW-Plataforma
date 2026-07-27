@@ -418,13 +418,13 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                     transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
                     className="block flex-shrink-0 relative mx-auto lg:mx-0 w-[320px] sm:w-[400px] md:w-[480px] lg:w-[560px] xl:w-[620px]"
                   >
-                    {/* Ambient Glow using blurred poster colors */}
-                    <div className="absolute -inset-6 sm:-inset-10 blur-3xl rounded-3xl opacity-80 pointer-events-none overflow-hidden">
+                    {/* Ambient Glow matching exact poster dimensions */}
+                    <div className="absolute inset-0 blur-2xl rounded-sm opacity-70 pointer-events-none overflow-hidden">
                       <Image 
                         src={slide.image} 
                         alt="" 
                         fill 
-                        className="object-cover blur-3xl scale-125 saturate-200 brightness-110" 
+                        className="object-cover blur-2xl scale-100 saturate-200 brightness-110" 
                         unoptimized 
                       />
                     </div>
