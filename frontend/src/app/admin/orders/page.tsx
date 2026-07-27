@@ -18,9 +18,11 @@ import {
   Filter,
   DollarSign,
   Layers,
-  ChevronDown
+  ChevronDown,
+  Mail
 } from 'lucide-react';
 import api from '@/services/api';
+import { adminService } from '@/services/admin.services';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 
 const STATUS_MAP: Record<string, { label: string, color: string, icon: any }> = {
@@ -38,6 +40,7 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const [resendingId, setResendingId] = useState<number | null>(null);
   
   const [activeTab, setActiveTab] = useState<'MERCH' | 'TICKETS'>('MERCH');
   const [selectedEventId, setSelectedEventId] = useState<string>('ALL');
@@ -88,6 +91,21 @@ export default function AdminOrdersPage() {
       alert("Hubo un error al actualizar el estado.");
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  const handleResendEmail = async (order: any) => {
+    if (!confirm(`¿Deseas reenviar los boletos / recibo de la orden #${order.id} a ${order.contact_email}?`)) return;
+    
+    setResendingId(order.id);
+    try {
+      const res = await adminService.resendOrderEmail(order.id);
+      alert(res.message || `Boletos reenviados exitosamente a ${order.contact_email}.`);
+    } catch (error: any) {
+      console.error("Error resending email:", error);
+      alert("Hubo un error al reenviar el correo: " + (error.response?.data?.error || error.message));
+    } finally {
+      setResendingId(null);
     }
   };
 
@@ -563,22 +581,38 @@ export default function AdminOrdersPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right" onClick={e => e.stopPropagation()}>
-                        {updatingId === order.id ? (
-                          <Loader2 className="w-5 h-5 animate-spin text-zinc-400 inline-block" />
-                        ) : (
-                          <select
-                            value={order.status}
-                            onChange={(e) => handleUpdateStatus(order.id, e.target.value)}
-                            className="bg-zinc-900 border border-white/10 text-xs text-white rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-blue-500 cursor-pointer"
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleResendEmail(order)}
+                            disabled={resendingId === order.id}
+                            title="Reenviar correo de boletos / recibo"
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-purple-500/10 hover:bg-purple-600 text-purple-400 hover:text-white rounded-lg border border-purple-500/20 hover:border-purple-600 text-xs font-semibold transition-all disabled:opacity-50"
                           >
-                            <option value="PENDING">Pendiente</option>
-                            <option value="PAID">Pagado</option>
-                            {activeTab === 'MERCH' && <option value="PROCESSING">Preparando</option>}
-                            {activeTab === 'MERCH' && <option value="SHIPPED">Enviado</option>}
-                            {activeTab === 'MERCH' && <option value="DELIVERED">Entregado</option>}
-                            <option value="CANCELLED">Cancelado</option>
-                          </select>
-                        )}
+                            {resendingId === order.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Mail className="w-3.5 h-3.5" />
+                            )}
+                            <span className="hidden lg:inline">Reenviar</span>
+                          </button>
+
+                          {updatingId === order.id ? (
+                            <Loader2 className="w-5 h-5 animate-spin text-zinc-400 inline-block" />
+                          ) : (
+                            <select
+                              value={order.status}
+                              onChange={(e) => handleUpdateStatus(order.id, e.target.value)}
+                              className="bg-zinc-900 border border-white/10 text-xs text-white rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-blue-500 cursor-pointer"
+                            >
+                              <option value="PENDING">Pendiente</option>
+                              <option value="PAID">Pagado</option>
+                              {activeTab === 'MERCH' && <option value="PROCESSING">Preparando</option>}
+                              {activeTab === 'MERCH' && <option value="SHIPPED">Enviado</option>}
+                              {activeTab === 'MERCH' && <option value="DELIVERED">Entregado</option>}
+                              <option value="CANCELLED">Cancelado</option>
+                            </select>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -643,7 +677,21 @@ export default function AdminOrdersPage() {
                       <span className="text-base font-black text-white">${parseFloat(order.total_amount).toFixed(2)}</span>
                     </div>
 
-                    <div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleResendEmail(order)}
+                        disabled={resendingId === order.id}
+                        title="Reenviar correo"
+                        className="inline-flex items-center gap-1 px-2 py-1.5 bg-purple-500/10 hover:bg-purple-600 text-purple-400 hover:text-white rounded-lg border border-purple-500/20 text-xs font-semibold transition"
+                      >
+                        {resendingId === order.id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Mail className="w-3.5 h-3.5" />
+                        )}
+                        <span>Reenviar</span>
+                      </button>
+
                       {updatingId === order.id ? (
                         <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
                       ) : (
@@ -697,9 +745,23 @@ export default function AdminOrdersPage() {
                     {new Date(selectedOrder.created_at).toLocaleString('es-MX')}
                   </p>
                 </div>
-                <button onClick={() => setSelectedOrder(null)} className="p-2 hover:bg-white/10 rounded-lg transition-colors text-zinc-400 hover:text-white">
-                  <X className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleResendEmail(selectedOrder)}
+                    disabled={resendingId === selectedOrder.id}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 shadow-md shadow-purple-600/20"
+                  >
+                    {resendingId === selectedOrder.id ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Mail className="w-3.5 h-3.5" />
+                    )}
+                    <span className="hidden sm:inline">Reenviar Correo</span>
+                  </button>
+                  <button onClick={() => setSelectedOrder(null)} className="p-2 hover:bg-white/10 rounded-lg transition-colors text-zinc-400 hover:text-white">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
               {/* Modal Body */}

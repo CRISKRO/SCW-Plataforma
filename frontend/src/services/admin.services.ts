@@ -38,6 +38,10 @@ export const adminService = {
     const response = await api.delete(`/payments/orders/${id}/`);
     return response.data;
   },
+  resendOrderEmail: async (id: number) => {
+    const response = await api.post(`/payments/orders/${id}/resend_email/`);
+    return response.data;
+  },
 
   // School / Enrollments
   getEnrollments: async () => {

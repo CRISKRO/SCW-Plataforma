@@ -489,6 +489,15 @@ class OrderViewSet(viewsets.ModelViewSet):
                 except Exception as e:
                     print("Error sending status update email:", e)
 
+    @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
+    def resend_email(self, request, pk=None):
+        order = self.get_object()
+        try:
+            send_order_emails_safely(order)
+            return Response({"success": True, "message": f"Boletos / Recibo de la orden #{order.id} reenviados a {order.contact_email}."})
+        except Exception as e:
+            return Response({"error": f"Error al reenviar correo: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 class ProcessCardPaymentView(APIView):
     """Receives card_data token from MP Brick and processes a direct charge."""
     permission_classes = [AllowAny]
