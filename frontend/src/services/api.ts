@@ -14,9 +14,7 @@ const envApiUrl = typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_
 const isDevelopment = typeof process !== 'undefined' && process.env.NODE_ENV === 'development';
 const isServer = typeof window === 'undefined';
 
-const defaultProdUrl = isServer 
-  ? 'https://renescw.pythonanywhere.com/api' 
-  : '/api';
+const defaultProdUrl = envApiUrl || 'https://renescw.pythonanywhere.com/api';
 
 const API_URL = isDevelopment 
   ? `${browserOrigin.replace(/:\d+$/, '')}:8000/api` 
