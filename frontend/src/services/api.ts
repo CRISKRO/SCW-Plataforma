@@ -28,21 +28,27 @@ const api = axios.create({
 });
 
 export const getMediaUrl = (url?: string | null) => {
-  if (!url) return '';
+  if (!url) return '/images/logoring.webp';
   
   if (url.startsWith('data:')) return url;
 
-  // Convert any /media/ URL to a local relative route handled by Next.js proxy rewrite
-  const mediaIndex = url.indexOf('/media/');
-  if (mediaIndex !== -1) {
-    return url.substring(mediaIndex);
+  // Local assets in /public (like /images/...) stay relative for Vercel
+  if (url.startsWith('/images/')) return url;
+
+  // Upgrade HTTP to HTTPS for PythonAnywhere to prevent mixed content errors
+  if (url.startsWith('http://') && url.includes('pythonanywhere.com')) {
+    return url.replace('http://', 'https://');
   }
 
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
-  
-  return url.startsWith('/') ? url : `/${url}`;
+
+  const host = typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_URL
+    ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/?$/, '')
+    : 'https://renescw.pythonanywhere.com';
+
+  return `${host}${url.startsWith('/') ? '' : '/'}${url}`;
 };
 
 // Interceptor to add the JWT token to requests

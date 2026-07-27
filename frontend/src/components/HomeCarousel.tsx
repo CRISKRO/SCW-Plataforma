@@ -523,6 +523,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                     >
                       <img 
                         src={getMediaUrl(post.image_url)} 
+                        onError={(e) => { (e.target as HTMLImageElement).src = '/images/logoring.webp'; }}
                         alt={post.title || post.event_title} 
                         className="w-full h-auto object-cover"
                       />

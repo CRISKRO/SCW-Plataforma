@@ -24,10 +24,6 @@ const nextConfig: NextConfig = {
         source: '/api/:path*',
         destination: 'https://renescw.pythonanywhere.com/api/:path*/',
       },
-      {
-        source: '/media/:path*',
-        destination: 'https://renescw.pythonanywhere.com/media/:path*',
-      },
     ];
   },
 };
