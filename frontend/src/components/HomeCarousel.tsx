@@ -321,7 +321,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                   </div>
                 )}
 
-                {(!slide.id || slide.type === 'event' || slide.type === 'raffle') && (
+                {slide.type !== 'event' && (
                   <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-6xl xl:text-7xl font-black tracking-tighter uppercase leading-none mb-2 md:mb-6">
                     {slide.title.split(' ').map((word: string, i: number) => (
                       <span key={i}>
