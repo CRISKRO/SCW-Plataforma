@@ -8,14 +8,23 @@ const envApiUrl = typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_
   ? process.env.NEXT_PUBLIC_API_URL
   : undefined;
 
-// Si estamos en desarrollo, forzamos la ruta del backend local. En producción usamos la ruta relativa '/api' para proxy por Vercel
+// Si estamos en desarrollo, forzamos la ruta del backend local.
+// En servidor (Node.js SSR) usamos la URL absoluta HTTP para evitar errores de Axios en Node.
+// En cliente (navegador) usamos la ruta relativa '/api' para proxy por Vercel.
 const isDevelopment = typeof process !== 'undefined' && process.env.NODE_ENV === 'development';
+const isServer = typeof window === 'undefined';
+
+const defaultProdUrl = isServer 
+  ? 'http://renescw.pythonanywhere.com/api' 
+  : '/api';
+
 const API_URL = isDevelopment 
   ? `${browserOrigin.replace(/:\d+$/, '')}:8000/api` 
-  : '/api';
+  : defaultProdUrl;
 
 const api = axios.create({
   baseURL: API_URL,
+  timeout: 15000,
 });
 
 export const getMediaUrl = (url?: string | null) => {

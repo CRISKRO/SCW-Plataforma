@@ -9,7 +9,9 @@ type Props = {
 async function getEventBySlug(slug: string) {
   try {
     const events = await eventsService.getEvents()
+    if (!Array.isArray(events)) return null
     return events.find((e: any) => {
+      if (!e || !e.title) return false
       const genSlug = e.title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
       return genSlug === slug || e.id.toString() === slug;
     })
