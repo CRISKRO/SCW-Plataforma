@@ -38,6 +38,8 @@ export default function EventDetailClient({ event }: { event: any }) {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+            <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tight mb-4">{event.title}</h1>
+            
             <div className="flex flex-wrap items-center gap-3 text-red-500 text-sm font-bold uppercase tracking-widest mb-4">
               <span className="flex items-center gap-2">
                 <Calendar className="w-5 h-5" />
@@ -48,8 +50,6 @@ export default function EventDetailClient({ event }: { event: any }) {
                 {new Date(event.date_time).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}
               </span>
             </div>
-            
-            <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tight mb-4">{event.title}</h1>
             
             <a 
               href={
