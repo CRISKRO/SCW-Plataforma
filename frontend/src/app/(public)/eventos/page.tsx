@@ -22,7 +22,8 @@ export default function EventosPage() {
     const fetchEvents = async () => {
       try {
         const data = await eventsService.getEvents();
-        setEvents(data);
+        const published = (Array.isArray(data) ? data : []).filter((e: any) => e.status !== 'DRAFT');
+        setEvents(published);
       } catch (error) {
         console.error("Error loading events", error);
       } finally {
