@@ -25,7 +25,7 @@ export default function CartPage() {
   const [zipcode, setZipcode] = useState('');
   const [shippingCost, setShippingCost] = useState(0);
 
-  const [paymentMethod, setPaymentMethod] = useState<'MERCADOPAGO' | 'TRANSFER'>('MERCADOPAGO');
+  const [paymentMethod, setPaymentMethod] = useState<'MERCADOPAGO' | 'STRIPE' | 'TRANSFER'>('MERCADOPAGO');
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
 
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -424,6 +424,7 @@ export default function CartPage() {
                 )}
 
                 {/* Opciones de pago */}
+                <div className="space-y-4 pt-4 border-t border-white/10">
                   <h3 className="font-bold uppercase text-sm">Método de Pago</h3>
 
                   <div className="grid grid-cols-3 gap-2">
@@ -541,7 +542,6 @@ export default function CartPage() {
                       <ShieldCheck className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
                       <span>Serás redirigido al Checkout seguro de <strong className="text-purple-400">Stripe</strong>. Acepta todas las tarjetas Visa, Mastercard y American Express internacionales.</span>
                     </div>
-                  )}         </div>
                   )}
                 </div>
               </div>
