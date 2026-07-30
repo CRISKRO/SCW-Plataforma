@@ -424,23 +424,29 @@ export default function CartPage() {
                 )}
 
                 {/* Opciones de pago */}
-                <div className="space-y-4 pt-4 border-t border-white/10">
                   <h3 className="font-bold uppercase text-sm">Método de Pago</h3>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-3 gap-2">
                     <button
                       onClick={() => setPaymentMethod('MERCADOPAGO')}
-                      className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${paymentMethod === 'MERCADOPAGO' ? 'bg-[#009EE3]/10 border-[#009EE3] text-[#009EE3]' : 'bg-black border-white/20 text-zinc-400 hover:border-white/40'}`}
+                      className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all ${paymentMethod === 'MERCADOPAGO' ? 'bg-[#009EE3]/10 border-[#009EE3] text-[#009EE3]' : 'bg-black border-white/20 text-zinc-400 hover:border-white/40'}`}
                     >
-                      <CreditCard className="w-6 h-6" />
-                      <span className="text-xs font-bold uppercase text-center">Mercado Pago</span>
+                      <CreditCard className="w-5 h-5" />
+                      <span className="text-[10px] font-bold uppercase text-center leading-tight">Mercado Pago</span>
+                    </button>
+                    <button
+                      onClick={() => setPaymentMethod('STRIPE')}
+                      className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all ${paymentMethod === 'STRIPE' ? 'bg-purple-950/40 border-purple-500 text-purple-400' : 'bg-black border-white/20 text-zinc-400 hover:border-white/40'}`}
+                    >
+                      <ShieldCheck className="w-5 h-5" />
+                      <span className="text-[10px] font-bold uppercase text-center leading-tight">Stripe (Tarjeta)</span>
                     </button>
                     <button
                       onClick={() => setPaymentMethod('TRANSFER')}
-                      className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${paymentMethod === 'TRANSFER' ? 'bg-zinc-800 border-white text-white' : 'bg-black border-white/20 text-zinc-400 hover:border-white/40'}`}
+                      className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all ${paymentMethod === 'TRANSFER' ? 'bg-zinc-800 border-white text-white' : 'bg-black border-white/20 text-zinc-400 hover:border-white/40'}`}
                     >
-                      <ShoppingBag className="w-6 h-6" />
-                      <span className="text-xs font-bold uppercase text-center">Transferencia</span>
+                      <ShoppingBag className="w-5 h-5" />
+                      <span className="text-[10px] font-bold uppercase text-center leading-tight">Transferencia</span>
                     </button>
                   </div>
 
@@ -502,7 +508,7 @@ export default function CartPage() {
                     <button
                       onClick={handleCheckout}
                       disabled={loading || !email || (paymentMethod === 'TRANSFER' && !receiptFile) || !acceptedTerms}
-                      className={`w-full ${paymentMethod === 'TRANSFER' ? 'bg-white hover:bg-zinc-200 text-black' : 'bg-[#009EE3] hover:bg-[#0088cc] text-white'} disabled:bg-zinc-800 disabled:text-zinc-500 py-4 rounded-xl font-bold text-base flex items-center justify-center gap-3 transition-all`}
+                      className={`w-full ${paymentMethod === 'TRANSFER' ? 'bg-white hover:bg-zinc-200 text-black' : paymentMethod === 'STRIPE' ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-[#009EE3] hover:bg-[#0088cc] text-white'} disabled:bg-zinc-800 disabled:text-zinc-500 py-4 rounded-xl font-bold text-base flex items-center justify-center gap-3 transition-all`}
                     >
                       {loading ? (
                         <>
@@ -512,7 +518,7 @@ export default function CartPage() {
                       ) : (
                         <>
                           {paymentMethod === 'TRANSFER' ? <ShoppingBag className="w-5 h-5" /> : <CreditCard className="w-5 h-5" />}
-                          {paymentMethod === 'TRANSFER' ? 'Enviar Comprobante' : `Pagar $${finalTotal.toFixed(2)} con Mercado Pago`}
+                          {paymentMethod === 'TRANSFER' ? 'Enviar Comprobante' : paymentMethod === 'STRIPE' ? `Pagar $${finalTotal.toFixed(2)} con Stripe` : `Pagar $${finalTotal.toFixed(2)} con Mercado Pago`}
                         </>
                       )}
                     </button>
@@ -528,6 +534,14 @@ export default function CartPage() {
                       <ShieldCheck className="w-4 h-4 text-[#009EE3] flex-shrink-0 mt-0.5" />
                       <span>Serás redirigido a la pasarela oficial de <strong className="text-[#009EE3]">Mercado Pago</strong>. Tu tarjeta es procesada de forma encriptada y el dinero va directamente a la cuenta de SCW.</span>
                     </div>
+                  )}
+
+                  {paymentMethod === 'STRIPE' && (
+                    <div className="flex items-start gap-2 bg-zinc-900 border border-purple-500/20 rounded-xl p-3 text-xs text-zinc-400">
+                      <ShieldCheck className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
+                      <span>Serás redirigido al Checkout seguro de <strong className="text-purple-400">Stripe</strong>. Acepta todas las tarjetas Visa, Mastercard y American Express internacionales.</span>
+                    </div>
+                  )}         </div>
                   )}
                 </div>
               </div>

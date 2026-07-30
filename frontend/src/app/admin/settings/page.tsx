@@ -22,7 +22,7 @@ import {
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 
 export default function AdminSettingsPage() {
-  const [activeTab, setActiveTab] = useState<'mercadopago' | 'email' | 'whatsapp' | 'registro'>('mercadopago');
+  const [activeTab, setActiveTab] = useState<'mercadopago' | 'stripe' | 'email' | 'whatsapp' | 'registro'>('mercadopago');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testingEmail, setTestingEmail] = useState(false);
@@ -53,6 +53,9 @@ export default function AdminSettingsPage() {
     mercadopago_public_key: '',
     mercadopago_access_token: '',
     mercadopago_commission_rate: 0.0401,
+    stripe_public_key: '',
+    stripe_secret_key: '',
+    stripe_enabled: true,
     email_host: 'smtp.gmail.com',
     email_port: 587,
     email_use_tls: true,
@@ -77,6 +80,9 @@ export default function AdminSettingsPage() {
             mercadopago_public_key: data.mercadopago_public_key || '',
             mercadopago_access_token: data.mercadopago_access_token || '',
             mercadopago_commission_rate: data.mercadopago_commission_rate !== undefined ? Number(data.mercadopago_commission_rate) : 0.0401,
+            stripe_public_key: data.stripe_public_key || '',
+            stripe_secret_key: data.stripe_secret_key || '',
+            stripe_enabled: data.stripe_enabled !== undefined ? Boolean(data.stripe_enabled) : true,
             email_host: data.email_host || 'smtp.gmail.com',
             email_port: data.email_port !== undefined ? Number(data.email_port) : 587,
             email_use_tls: data.email_use_tls !== undefined ? Boolean(data.email_use_tls) : true,
@@ -188,6 +194,18 @@ export default function AdminSettingsPage() {
           >
             <Key className="w-5 h-5" />
             Mercado Pago
+          </button>
+
+          <button
+            onClick={() => setActiveTab('stripe')}
+            className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold uppercase tracking-wider transition-all border ${
+              activeTab === 'stripe'
+                ? 'bg-gradient-to-r from-red-600 to-red-700 text-white border-red-500 shadow-lg shadow-red-600/10'
+                : 'bg-zinc-950/40 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-900/60'
+            }`}
+          >
+            <Key className="w-5 h-5" />
+            Stripe
           </button>
           
           <button
@@ -334,6 +352,65 @@ export default function AdminSettingsPage() {
                     <p className="text-zinc-500 text-xs mt-1.5">
                       Este es el monto único (en MXN) que se suma a la primera mensualidad de los nuevos alumnos inscritos.
                     </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: STRIPE */}
+            {activeTab === 'stripe' && (
+              <div className="space-y-6">
+                <div className="border-b border-white/10 pb-4">
+                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                    <Key className="text-red-500 w-5 h-5" />
+                    Credenciales de Stripe
+                  </h3>
+                  <p className="text-zinc-500 text-sm mt-1">
+                    Configura las llaves de Stripe Checkout para ofrecer cobro alternativo con tarjetas de crédito y débito.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">Clave Pública (Stripe Publishable Key)</label>
+                    <input
+                      type="text"
+                      name="stripe_public_key"
+                      value={formData.stripe_public_key}
+                      onChange={handleInputChange}
+                      placeholder="pk_live_... o pk_test_..."
+                      className="w-full bg-zinc-900/80 border border-white/10 hover:border-white/20 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none rounded-xl px-4 py-3 text-white transition-all text-sm font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">Clave Secreta (Stripe Secret Key)</label>
+                    <input
+                      type="password"
+                      name="stripe_secret_key"
+                      value={formData.stripe_secret_key}
+                      onChange={handleInputChange}
+                      placeholder="sk_live_... o sk_test_..."
+                      className="w-full bg-zinc-900/80 border border-white/10 hover:border-white/20 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none rounded-xl px-4 py-3 text-white transition-all text-sm font-mono"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-zinc-900/50 rounded-xl border border-white/5 mt-4">
+                    <div>
+                      <label className="block text-white text-sm font-bold uppercase tracking-wider">Habilitar Stripe como opción de pago</label>
+                      <p className="text-zinc-500 text-xs mt-1">Permite a los clientes seleccionar Stripe al finalizar sus compras.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleCheckboxChange('stripe_enabled', !formData.stripe_enabled)}
+                      className="text-zinc-400 hover:text-white transition-colors"
+                    >
+                      {formData.stripe_enabled ? (
+                        <ToggleRight className="w-12 h-12 text-red-500" />
+                      ) : (
+                        <ToggleLeft className="w-12 h-12 text-zinc-600" />
+                      )}
+                    </button>
                   </div>
                 </div>
               </div>

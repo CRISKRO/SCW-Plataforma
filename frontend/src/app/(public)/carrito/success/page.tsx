@@ -26,9 +26,41 @@ function SuccessContent() {
     const payment_method = searchParams.get('payment_method');
     const order_id_param = searchParams.get('order_id');
 
+    const session_id = searchParams.get('session_id');
+
     if (payment_method === 'transfer') {
       setState('transfer_pending');
       setOrderId(order_id_param);
+      return;
+    }
+
+    if (payment_method === 'stripe' && session_id) {
+      const verifyStripe = async () => {
+        try {
+          const res = await api.post('/payments/verify/', {
+            session_id,
+            external_reference: order_id_param
+          });
+          setOrderId(res.data.order_id?.toString() || order_id_param);
+          setAlreadyProcessed(res.data.already_processed || false);
+
+          if (res.data.status === 'approved' || res.data.status === 'paid') {
+            setState('approved');
+            if (res.data.has_tickets !== undefined) setHasTickets(res.data.has_tickets);
+            if (res.data.has_merch !== undefined) setHasMerch(res.data.has_merch);
+            if (res.data.has_raffles !== undefined) setHasRaffles(res.data.has_raffles);
+            if (res.data.tickets) setTickets(res.data.tickets);
+          } else if (res.data.status === 'pending') {
+            setState('pending');
+          } else {
+            setState('failed');
+          }
+        } catch {
+          setState('failed');
+        }
+      };
+
+      verifyStripe();
       return;
     }
 

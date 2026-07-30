@@ -70,6 +70,7 @@ class Order(models.Model):
 
     class PaymentMethod(models.TextChoices):
         MERCADOPAGO = 'MERCADOPAGO', _('MercadoPago')
+        STRIPE = 'STRIPE', _('Stripe (Tarjeta)')
         TRANSFER = 'TRANSFER', _('Transferencia Bancaria')
         BOX_OFFICE = 'BOX_OFFICE', _('Taquilla')
         COURTESY = 'COURTESY', _('Cortesía')
@@ -87,6 +88,8 @@ class Order(models.Model):
     transfer_receipt = models.FileField(_('comprobante de transferencia'), upload_to='receipts/', null=True, blank=True)
     mp_preference_id = models.CharField(_('MercadoPago Preference ID'), max_length=255, blank=True)
     mp_payment_id = models.CharField(_('MercadoPago Payment ID'), max_length=255, blank=True)
+    stripe_session_id = models.CharField(_('Stripe Session ID'), max_length=255, blank=True)
+    stripe_payment_intent = models.CharField(_('Stripe Payment Intent ID'), max_length=255, blank=True)
     
     # Datos de Envío
     shipping_address = models.CharField(_('Dirección de envío'), max_length=255, blank=True)

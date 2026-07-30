@@ -25,6 +25,27 @@ class SystemConfiguration(models.Model):
         help_text=_("Tasa de comisión extra (ej. 0.0401 para 4.01%)")
     )
     
+    # Stripe Settings
+    stripe_public_key = models.CharField(
+        max_length=255, 
+        blank=True, 
+        null=True,
+        verbose_name=_("Stripe Public Key"),
+        help_text=_("Clave pública de Stripe (ej. pk_live_... o pk_test_...)")
+    )
+    stripe_secret_key = models.CharField(
+        max_length=255, 
+        blank=True, 
+        null=True,
+        verbose_name=_("Stripe Secret Key"),
+        help_text=_("Clave secreta de Stripe (ej. sk_live_... o sk_test_...)")
+    )
+    stripe_enabled = models.BooleanField(
+        default=True,
+        verbose_name=_("Stripe Habilitado"),
+        help_text=_("Indica si Stripe está activo como opción de pago")
+    )
+    
     # Email Settings
     email_host = models.CharField(
         max_length=255, 

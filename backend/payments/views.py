@@ -468,6 +468,58 @@ class CreateOrderView(APIView):
                     "init_point": None
                 }, status=status.HTTP_201_CREATED)
 
+            if order.payment_method == 'STRIPE':
+                try:
+                    config = get_active_config()
+                    stripe_secret_key = config.stripe_secret_key if getattr(config, 'stripe_secret_key', None) else getattr(settings, 'STRIPE_SECRET_KEY', '')
+                    if not stripe_secret_key:
+                        raise Exception("No Stripe Secret Key configured. Configúrala en la sección de administración.")
+                        
+                    frontend_url = request.headers.get('origin', 'http://localhost:3000')
+                    
+                    import requests
+                    headers = {
+                        "Authorization": f"Bearer {stripe_secret_key}",
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    }
+                    
+                    stripe_payload = {
+                        "payment_method_types[0]": "card",
+                        "mode": "payment",
+                        "customer_email": data['contact_email'],
+                        "success_url": f"{frontend_url}/carrito/success?payment_method=stripe&session_id={{CHECKOUT_SESSION_ID}}&order_id={order.id}",
+                        "cancel_url": f"{frontend_url}/carrito",
+                        "client_reference_id": str(order.id),
+                    }
+                    
+                    for idx, mp_item in enumerate(mp_items):
+                        unit_cents = int(round(float(mp_item['unit_price']) * 100))
+                        stripe_payload[f"line_items[{idx}][price_data][currency]"] = "mxn"
+                        stripe_payload[f"line_items[{idx}][price_data][unit_amount]"] = str(unit_cents)
+                        stripe_payload[f"line_items[{idx}][price_data][product_data][name]"] = mp_item['title']
+                        stripe_payload[f"line_items[{idx}][quantity]"] = str(mp_item['quantity'])
+
+                    res = requests.post("https://api.stripe.com/v1/checkout/sessions", data=stripe_payload, headers=headers, timeout=15)
+                    session_data = res.json()
+                    
+                    if res.status_code != 200:
+                        err_msg = session_data.get('error', {}).get('message', 'Error al crear sesión en Stripe.')
+                        raise Exception(err_msg)
+                        
+                    order.stripe_session_id = session_data.get('id', '')
+                    order.save()
+
+                    return Response({
+                        "order_id": order.id,
+                        "total_amount": total_amount,
+                        "payment_method": "STRIPE",
+                        "init_point": session_data.get('url')
+                    }, status=status.HTTP_201_CREATED)
+
+                except Exception as e:
+                    print("Error con Stripe:", e)
+                    return Response({"error": f"Error de pasarela Stripe: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
             # Integrate with MercadoPago SDK to generate a real preference_id
             try:
                 config = get_active_config()
@@ -793,9 +845,84 @@ class VerifyPaymentView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+        session_id = request.data.get('session_id')
         payment_id = request.data.get('payment_id')
         external_reference = request.data.get('external_reference')  # order ID
         mp_status = request.data.get('status')
+
+        # Verificación de pago por Stripe
+        if session_id:
+            try:
+                config = get_active_config()
+                stripe_secret_key = config.stripe_secret_key if getattr(config, 'stripe_secret_key', None) else getattr(settings, 'STRIPE_SECRET_KEY', '')
+                import requests
+                headers = {"Authorization": f"Bearer {stripe_secret_key}"}
+                res = requests.get(f"https://api.stripe.com/v1/checkout/sessions/{session_id}", headers=headers, timeout=10)
+                session_data = res.json()
+                
+                if session_data.get('payment_status') == 'paid':
+                    order_id = external_reference or session_data.get('client_reference_id')
+                    order = Order.objects.get(id=int(order_id))
+                    
+                    if order.status != Order.Status.PAID:
+                        order.stripe_session_id = session_id
+                        order.stripe_payment_intent = str(session_data.get('payment_intent', ''))
+                        order.status = Order.Status.PAID
+                        order.save()
+
+                        for item in order.items.all():
+                            if getattr(item, 'seat', None) and item.seat.is_available:
+                                item.seat.is_available = False
+                                item.seat.save()
+                            if item.product:
+                                product = item.product
+                                if product.is_clothing:
+                                    size = item.size
+                                    if size and isinstance(product.stock_by_size, dict) and size in product.stock_by_size:
+                                        product.stock_by_size[size] = max(0, product.stock_by_size[size] - item.quantity)
+                                        product.save(update_fields=['stock_by_size'])
+                                else:
+                                    product.stock = max(0, product.stock - item.quantity)
+                                    product.save(update_fields=['stock'])
+
+                        for item in order.items.all():
+                            if hasattr(item, 'raffle_tickets'):
+                                from raffles.models import RaffleTicket
+                                for rt in item.raffle_tickets.all():
+                                    rt.status = RaffleTicket.Status.SOLD_ONLINE
+                                    rt.buyer_name = order.user.get_full_name() if order.user else order.contact_email
+                                    rt.save()
+
+                        send_order_emails_safely(order)
+
+                    has_tickets = order.items.filter(event__isnull=False).exists()
+                    has_merch = order.items.filter(product__isnull=False).exists()
+                    has_raffles = order.items.filter(raffle_tickets__isnull=False).exists()
+                    tickets_data = []
+                    for item in order.items.filter(event__isnull=False):
+                        if item.ticket_hash:
+                            tickets_data.append({
+                                "id": item.id,
+                                "ticket_hash": item.ticket_hash,
+                                "event_name": item.seat.zone.event.title if getattr(item, 'seat', None) and getattr(item.seat, 'zone', None) and getattr(item.seat.zone, 'event', None) else item.product_name,
+                                "seat_name": str(item.seat) if getattr(item, 'seat', None) else None,
+                                "price": str(item.price),
+                                "buyer_name": getattr(item, 'buyer_name', None) or (order.user.get_full_name() if order.user else "") or order.contact_email
+                            })
+
+                    return Response({
+                        "status": "approved", 
+                        "order_id": order.id,
+                        "has_tickets": has_tickets,
+                        "has_merch": has_merch,
+                        "has_raffles": has_raffles,
+                        "tickets": tickets_data
+                    })
+                else:
+                    return Response({"status": session_data.get('payment_status', 'pending')})
+            except Exception as e:
+                print("Verify Stripe error:", e)
+                return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         if not payment_id or not external_reference:
             return Response({"error": "Faltan datos de verificación."}, status=status.HTTP_400_BAD_REQUEST)
@@ -1271,6 +1398,59 @@ class WebhookView(APIView):
                 except Exception as e:
                     print("Webhook error:", e)
         
+        return Response({"status": "ok"}, status=200)
+
+
+class StripeWebhookView(APIView):
+    """Webhook para notificaciones de Stripe Checkout"""
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        event = request.data
+        event_type = event.get('type')
+
+        if event_type == 'checkout.session.completed':
+            session = event.get('data', {}).get('object', {})
+            session_id = session.get('id')
+            order_id = session.get('client_reference_id')
+            payment_status = session.get('payment_status')
+
+            if payment_status == 'paid' and order_id:
+                try:
+                    order = Order.objects.get(id=int(order_id))
+                    if order.status != Order.Status.PAID:
+                        order.stripe_session_id = session_id
+                        order.stripe_payment_intent = str(session.get('payment_intent', ''))
+                        order.status = Order.Status.PAID
+                        order.save()
+
+                        for item in order.items.all():
+                            if getattr(item, 'seat', None) and item.seat.is_available:
+                                item.seat.is_available = False
+                                item.seat.save()
+                            if item.product:
+                                product = item.product
+                                if product.is_clothing:
+                                    size = item.size
+                                    if size and isinstance(product.stock_by_size, dict) and size in product.stock_by_size:
+                                        product.stock_by_size[size] = max(0, product.stock_by_size[size] - item.quantity)
+                                        product.save(update_fields=['stock_by_size'])
+                                else:
+                                    product.stock = max(0, product.stock - item.quantity)
+                                    product.save(update_fields=['stock'])
+
+                        for item in order.items.all():
+                            if hasattr(item, 'raffle_tickets'):
+                                from raffles.models import RaffleTicket
+                                for rt in item.raffle_tickets.all():
+                                    rt.status = RaffleTicket.Status.SOLD_ONLINE
+                                    rt.buyer_name = order.user.get_full_name() if order.user else order.contact_email
+                                    rt.save()
+
+                        send_order_emails_safely(order)
+                except Exception as e:
+                    print("Stripe webhook error:", e)
+
         return Response({"status": "ok"}, status=200)
 
 
