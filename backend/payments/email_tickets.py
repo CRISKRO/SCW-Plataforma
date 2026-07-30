@@ -120,17 +120,11 @@ def send_ticket_email(order):
         img.add_header('Content-Disposition', 'inline', filename=f"boleto_{qr['item'].id}.png")
         email.attach(img)
 
-    connection = None
-    if config.email_host_user and config.email_host_password:
-        connection = get_connection(
-            host=config.email_host,
-            port=config.email_port,
-            username=config.email_host_user,
-            password=config.email_host_password,
-            use_tls=config.email_use_tls,
-        )
+    from .utils import get_smtp_connection
+    connection = get_smtp_connection(config)
 
     email.connection = connection
     email.send(fail_silently=False)
     return True
+
 

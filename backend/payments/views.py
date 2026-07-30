@@ -15,31 +15,38 @@ def send_order_emails_safely(order):
     has_merch = order.items.filter(product__isnull=False).exists()
     has_raffles = order.items.filter(raffle_tickets__isnull=False).exists()
     
+    errors = []
+
     if has_tickets:
         try:
             from .email_tickets import send_ticket_email
             send_ticket_email(order)
         except Exception as e:
             print("Email error (tickets):", e)
+            errors.append(f"Boletos: {str(e)}")
             
     if has_merch or has_raffles:
         try:
             if has_tickets:
                 import time
-                time.sleep(2) # Prevenir bloqueo del SMTP por enviar 2 correos seguidos muy rapido
+                time.sleep(1) # Prevenir bloqueo del SMTP
             from .email_orders import send_order_receipt_email
             send_order_receipt_email(order)
         except Exception as e:
             print("Email error (merch):", e)
+            errors.append(f"Recibo: {str(e)}")
 
     if has_merch:
         try:
             import time
-            time.sleep(2) # Prevenir bloqueo del SMTP
+            time.sleep(1) # Prevenir bloqueo del SMTP
             from .email_orders import send_new_merch_admin_email
             send_new_merch_admin_email(order)
         except Exception as e:
             print("Email error (admin merch alert):", e)
+
+    success = len(errors) == 0
+    return success, errors
 
 
 class CouponViewSet(viewsets.ModelViewSet):
@@ -291,10 +298,17 @@ class CreateOrderView(APIView):
                                 "error": f"El asiento {seat.display_number} (Fila {seat.row_name}) ya fue pagado en otra orden."
                             }, status=status.HTTP_400_BAD_REQUEST)
 
-                        # Verificar si el asiento pertenece a una orden de transferencia/pago pendiente activa
+                        # Auto-cancelar órdenes PENDING antiguas (>15 min) para liberar bloqueos abandonados
+                        from django.utils import timezone
+                        from datetime import timedelta
+                        cutoff = timezone.now() - timedelta(minutes=15)
+                        Order.objects.filter(status=Order.Status.PENDING, created_at__lt=cutoff).update(status=Order.Status.CANCELLED)
+
+                        # Verificar si el asiento pertenece a una orden de transferencia/pago pendiente activa (reciente)
                         pending_item = OrderItem.objects.filter(
                             seat=seat,
-                            order__status=Order.Status.PENDING
+                            order__status=Order.Status.PENDING,
+                            order__created_at__gte=cutoff
                         ).exclude(order__status=Order.Status.CANCELLED).first()
                         if pending_item:
                             return Response({
@@ -585,8 +599,12 @@ class OrderViewSet(viewsets.ModelViewSet):
     def resend_email(self, request, pk=None):
         order = self.get_object()
         try:
-            send_order_emails_safely(order)
-            return Response({"success": True, "message": f"Boletos / Recibo de la orden #{order.id} reenviados a {order.contact_email}."})
+            success, errors = send_order_emails_safely(order)
+            if success:
+                return Response({"success": True, "message": f"Boletos / Recibo de la orden #{order.id} reenviados exitosamente a {order.contact_email}."})
+            else:
+                err_msg = ", ".join(errors) if errors else "Error al conectar con servidor SMTP"
+                return Response({"error": f"Error al enviar correo: {err_msg}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:
             return Response({"error": f"Error al reenviar correo: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -1274,6 +1292,7 @@ class TestEmailView(APIView):
             from django.core.mail import EmailMultiAlternatives, get_connection
             from django.conf import settings
             from api.models import get_active_config
+            from .utils import get_smtp_connection
 
             config = get_active_config()
             from_email = config.default_from_email if config.default_from_email else settings.DEFAULT_FROM_EMAIL
@@ -1281,15 +1300,7 @@ class TestEmailView(APIView):
             # Use provided email or fallback to from_email
             test_target = request.query_params.get('email', from_email)
 
-            connection = None
-            if config.email_host_user and config.email_host_password:
-                connection = get_connection(
-                    host=config.email_host,
-                    port=config.email_port,
-                    username=config.email_host_user,
-                    password=config.email_host_password,
-                    use_tls=config.email_use_tls,
-                )
+            connection = get_smtp_connection(config)
 
             email = EmailMultiAlternatives(
                 subject="Test SCW",
@@ -1305,6 +1316,7 @@ class TestEmailView(APIView):
                 "message": f"Test email sent successfully to {test_target}",
                 "config_used": {
                     "host": config.email_host,
+                    "port": config.email_port,
                     "user": config.email_host_user,
                     "from_email": from_email
                 }

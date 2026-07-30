@@ -53,14 +53,8 @@ def send_premium_activation_email(subscription):
         return
         
     try:
-        from django.core.mail import get_connection
-        connection = get_connection(
-            host=config.email_host,
-            port=config.email_port,
-            username=config.email_host_user,
-            password=config.email_host_password,
-            use_tls=config.email_use_tls
-        )
+        from payments.utils import get_smtp_connection
+        connection = get_smtp_connection(config)
         
         import re
         match = re.search(r'<([^>]+)>', default_from_email)

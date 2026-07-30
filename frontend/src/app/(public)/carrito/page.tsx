@@ -196,9 +196,10 @@ export default function CartPage() {
         clearCart();
         router.push(`/carrito/success?payment_method=transfer&order_id=${response.data.order_id}`);
       }
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Hubo un problema al procesar tu orden. Intenta nuevamente.");
+    } catch (error: any) {
+      console.error("Error al procesar orden:", error);
+      const serverMessage = error.response?.data?.error || error.response?.data?.message || (typeof error.response?.data === 'string' ? error.response.data : null);
+      alert(serverMessage || "Hubo un problema al procesar tu orden. Intenta nuevamente.");
       setLoading(false);
     }
   };

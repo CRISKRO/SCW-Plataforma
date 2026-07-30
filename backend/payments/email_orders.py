@@ -131,17 +131,8 @@ def send_order_receipt_email(order):
     )
     email.attach_alternative(html_body, "text/html")
 
-    connection = None
-    if config.email_host_user and config.email_host_password:
-        connection = get_connection(
-            host=config.email_host,
-            port=config.email_port,
-            username=config.email_host_user,
-            password=config.email_host_password,
-            use_tls=config.email_use_tls,
-        )
-
-    email.connection = connection
+    from .utils import get_smtp_connection
+    email.connection = get_smtp_connection(config)
     email.send(fail_silently=False)
     return True
 
@@ -225,17 +216,8 @@ def send_status_update_email(order):
     )
     email.attach_alternative(html_body, "text/html")
 
-    connection = None
-    if config.email_host_user and config.email_host_password:
-        connection = get_connection(
-            host=config.email_host,
-            port=config.email_port,
-            username=config.email_host_user,
-            password=config.email_host_password,
-            use_tls=config.email_use_tls,
-        )
-
-    email.connection = connection
+    from .utils import get_smtp_connection
+    email.connection = get_smtp_connection(config)
     email.send(fail_silently=False)
     return True
 
@@ -295,17 +277,8 @@ def send_transfer_admin_email(order, request):
             print("Error attaching receipt:", e)
 
     try:
-        connection = None
-        if config.email_host_user and config.email_host_password:
-            connection = get_connection(
-                host=config.email_host,
-                port=config.email_port,
-                username=config.email_host_user,
-                password=config.email_host_password,
-                use_tls=config.email_use_tls,
-            )
-
-        email.connection = connection
+        from .utils import get_smtp_connection
+        email.connection = get_smtp_connection(config)
         email.send(fail_silently=False)
         return True
     except Exception as e:
@@ -367,16 +340,8 @@ def send_new_merch_admin_email(order):
     email.attach_alternative(html_body, "text/html")
     
     try:
-        connection = None
-        if config.email_host_user and config.email_host_password:
-            connection = get_connection(
-                host=config.email_host,
-                port=config.email_port,
-                username=config.email_host_user,
-                password=config.email_host_password,
-                use_tls=config.email_use_tls,
-            )
-        email.connection = connection
+        from .utils import get_smtp_connection
+        email.connection = get_smtp_connection(config)
         email.send(fail_silently=False)
         return True
     except Exception as e:

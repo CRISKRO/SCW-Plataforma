@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import api from '@/services/api';
 import { adminService } from '@/services/admin.services';
 import { 
   Settings, 
@@ -24,7 +25,28 @@ export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState<'mercadopago' | 'email' | 'whatsapp' | 'registro'>('mercadopago');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [testingEmail, setTestingEmail] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const handleTestEmail = async () => {
+    setTestingEmail(true);
+    setNotification(null);
+    try {
+      const targetEmail = formData.email_host_user || formData.admin_notification_email || '';
+      const res = await api.get(`/payments/test-email/?email=${encodeURIComponent(targetEmail)}`);
+      if (res.data.status === 'success') {
+        showNotification('success', `¡Correo de prueba enviado exitosamente a ${targetEmail}!`);
+      } else {
+        showNotification('error', `Error SMTP: ${res.data.error || 'No se pudo enviar el correo'}`);
+      }
+    } catch (error: any) {
+      console.error("Error testing email:", error);
+      const errMsg = error.response?.data?.error || error.message;
+      showNotification('error', `Fallo de conexión SMTP: ${errMsg}`);
+    } finally {
+      setTestingEmail(false);
+    }
+  };
 
   // Form State
   const [formData, setFormData] = useState({
@@ -430,6 +452,18 @@ export default function AdminSettingsPage() {
                     ) : (
                       <ToggleLeft className="w-12 h-12 text-zinc-600" />
                     )}
+                  </button>
+                </div>
+
+                <div className="pt-4 border-t border-white/10 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleTestEmail}
+                    disabled={testingEmail}
+                    className="bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-white font-bold text-xs uppercase px-5 py-3 rounded-xl transition-all flex items-center gap-2"
+                  >
+                    {testingEmail ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4 text-red-500" />}
+                    Probar Conexión SMTP
                   </button>
                 </div>
               </div>
