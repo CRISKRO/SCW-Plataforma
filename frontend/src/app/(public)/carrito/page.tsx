@@ -427,7 +427,7 @@ export default function CartPage() {
                 <div className="space-y-4 pt-4 border-t border-white/10">
                   <h3 className="font-bold uppercase text-sm">Método de Pago</h3>
 
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <button
                       onClick={() => setPaymentMethod('MERCADOPAGO')}
                       className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all ${paymentMethod === 'MERCADOPAGO' ? 'bg-[#009EE3]/10 border-[#009EE3] text-[#009EE3]' : 'bg-black border-white/20 text-zinc-400 hover:border-white/40'}`}
@@ -435,6 +435,7 @@ export default function CartPage() {
                       <CreditCard className="w-5 h-5" />
                       <span className="text-[10px] font-bold uppercase text-center leading-tight">Mercado Pago</span>
                     </button>
+                    {/* Stripe deshabilitado temporalmente - Descomentar para reactivar
                     <button
                       onClick={() => setPaymentMethod('STRIPE')}
                       className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all ${paymentMethod === 'STRIPE' ? 'bg-purple-950/40 border-purple-500 text-purple-400' : 'bg-black border-white/20 text-zinc-400 hover:border-white/40'}`}
@@ -442,6 +443,7 @@ export default function CartPage() {
                       <ShieldCheck className="w-5 h-5" />
                       <span className="text-[10px] font-bold uppercase text-center leading-tight">Stripe (Tarjeta)</span>
                     </button>
+                    */}
                     <button
                       onClick={() => setPaymentMethod('TRANSFER')}
                       className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all ${paymentMethod === 'TRANSFER' ? 'bg-zinc-800 border-white text-white' : 'bg-black border-white/20 text-zinc-400 hover:border-white/40'}`}
@@ -537,12 +539,14 @@ export default function CartPage() {
                     </div>
                   )}
 
+                  {/* Stripe banner deshabilitado temporalmente
                   {paymentMethod === 'STRIPE' && (
                     <div className="flex items-start gap-2 bg-zinc-900 border border-purple-500/20 rounded-xl p-3 text-xs text-zinc-400">
                       <ShieldCheck className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
                       <span>Serás redirigido al Checkout seguro de <strong className="text-purple-400">Stripe</strong>. Acepta todas las tarjetas Visa, Mastercard y American Express internacionales.</span>
                     </div>
                   )}
+                  */}
                 </div>
               </div>
             </div>
