@@ -8,21 +8,25 @@ from django.core.mail import EmailMultiAlternatives, get_connection
 from django.conf import settings
 from .qr import generate_ticket_qr
 from api.models import get_active_config
+from .utils import ensure_ticket_items_expanded
 
 
 def send_ticket_email(order):
     """
     Send a ticket confirmation email with an individual QR code per seat / ticket.
     """
+    ensure_ticket_items_expanded(order)
     ticket_items = list(order.items.filter(event__isnull=False))
     
     if not ticket_items:
         return False
 
+    total_tickets = len(ticket_items)
+
     # Build QR attachments
     qr_images = []
     items_html = ""
-    for item in ticket_items:
+    for idx, item in enumerate(ticket_items, 1):
         title = item.product_name if item.product_name else (item.event.title if item.event else "Boleto SCW")
         
         if item.seat and item.seat.zone:
@@ -31,6 +35,8 @@ def send_ticket_email(order):
             seat_info = item.size
         else:
             seat_info = "Entrada General"
+
+        badge_text = f"Boleto {idx} de {total_tickets}" if total_tickets > 1 else "1 Boleto"
 
         qr_buf = generate_ticket_qr(order.id, item.id, title)
         qr_b64 = base64.b64encode(qr_buf.read()).decode()
@@ -45,7 +51,7 @@ def send_ticket_email(order):
         
         items_html += f"""
         <div style="background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:20px;margin-bottom:20px;text-align:center;">
-          <p style="color:#e00;font-size:11px;text-transform:uppercase;letter-spacing:2px;margin:0 0 4px;font-weight:bold;">1 Boleto</p>
+          <p style="color:#e00;font-size:11px;text-transform:uppercase;letter-spacing:2px;margin:0 0 4px;font-weight:bold;">{badge_text}</p>
           <h3 style="color:#fff;margin:0 0 4px;font-size:18px;">{title}</h3>
           <p style="color:#22c55e;font-size:14px;font-weight:bold;margin:0 0 16px;">{seat_info}</p>
           <img src="cid:{cid_str}" width="220" height="220" alt="QR Boleto" style="border-radius:8px;"/>

@@ -11,6 +11,8 @@ from .serializers import OrderSerializer, CouponSerializer
 from api.models import get_active_config
 
 def send_order_emails_safely(order):
+    from .utils import ensure_ticket_items_expanded
+    ensure_ticket_items_expanded(order)
     has_tickets = order.items.filter(event__isnull=False).exists()
     has_merch = order.items.filter(product__isnull=False).exists()
     has_raffles = order.items.filter(raffle_tickets__isnull=False).exists()
@@ -409,21 +411,40 @@ class CreateOrderView(APIView):
             discount_ratio = (subtotal_after_discount / Decimal(str(total_amount))) if total_amount > 0 else Decimal('1.00')
 
             for item_data in order_items_data:
-                order_item = OrderItem.objects.create(
-                    order=order,
-                    product=item_data['product'],
-                    seat=item_data.get('seat'),
-                    event=item_data.get('event'),
-                    product_name=item_data['product_name'],
-                    quantity=item_data['quantity'],
-                    price=item_data['price'],
-                    size=item_data['size']
-                )
-                
-                if item_data.get('raffle_ticket'):
-                    rt = item_data['raffle_ticket']
-                    rt.order_item = order_item
-                    rt.save()
+                is_ticket_item = bool(item_data.get('event') or item_data.get('seat'))
+                qty = item_data['quantity']
+
+                if is_ticket_item and qty > 1:
+                    for _ in range(qty):
+                        order_item = OrderItem.objects.create(
+                            order=order,
+                            product=item_data['product'],
+                            seat=item_data.get('seat'),
+                            event=item_data.get('event'),
+                            product_name=item_data['product_name'],
+                            quantity=1,
+                            price=item_data['price'],
+                            size=item_data['size']
+                        )
+                        if item_data.get('raffle_ticket'):
+                            rt = item_data['raffle_ticket']
+                            rt.order_item = order_item
+                            rt.save()
+                else:
+                    order_item = OrderItem.objects.create(
+                        order=order,
+                        product=item_data['product'],
+                        seat=item_data.get('seat'),
+                        event=item_data.get('event'),
+                        product_name=item_data['product_name'],
+                        quantity=qty,
+                        price=item_data['price'],
+                        size=item_data['size']
+                    )
+                    if item_data.get('raffle_ticket'):
+                        rt = item_data['raffle_ticket']
+                        rt.order_item = order_item
+                        rt.save()
                 
                 config = get_active_config()
                 commission = float(config.mercadopago_commission_rate)
@@ -895,6 +916,8 @@ class VerifyPaymentView(APIView):
 
                         send_order_emails_safely(order)
 
+                    from .utils import ensure_ticket_items_expanded
+                    ensure_ticket_items_expanded(order)
                     has_tickets = order.items.filter(event__isnull=False).exists()
                     has_merch = order.items.filter(product__isnull=False).exists()
                     has_raffles = order.items.filter(raffle_tickets__isnull=False).exists()
@@ -1069,6 +1092,8 @@ class VerifyPaymentView(APIView):
 
         # Already processed
         if order.status == Order.Status.PAID:
+            from .utils import ensure_ticket_items_expanded
+            ensure_ticket_items_expanded(order)
             has_tickets = order.items.filter(event__isnull=False).exists()
             has_merch = order.items.filter(product__isnull=False).exists()
             has_raffles = order.items.filter(raffle_tickets__isnull=False).exists()
@@ -1135,6 +1160,8 @@ class VerifyPaymentView(APIView):
                 # Send ticket/merch email
                 send_order_emails_safely(order)
 
+                from .utils import ensure_ticket_items_expanded
+                ensure_ticket_items_expanded(order)
                 has_tickets = order.items.filter(event__isnull=False).exists()
                 has_merch = order.items.filter(product__isnull=False).exists()
                 has_raffles = order.items.filter(raffle_tickets__isnull=False).exists()
@@ -1462,6 +1489,9 @@ class MyOrdersView(APIView):
 
     def get(self, request):
         orders = Order.objects.filter(user=request.user).order_by('-created_at')
+        from .utils import ensure_ticket_items_expanded
+        for order in orders:
+            ensure_ticket_items_expanded(order)
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data, status=200)
 class TestEmailView(APIView):

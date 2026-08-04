@@ -60,3 +60,30 @@ def get_smtp_connection(config=None):
         use_ssl=use_ssl,
         timeout=15
     )
+
+
+def ensure_ticket_items_expanded(order):
+    """
+    Garantiza que todos los boletos (artículos de orden vinculados a un evento)
+    con cantidad > 1 se desglosen en registros individuales con cantidad = 1.
+    Esto permite que cada boleto tenga su propio ID único, hash de código QR e historial de escaneo.
+    """
+    from .models import OrderItem
+    unexpanded_items = list(order.items.filter(event__isnull=False, quantity__gt=1))
+    for item in unexpanded_items:
+        qty = item.quantity
+        item.quantity = 1
+        item.save(update_fields=['quantity'])
+        for _ in range(qty - 1):
+            OrderItem.objects.create(
+                order=order,
+                product=item.product,
+                product_name=item.product_name,
+                quantity=1,
+                price=item.price,
+                size=item.size,
+                is_scanned=item.is_scanned,
+                event=item.event,
+                seat=item.seat
+            )
+
