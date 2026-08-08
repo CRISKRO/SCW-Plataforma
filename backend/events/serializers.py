@@ -40,12 +40,13 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = ['id', 'title', 'description', 'date_time', 'location', 'banner',
-                  'status', 'ticket_link', 'created_at', 'updated_at', 'matches', 'banner_url']
+                  'status', 'ticket_link', 'is_multi_day', 'created_at', 'updated_at', 'matches', 'banner_url']
         extra_kwargs = {
             'banner': {'write_only': True, 'required': False, 'allow_null': True},
             'description': {'required': False},
             'ticket_link': {'required': False},
             'status': {'required': False},
+            'is_multi_day': {'required': False},
         }
 
     def get_banner_url(self, obj):

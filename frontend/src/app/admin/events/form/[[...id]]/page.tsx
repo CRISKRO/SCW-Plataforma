@@ -21,7 +21,8 @@ export default function EventFormPage() {
     date_time: '',
     location: '',
     ticket_link: '',
-    status: 'DRAFT'
+    status: 'DRAFT',
+    is_multi_day: false
   });
   
   const [bannerUrl, setBannerUrl] = useState('');
@@ -45,7 +46,8 @@ export default function EventFormPage() {
             date_time: formattedDate,
             location: data.location || '',
             ticket_link: data.ticket_link || '',
-            status: data.status || 'DRAFT'
+            status: data.status || 'DRAFT',
+            is_multi_day: !!data.is_multi_day
           });
           if (data.banner_url) {
             setBannerUrl(data.banner_url);
@@ -93,6 +95,7 @@ export default function EventFormPage() {
       data.append('location', formData.location);
       data.append('ticket_link', formData.ticket_link);
       data.append('status', formData.status);
+      data.append('is_multi_day', formData.is_multi_day ? 'true' : 'false');
       
       if (bannerFile) {
         data.append('banner', bannerFile);
@@ -213,6 +216,25 @@ export default function EventFormPage() {
             <option value="LIVE">En Vivo</option>
             <option value="COMPLETED">Finalizado</option>
           </select>
+        </div>
+
+        <div className="bg-zinc-900/80 border border-white/10 rounded-xl p-4 flex items-center justify-between">
+          <div className="pr-4">
+            <label htmlFor="is_multi_day" className="font-bold text-white uppercase tracking-widest text-sm block cursor-pointer">
+              Evento de 2 días (Venta por Día / Pase 2 Días)
+            </label>
+            <p className="text-xs text-zinc-400 mt-1">
+              Si activas esta casilla, los usuarios podrán comprar únicamente el Día 1, Día 2 o el Pase de 2 Días. Si la dejas desactivada, se venderá como evento normal de 1 día.
+            </p>
+          </div>
+          <input
+            type="checkbox"
+            id="is_multi_day"
+            name="is_multi_day"
+            checked={formData.is_multi_day}
+            onChange={handleChange}
+            className="w-6 h-6 accent-red-600 rounded cursor-pointer flex-shrink-0"
+          />
         </div>
 
         <div className="pt-4 border-t border-white/10">

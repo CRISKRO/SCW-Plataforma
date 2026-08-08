@@ -49,6 +49,11 @@ class Event(models.Model):
     banner = models.ImageField(_('banner del evento'), upload_to='events/', blank=True, null=True)
     status = models.CharField(_('estado'), max_length=15, choices=Status.choices, default=Status.DRAFT)
     ticket_link = models.URLField(_('link de boletos (externo, opcional)'), blank=True)
+    is_multi_day = models.BooleanField(
+        _('evento de 2 días'),
+        default=False,
+        help_text=_('Activa el selector de boletos por día (Día 1, Día 2 o Pase 2 Días) en la venta de boletos.')
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

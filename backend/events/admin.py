@@ -14,8 +14,9 @@ class MatchInline(admin.TabularInline):
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ('title', 'date_time', 'location', 'status')
-    list_filter = ('status', 'date_time')
+    list_display = ('title', 'date_time', 'location', 'status', 'is_multi_day')
+    list_editable = ('is_multi_day',)
+    list_filter = ('status', 'is_multi_day', 'date_time')
     search_fields = ('title', 'location')
     inlines = [MatchInline]
 

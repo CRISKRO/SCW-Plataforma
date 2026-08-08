@@ -335,29 +335,32 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
     
     try {
       setLoading(true);
+      const isMultiDay = !!event.is_multi_day;
+      const effectiveDay = isMultiDay ? selectedDay : 'ALL';
       const seatIds = selectedSeats.map(s => s.seatId);
-      await api.post('/tickets/seats/lock_seats/', { seat_ids: seatIds, session_id: sessionId, day: selectedDay });
 
-      const dayLabel = selectedDay === 'DAY_1' ? 'Día 1 (Sábado)' : selectedDay === 'DAY_2' ? 'Día 2 (Domingo)' : 'Pase 2 Días (Abono)';
-      const daySuffix = selectedDay === 'DAY_1' ? '1' : selectedDay === 'DAY_2' ? '2' : '3';
+      await api.post('/tickets/seats/lock_seats/', { seat_ids: seatIds, session_id: sessionId, day: effectiveDay });
+
+      const dayLabel = isMultiDay ? (selectedDay === 'DAY_1' ? ' (Día 1 - Sábado)' : selectedDay === 'DAY_2' ? ' (Día 2 - Domingo)' : ' (Pase 2 Días - Abono)') : '';
+      const daySuffix = isMultiDay ? (selectedDay === 'DAY_1' ? '1' : selectedDay === 'DAY_2' ? '2' : '3') : '0';
 
       selectedSeats.forEach(seat => {
         addItem({
           id: parseInt(`${actualEventId}${seat.seatId}${daySuffix}`),
           name: `Boleto: ${event.title}`,
-          price: selectedDay === 'BOTH' ? seat.price * 2 : seat.price,
+          price: (isMultiDay && selectedDay === 'BOTH') ? seat.price * 2 : seat.price,
           quantity: 1,
           image_url: event.banner_url || '',
-          size: `${ZONE_LABELS[seat.zoneType] || seat.zoneType} · Fila ${seat.rowName} - Asiento ${seat.seatNumber} (${dayLabel})`,
+          size: `${ZONE_LABELS[seat.zoneType] || seat.zoneType} · Fila ${seat.rowName} - Asiento ${seat.seatNumber}${dayLabel}`,
           seat_id: seat.seatId,
           event_id: actualEventId,
-          valid_for_day: selectedDay,
+          valid_for_day: effectiveDay,
           session_id: sessionId,
         });
       });
       setSelectedSeats([]);
       setShowConfirmPanel(false);
-      useToastStore.getState().addToast(`Se agregaron ${selectedSeats.length} boleto(s) (${dayLabel}) al carrito y se reservaron por 10 min`, 'success');
+      useToastStore.getState().addToast(`Se agregaron ${selectedSeats.length} boleto(s) al carrito y se reservaron por 10 min`, 'success');
 
       // Smoothly scroll to the top since the page height will shrink and leave the user stranded at the bottom
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -438,67 +441,69 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
           </div>
         </div>
 
-        {/* Day Selection Tabs */}
-        <div className="bg-zinc-950 border border-white/10 rounded-2xl p-4 sm:p-6 mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-xs font-bold uppercase tracking-widest text-zinc-400 flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-red-500" /> Selecciona la Vigencia del Asiento
-            </p>
-            <span className="text-[11px] font-medium text-zinc-500 hidden sm:inline">
-              Los asientos comprados por día quedan libres para la otra fecha
-            </span>
+        {/* Day Selection Tabs (solo si el evento está configurado como de 2 días) */}
+        {event.is_multi_day && (
+          <div className="bg-zinc-950 border border-white/10 rounded-2xl p-4 sm:p-6 mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-xs font-bold uppercase tracking-widest text-zinc-400 flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-red-500" /> Selecciona la Vigencia del Asiento
+              </p>
+              <span className="text-[11px] font-medium text-zinc-500 hidden sm:inline">
+                Los asientos comprados por día quedan libres para la otra fecha
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  if (selectedDay !== 'DAY_1') {
+                    setSelectedDay('DAY_1');
+                    setSelectedSeats([]);
+                  }
+                }}
+                className={`py-3.5 px-4 rounded-xl font-bold text-xs md:text-sm uppercase tracking-wider transition-all border flex items-center justify-center gap-2.5 ${
+                  selectedDay === 'DAY_1'
+                    ? 'bg-gradient-to-r from-red-600 to-red-700 text-white border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.5)] scale-[1.02]'
+                    : 'bg-zinc-900/80 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-white'
+                }`}
+              >
+                <span className="text-lg">🗓️</span> Día 1 (Sábado)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (selectedDay !== 'DAY_2') {
+                    setSelectedDay('DAY_2');
+                    setSelectedSeats([]);
+                  }
+                }}
+                className={`py-3.5 px-4 rounded-xl font-bold text-xs md:text-sm uppercase tracking-wider transition-all border flex items-center justify-center gap-2.5 ${
+                  selectedDay === 'DAY_2'
+                    ? 'bg-gradient-to-r from-red-600 to-red-700 text-white border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.5)] scale-[1.02]'
+                    : 'bg-zinc-900/80 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-white'
+                }`}
+              >
+                <span className="text-lg">🗓️</span> Día 2 (Domingo)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (selectedDay !== 'BOTH') {
+                    setSelectedDay('BOTH');
+                    setSelectedSeats([]);
+                  }
+                }}
+                className={`py-3.5 px-4 rounded-xl font-bold text-xs md:text-sm uppercase tracking-wider transition-all border flex items-center justify-center gap-2.5 ${
+                  selectedDay === 'BOTH'
+                    ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.5)] scale-[1.02]'
+                    : 'bg-zinc-900/80 text-zinc-400 border-zinc-800 hover:border-amber-700/50 hover:text-white'
+                }`}
+              >
+                <span className="text-lg">🎟️</span> Pase 2 Días (Abono)
+              </button>
+            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <button
-              type="button"
-              onClick={() => {
-                if (selectedDay !== 'DAY_1') {
-                  setSelectedDay('DAY_1');
-                  setSelectedSeats([]);
-                }
-              }}
-              className={`py-3.5 px-4 rounded-xl font-bold text-xs md:text-sm uppercase tracking-wider transition-all border flex items-center justify-center gap-2.5 ${
-                selectedDay === 'DAY_1'
-                  ? 'bg-gradient-to-r from-red-600 to-red-700 text-white border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.5)] scale-[1.02]'
-                  : 'bg-zinc-900/80 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-white'
-              }`}
-            >
-              <span className="text-lg">🗓️</span> Día 1 (Sábado)
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                if (selectedDay !== 'DAY_2') {
-                  setSelectedDay('DAY_2');
-                  setSelectedSeats([]);
-                }
-              }}
-              className={`py-3.5 px-4 rounded-xl font-bold text-xs md:text-sm uppercase tracking-wider transition-all border flex items-center justify-center gap-2.5 ${
-                selectedDay === 'DAY_2'
-                  ? 'bg-gradient-to-r from-red-600 to-red-700 text-white border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.5)] scale-[1.02]'
-                  : 'bg-zinc-900/80 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-white'
-              }`}
-            >
-              <span className="text-lg">🗓️</span> Día 2 (Domingo)
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                if (selectedDay !== 'BOTH') {
-                  setSelectedDay('BOTH');
-                  setSelectedSeats([]);
-                }
-              }}
-              className={`py-3.5 px-4 rounded-xl font-bold text-xs md:text-sm uppercase tracking-wider transition-all border flex items-center justify-center gap-2.5 ${
-                selectedDay === 'BOTH'
-                  ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.5)] scale-[1.02]'
-                  : 'bg-zinc-900/80 text-zinc-400 border-zinc-800 hover:border-amber-700/50 hover:text-white'
-              }`}
-            >
-              <span className="text-lg">🎟️</span> Pase 2 Días (Abono)
-            </button>
-          </div>
-        </div>
+        )}
 
         <div className={`flex flex-col-reverse lg:flex-row gap-8 items-start transition-all duration-500`}>
 
