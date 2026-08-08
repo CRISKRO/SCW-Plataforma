@@ -11,6 +11,7 @@ export interface CartItem {
   size?: string;
   seat_id?: number;
   event_id?: number;
+  valid_for_day?: string;
   raffle_ticket_id?: number;
   requires_shipping?: boolean;
   session_id?: string;
@@ -45,13 +46,13 @@ export const useCartStore = create<CartState>()(
       addItem: (newItem) => {
         set((state) => {
           const existingItem = state.items.find(
-            (item) => item.id === newItem.id && item.size === newItem.size
+            (item) => item.id === newItem.id && item.size === newItem.size && item.valid_for_day === newItem.valid_for_day
           );
 
           if (existingItem) {
             return {
               items: state.items.map((item) =>
-                item.id === newItem.id && item.size === newItem.size
+                item.id === newItem.id && item.size === newItem.size && item.valid_for_day === newItem.valid_for_day
                   ? { ...item, quantity: item.quantity + newItem.quantity }
                   : item
               ),

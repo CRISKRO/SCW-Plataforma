@@ -36,6 +36,9 @@ def send_ticket_email(order):
         else:
             seat_info = "Entrada General"
 
+        if hasattr(item, 'get_valid_for_day_display') and item.valid_for_day != 'ALL':
+            seat_info += f" · ({item.get_valid_for_day_display()})"
+
         badge_text = f"Boleto {idx} de {total_tickets}" if total_tickets > 1 else "1 Boleto"
 
         qr_buf = generate_ticket_qr(order.id, item.id, title)

@@ -117,11 +117,18 @@ class OrderItem(models.Model):
     price = models.DecimalField(_('precio unitario (snapshot)'), max_digits=8, decimal_places=2)
     size = models.CharField(_('talla o variante'), max_length=100, blank=True)
     
+    class ValidForDay(models.TextChoices):
+        ALL = 'ALL', _('Todos los Días / Día Único')
+        DAY_1 = 'DAY_1', _('Día 1 (Sábado)')
+        DAY_2 = 'DAY_2', _('Día 2 (Domingo)')
+        BOTH = 'BOTH', _('Pase 2 Días (Abono)')
+
     # Nuevos campos para validación de boletos QR
     is_scanned = models.BooleanField(_('ya escaneado'), default=False)
     scanned_at = models.DateTimeField(_('fecha/hora de escaneo'), null=True, blank=True)
     event = models.ForeignKey('events.Event', on_delete=models.SET_NULL, null=True, blank=True, help_text="Vincular a un evento para verificar vigencia")
     seat = models.ForeignKey('tickets.Seat', on_delete=models.SET_NULL, null=True, blank=True, help_text="Vincular a un asiento para bloquearlo tras el pago")
+    valid_for_day = models.CharField(_('vigencia por día'), max_length=10, choices=ValidForDay.choices, default=ValidForDay.ALL)
 
     @property
     def ticket_hash(self):

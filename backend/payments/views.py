@@ -209,6 +209,7 @@ class OrderItemInputSerializer(serializers.Serializer):
     product_id = serializers.IntegerField(required=False, allow_null=True)
     seat_id = serializers.IntegerField(required=False, allow_null=True)
     event_id = serializers.IntegerField(required=False, allow_null=True)
+    valid_for_day = serializers.CharField(max_length=10, required=False, default='ALL')
     quantity = serializers.IntegerField(default=1)
     price = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, default=0.00)
     size = serializers.CharField(max_length=100, allow_blank=True, required=False, default='')
@@ -345,6 +346,7 @@ class CreateOrderView(APIView):
                     'product': product,
                     'seat': seat,
                     'event': event_obj,
+                    'valid_for_day': item.get('valid_for_day', 'ALL'),
                     'raffle_ticket': raffle_ticket,
                     'product_name': name,
                     'quantity': item['quantity'],
@@ -421,6 +423,7 @@ class CreateOrderView(APIView):
                             product=item_data['product'],
                             seat=item_data.get('seat'),
                             event=item_data.get('event'),
+                            valid_for_day=item_data.get('valid_for_day', 'ALL'),
                             product_name=item_data['product_name'],
                             quantity=1,
                             price=item_data['price'],
@@ -436,6 +439,7 @@ class CreateOrderView(APIView):
                         product=item_data['product'],
                         seat=item_data.get('seat'),
                         event=item_data.get('event'),
+                        valid_for_day=item_data.get('valid_for_day', 'ALL'),
                         product_name=item_data['product_name'],
                         quantity=qty,
                         price=item_data['price'],
@@ -574,7 +578,7 @@ class CreateOrderView(APIView):
                 if not init_point:
                     init_point = preference.get("init_point", "")
                 order.mp_preference_id = preference.get("id", "")
-                order.save()
+                order.save() 
 
                 return Response({
                     "order_id": order.id,
