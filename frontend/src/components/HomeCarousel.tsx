@@ -548,7 +548,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                     <motion.div
                       whileHover={{ scale: 1.02 }}
                       transition={{ duration: 0.3 }}
-                      className="relative h-full rounded-2xl overflow-hidden bg-zinc-900 border border-white/10 group-hover:border-red-500/80 shadow-2xl transition-all flex flex-col justify-between"
+                      className="relative h-full rounded-2xl overflow-hidden bg-zinc-900 border border-white/10 group-hover:border-red-500/80 shadow-2xl transition-all"
                     >
                       <img 
                         src={getMediaUrl(post.image_url)} 
@@ -556,15 +556,6 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                         alt={post.title || post.event_title} 
                         className="w-full h-auto object-cover"
                       />
-                      <div className="p-4 bg-gradient-to-t from-black via-zinc-950/90 to-transparent flex items-center justify-between gap-2 border-t border-white/5">
-                        <div>
-                          <p className="text-xs text-red-500 font-bold uppercase tracking-wider">Evento Asociado</p>
-                          <p className="text-sm font-black uppercase text-white truncate">{post.event_title}</p>
-                        </div>
-                        <span className="bg-red-600 group-hover:bg-red-500 text-white text-[11px] font-black uppercase tracking-widest px-3 py-2 rounded-xl shadow-lg flex items-center gap-1.5 flex-shrink-0 transition-colors">
-                          <Ticket className="w-3.5 h-3.5" /> Boletos
-                        </span>
-                      </div>
                     </motion.div>
                   </Link>
                 );
