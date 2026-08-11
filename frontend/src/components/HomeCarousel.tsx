@@ -534,7 +534,6 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
         <section className="py-12 lg:py-16 bg-black relative border-t border-white/5">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight">Cartelera Promocional</h2>
-            <p className="text-zinc-500 mt-2">Haz clic en cualquier cartel para ir directamente a la compra de boletos del evento.</p>
           </div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
