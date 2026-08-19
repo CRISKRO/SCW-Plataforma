@@ -32,6 +32,47 @@ const ZONE_COLORS: Record<string, string> = {
   OESTE: 'text-red-400 border-red-500',
 };
 
+const getEventDays = (dateTimeStr?: string) => {
+  if (!dateTimeStr) {
+    return {
+      day1Name: '',
+      day2Name: '',
+      day1Tab: 'Día 1',
+      day2Tab: 'Día 2',
+      day1Label: ' (Día 1)',
+      day2Label: ' (Día 2)',
+    };
+  }
+
+  try {
+    const d1 = new Date(dateTimeStr);
+    const d2 = new Date(d1);
+    d2.setDate(d2.getDate() + 1);
+
+    const capitalize = (str: string) => (str ? str.charAt(0).toUpperCase() + str.slice(1) : '');
+    const d1Name = capitalize(d1.toLocaleDateString('es-MX', { weekday: 'long' }));
+    const d2Name = capitalize(d2.toLocaleDateString('es-MX', { weekday: 'long' }));
+
+    return {
+      day1Name: d1Name,
+      day2Name: d2Name,
+      day1Tab: `Día 1 (${d1Name})`,
+      day2Tab: `Día 2 (${d2Name})`,
+      day1Label: ` (Día 1 - ${d1Name})`,
+      day2Label: ` (Día 2 - ${d2Name})`,
+    };
+  } catch {
+    return {
+      day1Name: '',
+      day2Name: '',
+      day1Tab: 'Día 1',
+      day2Tab: 'Día 2',
+      day1Label: ' (Día 1)',
+      day2Label: ' (Día 2)',
+    };
+  }
+};
+
 export default function EventDetail({ params }: { params: Promise<{ slug: string }> }) {
   const unwrappedParams = use(params);
   const slug = unwrappedParams.slug;
@@ -46,6 +87,10 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
   const addItem = useCartStore((state) => state.addItem);
   const [sessionId] = useState(() => Math.random().toString(36).substring(2, 15));
   const router = useRouter();
+
+  const { day1Tab, day2Tab, day1Label, day2Label } = useMemo(() => {
+    return getEventDays(event?.date_time);
+  }, [event?.date_time]);
 
   const [scale, setScale] = useState(1);
   const [minScale, setMinScale] = useState(0.6);
@@ -341,7 +386,7 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
 
       await api.post('/tickets/seats/lock_seats/', { seat_ids: seatIds, session_id: sessionId, day: effectiveDay });
 
-      const dayLabel = isMultiDay ? (selectedDay === 'DAY_1' ? ' (Día 1 - Sábado)' : selectedDay === 'DAY_2' ? ' (Día 2 - Domingo)' : ' (Pase 2 Días - Abono)') : '';
+      const dayLabel = isMultiDay ? (selectedDay === 'DAY_1' ? day1Label : selectedDay === 'DAY_2' ? day2Label : ' (Pase 2 Días - Abono)') : '';
       const daySuffix = isMultiDay ? (selectedDay === 'DAY_1' ? '1' : selectedDay === 'DAY_2' ? '2' : '3') : '0';
 
       selectedSeats.forEach(seat => {
@@ -467,7 +512,7 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
                     : 'bg-zinc-900/80 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-white'
                 }`}
               >
-                <span className="text-lg">🗓️</span> Día 1 (Sábado)
+                <span className="text-lg">🗓️</span> {day1Tab}
               </button>
               <button
                 type="button"
@@ -483,7 +528,7 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
                     : 'bg-zinc-900/80 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-white'
                 }`}
               >
-                <span className="text-lg">🗓️</span> Día 2 (Domingo)
+                <span className="text-lg">🗓️</span> {day2Tab}
               </button>
               <button
                 type="button"

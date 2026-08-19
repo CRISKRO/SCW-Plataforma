@@ -119,8 +119,8 @@ class OrderItem(models.Model):
     
     class ValidForDay(models.TextChoices):
         ALL = 'ALL', _('Todos los Días / Día Único')
-        DAY_1 = 'DAY_1', _('Día 1 (Sábado)')
-        DAY_2 = 'DAY_2', _('Día 2 (Domingo)')
+        DAY_1 = 'DAY_1', _('Día 1')
+        DAY_2 = 'DAY_2', _('Día 2')
         BOTH = 'BOTH', _('Pase 2 Días (Abono)')
 
     # Nuevos campos para validación de boletos QR
@@ -129,6 +129,25 @@ class OrderItem(models.Model):
     event = models.ForeignKey('events.Event', on_delete=models.SET_NULL, null=True, blank=True, help_text="Vincular a un evento para verificar vigencia")
     seat = models.ForeignKey('tickets.Seat', on_delete=models.SET_NULL, null=True, blank=True, help_text="Vincular a un asiento para bloquearlo tras el pago")
     valid_for_day = models.CharField(_('vigencia por día'), max_length=10, choices=ValidForDay.choices, default=ValidForDay.ALL)
+
+    def get_valid_day_label(self):
+        if self.valid_for_day == self.ValidForDay.ALL:
+            return ""
+        if self.valid_for_day == self.ValidForDay.BOTH:
+            return "Pase 2 Días (Abono)"
+
+        if self.event and self.event.date_time:
+            import datetime
+            DAYS_ES = {0: 'Lunes', 1: 'Martes', 2: 'Miércoles', 3: 'Jueves', 4: 'Viernes', 5: 'Sábado', 6: 'Domingo'}
+            if self.valid_for_day == self.ValidForDay.DAY_1:
+                d_name = DAYS_ES.get(self.event.date_time.weekday(), '')
+                return f"Día 1 ({d_name})" if d_name else "Día 1"
+            elif self.valid_for_day == self.ValidForDay.DAY_2:
+                d2 = self.event.date_time + datetime.timedelta(days=1)
+                d_name = DAYS_ES.get(d2.weekday(), '')
+                return f"Día 2 ({d_name})" if d_name else "Día 2"
+
+        return self.get_valid_for_day_display()
 
     @property
     def ticket_hash(self):
