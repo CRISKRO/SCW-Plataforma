@@ -158,10 +158,10 @@ class ApproveTransferView(APIView):
         order.save()
 
         # Deduct seats and stock
+        from .utils import mark_seat_availability_after_payment
         for item in order.items.all():
             if getattr(item, 'seat', None):
-                item.seat.is_available = False
-                item.seat.save()
+                mark_seat_availability_after_payment(item.seat, getattr(item, 'valid_for_day', 'ALL'))
             if item.product:
                 product = item.product
                 if product.is_clothing:
@@ -623,10 +623,10 @@ class OrderViewSet(viewsets.ModelViewSet):
             if instance.status == 'PAID':
                 # Simular lógica de webhook: enviar recibo/boleto y descontar asientos
                 try:
+                    from .utils import mark_seat_availability_after_payment
                     for item in instance.items.all():
                         if getattr(item, 'seat', None):
-                            item.seat.is_available = False
-                            item.seat.save()
+                            mark_seat_availability_after_payment(item.seat, getattr(item, 'valid_for_day', 'ALL'))
                         if item.product:
                             product = item.product
                             if product.is_clothing:
@@ -827,10 +827,10 @@ class ProcessCardPaymentView(APIView):
             order.mp_payment_id = str(payment.get("id", ""))
             if pay_status == "approved":
                 order.status = Order.Status.PAID
+                from .utils import mark_seat_availability_after_payment
                 for item in order.items.all():
-                    if getattr(item, 'seat', None) and item.seat.is_available:
-                        item.seat.is_available = False
-                        item.seat.save()
+                    if getattr(item, 'seat', None):
+                        mark_seat_availability_after_payment(item.seat, getattr(item, 'valid_for_day', 'ALL'))
                     if item.product:
                         product = item.product
                         if product.is_clothing:
@@ -895,10 +895,10 @@ class VerifyPaymentView(APIView):
                         order.status = Order.Status.PAID
                         order.save()
 
+                        from .utils import mark_seat_availability_after_payment
                         for item in order.items.all():
-                            if getattr(item, 'seat', None) and item.seat.is_available:
-                                item.seat.is_available = False
-                                item.seat.save()
+                            if getattr(item, 'seat', None):
+                                mark_seat_availability_after_payment(item.seat, getattr(item, 'valid_for_day', 'ALL'))
                             if item.product:
                                 product = item.product
                                 if product.is_clothing:
@@ -1137,10 +1137,10 @@ class VerifyPaymentView(APIView):
                 order.save()
 
                 # Bloquear asientos y descontar inventario
+                from .utils import mark_seat_availability_after_payment
                 for item in order.items.all():
-                    if getattr(item, 'seat', None) and item.seat.is_available:
-                        item.seat.is_available = False
-                        item.seat.save()
+                    if getattr(item, 'seat', None):
+                        mark_seat_availability_after_payment(item.seat, getattr(item, 'valid_for_day', 'ALL'))
                     if item.product:
                         product = item.product
                         if product.is_clothing:
@@ -1401,10 +1401,10 @@ class WebhookView(APIView):
                                 order.save()
 
                                 # Bloquear asientos y descontar inventario
+                                from .utils import mark_seat_availability_after_payment
                                 for item in order.items.all():
-                                    if getattr(item, 'seat', None) and item.seat.is_available:
-                                        item.seat.is_available = False
-                                        item.seat.save()
+                                    if getattr(item, 'seat', None):
+                                        mark_seat_availability_after_payment(item.seat, getattr(item, 'valid_for_day', 'ALL'))
                                     if item.product:
                                         product = item.product
                                         if product.is_clothing:
@@ -1455,10 +1455,10 @@ class StripeWebhookView(APIView):
                         order.status = Order.Status.PAID
                         order.save()
 
+                        from .utils import mark_seat_availability_after_payment
                         for item in order.items.all():
-                            if getattr(item, 'seat', None) and item.seat.is_available:
-                                item.seat.is_available = False
-                                item.seat.save()
+                            if getattr(item, 'seat', None):
+                                mark_seat_availability_after_payment(item.seat, getattr(item, 'valid_for_day', 'ALL'))
                             if item.product:
                                 product = item.product
                                 if product.is_clothing:
@@ -1996,10 +1996,10 @@ class GenerateCourtesyTicketView(APIView):
                     payment_method=payment_method
                 )
 
+                from .utils import mark_seat_availability_after_payment
                 for item_data in items_to_create:
                     if item_data['seat']:
-                        item_data['seat'].is_available = False
-                        item_data['seat'].save()
+                        mark_seat_availability_after_payment(item_data['seat'], item_data.get('valid_for_day', 'ALL'))
 
                     OrderItem.objects.create(
                         order=order,

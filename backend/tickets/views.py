@@ -34,9 +34,12 @@ class EventZoneViewSet(viewsets.ModelViewSet):
             
             from api.models import get_active_config
             from payments.models import Order, OrderItem
+            from django.utils import timezone
+            from datetime import timedelta
 
             config = get_active_config()
             commission = float(config.mercadopago_commission_rate)
+            now = timezone.now()
             
             # Obtener ventas pagadas de este evento agrupadas por asiento y valid_for_day
             paid_items = OrderItem.objects.filter(
@@ -51,27 +54,44 @@ class EventZoneViewSet(viewsets.ModelViewSet):
                     occupied_by_seat[s_id] = set()
                 occupied_by_seat[s_id].add(item['valid_for_day'])
             
+            seats_by_id = {s.id: s for z in zones for s in z.seats.all()}
+
             for zone in data:
                 zone['price'] = str(round(float(zone['price']) * (1 + commission), 2))
                 for seat_data in zone.get('seats', []):
                     s_id = seat_data['id']
-                    if not seat_data.get('is_available', True):
-                        seat_data['is_locked'] = True
-                        continue
+                    seat_obj = seats_by_id.get(s_id)
 
                     occupied_days = occupied_by_seat.get(s_id, set())
-                    is_locked_for_day = False
+                    is_sold_for_day = False
                     if 'ALL' in occupied_days or 'BOTH' in occupied_days:
-                        is_locked_for_day = True
-                    elif requested_day == 'DAY_1' and ('DAY_1' in occupied_days or 'BOTH' in occupied_days):
-                        is_locked_for_day = True
-                    elif requested_day == 'DAY_2' and ('DAY_2' in occupied_days or 'BOTH' in occupied_days):
-                        is_locked_for_day = True
+                        is_sold_for_day = True
+                    elif requested_day == 'DAY_1' and ('DAY_1' in occupied_days or 'BOTH' in occupied_days or 'ALL' in occupied_days):
+                        is_sold_for_day = True
+                    elif requested_day == 'DAY_2' and ('DAY_2' in occupied_days or 'BOTH' in occupied_days or 'ALL' in occupied_days):
+                        is_sold_for_day = True
                     elif requested_day == 'BOTH' and len(occupied_days) > 0:
-                        is_locked_for_day = True
+                        is_sold_for_day = True
 
-                    if is_locked_for_day:
-                        seat_data['is_locked'] = True
+                    is_temp_locked = False
+                    if seat_obj and seat_obj.locked_at and now < seat_obj.locked_at + timedelta(minutes=10):
+                        lock_info = seat_obj.locked_by_session or ""
+                        if "::" in lock_info:
+                            _, lock_day = lock_info.split("::", 1)
+                        else:
+                            lock_day = 'ALL'
+
+                        if lock_day in ['ALL', 'BOTH']:
+                            is_temp_locked = True
+                        elif requested_day == 'DAY_1' and lock_day == 'DAY_1':
+                            is_temp_locked = True
+                        elif requested_day == 'DAY_2' and lock_day == 'DAY_2':
+                            is_temp_locked = True
+                        elif requested_day == 'BOTH':
+                            is_temp_locked = True
+
+                    is_disabled = not seat_data.get('is_available', True)
+                    seat_data['is_locked'] = bool(is_sold_for_day or is_temp_locked or is_disabled)
 
             return Response(data)
         return Response([])
@@ -112,9 +132,9 @@ class SeatViewSet(viewsets.ModelViewSet):
             is_sold = False
             if 'ALL' in occupied_days or 'BOTH' in occupied_days:
                 is_sold = True
-            elif requested_day == 'DAY_1' and ('DAY_1' in occupied_days or 'BOTH' in occupied_days):
+            elif requested_day == 'DAY_1' and ('DAY_1' in occupied_days or 'BOTH' in occupied_days or 'ALL' in occupied_days):
                 is_sold = True
-            elif requested_day == 'DAY_2' and ('DAY_2' in occupied_days or 'BOTH' in occupied_days):
+            elif requested_day == 'DAY_2' and ('DAY_2' in occupied_days or 'BOTH' in occupied_days or 'ALL' in occupied_days):
                 is_sold = True
             elif requested_day == 'BOTH' and len(occupied_days) > 0:
                 is_sold = True
@@ -122,15 +142,31 @@ class SeatViewSet(viewsets.ModelViewSet):
             if is_sold:
                 return Response({"error": f"El asiento {seat.seat_number} de la fila {seat.row_name} ya fue vendido para el día seleccionado."}, status=400)
 
-            if seat.locked_at and seat.locked_by_session != session_id:
-                if timezone.now() < seat.locked_at + timedelta(minutes=10):
+            if seat.locked_at and timezone.now() < seat.locked_at + timedelta(minutes=10):
+                lock_info = seat.locked_by_session or ""
+                if "::" in lock_info:
+                    lock_sess, lock_day = lock_info.split("::", 1)
+                else:
+                    lock_sess, lock_day = lock_info, 'ALL'
+
+                is_conflicting_lock = False
+                if lock_day in ['ALL', 'BOTH']:
+                    is_conflicting_lock = True
+                elif requested_day == 'DAY_1' and lock_day == 'DAY_1':
+                    is_conflicting_lock = True
+                elif requested_day == 'DAY_2' and lock_day == 'DAY_2':
+                    is_conflicting_lock = True
+                elif requested_day == 'BOTH':
+                    is_conflicting_lock = True
+
+                if is_conflicting_lock and lock_sess != session_id:
                     return Response({"error": f"El asiento {seat.seat_number} de la fila {seat.row_name} está reservado temporalmente por otro usuario."}, status=400)
                     
-        # Lock them
+        # Lock them with session and day
         now = timezone.now()
         for seat in seats:
             seat.locked_at = now
-            seat.locked_by_session = session_id
+            seat.locked_by_session = f"{session_id}::{requested_day}"
             seat.save(update_fields=['locked_at', 'locked_by_session'])
             
         return Response({"status": "locked"})
@@ -145,7 +181,7 @@ class SeatViewSet(viewsets.ModelViewSet):
             
         seats = Seat.objects.filter(id__in=seat_ids)
         for seat in seats:
-            if seat.locked_by_session == session_id:
+            if seat.locked_by_session and (seat.locked_by_session == session_id or seat.locked_by_session.startswith(f"{session_id}::")):
                 seat.locked_at = None
                 seat.locked_by_session = None
                 seat.save(update_fields=['locked_at', 'locked_by_session'])

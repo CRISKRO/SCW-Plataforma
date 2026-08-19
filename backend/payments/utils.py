@@ -87,3 +87,27 @@ def ensure_ticket_items_expanded(order):
                 seat=item.seat
             )
 
+
+def mark_seat_availability_after_payment(seat, valid_for_day='ALL'):
+    """
+    Marca un asiento como no disponible solo si:
+    - Es un evento de 1 día (is_multi_day = False).
+    - Es un abono/pase completo ('BOTH' o 'ALL').
+    - O ambos días ('DAY_1' y 'DAY_2') ya fueron pagados por separado.
+    """
+    if not seat:
+        return
+    from .models import Order, OrderItem
+    is_multi = bool(seat.zone and seat.zone.event and seat.zone.event.is_multi_day)
+    if not is_multi or valid_for_day in ['ALL', 'BOTH']:
+        seat.is_available = False
+        seat.save(update_fields=['is_available'])
+    else:
+        paid_days = set(OrderItem.objects.filter(
+            seat=seat,
+            order__status=Order.Status.PAID
+        ).values_list('valid_for_day', flat=True))
+        if ('DAY_1' in paid_days and 'DAY_2' in paid_days) or 'BOTH' in paid_days or 'ALL' in paid_days:
+            seat.is_available = False
+            seat.save(update_fields=['is_available'])
+

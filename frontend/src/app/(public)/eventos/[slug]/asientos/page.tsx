@@ -512,7 +512,7 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
                     : 'bg-zinc-900/80 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-white'
                 }`}
               >
-                <span className="text-lg">🗓️</span> {day1Tab}
+                {day1Tab}
               </button>
               <button
                 type="button"
@@ -528,7 +528,7 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
                     : 'bg-zinc-900/80 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-white'
                 }`}
               >
-                <span className="text-lg">🗓️</span> {day2Tab}
+                {day2Tab}
               </button>
               <button
                 type="button"
@@ -544,7 +544,7 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
                     : 'bg-zinc-900/80 text-zinc-400 border-zinc-800 hover:border-amber-700/50 hover:text-white'
                 }`}
               >
-                <span className="text-lg">🎟️</span> Pase 2 Días (Abono)
+                Pase 2 Días (Abono)
               </button>
             </div>
           </div>
