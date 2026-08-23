@@ -102,7 +102,8 @@ export const adminService = {
     email: string, 
     name?: string,
     is_courtesy?: boolean,
-    payment_method?: string
+    payment_method?: string,
+    valid_for_day?: string
   }) => {
     const res = await api.post('/payments/courtesy-ticket/', data);
     return res.data;

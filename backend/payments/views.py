@@ -2029,6 +2029,9 @@ class GenerateCourtesyTicketView(APIView):
         try:
             with transaction.atomic():
                 event = Event.objects.get(id=event_id)
+                raw_valid_day = request.data.get('valid_for_day', 'ALL')
+                valid_day = raw_valid_day if (event.is_multi_day and raw_valid_day in ['DAY_1', 'DAY_2', 'BOTH']) else ('BOTH' if event.is_multi_day else 'ALL')
+
                 general_zone = None
                 if quantity_general > 0:
                     general_zone = EventZone.objects.filter(event=event, zone_type='GENERAL').first()
@@ -2045,10 +2048,34 @@ class GenerateCourtesyTicketView(APIView):
                         if not seat.is_available:
                             return Response({"error": f"El asiento {seat.display_number} ya no está disponible."}, status=400)
                         
-                        price = Decimal('0.00') if is_courtesy else Decimal(str(seat.zone.price))
+                        if event.is_multi_day:
+                            occupied_days = set(OrderItem.objects.filter(
+                                seat=seat,
+                                order__status=Order.Status.PAID
+                            ).values_list('valid_for_day', flat=True))
+                            
+                            if valid_day == 'DAY_1' and ('DAY_1' in occupied_days or 'BOTH' in occupied_days or 'ALL' in occupied_days):
+                                return Response({"error": f"El asiento {seat.display_number} ya está ocupado para el Día 1."}, status=400)
+                            elif valid_day == 'DAY_2' and ('DAY_2' in occupied_days or 'BOTH' in occupied_days or 'ALL' in occupied_days):
+                                return Response({"error": f"El asiento {seat.display_number} ya está ocupado para el Día 2."}, status=400)
+                            elif valid_day == 'BOTH' and len(occupied_days) > 0:
+                                return Response({"error": f"El asiento {seat.display_number} ya tiene una fecha ocupada; no se puede emitir como Pase 2 Días."}, status=400)
+                        
+                        if is_courtesy:
+                            price = Decimal('0.00')
+                        else:
+                            if valid_day == 'BOTH':
+                                price = Decimal(str(seat.zone.price_abono)) if seat.zone.price_abono else Decimal(str(seat.zone.price)) * 2
+                            else:
+                                price = Decimal(str(seat.zone.price))
+
                         total_amount += price
                         prefix = "Boleto CORTESÍA" if is_courtesy else "Boleto"
-                        p_name = f"{prefix}: {seat.zone.zone_type} - Fila {seat.row_name} Asiento {seat.display_number}"
+                        day_label = ""
+                        if event.is_multi_day:
+                            day_label = " · Pase 2 Días (Abono)" if valid_day == 'BOTH' else f" · {valid_day.replace('_', ' ')}"
+
+                        p_name = f"{prefix}: {seat.zone.zone_type} - Fila {seat.row_name} Asiento {seat.display_number}{day_label}"
 
                         items_to_create.append({
                             'product_name': p_name,
@@ -2056,21 +2083,34 @@ class GenerateCourtesyTicketView(APIView):
                             'price': price,
                             'event': event,
                             'seat': seat,
-                            'size': f"Fila {seat.row_name} - Asiento {seat.display_number}"
+                            'size': f"Fila {seat.row_name} - Asiento {seat.display_number}{day_label}",
+                            'valid_for_day': valid_day
                         })
 
                 if quantity_general > 0:
-                    gen_price = Decimal('0.00') if is_courtesy else (Decimal(str(general_zone.price)) if general_zone else Decimal('0.00'))
+                    if is_courtesy:
+                        gen_price = Decimal('0.00')
+                    else:
+                        if valid_day == 'BOTH':
+                            gen_price = Decimal(str(general_zone.price_abono)) if (general_zone and general_zone.price_abono) else ((Decimal(str(general_zone.price)) * 2) if general_zone else Decimal('0.00'))
+                        else:
+                            gen_price = Decimal(str(general_zone.price)) if general_zone else Decimal('0.00')
+
                     prefix = "Boleto CORTESÍA" if is_courtesy else "Boleto"
+                    day_label = ""
+                    if event.is_multi_day:
+                        day_label = " · Pase 2 Días (Abono)" if valid_day == 'BOTH' else f" · {valid_day.replace('_', ' ')}"
+
                     for _ in range(quantity_general):
                         total_amount += gen_price
                         items_to_create.append({
-                            'product_name': f"{prefix}: GENERAL",
+                            'product_name': f"{prefix}: GENERAL{day_label}",
                             'quantity': 1,
                             'price': gen_price,
                             'event': event,
                             'seat': None,
-                            'size': 'General'
+                            'size': f"General{day_label}",
+                            'valid_for_day': valid_day
                         })
 
                 contact_name = raw_name.strip() if raw_name.strip() else ("Cortesía SCW" if is_courtesy else "Cliente SCW")
@@ -2097,13 +2137,14 @@ class GenerateCourtesyTicketView(APIView):
                         price=item_data['price'],
                         event=item_data['event'],
                         seat=item_data['seat'],
-                        size=item_data['size']
+                        size=item_data['size'],
+                        valid_for_day=item_data.get('valid_for_day', 'ALL')
                     )
                 
             # Fuera de la transacción enviamos el correo
             send_order_emails_safely(order)
             msg = "Boletos de cortesía generados y enviados." if is_courtesy else "Boletos emitidos y enviados correctamente."
-            return Response({"success": True, "message": msg, "order_id": order.id})
+            return Response({"success": True, "message": msg, "order_id": order.id, "total": str(total_amount)})
             
         except Event.DoesNotExist:
             return Response({"error": "Evento no encontrado."}, status=404)

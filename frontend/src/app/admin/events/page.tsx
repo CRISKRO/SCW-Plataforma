@@ -25,8 +25,39 @@ export default function AdminEventsPage() {
   const [courtesyName, setCourtesyName] = useState('');
   const [isCourtesy, setIsCourtesy] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState<'TRANSFER' | 'BOX_OFFICE'>('TRANSFER');
+  const [validForDay, setValidForDay] = useState<'DAY_1' | 'DAY_2' | 'BOTH'>('BOTH');
   const [loadingCourtesy, setLoadingCourtesy] = useState(false);
   const [loadingZones, setLoadingZones] = useState(false);
+
+  const calculateEstimatedTotal = () => {
+    if (isCourtesy) return 0;
+    let total = 0;
+    for (const seatId of selectedSeats) {
+      for (const zone of eventZones) {
+        const found = zone.seats?.find((s: any) => s.id === seatId);
+        if (found) {
+          if (selectedEvent?.is_multi_day && validForDay === 'BOTH') {
+            total += zone.price_abono ? parseFloat(zone.price_abono) : parseFloat(zone.price) * 2;
+          } else {
+            total += parseFloat(zone.price);
+          }
+          break;
+        }
+      }
+    }
+    if (quantityGeneral > 0) {
+      const generalZone = eventZones.find((z: any) => z.zone_type === 'GENERAL');
+      if (generalZone) {
+        if (selectedEvent?.is_multi_day && validForDay === 'BOTH') {
+          const p = generalZone.price_abono ? parseFloat(generalZone.price_abono) : parseFloat(generalZone.price) * 2;
+          total += p * quantityGeneral;
+        } else {
+          total += parseFloat(generalZone.price) * quantityGeneral;
+        }
+      }
+    }
+    return total;
+  };
 
   const fetchEvents = async () => {
     try {
@@ -62,6 +93,7 @@ export default function AdminEventsPage() {
     setCourtesyName('');
     setIsCourtesy(true);
     setPaymentMethod('TRANSFER');
+    setValidForDay(event.is_multi_day ? 'BOTH' : 'DAY_1');
     setSelectedSeats([]);
     setQuantityGeneral(0);
     setIsCourtesyModalOpen(true);
@@ -92,7 +124,8 @@ export default function AdminEventsPage() {
         email: courtesyEmail,
         name: courtesyName,
         is_courtesy: isCourtesy,
-        payment_method: isCourtesy ? 'COURTESY' : paymentMethod
+        payment_method: isCourtesy ? 'COURTESY' : paymentMethod,
+        valid_for_day: selectedEvent?.is_multi_day ? validForDay : 'ALL'
       });
       const msg = isCourtesy ? '✅ Boleto de cortesía generado y enviado con éxito.' : '✅ Boleto emitido y enviado con éxito como Venta Registrada.';
       alert(msg);
@@ -460,7 +493,9 @@ export default function AdminEventsPage() {
                   <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div className="text-xs text-blue-300">
                       <p className="font-bold mb-0.5">🎟️ Registro de Venta Directa con Costo Real</p>
-                      <p className="text-zinc-400">El boleto se emitirá con el costo oficial de su zona y aparecerá contabilizado en el historial de ingresos.</p>
+                      <p className="text-zinc-400">
+                        Total calculado: <span className="font-bold text-white">${calculateEstimatedTotal().toFixed(2)} MXN</span>. Aparecerá en el historial de ingresos.
+                      </p>
                     </div>
                     <div className="flex items-center gap-2 whitespace-nowrap shrink-0">
                       <label className="text-xs font-bold uppercase tracking-wider text-zinc-300">Pago:</label>
@@ -472,6 +507,55 @@ export default function AdminEventsPage() {
                         <option value="TRANSFER">Transferencia Bancaria</option>
                         <option value="BOX_OFFICE">Taquilla / Efectivo</option>
                       </select>
+                    </div>
+                  </div>
+                )}
+
+                {/* Selector de Vigencia (SOLO si el evento es de 2 días) */}
+                {selectedEvent?.is_multi_day && (
+                  <div className="bg-zinc-950 p-4 rounded-xl border border-white/10 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold uppercase tracking-widest text-zinc-300 flex items-center gap-1.5">
+                        <Calendar className="w-4 h-4 text-amber-500" /> Vigencia de la Emisión
+                      </label>
+                      <span className="text-[11px] text-zinc-400">
+                        {validForDay === 'BOTH' ? '2 Escaneos habilitados (Día 1 y 2)' : '1 Escaneo habilitado'}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setValidForDay('DAY_1')}
+                        className={`py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border ${
+                          validForDay === 'DAY_1'
+                            ? 'bg-red-600 text-white border-red-500 shadow-md shadow-red-600/20'
+                            : 'bg-zinc-900 text-zinc-400 border-white/5 hover:text-white'
+                        }`}
+                      >
+                        Día 1
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setValidForDay('DAY_2')}
+                        className={`py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border ${
+                          validForDay === 'DAY_2'
+                            ? 'bg-red-600 text-white border-red-500 shadow-md shadow-red-600/20'
+                            : 'bg-zinc-900 text-zinc-400 border-white/5 hover:text-white'
+                        }`}
+                      >
+                        Día 2
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setValidForDay('BOTH')}
+                        className={`py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border ${
+                          validForDay === 'BOTH'
+                            ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white border-amber-400 shadow-md shadow-amber-500/20'
+                            : 'bg-zinc-900 text-zinc-400 border-white/5 hover:text-white'
+                        }`}
+                      >
+                        Pase 2 Días (Abono)
+                      </button>
                     </div>
                   </div>
                 )}
@@ -574,7 +658,9 @@ export default function AdminEventsPage() {
                   ) : (
                     <>
                       {isCourtesy ? <Gift className="w-5 h-5" /> : <Ticket className="w-5 h-5" />}
-                      {isCourtesy ? 'Enviar Cortesía' : 'Emitir y Enviar Venta'} ({selectedSeats.length + quantityGeneral})
+                      {isCourtesy 
+                        ? `Enviar Cortesía (${selectedSeats.length + quantityGeneral})` 
+                        : `Emitir Venta ($${calculateEstimatedTotal().toFixed(2)} MXN)`}
                     </>
                   )}
                 </button>
