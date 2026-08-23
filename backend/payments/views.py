@@ -1244,15 +1244,72 @@ class ValidateTicketView(APIView):
                 if not validate_group_ticket_code(int(order_id), [int(item_id)], code):
                     return Response({"valid": False, "message": "❌ Código inválido."})
 
-            if item.is_scanned:
-                return Response({"valid": False, "message": "❌ Este boleto ya fue registrado/escaneado."})
+            now = timezone.now()
+            from datetime import timedelta
+            today = timezone.localtime(now).date()
 
-            if item.event and item.event.date_time < timezone.now():
-                return Response({"valid": False, "message": "❌ Evento caducado/pasado."})
+            # Comprobar expiración del evento
+            if item.event and item.event.date_time:
+                event_dt = item.event.date_time
+                event_expiry = event_dt + timedelta(days=2 if item.event.is_multi_day else 1)
+                if now > event_expiry:
+                    return Response({"valid": False, "message": "❌ Evento caducado/pasado."})
 
-            item.is_scanned = True
-            item.scanned_at = timezone.now()
-            item.save()
+            valid_day = item.valid_for_day or OrderItem.ValidForDay.ALL
+            auth_message = "✅ Acceso autorizado"
+
+            # Caso A: Pase 2 Días (Abono)
+            if valid_day == OrderItem.ValidForDay.BOTH:
+                if item.scanned_day_1_at and item.scanned_day_2_at:
+                    return Response({"valid": False, "message": "❌ Este abono ya fue canjeado en ambos días (Día 1 y Día 2)."})
+
+                if not item.scanned_day_1_at:
+                    item.scanned_day_1_at = now
+                    item.scanned_at = now
+                    item.save(update_fields=['scanned_day_1_at', 'scanned_at'])
+                    auth_message = "✅ Pase 2 Días: Acceso Día 1 Autorizado (1/2 Canjeado)"
+                else:
+                    scan_1_date = timezone.localtime(item.scanned_day_1_at).date()
+                    if today == scan_1_date:
+                        return Response({
+                            "valid": False,
+                            "message": "❌ Este abono ya ingresó hoy (Día 1). El segundo acceso es válido para el siguiente día."
+                        })
+                    else:
+                        item.scanned_day_2_at = now
+                        item.is_scanned = True
+                        item.scanned_at = now
+                        item.save(update_fields=['scanned_day_2_at', 'is_scanned', 'scanned_at'])
+                        auth_message = "✅ Pase 2 Días: Acceso Día 2 Autorizado (Abono Completado)"
+
+            # Caso B: Boleto Día 1
+            elif valid_day == OrderItem.ValidForDay.DAY_1:
+                if item.is_scanned or item.scanned_day_1_at:
+                    return Response({"valid": False, "message": "❌ Este boleto (Día 1) ya fue registrado/escaneado."})
+                item.is_scanned = True
+                item.scanned_day_1_at = now
+                item.scanned_at = now
+                item.save(update_fields=['is_scanned', 'scanned_day_1_at', 'scanned_at'])
+                auth_message = "✅ Boleto Día 1: Acceso Autorizado"
+
+            # Caso C: Boleto Día 2
+            elif valid_day == OrderItem.ValidForDay.DAY_2:
+                if item.is_scanned or item.scanned_day_2_at:
+                    return Response({"valid": False, "message": "❌ Este boleto (Día 2) ya fue registrado/escaneado."})
+                item.is_scanned = True
+                item.scanned_day_2_at = now
+                item.scanned_at = now
+                item.save(update_fields=['is_scanned', 'scanned_day_2_at', 'scanned_at'])
+                auth_message = "✅ Boleto Día 2: Acceso Autorizado"
+
+            # Caso D: Boleto normal / Día único
+            else:
+                if item.is_scanned:
+                    return Response({"valid": False, "message": "❌ Este boleto ya fue registrado/escaneado."})
+                item.is_scanned = True
+                item.scanned_at = now
+                item.save(update_fields=['is_scanned', 'scanned_at'])
+                auth_message = "✅ Acceso autorizado"
 
             seat_info = ""
             if item.seat and item.seat.zone:
@@ -1262,7 +1319,7 @@ class ValidateTicketView(APIView):
 
             return Response({
                 "valid": True,
-                "message": "✅ Acceso autorizado",
+                "message": auth_message,
                 "item": item.product_name,
                 "size": seat_info or item.size
             })
@@ -1279,24 +1336,56 @@ class ValidateTicketView(APIView):
                 return Response({"valid": False, "message": "❌ Código de grupo inválido."})
 
             group_items = target_group['items']
-            if all(it.is_scanned for it in group_items):
-                return Response({"valid": False, "message": "❌ Este grupo de boletos ya fue registrado/escaneado."})
+            now = timezone.now()
+            from datetime import timedelta
+            today = timezone.localtime(now).date()
 
             # Check event expiry
             first_event = group_items[0].event
-            if first_event and first_event.date_time < timezone.now():
-                return Response({"valid": False, "message": "❌ Evento caducado/pasado."})
+            if first_event and first_event.date_time:
+                event_expiry = first_event.date_time + timedelta(days=2 if first_event.is_multi_day else 1)
+                if now > event_expiry:
+                    return Response({"valid": False, "message": "❌ Evento caducado/pasado."})
 
-            now = timezone.now()
-            for it in group_items:
-                it.is_scanned = True
-                it.scanned_at = now
-                it.save()
+            # Check if all items in the group are already scanned
+            valid_day = group_items[0].valid_for_day or OrderItem.ValidForDay.ALL
+            auth_msg = f"✅ Acceso autorizado ({len(group_items)} boletos)"
 
-            qty = target_group['quantity']
+            if valid_day == OrderItem.ValidForDay.BOTH:
+                if all(it.scanned_day_1_at and it.scanned_day_2_at for it in group_items):
+                    return Response({"valid": False, "message": "❌ Este grupo de abonos ya fue canjeado en ambos días."})
+                
+                if any(not it.scanned_day_1_at for it in group_items):
+                    for it in group_items:
+                        it.scanned_day_1_at = now
+                        it.scanned_at = now
+                        it.save(update_fields=['scanned_day_1_at', 'scanned_at'])
+                    auth_msg = f"✅ Pase 2 Días: Acceso Día 1 Autorizado ({len(group_items)} abonos - 1/2 Canjeado)"
+                else:
+                    scan_1_date = timezone.localtime(group_items[0].scanned_day_1_at).date()
+                    if today == scan_1_date:
+                        return Response({
+                            "valid": False,
+                            "message": "❌ Este grupo de abonos ya ingresó hoy (Día 1). El segundo acceso es válido para el siguiente día."
+                        })
+                    else:
+                        for it in group_items:
+                            it.scanned_day_2_at = now
+                            it.is_scanned = True
+                            it.scanned_at = now
+                            it.save(update_fields=['scanned_day_2_at', 'is_scanned', 'scanned_at'])
+                        auth_msg = f"✅ Pase 2 Días: Acceso Día 2 Autorizado ({len(group_items)} abonos - Completado)"
+            else:
+                if all(it.is_scanned for it in group_items):
+                    return Response({"valid": False, "message": "❌ Este grupo de boletos ya fue registrado/escaneado."})
+                for it in group_items:
+                    it.is_scanned = True
+                    it.scanned_at = now
+                    it.save(update_fields=['is_scanned', 'scanned_at'])
+
             return Response({
                 "valid": True, 
-                "message": f"✅ Acceso autorizado ({qty} boleto{'s' if qty > 1 else ''})", 
+                "message": auth_msg, 
                 "item": target_group['title'], 
                 "size": target_group['subtitle']
             })

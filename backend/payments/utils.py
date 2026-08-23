@@ -83,6 +83,9 @@ def ensure_ticket_items_expanded(order):
                 price=item.price,
                 size=item.size,
                 is_scanned=item.is_scanned,
+                scanned_at=item.scanned_at,
+                scanned_day_1_at=item.scanned_day_1_at,
+                scanned_day_2_at=item.scanned_day_2_at,
                 event=item.event,
                 seat=item.seat,
                 valid_for_day=item.valid_for_day

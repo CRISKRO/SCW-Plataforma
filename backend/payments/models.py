@@ -123,9 +123,11 @@ class OrderItem(models.Model):
         DAY_2 = 'DAY_2', _('Día 2')
         BOTH = 'BOTH', _('Pase 2 Días (Abono)')
 
-    # Nuevos campos para validación de boletos QR
+    # Campos para validación de boletos QR y control de acceso por día
     is_scanned = models.BooleanField(_('ya escaneado'), default=False)
     scanned_at = models.DateTimeField(_('fecha/hora de escaneo'), null=True, blank=True)
+    scanned_day_1_at = models.DateTimeField(_('fecha/hora escaneo Día 1'), null=True, blank=True)
+    scanned_day_2_at = models.DateTimeField(_('fecha/hora escaneo Día 2'), null=True, blank=True)
     event = models.ForeignKey('events.Event', on_delete=models.SET_NULL, null=True, blank=True, help_text="Vincular a un evento para verificar vigencia")
     seat = models.ForeignKey('tickets.Seat', on_delete=models.SET_NULL, null=True, blank=True, help_text="Vincular a un asiento para bloquearlo tras el pago")
     valid_for_day = models.CharField(_('vigencia por día'), max_length=10, choices=ValidForDay.choices, default=ValidForDay.ALL)
