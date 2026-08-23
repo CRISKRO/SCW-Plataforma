@@ -13,6 +13,14 @@ class EventZone(models.Model):
     event = models.ForeignKey(Event, related_name='zones', on_delete=models.CASCADE)
     zone_type = models.CharField(_('tipo de zona'), max_length=20, choices=ZoneType.choices)
     price = models.DecimalField(_('precio (MXN)'), max_digits=8, decimal_places=2)
+    price_abono = models.DecimalField(
+        _('precio abono 2 días (MXN)'),
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text=_('Precio especial si el usuario compra el abono para los 2 días. Si se deja vacío, se cobrará el precio individual.')
+    )
     rows = models.PositiveIntegerField(_('filas'), default=3)
     seats_per_row = models.PositiveIntegerField(_('asientos por fila'), default=10)
 

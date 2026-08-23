@@ -58,6 +58,8 @@ class EventZoneViewSet(viewsets.ModelViewSet):
 
             for zone in data:
                 zone['price'] = str(round(float(zone['price']) * (1 + commission), 2))
+                if zone.get('price_abono'):
+                    zone['price_abono'] = str(round(float(zone['price_abono']) * (1 + commission), 2))
                 for seat_data in zone.get('seats', []):
                     s_id = seat_data['id']
                     seat_obj = seats_by_id.get(s_id)

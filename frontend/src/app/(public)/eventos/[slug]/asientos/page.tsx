@@ -321,6 +321,11 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
     if (isSeatSelected(seat.id)) {
       setSelectedSeats(prev => prev.filter(s => s.seatId !== seat.id));
     } else {
+      const isAbono = !!event?.is_multi_day && selectedDay === 'BOTH';
+      const effectivePrice = isAbono
+        ? (zone.price_abono ? parseFloat(zone.price_abono) : parseFloat(zone.price) * 2)
+        : parseFloat(zone.price);
+
       setSelectedSeats(prev => [
         ...prev,
         {
@@ -328,7 +333,7 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
           rowName: seat.row_name,
           seatNumber: displayNumber,
           zoneType: zone.zone_type,
-          price: parseFloat(zone.price),
+          price: effectivePrice,
           zoneId: zone.id,
         },
       ]);
@@ -393,7 +398,7 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
         addItem({
           id: parseInt(`${actualEventId}${seat.seatId}${daySuffix}`),
           name: `Boleto: ${event.title}`,
-          price: (isMultiDay && selectedDay === 'BOTH') ? seat.price * 2 : seat.price,
+          price: seat.price,
           quantity: 1,
           image_url: event.banner_url || '',
           size: `${ZONE_LABELS[seat.zoneType] || seat.zoneType} · Fila ${seat.rowName} - Asiento ${seat.seatNumber}${dayLabel}`,
@@ -498,54 +503,73 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
               </span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  if (selectedDay !== 'DAY_1') {
-                    setSelectedDay('DAY_1');
-                    setSelectedSeats([]);
-                  }
-                }}
-                className={`py-3.5 px-4 rounded-xl font-bold text-xs md:text-sm uppercase tracking-wider transition-all border flex items-center justify-center gap-2.5 ${
-                  selectedDay === 'DAY_1'
-                    ? 'bg-gradient-to-r from-red-600 to-red-700 text-white border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.5)] scale-[1.02]'
-                    : 'bg-zinc-900/80 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-white'
-                }`}
-              >
-                {day1Tab}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (selectedDay !== 'DAY_2') {
-                    setSelectedDay('DAY_2');
-                    setSelectedSeats([]);
-                  }
-                }}
-                className={`py-3.5 px-4 rounded-xl font-bold text-xs md:text-sm uppercase tracking-wider transition-all border flex items-center justify-center gap-2.5 ${
-                  selectedDay === 'DAY_2'
-                    ? 'bg-gradient-to-r from-red-600 to-red-700 text-white border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.5)] scale-[1.02]'
-                    : 'bg-zinc-900/80 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-white'
-                }`}
-              >
-                {day2Tab}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (selectedDay !== 'BOTH') {
-                    setSelectedDay('BOTH');
-                    setSelectedSeats([]);
-                  }
-                }}
-                className={`py-3.5 px-4 rounded-xl font-bold text-xs md:text-sm uppercase tracking-wider transition-all border flex items-center justify-center gap-2.5 ${
-                  selectedDay === 'BOTH'
-                    ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.5)] scale-[1.02]'
-                    : 'bg-zinc-900/80 text-zinc-400 border-zinc-800 hover:border-amber-700/50 hover:text-white'
-                }`}
-              >
-                Pase 2 Días (Abono)
-              </button>
+              {(() => {
+                const sampleNumberedZone = zones.find(z => z.zone_type !== 'GENERAL');
+                const sampleDayPrice = sampleNumberedZone ? parseFloat(sampleNumberedZone.price) : null;
+                const sampleAbonoPrice = sampleNumberedZone ? (sampleNumberedZone.price_abono ? parseFloat(sampleNumberedZone.price_abono) : (sampleDayPrice ? sampleDayPrice * 2 : null)) : null;
+
+                return (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (selectedDay !== 'DAY_1') {
+                          setSelectedDay('DAY_1');
+                          setSelectedSeats([]);
+                        }
+                      }}
+                      className={`py-3 px-4 rounded-xl font-bold text-xs md:text-sm uppercase tracking-wider transition-all border flex flex-col items-center justify-center gap-1 ${
+                        selectedDay === 'DAY_1'
+                          ? 'bg-gradient-to-r from-red-600 to-red-700 text-white border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.5)] scale-[1.02]'
+                          : 'bg-zinc-900/80 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-white'
+                      }`}
+                    >
+                      <span>{day1Tab}</span>
+                      {sampleDayPrice && (
+                        <span className="text-[11px] font-semibold opacity-90">${sampleDayPrice.toFixed(2)} MXN</span>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (selectedDay !== 'DAY_2') {
+                          setSelectedDay('DAY_2');
+                          setSelectedSeats([]);
+                        }
+                      }}
+                      className={`py-3 px-4 rounded-xl font-bold text-xs md:text-sm uppercase tracking-wider transition-all border flex flex-col items-center justify-center gap-1 ${
+                        selectedDay === 'DAY_2'
+                          ? 'bg-gradient-to-r from-red-600 to-red-700 text-white border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.5)] scale-[1.02]'
+                          : 'bg-zinc-900/80 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-white'
+                      }`}
+                    >
+                      <span>{day2Tab}</span>
+                      {sampleDayPrice && (
+                        <span className="text-[11px] font-semibold opacity-90">${sampleDayPrice.toFixed(2)} MXN</span>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (selectedDay !== 'BOTH') {
+                          setSelectedDay('BOTH');
+                          setSelectedSeats([]);
+                        }
+                      }}
+                      className={`py-3 px-4 rounded-xl font-bold text-xs md:text-sm uppercase tracking-wider transition-all border flex flex-col items-center justify-center gap-1 ${
+                        selectedDay === 'BOTH'
+                          ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.5)] scale-[1.02]'
+                          : 'bg-zinc-900/80 text-zinc-400 border-zinc-800 hover:border-amber-700/50 hover:text-white'
+                      }`}
+                    >
+                      <span>Pase 2 Días (Abono)</span>
+                      {sampleAbonoPrice && (
+                        <span className="text-[11px] font-semibold opacity-90 text-amber-300">${sampleAbonoPrice.toFixed(2)} MXN</span>
+                      )}
+                    </button>
+                  </>
+                );
+              })()}
             </div>
           </div>
         )}

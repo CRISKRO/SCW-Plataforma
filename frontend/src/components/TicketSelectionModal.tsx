@@ -11,6 +11,7 @@ interface EventZone {
   id: number;
   zone_type: string;
   price: number;
+  price_abono?: number | string | null;
 }
 
 interface Event {
@@ -194,10 +195,11 @@ export function TicketSelectionModal({ isOpen, onClose, eventId, event }: Ticket
                     {(() => {
                       const numberedZones = zones.filter(z => z.zone_type !== 'GENERAL');
                       if (numberedZones.length === 0) return null;
-                      
+                      const basePrice = Number(numberedZones[0].price).toFixed(2);
+                      const abonoPrice = numberedZones[0].price_abono ? Number(numberedZones[0].price_abono).toFixed(2) : null;
                       return (
-                        <p className="text-red-400 font-bold mt-2">
-                          ${Number(numberedZones[0].price).toFixed(2)} MXN
+                        <p className="text-red-400 font-bold mt-2 text-sm">
+                          ${basePrice} MXN {abonoPrice ? <span className="text-xs text-amber-400 font-medium ml-1">· Abono: ${abonoPrice} MXN</span> : ''}
                         </p>
                       );
                     })()}

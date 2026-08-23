@@ -8,7 +8,7 @@ class SeatInline(admin.TabularInline):
 
 @admin.register(EventZone)
 class EventZoneAdmin(admin.ModelAdmin):
-    list_display = ('event', 'zone_type', 'price', 'rows', 'seats_per_row')
+    list_display = ('event', 'zone_type', 'price', 'price_abono', 'rows', 'seats_per_row')
     list_filter = ('event', 'zone_type')
     inlines = [SeatInline]
 

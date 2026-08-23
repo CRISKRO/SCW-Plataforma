@@ -34,6 +34,7 @@ export default function EventTicketsPage() {
 
   const [editingZone, setEditingZone] = useState<number | null>(null);
   const [editPrice, setEditPrice] = useState('');
+  const [editPriceAbono, setEditPriceAbono] = useState('');
 
   const getDefaultSeats = (type: string) => {
     if (type === 'NORTE' || type === 'SUR') return 17;
@@ -44,6 +45,7 @@ export default function EventTicketsPage() {
   const [newZone, setNewZone] = useState({
     zone_type: 'NORTE',
     price: '',
+    price_abono: '',
     rows: 2,
     seats_per_row: 17,
   });
@@ -210,6 +212,7 @@ export default function EventTicketsPage() {
         event: eventId,
         zone_type: typeToSubmit,
         price: newZone.price,
+        price_abono: newZone.price_abono ? newZone.price_abono : null,
         rows: Number(newZone.rows),
         seats_per_row: Number(newZone.seats_per_row),
       });
@@ -222,6 +225,7 @@ export default function EventTicketsPage() {
       setNewZone({ 
         zone_type: newAvailable.length > 0 ? newAvailable[0].value : 'NORTE', 
         price: '', 
+        price_abono: '',
         rows: 2, 
         seats_per_row: newAvailable.length > 0 ? getDefaultSeats(newAvailable[0].value) : 17 
       });
@@ -236,8 +240,12 @@ export default function EventTicketsPage() {
   const handleUpdateZone = async (zoneId: number) => {
     try {
       setSaving(true);
-      const updated = await adminService.updateZone(zoneId, { price: editPrice });
-      setZones(zones.map(z => z.id === zoneId ? { ...z, price: updated.price } : z));
+      const payload: any = { price: editPrice };
+      if (event?.is_multi_day) {
+        payload.price_abono = editPriceAbono ? editPriceAbono : null;
+      }
+      const updated = await adminService.updateZone(zoneId, payload);
+      setZones(zones.map(z => z.id === zoneId ? { ...z, price: updated.price, price_abono: updated.price_abono } : z));
       setEditingZone(null);
     } catch (error) {
       alert("Error al actualizar la zona.");
@@ -397,15 +405,31 @@ export default function EventTicketsPage() {
                     <p className="font-black text-lg uppercase tracking-widest">
                       {ZONE_TYPES.find(zt => zt.value === zone.zone_type)?.label}
                     </p>
-                    <div>
-                      <label className="text-xs uppercase tracking-widest font-bold opacity-70 mb-1 block">Nuevo Precio (MXN)</label>
-                      <input 
-                        type="number" 
-                        step="0.01" 
-                        value={editPrice}
-                        onChange={e => setEditPrice(e.target.value)}
-                        className="w-full bg-zinc-950 border border-white/20 rounded px-3 py-2 text-white focus:outline-none focus:border-red-500"
-                      />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs uppercase tracking-widest font-bold opacity-70 mb-1 block">Precio por Día (MXN)</label>
+                        <input 
+                          type="number" 
+                          step="0.01" 
+                          value={editPrice}
+                          onChange={e => setEditPrice(e.target.value)}
+                          className="w-full bg-zinc-950 border border-white/20 rounded px-3 py-2 text-white focus:outline-none focus:border-red-500 text-sm"
+                          placeholder="Ej. 320.00"
+                        />
+                      </div>
+                      {event?.is_multi_day && (
+                        <div>
+                          <label className="text-xs uppercase tracking-widest font-bold text-amber-400 mb-1 block">Precio Abono 2 Días (MXN)</label>
+                          <input 
+                            type="number" 
+                            step="0.01" 
+                            value={editPriceAbono}
+                            onChange={e => setEditPriceAbono(e.target.value)}
+                            className="w-full bg-zinc-950 border border-amber-500/30 rounded px-3 py-2 text-white focus:outline-none focus:border-amber-500 text-sm"
+                            placeholder="Ej. 550.00 (Opcional)"
+                          />
+                        </div>
+                      )}
                     </div>
                     <div className="flex gap-2 mt-2">
                       <button 
@@ -429,7 +453,21 @@ export default function EventTicketsPage() {
                     <p className="font-black text-lg uppercase tracking-widest">
                       {ZONE_TYPES.find(zt => zt.value === zone.zone_type)?.label}
                     </p>
-                    <p className="text-2xl font-bold mt-1">${zone.price} <span className="text-sm font-normal opacity-70">MXN</span></p>
+                    <div className="mt-1 space-y-1">
+                      <p className="text-2xl font-bold">
+                        ${zone.price} <span className="text-sm font-normal opacity-70">MXN {event?.is_multi_day ? '/ día' : ''}</span>
+                      </p>
+                      {event?.is_multi_day && (
+                        <p className="text-xs font-medium flex items-center gap-1.5">
+                          <span className="text-amber-400 font-bold uppercase tracking-wider">Abono (2 Días):</span>
+                          {zone.price_abono ? (
+                            <span className="text-white font-black text-sm">${zone.price_abono} MXN</span>
+                          ) : (
+                            <span className="opacity-60 italic">No configurado</span>
+                          )}
+                        </p>
+                      )}
+                    </div>
                     <p className="text-sm mt-2 opacity-70">
                       {zone.rows} filas × {zone.seats_per_row} asientos = <strong>{zone.rows * zone.seats_per_row} lugares</strong>
                     </p>
@@ -442,6 +480,7 @@ export default function EventTicketsPage() {
                       onClick={() => {
                         setEditingZone(zone.id);
                         setEditPrice(zone.price);
+                        setEditPriceAbono(zone.price_abono || '');
                       }}
                       className="text-current opacity-50 hover:opacity-100 transition-opacity"
                       title="Editar precio"
@@ -476,7 +515,7 @@ export default function EventTicketsPage() {
           </div>
         ) : (
           <form onSubmit={handleAddZone} className="bg-zinc-950 border border-white/10 rounded-xl p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className={`grid grid-cols-1 ${event?.is_multi_day ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-6`}>
               <div className="space-y-2">
                 <label className="text-sm font-bold text-white uppercase tracking-widest">Tipo de Zona</label>
                 <select
@@ -494,7 +533,9 @@ export default function EventTicketsPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-white uppercase tracking-widest">Precio por Boleto (MXN)</label>
+                <label className="text-sm font-bold text-white uppercase tracking-widest">
+                  {event?.is_multi_day ? 'Precio por Día (MXN)' : 'Precio por Boleto (MXN)'}
+                </label>
                 <input
                   type="number"
                   min="0"
@@ -503,9 +544,27 @@ export default function EventTicketsPage() {
                   value={newZone.price}
                   onChange={e => setNewZone({ ...newZone, price: e.target.value })}
                   className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
-                  placeholder="Ej. 350.00"
+                  placeholder="Ej. 320.00"
                 />
               </div>
+
+              {event?.is_multi_day && (
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-amber-400 uppercase tracking-widest flex items-center justify-between">
+                    <span>Precio Abono 2 Días</span>
+                    <span className="text-[10px] text-zinc-400 font-normal lowercase">(opcional)</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={newZone.price_abono}
+                    onChange={e => setNewZone({ ...newZone, price_abono: e.target.value })}
+                    className="w-full bg-zinc-900 border border-amber-500/30 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500 transition-colors"
+                    placeholder="Ej. 550.00"
+                  />
+                </div>
+              )}
             </div>
 
             {newZone.zone_type !== 'GENERAL' && (
@@ -541,16 +600,19 @@ export default function EventTicketsPage() {
             {/* Preview */}
             <div className="bg-zinc-900/50 border border-white/5 rounded-lg p-4">
               <p className="text-xs text-zinc-400 uppercase tracking-widest font-bold mb-1">Vista Previa</p>
-              <p className="text-white">
+              <p className="text-white text-sm">
                 {newZone.zone_type === 'GENERAL' ? (
                   <>
-                    Se creará la zona <strong>General</strong> a <strong>${newZone.price || '0'} MXN</strong> c/u (Sin asientos numerados).
+                    Se creará la zona <strong>General</strong> a <strong>${newZone.price || '0'} MXN {event?.is_multi_day ? '/ día' : ''}</strong>
+                    {event?.is_multi_day && newZone.price_abono ? <> y <strong>${newZone.price_abono} MXN</strong> en Abono (2 Días)</> : ''}
+                    {' '}(Sin asientos numerados).
                   </>
                 ) : (
                   <>
                     Se crearán <strong className="text-red-500">{Number(newZone.rows) * Number(newZone.seats_per_row)} asientos</strong> para{' '}
                     <strong>{ZONE_TYPES.find(zt => zt.value === newZone.zone_type)?.label}</strong>{' '}
-                    a <strong>${newZone.price || '0'} MXN</strong> c/u.
+                    a <strong>${newZone.price || '0'} MXN {event?.is_multi_day ? '/ día' : ''}</strong>
+                    {event?.is_multi_day && newZone.price_abono ? <> y <strong>${newZone.price_abono} MXN</strong> en Abono (2 Días)</> : ''} c/u.
                   </>
                 )}
               </p>

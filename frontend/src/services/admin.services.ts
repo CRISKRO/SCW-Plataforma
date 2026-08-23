@@ -79,7 +79,7 @@ export const adminService = {
     const response = await api.get(`/tickets/zones/by_event/?event_id=${eventId}`);
     return response.data;
   },
-  createZone: async (data: { event: number; zone_type: string; price: string; rows: number; seats_per_row: number }) => {
+  createZone: async (data: { event: number; zone_type: string; price: string; price_abono?: string | null; rows: number; seats_per_row: number }) => {
     const response = await api.post('/tickets/zones/', data);
     return response.data;
   },
