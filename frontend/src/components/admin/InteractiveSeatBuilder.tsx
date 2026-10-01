@@ -171,8 +171,18 @@ export default function InteractiveSeatBuilder({
       setSelectedZone(null);
       useToastStore.getState().addToast(`Plantilla "${isArena ? 'Arena VIP' : 'Ring Clásico'}" cargada con éxito`, 'success');
     } catch (error: any) {
-      console.error('Error applying template:', error);
-      alert(error?.response?.data?.error || 'Error al aplicar plantilla');
+      const data = error?.response?.data;
+      let msg = "Error al aplicar plantilla";
+      if (typeof data === 'string' && data.includes('no such column')) {
+        msg = "Faltan migraciones en el servidor backend (PythonAnywhere). Ejecuta en la consola Bash: python manage.py migrate";
+      } else if (data?.error) {
+        msg = data.error;
+      } else if (data?.detail) {
+        msg = data.detail;
+      } else if (error?.message) {
+        msg = `${msg}: ${error.message}`;
+      }
+      alert(msg);
     } finally {
       setIsSaving(false);
     }

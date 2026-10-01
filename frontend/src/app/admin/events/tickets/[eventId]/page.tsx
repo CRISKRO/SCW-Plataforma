@@ -243,7 +243,17 @@ export default function EventTicketsPage() {
         seats_per_row: newAvailable.length > 0 ? getDefaultSeats(newAvailable[0].value) : 17 
       });
     } catch (error: any) {
-      const msg = error?.response?.data?.non_field_errors?.[0] || "Error al crear la zona.";
+      const data = error?.response?.data;
+      let msg = "Error al crear la zona.";
+      if (typeof data === 'string' && data.includes('no such column')) {
+        msg = "Faltan migraciones en el servidor backend (PythonAnywhere). Ejecuta en la consola Bash: python manage.py migrate";
+      } else if (data?.non_field_errors?.[0]) {
+        msg = data.non_field_errors[0];
+      } else if (data?.error) {
+        msg = data.error;
+      } else if (data?.detail) {
+        msg = data.detail;
+      }
       alert(msg.includes('unique_together') ? 'Esta zona ya existe para este evento.' : msg);
     } finally {
       setSaving(false);

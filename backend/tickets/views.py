@@ -130,6 +130,16 @@ class EventZoneViewSet(viewsets.ModelViewSet):
         except Event.DoesNotExist:
             return Response({"error": "Evento no encontrado"}, status=404)
 
+        def get_price(key, default):
+            val = prices.get(key)
+            if val is None or str(val).strip() == '':
+                return default
+            try:
+                float(val)
+                return str(val)
+            except (ValueError, TypeError):
+                return default
+
         with transaction.atomic():
             if clear_existing:
                 EventZone.objects.filter(event=event).delete()
@@ -158,7 +168,7 @@ class EventZoneViewSet(viewsets.ModelViewSet):
                     zone_type=EventZone.ZoneType.MESAS_VIP_RINGSIDE,
                     name='Mesas VIP Ringside',
                     color='#d946ef',
-                    price=prices.get('MESAS_VIP_RINGSIDE', '1500.00'),
+                    price=get_price('MESAS_VIP_RINGSIDE', '1500.00'),
                     price_abono=prices.get('MESAS_VIP_RINGSIDE_ABONO', None),
                     rows=8,
                     seats_per_row=1
@@ -181,7 +191,7 @@ class EventZoneViewSet(viewsets.ModelViewSet):
                     zone_type=EventZone.ZoneType.MESAS_VIP,
                     name='Mesas VIP',
                     color='#eab308',
-                    price=prices.get('MESAS_VIP', '1000.00'),
+                    price=get_price('MESAS_VIP', '1000.00'),
                     price_abono=prices.get('MESAS_VIP_ABONO', None),
                     rows=2,
                     seats_per_row=6
@@ -218,7 +228,7 @@ class EventZoneViewSet(viewsets.ModelViewSet):
                     zone_type=EventZone.ZoneType.PRIMERA_FILA,
                     name='Primera Fila',
                     color='#ef4444',
-                    price=prices.get('PRIMERA_FILA', '500.00'),
+                    price=get_price('PRIMERA_FILA', '500.00'),
                     price_abono=prices.get('PRIMERA_FILA_ABONO', None),
                     rows=1,
                     seats_per_row=44
@@ -230,7 +240,7 @@ class EventZoneViewSet(viewsets.ModelViewSet):
                     zone_type=EventZone.ZoneType.SEGUNDA_FILA,
                     name='Segunda Fila',
                     color='#2563eb',
-                    price=prices.get('SEGUNDA_FILA', '400.00'),
+                    price=get_price('SEGUNDA_FILA', '400.00'),
                     price_abono=prices.get('SEGUNDA_FILA_ABONO', None),
                     rows=1,
                     seats_per_row=44
@@ -270,7 +280,7 @@ class EventZoneViewSet(viewsets.ModelViewSet):
                     zone_type=EventZone.ZoneType.GENERAL,
                     name='General',
                     color='#064e3b',
-                    price=prices.get('GENERAL', '250.00'),
+                    price=get_price('GENERAL', '250.00'),
                     price_abono=prices.get('GENERAL_ABONO', None),
                     rows=0,
                     seats_per_row=0
@@ -281,18 +291,18 @@ class EventZoneViewSet(viewsets.ModelViewSet):
                 event.map_config = {}
                 event.save(update_fields=['map_type', 'map_config'])
 
-                for zt, rows, sps, pr in [
-                    (EventZone.ZoneType.NORTE, 2, 17, prices.get('NORTE', '320.00')),
-                    (EventZone.ZoneType.SUR, 2, 17, prices.get('SUR', '320.00')),
-                    (EventZone.ZoneType.ESTE, 2, 10, prices.get('ESTE', '320.00')),
-                    (EventZone.ZoneType.OESTE, 2, 16, prices.get('OESTE', '320.00')),
-                    (EventZone.ZoneType.GENERAL, 0, 0, prices.get('GENERAL', '200.00')),
+                for zt, rows, sps, pr_key, def_price in [
+                    (EventZone.ZoneType.NORTE, 2, 17, 'NORTE', '320.00'),
+                    (EventZone.ZoneType.SUR, 2, 17, 'SUR', '320.00'),
+                    (EventZone.ZoneType.ESTE, 2, 10, 'ESTE', '320.00'),
+                    (EventZone.ZoneType.OESTE, 2, 16, 'OESTE', '320.00'),
+                    (EventZone.ZoneType.GENERAL, 0, 0, 'GENERAL', '200.00'),
                 ]:
                     EventZone.objects.create(
                         event=event,
                         zone_type=zt,
                         name=dict(EventZone.ZoneType.choices).get(zt, zt),
-                        price=pr,
+                        price=get_price(pr_key, def_price),
                         rows=rows,
                         seats_per_row=sps
                     )
