@@ -91,8 +91,28 @@ export const adminService = {
     const response = await api.patch(`/tickets/zones/${id}/`, data);
     return response.data;
   },
-  updateSeat: async (id: number, data: { is_available: boolean }) => {
+  updateSeat: async (id: number, data: any) => {
     const response = await api.patch(`/tickets/seats/${id}/`, data);
+    return response.data;
+  },
+  deleteSeat: async (id: number) => {
+    const response = await api.delete(`/tickets/seats/${id}/`);
+    return response.data;
+  },
+  createCustomSeat: async (data: any) => {
+    const response = await api.post('/tickets/seats/create_custom_seat/', data);
+    return response.data;
+  },
+  bulkUpdateSeatPositions: async (data: { seats: any[] }) => {
+    const response = await api.post('/tickets/seats/bulk_update_positions/', data);
+    return response.data;
+  },
+  applyTemplate: async (data: { event_id: number; template_type: string; prices?: any; clear_existing?: boolean }) => {
+    const response = await api.post('/tickets/zones/apply_template/', data);
+    return response.data;
+  },
+  updateMapConfig: async (data: { event_id: number; map_type?: string; map_config?: any }) => {
+    const response = await api.post('/tickets/zones/update_map_config/', data);
     return response.data;
   },
   generateCourtesyTicket: async (data: { 

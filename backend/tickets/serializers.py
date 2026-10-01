@@ -5,6 +5,7 @@ from .models import EventZone, Seat
 
 class SeatSerializer(serializers.ModelSerializer):
     is_locked = serializers.SerializerMethodField()
+    display_number = serializers.ReadOnlyField()
 
     class Meta:
         model = Seat

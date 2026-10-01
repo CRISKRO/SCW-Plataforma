@@ -8,28 +8,41 @@ import { useCartStore } from '@/store/cartStore';
 import { useToastStore } from '@/store/toastStore';
 import { useRouter } from 'next/navigation';
 import { eventsService } from '@/services/events.services';
+import ArenaSeatMap from '@/components/ArenaSeatMap';
 
 interface SelectedSeat {
   seatId: number;
   rowName: string;
-  seatNumber: number;
+  seatNumber: number | string;
   zoneType: string;
   price: number;
   zoneId: number;
 }
 
 const ZONE_LABELS: Record<string, string> = {
+  MESAS_VIP_RINGSIDE: 'Mesas VIP Ringside',
+  MESAS_VIP: 'Mesas VIP',
+  PRIMERA_FILA: 'Primera Fila',
+  SEGUNDA_FILA: 'Segunda Fila',
   NORTE: 'Norte',
   SUR: 'Sur',
   ESTE: 'Este',
   OESTE: 'Oeste',
+  GENERAL: 'General',
+  CUSTOM: 'Zona Especial',
 };
 
 const ZONE_COLORS: Record<string, string> = {
+  MESAS_VIP_RINGSIDE: 'text-pink-400 border-pink-500',
+  MESAS_VIP: 'text-amber-400 border-amber-500',
+  PRIMERA_FILA: 'text-red-400 border-red-500',
+  SEGUNDA_FILA: 'text-blue-400 border-blue-500',
   NORTE: 'text-red-400 border-red-500',
   SUR: 'text-red-400 border-red-500',
   ESTE: 'text-red-400 border-red-500',
   OESTE: 'text-red-400 border-red-500',
+  GENERAL: 'text-emerald-400 border-emerald-500',
+  CUSTOM: 'text-purple-400 border-purple-500',
 };
 
 const getEventDays = (dateTimeStr?: string) => {
@@ -312,10 +325,12 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
     return seatNumber;
   };
 
+  const isArenaMap = event?.map_type === 'ARENA_VIP' || zones.some(z => ['MESAS_VIP_RINGSIDE', 'MESAS_VIP', 'PRIMERA_FILA', 'SEGUNDA_FILA'].includes(z.zone_type));
+
   const isSeatSelected = (seatId: number) =>
     selectedSeats.some(s => s.seatId === seatId);
 
-  const toggleSeat = (seat: any, zone: any, displayNumber: number) => {
+  const toggleSeat = (seat: any, zone: any, displayNumber?: number | string) => {
     if (!seat.is_available || seat.is_locked) return;
 
     if (isSeatSelected(seat.id)) {
@@ -326,12 +341,14 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
         ? (zone.price_abono ? parseFloat(zone.price_abono) : parseFloat(zone.price) * 2)
         : parseFloat(zone.price);
 
+      const dNum = displayNumber ?? (seat.custom_label || (seat.table_number ? `Mesa ${seat.table_number}` : (seat.display_number ?? getDisplayNumber(zone.zone_type, seat.seat_number))));
+
       setSelectedSeats(prev => [
         ...prev,
         {
           seatId: seat.id,
           rowName: seat.row_name,
-          seatNumber: displayNumber,
+          seatNumber: dNum,
           zoneType: zone.zone_type,
           price: effectivePrice,
           zoneId: zone.id,
@@ -340,11 +357,37 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
     }
   };
 
+  const handleSelectGeneral = (zone: any) => {
+    const isAbono = !!event?.is_multi_day && selectedDay === 'BOTH';
+    const effectivePrice = isAbono
+      ? (zone.price_abono ? parseFloat(zone.price_abono) : parseFloat(zone.price) * 2)
+      : parseFloat(zone.price);
+
+    const isMultiDay = !!event.is_multi_day;
+    const effectiveDay = isMultiDay ? selectedDay : 'ALL';
+    const dayLabel = isMultiDay ? (selectedDay === 'DAY_1' ? day1Label : selectedDay === 'DAY_2' ? day2Label : ' (Pase 2 Días - Abono)') : '';
+    const daySuffix = isMultiDay ? (selectedDay === 'DAY_1' ? '1' : selectedDay === 'DAY_2' ? '2' : '3') : '0';
+
+    addItem({
+      id: parseInt(`${actualEventId}999${daySuffix}`),
+      name: `Boleto: ${event.title}`,
+      price: effectivePrice,
+      quantity: 1,
+      image_url: event.banner_url || '',
+      size: `General (Sin Numeración)${dayLabel}`,
+      event_id: actualEventId!,
+      valid_for_day: effectiveDay,
+      session_id: sessionId,
+    });
+    useToastStore.getState().addToast(`Se agregó 1 boleto General al carrito`, 'success');
+  };
+
   const removeSeat = (seatId: number) => {
     setSelectedSeats(prev => prev.filter(s => s.seatId !== seatId));
   };
 
   const validateOrphanSeats = (): boolean => {
+    if (isArenaMap) return true;
     for (const zone of parsedZones) {
       if (!zone.groupedSeats) continue;
       for (const rowName of Object.keys(zone.groupedSeats)) {
@@ -636,8 +679,8 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
                 {selectedSeats.length === 0 && <span className="text-sm font-medium text-zinc-500 tracking-normal hidden md:inline-block ml-4">Haz clic en un asiento para comenzar</span>}
               </h2>
 
-              {/* Controles de Zoom */}
-              {parsedZones.length > 0 && (
+              {/* Controles de Zoom para mapa clásico */}
+              {!isArenaMap && parsedZones.length > 0 && (
                 <div className="flex items-center gap-1 bg-zinc-900 border border-white/10 rounded-lg p-1">
                   <button onClick={handleZoomOut} className="p-2 hover:bg-zinc-800 rounded text-white transition-colors" title="Alejar">
                     <Minus className="w-4 h-4" />
@@ -652,87 +695,98 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
               )}
             </div>
 
-            {/* Show overlay hint on mobile */}
-            <div className="md:hidden text-center text-zinc-500 text-xs mb-2 uppercase tracking-widest">
-              Usa un dedo para mover el mapa, dos para hacer zoom
-            </div>
-            <div
-              className={`bg-zinc-950 border border-white/10 rounded-3xl h-[50vh] min-h-[400px] max-h-[600px] shadow-2xl relative overflow-hidden flex items-center justify-center w-full touch-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-              ref={mapContainerRef}
-              onPointerDown={onPointerDown}
-              onPointerMove={onPointerMove}
-              onPointerUp={onPointerUp}
-              onPointerLeave={onPointerUp}
-              onTouchStart={onTouchStart}
-              onTouchMove={onTouchMove}
-              onTouchEnd={onTouchEnd}
-            >
-              {parsedZones.length === 0 ? (
-                <div className="flex items-center justify-center h-64 text-zinc-500 text-center cursor-default">
-                  El mapa de asientos aún no está disponible para este evento.
+            {isArenaMap ? (
+              <ArenaSeatMap
+                zones={zones}
+                selectedSeatIds={selectedSeats.map(s => s.seatId)}
+                onToggleSeat={(seat, zone) => toggleSeat(seat, zone)}
+                onSelectGeneral={handleSelectGeneral}
+              />
+            ) : (
+              <>
+                {/* Show overlay hint on mobile */}
+                <div className="md:hidden text-center text-zinc-500 text-xs mb-2 uppercase tracking-widest">
+                  Usa un dedo para mover el mapa, dos para hacer zoom
                 </div>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <div
-                    ref={innerContainerRef}
-                    style={{
-                      transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
-                      transition: isDragging ? 'none' : 'transform 0.1s ease-out'
-                    }}
-                  >
-                    <div className="bg-zinc-900/60 shadow-2xl rounded-[1.5rem] p-1.5 md:p-3 flex flex-col items-center justify-center border border-white/10 relative w-max backdrop-blur-md">
+                <div
+                  className={`bg-zinc-950 border border-white/10 rounded-3xl h-[50vh] min-h-[400px] max-h-[600px] shadow-2xl relative overflow-hidden flex items-center justify-center w-full touch-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                  ref={mapContainerRef}
+                  onPointerDown={onPointerDown}
+                  onPointerMove={onPointerMove}
+                  onPointerUp={onPointerUp}
+                  onPointerLeave={onPointerUp}
+                  onTouchStart={onTouchStart}
+                  onTouchMove={onTouchMove}
+                  onTouchEnd={onTouchEnd}
+                >
+                  {parsedZones.length === 0 ? (
+                    <div className="flex items-center justify-center h-64 text-zinc-500 text-center cursor-default">
+                      El mapa de asientos aún no está disponible para este evento.
+                    </div>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div
+                        ref={innerContainerRef}
+                        style={{
+                          transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+                          transition: isDragging ? 'none' : 'transform 0.1s ease-out'
+                        }}
+                      >
+                        <div className="bg-zinc-900/60 shadow-2xl rounded-[1.5rem] p-1.5 md:p-3 flex flex-col items-center justify-center border border-white/10 relative w-max backdrop-blur-md">
 
-                      {/* Norte */}
-                      {parsedZones.find(z => z.zone_type === 'NORTE') && (
-                        <div className="flex justify-center mb-6 md:mb-10">
-                          {renderPublicZone(parsedZones.find(z => z.zone_type === 'NORTE'), 'top')}
-                        </div>
-                      )}
+                          {/* Norte */}
+                          {parsedZones.find(z => z.zone_type === 'NORTE') && (
+                            <div className="flex justify-center mb-6 md:mb-10">
+                              {renderPublicZone(parsedZones.find(z => z.zone_type === 'NORTE'), 'top')}
+                            </div>
+                          )}
 
-                      <div className="flex items-center justify-center w-full">
-                        {/* Oeste */}
-                        <div className="flex-1 flex justify-end pr-6 md:pr-10 relative">
-                          {renderPublicZone(parsedZones.find(z => z.zone_type === 'OESTE'), 'left')}
-                        </div>
+                          <div className="flex items-center justify-center w-full">
+                            {/* Oeste */}
+                            <div className="flex-1 flex justify-end pr-6 md:pr-10 relative">
+                              {renderPublicZone(parsedZones.find(z => z.zone_type === 'OESTE'), 'left')}
+                            </div>
 
-                        {/* El Ring Central - Diseño Realista */}
-                        <div className="relative w-48 h-48 md:w-64 md:h-64 bg-[#d4d4d8] border-[8px] border-zinc-950 rounded flex items-center justify-center shadow-[0_0_80px_rgba(255,255,255,0.05)] z-10 shrink-0 mx-8 md:mx-12 lg:mx-16">
-                          <div className="absolute inset-1 border-[1.5px] border-red-600/80 rounded-sm"></div>
-                          <div className="absolute inset-2 border-[1.5px] border-zinc-100 rounded-sm"></div>
-                          <div className="absolute inset-3 border-[1.5px] border-red-600/80 rounded-sm"></div>
-                          <div className="absolute -top-2 -left-2 w-5 h-5 bg-red-600 rounded-full shadow-lg border-2 border-black z-20"></div>
-                          <div className="absolute top-2 left-2 w-6 h-6 bg-zinc-900 rotate-45 transform -translate-x-1 -translate-y-1 rounded-sm z-10"></div>
-                          <div className="absolute -top-2 -right-2 w-5 h-5 bg-blue-600 rounded-full shadow-lg border-2 border-black z-20"></div>
-                          <div className="absolute top-2 right-2 w-6 h-6 bg-zinc-900 -rotate-45 transform translate-x-1 -translate-y-1 rounded-sm z-10"></div>
-                          <div className="absolute -bottom-2 -left-2 w-5 h-5 bg-blue-600 rounded-full shadow-lg border-2 border-black z-20"></div>
-                          <div className="absolute bottom-2 left-2 w-6 h-6 bg-zinc-900 -rotate-45 transform -translate-x-1 translate-y-1 rounded-sm z-10"></div>
-                          <div className="absolute -bottom-2 -right-2 w-5 h-5 bg-red-600 rounded-full shadow-lg border-2 border-black z-20"></div>
-                          <div className="absolute bottom-2 right-2 w-6 h-6 bg-zinc-900 -rotate-45 transform translate-x-1 translate-y-1 rounded-sm z-10"></div>
-                          <div className="relative flex items-center justify-center w-24 h-24 border-4 border-zinc-400/50 rounded-full p-2 bg-black/10">
-                            <img src="/images/logo-scw.png" alt="SCW Logo" className="w-16 h-16 object-contain drop-shadow-md select-none pointer-events-none opacity-90" />
+                            {/* El Ring Central - Diseño Realista */}
+                            <div className="relative w-48 h-48 md:w-64 md:h-64 bg-[#d4d4d8] border-[8px] border-zinc-950 rounded flex items-center justify-center shadow-[0_0_80px_rgba(255,255,255,0.05)] z-10 shrink-0 mx-8 md:mx-12 lg:mx-16">
+                              <div className="absolute inset-1 border-[1.5px] border-red-600/80 rounded-sm"></div>
+                              <div className="absolute inset-2 border-[1.5px] border-zinc-100 rounded-sm"></div>
+                              <div className="absolute inset-3 border-[1.5px] border-red-600/80 rounded-sm"></div>
+                              <div className="absolute -top-2 -left-2 w-5 h-5 bg-red-600 rounded-full shadow-lg border-2 border-black z-20"></div>
+                              <div className="absolute top-2 left-2 w-6 h-6 bg-zinc-900 rotate-45 transform -translate-x-1 -translate-y-1 rounded-sm z-10"></div>
+                              <div className="absolute -top-2 -right-2 w-5 h-5 bg-blue-600 rounded-full shadow-lg border-2 border-black z-20"></div>
+                              <div className="absolute top-2 right-2 w-6 h-6 bg-zinc-900 -rotate-45 transform translate-x-1 -translate-y-1 rounded-sm z-10"></div>
+                              <div className="absolute -bottom-2 -left-2 w-5 h-5 bg-blue-600 rounded-full shadow-lg border-2 border-black z-20"></div>
+                              <div className="absolute bottom-2 left-2 w-6 h-6 bg-zinc-900 -rotate-45 transform -translate-x-1 translate-y-1 rounded-sm z-10"></div>
+                              <div className="absolute -bottom-2 -right-2 w-5 h-5 bg-red-600 rounded-full shadow-lg border-2 border-black z-20"></div>
+                              <div className="absolute bottom-2 right-2 w-6 h-6 bg-zinc-900 rotate-45 transform translate-x-1 translate-y-1 rounded-sm z-10"></div>
+                              <div className="relative flex items-center justify-center w-24 h-24 border-4 border-zinc-400/50 rounded-full p-2 bg-black/10">
+                                <img src="/images/logo-scw.png" alt="SCW Logo" className="w-16 h-16 object-contain drop-shadow-md select-none pointer-events-none opacity-90" />
+                              </div>
+                            </div>
+
+                            {/* Este */}
+                            <div className="flex-1 flex justify-start pl-6 md:pl-10 relative">
+                              {renderPublicZone(parsedZones.find(z => z.zone_type === 'ESTE'), 'right')}
+                            </div>
                           </div>
-                        </div>
 
-                        {/* Este */}
-                        <div className="flex-1 flex justify-start pl-6 md:pl-10 relative">
-                          {renderPublicZone(parsedZones.find(z => z.zone_type === 'ESTE'), 'right')}
+                          {/* Sur */}
+                          {parsedZones.find(z => z.zone_type === 'SUR') && (
+                            <div className="flex justify-center mt-6 md:mt-10">
+                              {renderPublicZone(parsedZones.find(z => z.zone_type === 'SUR'), 'bottom')}
+                            </div>
+                          )}
                         </div>
                       </div>
-
-                      {/* Sur */}
-                      {parsedZones.find(z => z.zone_type === 'SUR') && (
-                        <div className="flex justify-center mt-6 md:mt-10">
-                          {renderPublicZone(parsedZones.find(z => z.zone_type === 'SUR'), 'bottom')}
-                        </div>
-                      )}
                     </div>
-                  </div>
+                  )}
                 </div>
-              )}
+              </>
+            )}
             </div>
           </div>
         </div>
-      </div>
 
       {/* === CONFIRMATION MODAL === */}
       <AnimatePresence>

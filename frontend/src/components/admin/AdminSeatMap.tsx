@@ -1,7 +1,6 @@
-"use client";
-
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Minus, Plus as PlusIcon } from 'lucide-react';
+import ArenaSeatMap from '@/components/ArenaSeatMap';
 
 interface AdminSeatMapProps {
   zones: any[];
@@ -10,6 +9,21 @@ interface AdminSeatMapProps {
 }
 
 export default function AdminSeatMap({ zones, selectedSeatIds, onToggleSeat }: AdminSeatMapProps) {
+  const isArena = useMemo(() => {
+    return zones.some(z => ['MESAS_VIP_RINGSIDE', 'MESAS_VIP', 'PRIMERA_FILA', 'SEGUNDA_FILA'].includes(z.zone_type));
+  }, [zones]);
+
+  if (isArena) {
+    return (
+      <div className="w-full">
+        <ArenaSeatMap
+          zones={zones}
+          selectedSeatIds={selectedSeatIds}
+          onToggleSeat={(seat) => onToggleSeat(seat.id)}
+        />
+      </div>
+    );
+  }
   const [scale, setScale] = useState(1);
   const [minScale, setMinScale] = useState(0.6);
   const [position, setPosition] = useState({ x: 0, y: 0 });

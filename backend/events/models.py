@@ -54,6 +54,18 @@ class Event(models.Model):
         default=False,
         help_text=_('Activa el selector de boletos por día (Día 1, Día 2 o Pase 2 Días) en la venta de boletos.')
     )
+    map_type = models.CharField(
+        _('tipo de mapa'),
+        max_length=50,
+        default='CLASSIC_RING',
+        help_text=_('Plantilla de distribución: CLASSIC_RING (Ring clásico SCW), ARENA_VIP (Arena VIP con mesas), CUSTOM (Personalizado)')
+    )
+    map_config = models.JSONField(
+        _('configuración interactiva del mapa'),
+        default=dict,
+        blank=True,
+        help_text=_('Configuración visual: pasillos, elementos decorativos, textos y metadatos del mapa')
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
