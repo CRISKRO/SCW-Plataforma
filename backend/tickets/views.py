@@ -315,6 +315,7 @@ class EventZoneViewSet(viewsets.ModelViewSet):
         return Response({
             "status": "success",
             "map_type": event.map_type,
+            "location": event.location,
             "map_config": event.map_config,
             "zones": serializer.data
         })
