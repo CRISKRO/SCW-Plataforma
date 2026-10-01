@@ -385,36 +385,53 @@ export default function EventTicketsPage() {
   return (
     <div className="max-w-7xl mx-auto space-y-8">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link href="/admin/events" className="text-zinc-400 hover:text-white transition-colors">
-          <ArrowLeft className="w-6 h-6" />
-        </Link>
-        <div>
-          <p className="text-red-500 text-sm font-bold uppercase tracking-widest mb-1">Gestión de Boletos y Mapas</p>
-          <h1 className="text-3xl font-bold tracking-tight text-white">{event?.title}</h1>
-          <p className="text-zinc-400 mt-1">
-            {new Date(event?.date_time).toLocaleString()} · {event?.location}
-          </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Link 
+            href="/admin/events" 
+            className="flex items-center gap-2 bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-white/10 hover:border-white/25 px-4 py-2.5 rounded-2xl transition-all shadow-md group active:scale-95"
+          >
+            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            <span className="text-xs font-black uppercase tracking-wider hidden sm:inline">Volver a Eventos</span>
+          </Link>
+          <div>
+            <p className="text-red-500 text-xs font-black uppercase tracking-widest mb-1 flex items-center gap-2">
+              <span>Gestión de Boletos y Mapas</span>
+              <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-black border ${
+                isArenaMap
+                  ? 'bg-rose-950/80 text-rose-300 border-rose-500/40'
+                  : 'bg-amber-950/80 text-amber-300 border-amber-500/40'
+              }`}>
+                {isArenaMap ? 'Sede: Labrú' : 'Sede: The Wrestling Factory'}
+              </span>
+            </p>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">{event?.title}</h1>
+            <p className="text-zinc-400 mt-1 flex items-center gap-2 text-xs sm:text-sm">
+              <span>{new Date(event?.date_time).toLocaleString()}</span>
+              <span>·</span>
+              <span className="text-amber-400 font-bold">{event?.location}</span>
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-zinc-950 border border-white/10 rounded-xl p-5">
-          <p className="text-zinc-400 text-xs font-bold uppercase tracking-widest">Plantilla Activa</p>
+        <div className="bg-zinc-950 border border-white/10 rounded-2xl p-5 shadow-lg">
+          <p className="text-zinc-400 text-xs font-bold uppercase tracking-widest">Sede / Plantilla</p>
           <p className="text-base sm:text-lg font-black text-amber-400 mt-1 truncate">
-            {isArenaMap ? 'Arena VIP (Imagen)' : 'Ring Clásico SCW'}
+            {isArenaMap ? 'Labrú' : 'The Wrestling Factory'}
           </p>
         </div>
-        <div className="bg-zinc-950 border border-white/10 rounded-xl p-5">
+        <div className="bg-zinc-950 border border-white/10 rounded-2xl p-5 shadow-lg">
           <p className="text-zinc-400 text-xs font-bold uppercase tracking-widest">Zonas Creadas</p>
           <p className="text-3xl font-black text-white mt-1">{zones.length}</p>
         </div>
-        <div className="bg-zinc-950 border border-white/10 rounded-xl p-5">
+        <div className="bg-zinc-950 border border-white/10 rounded-2xl p-5 shadow-lg">
           <p className="text-zinc-400 text-xs font-bold uppercase tracking-widest">Total Asientos</p>
           <p className="text-3xl font-black text-white mt-1">{totalSeats}</p>
         </div>
-        <div className="bg-zinc-950 border border-white/10 rounded-xl p-5">
+        <div className="bg-zinc-950 border border-white/10 rounded-2xl p-5 shadow-lg">
           <p className="text-zinc-400 text-xs font-bold uppercase tracking-widest">Disponibles</p>
           <p className="text-3xl font-black text-emerald-400 mt-1">
             {zones.reduce((acc, z) => acc + (z.seats?.filter((s: any) => s.is_available && !s.is_locked).length || 0), 0)}
@@ -422,47 +439,49 @@ export default function EventTicketsPage() {
         </div>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="flex border-b border-white/10 gap-2 overflow-x-auto pb-1">
+      {/* Navigation Tabs - Modern Segmented Glass Bar */}
+      <div className="bg-zinc-950/80 backdrop-blur-md p-1.5 rounded-2xl border border-white/10 flex gap-2 overflow-x-auto shadow-2xl">
         <button
           type="button"
           onClick={() => setActiveTab('BUILDER')}
-          className={`flex items-center gap-2 py-3 px-5 rounded-t-xl font-bold text-xs uppercase tracking-wider transition-all border-b-2 shrink-0 ${
+          className={`flex items-center gap-2.5 py-3 px-5 sm:px-6 rounded-xl font-black text-xs uppercase tracking-wider transition-all shrink-0 ${
             activeTab === 'BUILDER'
-              ? 'border-red-500 text-white bg-zinc-900/80 shadow-md'
-              : 'border-transparent text-zinc-400 hover:text-white hover:bg-zinc-900/40'
+              ? 'bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 text-white shadow-[0_0_20px_rgba(239,68,68,0.4)] scale-[1.02]'
+              : 'text-zinc-400 hover:text-white hover:bg-white/5'
           }`}
         >
-          <Layout className="w-4 h-4 text-red-500" />
+          <Layout className={`w-4 h-4 ${activeTab === 'BUILDER' ? 'text-white' : 'text-rose-400'}`} />
           <span>Editor Interactivo de Mapa</span>
-          <span className="text-[10px] bg-red-600/30 text-red-300 border border-red-500/40 px-2 py-0.5 rounded-full font-black">
-            Interactivo
+          <span className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
+            activeTab === 'BUILDER' ? 'bg-white/20 text-white' : 'bg-rose-950/80 text-rose-300 border border-rose-500/30'
+          }`}>
+            Labrú / TWF
           </span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('ZONES')}
-          className={`flex items-center gap-2 py-3 px-5 rounded-t-xl font-bold text-xs uppercase tracking-wider transition-all border-b-2 shrink-0 ${
+          className={`flex items-center gap-2.5 py-3 px-5 sm:px-6 rounded-xl font-black text-xs uppercase tracking-wider transition-all shrink-0 ${
             activeTab === 'ZONES'
-              ? 'border-red-500 text-white bg-zinc-900/80 shadow-md'
-              : 'border-transparent text-zinc-400 hover:text-white hover:bg-zinc-900/40'
+              ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white shadow-[0_0_20px_rgba(245,158,11,0.4)] scale-[1.02]'
+              : 'text-zinc-400 hover:text-white hover:bg-white/5'
           }`}
         >
-          <Sliders className="w-4 h-4 text-amber-500" />
+          <Sliders className={`w-4 h-4 ${activeTab === 'ZONES' ? 'text-white' : 'text-amber-400'}`} />
           <span>Configuración de Zonas y Precios</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('AVAILABILITY')}
-          className={`flex items-center gap-2 py-3 px-5 rounded-t-xl font-bold text-xs uppercase tracking-wider transition-all border-b-2 shrink-0 ${
+          className={`flex items-center gap-2.5 py-3 px-5 sm:px-6 rounded-xl font-black text-xs uppercase tracking-wider transition-all shrink-0 ${
             activeTab === 'AVAILABILITY'
-              ? 'border-red-500 text-white bg-zinc-900/80 shadow-md'
-              : 'border-transparent text-zinc-400 hover:text-white hover:bg-zinc-900/40'
+              ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] scale-[1.02]'
+              : 'text-zinc-400 hover:text-white hover:bg-white/5'
           }`}
         >
-          <Ticket className="w-4 h-4 text-blue-500" />
+          <Ticket className={`w-4 h-4 ${activeTab === 'AVAILABILITY' ? 'text-white' : 'text-blue-400'}`} />
           <span>Disponibilidad en Vivo ({totalSeats})</span>
         </button>
       </div>
@@ -526,18 +545,18 @@ export default function EventTicketsPage() {
                             </div>
                           )}
                         </div>
-                        <div className="flex gap-2 mt-2">
+                        <div className="flex gap-2.5 mt-3">
                           <button 
                             onClick={() => handleUpdateZone(zone.id)}
                             disabled={saving}
-                            className="bg-white text-black text-xs font-bold px-3 py-1.5 rounded uppercase tracking-widest hover:bg-zinc-200"
+                            className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white text-xs font-black px-4 py-2 rounded-xl uppercase tracking-wider shadow-lg shadow-emerald-950/40 transition-all active:scale-95 disabled:opacity-50"
                           >
                             {saving ? 'Guardando...' : 'Guardar'}
                           </button>
                           <button 
                             onClick={() => setEditingZone(null)}
                             disabled={saving}
-                            className="bg-zinc-800 text-white text-xs font-bold px-3 py-1.5 rounded uppercase tracking-widest hover:bg-zinc-700"
+                            className="bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xs font-bold px-4 py-2 rounded-xl uppercase tracking-wider border border-white/10 transition-all active:scale-95"
                           >
                             Cancelar
                           </button>
@@ -570,24 +589,24 @@ export default function EventTicketsPage() {
                     )}
                     
                     {!editingZone && (
-                      <div className="flex gap-3">
+                      <div className="flex items-center gap-2">
                         <button
                           onClick={() => {
                             setEditingZone(zone.id);
                             setEditPrice(zone.price);
                             setEditPriceAbono(zone.price_abono || '');
                           }}
-                          className="text-current opacity-50 hover:opacity-100 transition-opacity"
+                          className="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-black uppercase tracking-wider transition-all border border-white/10 hover:border-white/30 active:scale-95 shadow-sm"
                           title="Editar precio"
                         >
-                          <span className="text-sm uppercase font-bold tracking-widest">Editar</span>
+                          Editar
                         </button>
                         <button
                           onClick={() => handleDeleteZone(zone.id)}
-                          className="text-current opacity-50 hover:opacity-100 transition-opacity"
+                          className="p-2 rounded-xl bg-red-950/40 hover:bg-red-900/60 text-red-400 hover:text-red-300 border border-red-500/20 hover:border-red-500/40 transition-all active:scale-95 shadow-sm"
                           title="Eliminar zona"
                         >
-                          <Trash2 className="w-5 h-5" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     )}
@@ -695,10 +714,10 @@ export default function EventTicketsPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex items-center gap-2 bg-white text-black px-6 py-3 font-bold uppercase tracking-widest rounded-lg hover:bg-zinc-200 transition-colors disabled:opacity-50"
+                  className="flex items-center gap-2.5 bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 hover:from-red-500 hover:via-rose-500 hover:to-amber-500 text-white px-7 py-3.5 font-black uppercase tracking-wider text-xs rounded-2xl shadow-[0_0_25px_rgba(239,68,68,0.4)] hover:shadow-[0_0_35px_rgba(245,158,11,0.6)] transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
-                  {saving ? 'Creando...' : 'Crear Zona y Asientos'}
+                  <span>{saving ? 'Creando...' : 'Crear Zona y Asientos'}</span>
                 </button>
               </form>
             )}
@@ -708,7 +727,7 @@ export default function EventTicketsPage() {
 
       {/* TAB 3: LIVE AVAILABILITY MAP */}
       {activeTab === 'AVAILABILITY' && (
-        <div className="bg-zinc-950 border border-white/10 rounded-xl p-6">
+        <div className="bg-zinc-950 border border-white/10 rounded-2xl p-6 shadow-2xl">
           <div className="mb-4">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
               <Ticket className="w-5 h-5 text-red-500" />
@@ -728,11 +747,11 @@ export default function EventTicketsPage() {
           ) : (
             <div className="w-full">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-xs text-zinc-500 uppercase font-bold">Ring Clásico SCW</span>
-                <div className="flex items-center gap-1 bg-zinc-900 border border-white/10 rounded-lg p-1">
-                  <button onClick={handleZoomOut} className="p-2 hover:bg-zinc-800 rounded text-white"><Minus className="w-4 h-4" /></button>
-                  <button onClick={handleResetZoom} className="px-3 py-1 hover:bg-zinc-800 rounded text-xs font-bold text-white">{Math.round(scale * 100)}%</button>
-                  <button onClick={handleZoomIn} className="p-2 hover:bg-zinc-800 rounded text-white"><Plus className="w-4 h-4" /></button>
+                <span className="text-xs text-zinc-500 uppercase font-black tracking-wider">The Wrestling Factory (Clásico SCW)</span>
+                <div className="flex items-center gap-1 bg-zinc-900/90 backdrop-blur-md border border-white/10 rounded-2xl p-1 shadow-lg">
+                  <button onClick={handleZoomOut} className="p-2 hover:bg-white/10 rounded-xl text-zinc-300 hover:text-white transition-all active:scale-95" title="Alejar"><Minus className="w-4 h-4" /></button>
+                  <button onClick={handleResetZoom} className="px-3 py-1 hover:bg-white/10 rounded-xl text-xs font-black text-amber-400 tracking-wider transition-all" title="Restablecer">{Math.round(scale * 100)}%</button>
+                  <button onClick={handleZoomIn} className="p-2 hover:bg-white/10 rounded-xl text-zinc-300 hover:text-white transition-all active:scale-95" title="Acercar"><Plus className="w-4 h-4" /></button>
                 </div>
               </div>
 

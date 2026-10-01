@@ -145,12 +145,13 @@ export default function InteractiveSeatBuilder({
     }
   };
 
-  // Apply template (e.g. Arena VIP from the image)
+  // Apply template (Labrú o The Wrestling Factory)
   const handleApplyTemplate = async () => {
-    const isArena = selectedTemplate === 'ARENA_VIP';
-    const confirmMsg = isArena
-      ? '¿Cargar la plantilla "Arena VIP con Mesas (Imagen)"? Esto reemplazará las zonas actuales de este evento para crear las 8 Mesas Ringside, 12 Mesas VIP, 44 Primera Fila, 44 Segunda Fila y General.'
-      : '¿Cargar la plantilla "Ring Clásico SCW"? Esto restaurará las 4 zonas tradicionales (Norte, Sur, Este, Oeste y General).';
+    const isLabru = selectedTemplate === 'ARENA_VIP';
+    const venueName = isLabru ? 'Labrú' : 'The Wrestling Factory';
+    const confirmMsg = isLabru
+      ? '¿Cargar la plantilla de la sede "Labrú"? Esto configurará el mapa con 8 Mesas Ringside, 12 Mesas VIP, 44 Primera Fila, 44 Segunda Fila, General y cuadrilátero.'
+      : '¿Cargar la plantilla de la sede "The Wrestling Factory"? Esto restaurará la distribución tradicional con Ring Clásico SCW y las 4 zonas cardinales (Norte, Sur, Este, Oeste y General).';
 
     if (!confirm(confirmMsg)) return;
 
@@ -169,7 +170,7 @@ export default function InteractiveSeatBuilder({
       setIsTemplateModalOpen(false);
       setSelectedSeat(null);
       setSelectedZone(null);
-      useToastStore.getState().addToast(`Plantilla "${isArena ? 'Arena VIP' : 'Ring Clásico'}" cargada con éxito`, 'success');
+      useToastStore.getState().addToast(`Plantilla de "${venueName}" aplicada con éxito`, 'success');
     } catch (error: any) {
       const data = error?.response?.data;
       let msg = "Error al aplicar plantilla";
@@ -246,65 +247,69 @@ export default function InteractiveSeatBuilder({
   return (
     <div className="space-y-6">
       {/* Top Action Toolbar */}
-      <div className="bg-zinc-950 border border-white/10 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-xl">
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+      <div className="bg-zinc-950/90 backdrop-blur-md border border-white/10 rounded-3xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 shadow-2xl">
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
           {/* Templates Button */}
           <button
             type="button"
             onClick={() => setIsTemplateModalOpen(true)}
-            className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-bold text-xs uppercase tracking-wider px-4 py-2.5 rounded-xl transition-all shadow-md shadow-red-950/40"
+            className="group relative flex items-center gap-2.5 bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 hover:from-red-500 hover:via-rose-500 hover:to-amber-400 text-white font-black text-xs uppercase tracking-wider px-5 py-3 rounded-2xl transition-all shadow-[0_0_20px_rgba(239,68,68,0.35)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] hover:scale-[1.02] active:scale-[0.98] border border-white/20"
           >
-            <LayoutTemplate className="w-4 h-4" />
-            Cargar Plantilla de Mapa
+            <LayoutTemplate className="w-4 h-4 text-amber-200 group-hover:rotate-12 transition-transform" />
+            <span>Cargar Plantilla de Mapa</span>
           </button>
 
           {/* Add Seat */}
           <button
             type="button"
             onClick={() => setIsAddSeatOpen(true)}
-            className="flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-white/10 font-bold text-xs uppercase tracking-wider px-3.5 py-2.5 rounded-xl transition-colors"
+            className="flex items-center gap-2 bg-zinc-900/90 hover:bg-emerald-950/40 text-zinc-200 hover:text-emerald-300 border border-white/10 hover:border-emerald-500/40 font-bold text-xs uppercase tracking-wider px-4 py-3 rounded-2xl transition-all shadow-sm hover:shadow-[0_0_15px_rgba(16,185,129,0.25)] hover:scale-[1.02] active:scale-[0.98]"
           >
             <Plus className="w-4 h-4 text-emerald-400" />
-            Agregar Asiento
+            <span>Agregar Asiento</span>
           </button>
 
           {/* Grid Snap Options */}
-          <div className="flex items-center gap-1.5 bg-zinc-900 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-zinc-300">
+          <div className="flex items-center gap-2 bg-zinc-900/90 backdrop-blur-md border border-white/10 rounded-2xl px-3.5 py-1.5 shadow-inner">
             <Grid className="w-3.5 h-3.5 text-zinc-400" />
-            <span className="font-bold text-[11px] uppercase tracking-wider text-zinc-400">Alineación:</span>
-            {[0, 5, 10, 20].map(val => (
-              <button
-                key={val}
-                type="button"
-                onClick={() => setGridSnap(val)}
-                className={`px-1.5 py-0.5 rounded text-[11px] font-bold ${
-                  gridSnap === val ? 'bg-red-600 text-white' : 'text-zinc-500 hover:text-white'
-                }`}
-              >
-                {val === 0 ? 'Libre' : `${val}px`}
-              </button>
-            ))}
+            <span className="font-black text-[10px] uppercase tracking-wider text-zinc-400">Cuadrícula:</span>
+            <div className="flex items-center gap-1">
+              {[0, 5, 10, 20].map(val => (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => setGridSnap(val)}
+                  className={`px-2 py-1 rounded-xl text-[11px] font-black transition-all ${
+                    gridSnap === val
+                      ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-[0_0_12px_rgba(239,68,68,0.5)] scale-105'
+                      : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  {val === 0 ? 'Libre' : `${val}px`}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Preview Toggle */}
           <button
             type="button"
             onClick={() => setPreviewMode(!previewMode)}
-            className={`flex items-center gap-2 text-xs font-bold uppercase tracking-wider px-3.5 py-2.5 rounded-xl border transition-all ${
+            className={`flex items-center gap-2 text-xs font-bold uppercase tracking-wider px-4 py-3 rounded-2xl border transition-all hover:scale-[1.02] active:scale-[0.98] ${
               previewMode
-                ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
-                : 'bg-zinc-900 text-zinc-400 border-white/10 hover:text-white'
+                ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
+                : 'bg-zinc-900/90 text-zinc-300 border-white/10 hover:text-white hover:bg-zinc-800'
             }`}
           >
-            {previewMode ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-            {previewMode ? 'Modo Vista Previa' : 'Modo Edición'}
+            {previewMode ? <Eye className="w-4 h-4 text-amber-400" /> : <EyeOff className="w-4 h-4 text-zinc-400" />}
+            <span>{previewMode ? 'Modo Vista Previa' : 'Modo Edición'}</span>
           </button>
         </div>
 
         {/* Save Changes Button */}
         <div className="flex items-center gap-3">
           {hasUnsavedChanges && (
-            <span className="text-amber-400 text-xs font-bold animate-pulse flex items-center gap-1">
+            <span className="text-amber-400 text-xs font-bold animate-pulse flex items-center gap-1 bg-amber-950/40 border border-amber-500/30 px-3 py-1.5 rounded-full">
               <AlertCircle className="w-3.5 h-3.5" /> Cambios sin guardar
             </span>
           )}
@@ -312,14 +317,14 @@ export default function InteractiveSeatBuilder({
             type="button"
             disabled={isSaving || !hasUnsavedChanges}
             onClick={handleSaveChanges}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all shadow-lg ${
+            className={`flex items-center gap-2.5 px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-wider transition-all shadow-xl ${
               hasUnsavedChanges
-                ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-950/50 scale-105'
-                : 'bg-zinc-800 text-zinc-500 cursor-not-allowed opacity-60'
+                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white shadow-[0_0_25px_rgba(16,185,129,0.5)] ring-2 ring-emerald-400/50 scale-105 active:scale-95'
+                : 'bg-zinc-900/60 text-zinc-600 border border-white/5 cursor-not-allowed'
             }`}
           >
             <Save className="w-4 h-4" />
-            {isSaving ? 'Guardando...' : 'Guardar Mapa'}
+            <span>{isSaving ? 'Guardando...' : 'Guardar Mapa'}</span>
           </button>
         </div>
       </div>
@@ -408,29 +413,29 @@ export default function InteractiveSeatBuilder({
               </div>
 
               {/* Status toggle */}
-              <div className="pt-2 border-t border-white/10">
+              <div className="pt-2 border-t border-white/10 space-y-2">
                 <button
                   type="button"
                   onClick={() => handleToggleSeatAvailability(selectedSeat)}
-                  className={`w-full py-2.5 px-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all border ${
+                  className={`w-full py-3 px-4 rounded-2xl font-black text-xs uppercase tracking-wider transition-all border shadow-lg ${
                     selectedSeat.is_available
-                      ? 'bg-emerald-950/60 text-emerald-400 border-emerald-800/80 hover:bg-emerald-900/50'
-                      : 'bg-zinc-900 text-zinc-500 border-zinc-800 hover:text-white'
+                      ? 'bg-emerald-950/70 text-emerald-300 border-emerald-500/50 hover:bg-emerald-900/80 shadow-[0_0_15px_rgba(16,185,129,0.25)] active:scale-95'
+                      : 'bg-zinc-900/80 text-zinc-400 border-zinc-700/60 hover:text-white hover:bg-zinc-850 active:scale-95'
                   }`}
                 >
-                  {selectedSeat.is_available ? '✓ Asiento Habilitado' : '✕ Asiento Bloqueado / Oculto'}
+                  {selectedSeat.is_available ? '✓ Asiento Habilitado (Público)' : '✕ Asiento Bloqueado / Oculto'}
+                </button>
+
+                {/* Delete Seat */}
+                <button
+                  type="button"
+                  onClick={() => handleDeleteSeat(selectedSeat.id)}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 text-xs font-black uppercase tracking-wider text-rose-400 hover:text-rose-200 bg-rose-950/20 hover:bg-rose-950/50 border border-rose-500/20 hover:border-rose-500/50 rounded-2xl transition-all shadow-sm active:scale-95"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Eliminar Asiento</span>
                 </button>
               </div>
-
-              {/* Delete Seat */}
-              <button
-                type="button"
-                onClick={() => handleDeleteSeat(selectedSeat.id)}
-                className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-red-500 hover:text-red-400 hover:bg-red-950/30 rounded-lg transition-colors"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                Eliminar Asiento del Mapa
-              </button>
             </div>
           ) : (
             <div className="bg-zinc-950 border border-white/10 rounded-2xl p-5 shadow-2xl text-center space-y-3">
@@ -486,39 +491,49 @@ export default function InteractiveSeatBuilder({
 
             {/* Template Options */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Option 1: Arena VIP (As in image) */}
+              {/* Option 1: Labrú */}
               <div
                 onClick={() => setSelectedTemplate('ARENA_VIP')}
-                className={`p-4 rounded-2xl border cursor-pointer transition-all ${
+                className={`p-5 rounded-3xl border cursor-pointer transition-all ${
                   selectedTemplate === 'ARENA_VIP'
-                    ? 'bg-red-950/30 border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)] ring-1 ring-red-500'
-                    : 'bg-zinc-900/60 border-zinc-800 hover:border-zinc-700'
+                    ? 'bg-gradient-to-b from-rose-950/40 to-zinc-950 border-rose-500 shadow-[0_0_25px_rgba(244,63,94,0.35)] ring-2 ring-rose-500/80 scale-[1.02]'
+                    : 'bg-zinc-900/60 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900/80'
                 }`}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-black uppercase tracking-wider text-red-400">Arena VIP (Imagen)</span>
-                  {selectedTemplate === 'ARENA_VIP' && <CheckCircle2 className="w-4 h-4 text-red-500" />}
+                <div className="flex items-center justify-between mb-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base font-black uppercase tracking-wider text-rose-400">Labrú</span>
+                    <span className="text-[10px] bg-rose-950/80 text-rose-300 border border-rose-500/40 px-2.5 py-0.5 rounded-full font-black">
+                      Sede Nueva
+                    </span>
+                  </div>
+                  {selectedTemplate === 'ARENA_VIP' && <CheckCircle2 className="w-5 h-5 text-rose-500" />}
                 </div>
                 <p className="text-xs text-zinc-400 leading-relaxed">
-                  Configura exactamente el mapa de la imagen: <strong>8 Mesas Ringside</strong>, <strong>12 Mesas VIP</strong>, <strong>44 Primera Fila</strong>, <strong>44 Segunda Fila</strong>, Pasillo y General.
+                  Configura la distribución oficial para <strong>Labrú</strong>: <strong>8 Mesas Ringside</strong> con entrada, <strong>12 Mesas VIP</strong>, <strong>44 Primera Fila</strong>, <strong>44 Segunda Fila</strong>, General y cuadrilátero central.
                 </p>
               </div>
 
-              {/* Option 2: Classic Ring SCW */}
+              {/* Option 2: The Wrestling Factory */}
               <div
                 onClick={() => setSelectedTemplate('CLASSIC_RING')}
-                className={`p-4 rounded-2xl border cursor-pointer transition-all ${
+                className={`p-5 rounded-3xl border cursor-pointer transition-all ${
                   selectedTemplate === 'CLASSIC_RING'
-                    ? 'bg-amber-950/30 border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.3)] ring-1 ring-amber-500'
-                    : 'bg-zinc-900/60 border-zinc-800 hover:border-zinc-700'
+                    ? 'bg-gradient-to-b from-amber-950/40 to-zinc-950 border-amber-500 shadow-[0_0_25px_rgba(245,158,11,0.35)] ring-2 ring-amber-500/80 scale-[1.02]'
+                    : 'bg-zinc-900/60 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900/80'
                 }`}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-black uppercase tracking-wider text-amber-400">Ring Clásico SCW</span>
-                  {selectedTemplate === 'CLASSIC_RING' && <CheckCircle2 className="w-4 h-4 text-amber-500" />}
+                <div className="flex items-center justify-between mb-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base font-black uppercase tracking-wider text-amber-400">The Wrestling Factory</span>
+                    <span className="text-[10px] bg-amber-950/80 text-amber-300 border border-amber-500/40 px-2.5 py-0.5 rounded-full font-black">
+                      Sede Clásica
+                    </span>
+                  </div>
+                  {selectedTemplate === 'CLASSIC_RING' && <CheckCircle2 className="w-5 h-5 text-amber-500" />}
                 </div>
                 <p className="text-xs text-zinc-400 leading-relaxed">
-                  El diseño tradicional original con las 4 zonas cardinales: <strong>Norte</strong>, <strong>Sur</strong>, <strong>Este</strong>, <strong>Oeste</strong> y <strong>General</strong>.
+                  Configura la distribución tradicional de <strong>The Wrestling Factory</strong>: Ring SCW clásico con las 4 zonas cardinales (<strong>Norte</strong>, <strong>Sur</strong>, <strong>Este</strong>, <strong>Oeste</strong>) y <strong>General</strong>.
                 </p>
               </div>
             </div>
@@ -607,18 +622,18 @@ export default function InteractiveSeatBuilder({
               )}
             </div>
 
-            <div className="flex gap-3 pt-2">
+            <div className="flex gap-3 pt-3">
               <button
                 type="button"
                 onClick={() => setIsTemplateModalOpen(false)}
-                className="flex-1 py-3 rounded-xl border border-white/10 font-bold text-xs uppercase tracking-wider text-zinc-400 hover:text-white"
+                className="flex-1 py-3.5 rounded-2xl border border-white/10 bg-zinc-900/80 hover:bg-zinc-800 font-bold text-xs uppercase tracking-wider text-zinc-400 hover:text-white transition-all active:scale-[0.98]"
               >
                 Cancelar
               </button>
               <button
                 type="button"
                 onClick={handleApplyTemplate}
-                className="flex-1 py-3 rounded-xl bg-red-600 hover:bg-red-500 font-bold text-xs uppercase tracking-wider text-white shadow-lg shadow-red-950/50"
+                className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 hover:from-red-500 hover:via-rose-500 hover:to-amber-500 font-black text-xs uppercase tracking-wider text-white shadow-[0_0_25px_rgba(239,68,68,0.4)] hover:shadow-[0_0_35px_rgba(245,158,11,0.6)] transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 Confirmar y Aplicar Plantilla
               </button>
@@ -690,17 +705,17 @@ export default function InteractiveSeatBuilder({
               </div>
             </div>
 
-            <div className="flex gap-3 pt-2">
+            <div className="flex gap-3 pt-3">
               <button
                 type="button"
                 onClick={() => setIsAddSeatOpen(false)}
-                className="flex-1 py-2.5 rounded-xl border border-white/10 font-bold text-xs uppercase text-zinc-400 hover:text-white"
+                className="flex-1 py-3 rounded-2xl border border-white/10 bg-zinc-900/80 hover:bg-zinc-800 font-bold text-xs uppercase tracking-wider text-zinc-400 hover:text-white transition-all active:scale-95"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-xs uppercase text-white shadow-lg"
+                className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 font-black text-xs uppercase tracking-wider text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all hover:scale-[1.02] active:scale-95"
               >
                 Crear Asiento
               </button>

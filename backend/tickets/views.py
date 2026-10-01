@@ -144,8 +144,10 @@ class EventZoneViewSet(viewsets.ModelViewSet):
             if clear_existing:
                 EventZone.objects.filter(event=event).delete()
 
-            if template_type == 'ARENA_VIP':
+            if template_type in ['ARENA_VIP', 'LABRU']:
                 event.map_type = 'ARENA_VIP'
+                if not event.location or event.location in ['Labrú', 'The Wrestling Factory', 'Arena Metropolitana SCW', 'Gimnasio Municipal SCW', '']:
+                    event.location = 'Labrú'
                 event.map_config = {
                     "width": 1200,
                     "height": 980,
@@ -160,7 +162,7 @@ class EventZoneViewSet(viewsets.ModelViewSet):
                     ],
                     "entrance": { "x": 185, "y": 780, "title": "ENTRADA" }
                 }
-                event.save(update_fields=['map_type', 'map_config'])
+                event.save(update_fields=['map_type', 'map_config', 'location'])
 
                 # 1. Mesas VIP Ringside (8 Mesas)
                 z_ringside = EventZone.objects.create(
@@ -286,10 +288,12 @@ class EventZoneViewSet(viewsets.ModelViewSet):
                     seats_per_row=0
                 )
 
-            elif template_type == 'CLASSIC_RING':
+            elif template_type in ['CLASSIC_RING', 'WRESTLING_FACTORY']:
                 event.map_type = 'CLASSIC_RING'
+                if not event.location or event.location in ['Labrú', 'The Wrestling Factory', 'Arena Metropolitana SCW', 'Gimnasio Municipal SCW', '']:
+                    event.location = 'The Wrestling Factory'
                 event.map_config = {}
-                event.save(update_fields=['map_type', 'map_config'])
+                event.save(update_fields=['map_type', 'map_config', 'location'])
 
                 for zt, rows, sps, pr_key, def_price in [
                     (EventZone.ZoneType.NORTE, 2, 17, 'NORTE', '320.00'),

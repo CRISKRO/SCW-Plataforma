@@ -51,6 +51,7 @@ class Command(BaseCommand):
 
                 # Asignar configuración de mapa
                 event.map_type = 'ARENA_VIP'
+                event.location = 'Labrú'
                 event.map_config = {
                     "width": 1200,
                     "height": 980,
@@ -65,7 +66,7 @@ class Command(BaseCommand):
                     ],
                     "entrance": { "x": 185, "y": 780, "title": "ENTRADA" }
                 }
-                event.save(update_fields=['map_type', 'map_config'])
+                event.save(update_fields=['map_type', 'map_config', 'location'])
 
                 # 1. Mesas VIP Ringside (8 Mesas con entrada)
                 z_ringside = EventZone.objects.create(
