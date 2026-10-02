@@ -162,7 +162,10 @@ class Command(BaseCommand):
             try:
                 event = Event.objects.get(id=event_id)
             except Event.DoesNotExist:
-                self.stderr.write(self.style.ERROR(f'No se encontró el evento con ID {event_id}'))
+                self.stderr.write(self.style.ERROR(f'No se encontró el evento con ID {event_id}.'))
+                self.stderr.write('Eventos disponibles en la base de datos:')
+                for e in Event.objects.all():
+                    self.stderr.write(f'  - ID {e.id}: {e.title}')
                 return
         else:
             # Buscar por nombre o por map_type
