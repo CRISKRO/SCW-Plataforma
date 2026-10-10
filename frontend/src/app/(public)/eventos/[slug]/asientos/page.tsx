@@ -846,12 +846,12 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
 
                           <div className="flex items-center justify-center w-full">
                             {/* Oeste */}
-                            <div className="flex-1 flex justify-end pr-2 sm:pr-6 md:pr-10 relative">
+                            <div className="flex-1 flex justify-end pr-6 sm:pr-8 md:pr-10 relative">
                               {renderPublicZone(parsedZones.find(z => z.zone_type === 'OESTE'), 'left')}
                             </div>
 
                             {/* El Ring Central - Diseño Realista */}
-                            <div className="relative w-40 h-40 sm:w-52 sm:h-52 md:w-64 md:h-64 bg-[#d4d4d8] border-[6px] sm:border-[8px] border-zinc-950 rounded flex items-center justify-center shadow-[0_0_80px_rgba(255,255,255,0.05)] z-10 shrink-0 mx-3 sm:mx-6 md:mx-12 lg:mx-16">
+                            <div className="relative w-40 h-40 sm:w-52 sm:h-52 md:w-64 md:h-64 bg-[#d4d4d8] border-[6px] sm:border-[8px] border-zinc-950 rounded flex items-center justify-center shadow-[0_0_80px_rgba(255,255,255,0.05)] z-10 shrink-0 mx-6 sm:mx-8 md:mx-12 lg:mx-16">
                               <div className="absolute inset-1 border-[1.5px] border-red-600/80 rounded-sm"></div>
                               <div className="absolute inset-2 border-[1.5px] border-zinc-100 rounded-sm"></div>
                               <div className="absolute inset-3 border-[1.5px] border-red-600/80 rounded-sm"></div>
@@ -869,7 +869,7 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
                             </div>
 
                             {/* Este */}
-                            <div className="flex-1 flex justify-start pl-2 sm:pl-6 md:pl-10 relative">
+                            <div className="flex-1 flex justify-start pl-6 sm:pl-8 md:pl-10 relative">
                               {renderPublicZone(parsedZones.find(z => z.zone_type === 'ESTE'), 'right')}
                             </div>
                           </div>
