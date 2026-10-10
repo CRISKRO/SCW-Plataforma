@@ -536,27 +536,13 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
           {/* Franja roja lateral conmemorativa */}
           <div className="hidden md:flex w-9 bg-gradient-to-b from-red-600 via-red-700 to-red-900 items-center justify-center shrink-0 border-r border-red-500/40 relative">
             <span className="text-[10px] font-black tracking-[0.3em] uppercase text-white rotate-[-90deg] whitespace-nowrap drop-shadow">
-              ★ SCW OFFICIAL PASS ★
+              ★ PASE OFICIAL SCW ★
             </span>
           </div>
 
           {/* Cuerpo principal del ticket */}
           <div className="flex-1 p-5 sm:p-6 md:p-8 relative z-10 flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-1 rounded bg-red-600/15 border border-red-500/30 text-red-400 font-black text-[11px] uppercase tracking-widest">
-                    STRONG CLASSIC WRESTLING
-                  </span>
-                  <span className="text-zinc-500 text-xs font-mono font-bold hidden sm:inline">
-                    BOLETO OFICIAL #{event.id ? String(event.id).padStart(4, '0') : '0001'}
-                  </span>
-                </div>
-                <span className="text-zinc-500 text-[11px] font-mono tracking-wider font-semibold">
-                  SERIE: {String(slug).toUpperCase().slice(0, 6)}
-                </span>
-              </div>
-
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight text-white drop-shadow-md">
                 {event.title}
               </h1>
@@ -621,12 +607,9 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
 
           {/* Talón desprendible */}
           <div className="w-full md:w-56 p-5 sm:p-6 bg-zinc-950/70 border-t md:border-t-0 md:border-l border-white/5 relative z-10 flex flex-col justify-between items-center text-center">
-            <div className="w-full flex items-center justify-between md:flex-col md:items-center gap-1.5">
+            <div className="w-full flex items-center justify-center">
               <span className="text-[10px] font-black uppercase tracking-widest text-red-500">
                 TALÓN DE CONTROL
-              </span>
-              <span className="text-[11px] font-mono text-zinc-400 font-bold bg-zinc-900 border border-zinc-800 px-2.5 py-0.5 rounded-full">
-                ASIENTOS NUMERADOS
               </span>
             </div>
 
