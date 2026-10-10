@@ -123,8 +123,8 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
       const containerHeight = mapContainerRef.current.clientHeight;
       const innerWidth = innerContainerRef.current.clientWidth;
       const innerHeight = innerContainerRef.current.clientHeight;
-      const scaleX = containerWidth < innerWidth ? (containerWidth / innerWidth) * 0.9 : 1;
-      const scaleY = containerHeight < innerHeight ? (containerHeight / innerHeight) * 0.9 : 1;
+      const scaleX = containerWidth < innerWidth ? (containerWidth / innerWidth) * 0.94 : 1;
+      const scaleY = containerHeight < innerHeight ? (containerHeight / innerHeight) * 0.94 : 1;
       const calculatedMinScale = Math.min(scaleX, scaleY);
       setScale(Math.max(calculatedMinScale, 0.4));
     } else {
@@ -288,8 +288,8 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
         const innerHeight = innerContainerRef.current.clientHeight;
         
         // Fit with some margin so it doesn't feel too close to the edges
-        const scaleX = containerWidth < innerWidth ? (containerWidth / innerWidth) * 0.9 : 1;
-        const scaleY = containerHeight < innerHeight ? (containerHeight / innerHeight) * 0.9 : 1;
+        const scaleX = containerWidth < innerWidth ? (containerWidth / innerWidth) * 0.94 : 1;
+        const scaleY = containerHeight < innerHeight ? (containerHeight / innerHeight) * 0.94 : 1;
         const calculatedFitScale = Math.min(scaleX, scaleY);
         const initialScale = Math.max(calculatedFitScale, 0.4);
 
@@ -812,7 +812,7 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
                   Usa un dedo para mover el mapa, dos para hacer zoom
                 </div>
                 <div
-                  className={`bg-zinc-950 border border-white/10 rounded-3xl h-[75vh] min-h-[620px] max-h-[850px] shadow-2xl relative overflow-hidden flex items-center justify-center w-full touch-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                  className={`bg-zinc-950 border border-white/10 rounded-2xl sm:rounded-3xl h-[420px] sm:h-[680px] lg:h-[750px] min-h-[360px] sm:min-h-[580px] max-h-[850px] shadow-2xl relative overflow-hidden flex items-center justify-center w-full touch-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
                   ref={mapContainerRef}
                   onPointerDown={onPointerDown}
                   onPointerMove={onPointerMove}
@@ -835,23 +835,23 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
                           transition: isDragging ? 'none' : 'transform 0.1s ease-out'
                         }}
                       >
-                        <div className="bg-zinc-900/60 shadow-2xl rounded-[2.5rem] py-10 px-8 sm:py-14 sm:px-12 flex flex-col items-center justify-center border border-white/10 relative w-max backdrop-blur-md">
+                        <div className="bg-zinc-900/60 shadow-2xl rounded-2xl sm:rounded-[2.5rem] py-3.5 px-3 sm:py-10 sm:px-8 md:py-14 md:px-12 flex flex-col items-center justify-center border border-white/10 relative w-max backdrop-blur-md">
 
                           {/* Norte */}
                           {parsedZones.find(z => z.zone_type === 'NORTE') && (
-                            <div className="flex justify-center mb-6 md:mb-10">
+                            <div className="flex justify-center mb-3 sm:mb-6 md:mb-10">
                               {renderPublicZone(parsedZones.find(z => z.zone_type === 'NORTE'), 'top')}
                             </div>
                           )}
 
                           <div className="flex items-center justify-center w-full">
                             {/* Oeste */}
-                            <div className="flex-1 flex justify-end pr-6 md:pr-10 relative">
+                            <div className="flex-1 flex justify-end pr-2 sm:pr-6 md:pr-10 relative">
                               {renderPublicZone(parsedZones.find(z => z.zone_type === 'OESTE'), 'left')}
                             </div>
 
                             {/* El Ring Central - Diseño Realista */}
-                            <div className="relative w-48 h-48 md:w-64 md:h-64 bg-[#d4d4d8] border-[8px] border-zinc-950 rounded flex items-center justify-center shadow-[0_0_80px_rgba(255,255,255,0.05)] z-10 shrink-0 mx-8 md:mx-12 lg:mx-16">
+                            <div className="relative w-40 h-40 sm:w-52 sm:h-52 md:w-64 md:h-64 bg-[#d4d4d8] border-[6px] sm:border-[8px] border-zinc-950 rounded flex items-center justify-center shadow-[0_0_80px_rgba(255,255,255,0.05)] z-10 shrink-0 mx-3 sm:mx-6 md:mx-12 lg:mx-16">
                               <div className="absolute inset-1 border-[1.5px] border-red-600/80 rounded-sm"></div>
                               <div className="absolute inset-2 border-[1.5px] border-zinc-100 rounded-sm"></div>
                               <div className="absolute inset-3 border-[1.5px] border-red-600/80 rounded-sm"></div>
@@ -863,20 +863,20 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
                               <div className="absolute bottom-2 left-2 w-6 h-6 bg-zinc-900 -rotate-45 transform -translate-x-1 translate-y-1 rounded-sm z-10"></div>
                               <div className="absolute -bottom-2 -right-2 w-5 h-5 bg-red-600 rounded-full shadow-lg border-2 border-black z-20"></div>
                               <div className="absolute bottom-2 right-2 w-6 h-6 bg-zinc-900 rotate-45 transform translate-x-1 translate-y-1 rounded-sm z-10"></div>
-                              <div className="relative flex items-center justify-center w-24 h-24 border-4 border-zinc-400/50 rounded-full p-2 bg-black/10">
-                                <img src="/images/logo-scw.png" alt="SCW Logo" className="w-16 h-16 object-contain drop-shadow-md select-none pointer-events-none opacity-90" />
+                              <div className="relative flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 border-4 border-zinc-400/50 rounded-full p-1.5 sm:p-2 bg-black/10">
+                                <img src="/images/logo-scw.png" alt="SCW Logo" className="w-14 h-14 sm:w-16 sm:h-16 object-contain drop-shadow-md select-none pointer-events-none opacity-90" />
                               </div>
                             </div>
 
                             {/* Este */}
-                            <div className="flex-1 flex justify-start pl-6 md:pl-10 relative">
+                            <div className="flex-1 flex justify-start pl-2 sm:pl-6 md:pl-10 relative">
                               {renderPublicZone(parsedZones.find(z => z.zone_type === 'ESTE'), 'right')}
                             </div>
                           </div>
 
                           {/* Sur */}
                           {parsedZones.find(z => z.zone_type === 'SUR') && (
-                            <div className="flex justify-center mt-6 md:mt-10">
+                            <div className="flex justify-center mt-3 sm:mt-6 md:mt-10">
                               {renderPublicZone(parsedZones.find(z => z.zone_type === 'SUR'), 'bottom')}
                             </div>
                           )}
