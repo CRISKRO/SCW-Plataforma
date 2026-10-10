@@ -273,7 +273,8 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                     unoptimized 
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/30" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-black via-black/30 to-black/60" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-black/60" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent w-full lg:w-3/5" />
                 </div>
               </>
             ) : (
@@ -348,7 +349,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                   </p>
                 )}
 
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 md:gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 md:gap-4 relative z-20">
                   {(slide.cta || []).map((btn: any) => {
                     if (btn.isEventTicket) {
                       return (
@@ -358,9 +359,9 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                             setSelectedEvent(btn.event);
                             setIsModalOpen(true);
                           }}
-                          className="group inline-flex w-full sm:w-auto justify-center items-center gap-2 px-6 py-3 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-black uppercase tracking-widest text-black bg-white hover:bg-zinc-100 transition-all hover:scale-105 rounded-sm"
+                          className="group inline-flex w-full sm:w-auto justify-center items-center gap-2.5 px-6 py-3.5 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-black uppercase tracking-wider text-black bg-white hover:bg-zinc-100 transition-all transform hover:scale-105 active:scale-95 rounded-xl shadow-2xl shadow-black/90"
                         >
-                          <Ticket className="w-4 h-4 md:w-5 md:h-5" />
+                          <Ticket className="w-4 h-4 md:w-5 md:h-5 text-red-600" />
                           {btn.label}
                           <ChevronRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
                         </button>
@@ -370,9 +371,9 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                       <Link
                         key={btn.label}
                         href={btn.href}
-                        className={`group inline-flex w-full sm:w-auto justify-center items-center gap-2 px-6 py-3 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-black uppercase tracking-widest transition-all hover:scale-105 rounded-sm shadow-xl ${slide.type === 'raffle' ? 'bg-gradient-to-r from-yellow-500 to-amber-600 text-black hover:from-yellow-400 hover:to-amber-500 shadow-yellow-900/50' : 'text-black bg-white hover:bg-zinc-100'}`}
+                        className={`group inline-flex w-full sm:w-auto justify-center items-center gap-2.5 px-6 py-3.5 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-black uppercase tracking-wider transition-all transform hover:scale-105 active:scale-95 rounded-xl shadow-2xl shadow-black/90 ${slide.type === 'raffle' ? 'bg-gradient-to-r from-yellow-500 to-amber-600 text-black hover:from-yellow-400 hover:to-amber-500 shadow-yellow-900/50' : 'text-black bg-white hover:bg-zinc-100'}`}
                       >
-                        <Ticket className="w-4 h-4 md:w-5 md:h-5" />
+                        <Ticket className={`w-4 h-4 md:w-5 md:h-5 ${slide.type === 'raffle' ? 'text-black' : 'text-red-600'}`} />
                         {btn.label}
                         <ChevronRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
                       </Link>
@@ -380,7 +381,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                       <Link
                         key={btn.label}
                         href={btn.href}
-                        className="inline-flex w-full sm:w-auto justify-center items-center gap-2 px-6 py-3 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-bold uppercase tracking-widest text-white border border-white/30 bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all hover:scale-105 rounded-sm"
+                        className="inline-flex w-full sm:w-auto justify-center items-center gap-2 px-6 py-3.5 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-bold uppercase tracking-wider text-zinc-100 hover:text-white border border-zinc-700/90 hover:border-zinc-400 bg-[#0a0a0e] hover:bg-zinc-900 shadow-2xl shadow-black transition-all transform hover:scale-105 active:scale-95 rounded-xl"
                       >
                         {btn.label}
                       </Link>
