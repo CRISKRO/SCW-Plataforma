@@ -119,9 +119,13 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
   const handleResetZoom = () => {
     if (mapContainerRef.current && innerContainerRef.current) {
       const containerWidth = mapContainerRef.current.clientWidth;
+      const containerHeight = mapContainerRef.current.clientHeight;
       const innerWidth = innerContainerRef.current.clientWidth;
-      const calculatedMinScale = containerWidth < innerWidth ? (containerWidth / innerWidth) * 0.88 : 1;
-      setScale(calculatedMinScale);
+      const innerHeight = innerContainerRef.current.clientHeight;
+      const scaleX = containerWidth < innerWidth ? (containerWidth / innerWidth) * 0.9 : 1;
+      const scaleY = containerHeight < innerHeight ? (containerHeight / innerHeight) * 0.9 : 1;
+      const calculatedMinScale = Math.min(scaleX, scaleY);
+      setScale(Math.max(calculatedMinScale, 0.4));
     } else {
       setScale(1);
     }
@@ -274,16 +278,22 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
 
   useEffect(() => {
     if (mapContainerRef.current && innerContainerRef.current && parsedZones.length > 0) {
-      // Use a short timeout to let the DOM render the inner content width properly
+      // Use a short timeout to let the DOM render the inner content width and height properly
       setTimeout(() => {
         if (!mapContainerRef.current || !innerContainerRef.current) return;
         const containerWidth = mapContainerRef.current.clientWidth;
+        const containerHeight = mapContainerRef.current.clientHeight;
         const innerWidth = innerContainerRef.current.clientWidth;
+        const innerHeight = innerContainerRef.current.clientHeight;
         
         // Fit with some margin so it doesn't feel too close to the edges
-        const calculatedMinScale = containerWidth < innerWidth ? (containerWidth / innerWidth) * 0.88 : 1;
-        setMinScale(calculatedMinScale);
-        setScale(calculatedMinScale);
+        const scaleX = containerWidth < innerWidth ? (containerWidth / innerWidth) * 0.9 : 1;
+        const scaleY = containerHeight < innerHeight ? (containerHeight / innerHeight) * 0.9 : 1;
+        const calculatedFitScale = Math.min(scaleX, scaleY);
+        const initialScale = Math.max(calculatedFitScale, 0.4);
+
+        setMinScale(Math.min(initialScale * 0.7, 0.4));
+        setScale(initialScale);
         setPosition({ x: 0, y: 0 });
       }, 50);
     }
@@ -709,7 +719,7 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
                   Usa un dedo para mover el mapa, dos para hacer zoom
                 </div>
                 <div
-                  className={`bg-zinc-950 border border-white/10 rounded-3xl h-[50vh] min-h-[400px] max-h-[600px] shadow-2xl relative overflow-hidden flex items-center justify-center w-full touch-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                  className={`bg-zinc-950 border border-white/10 rounded-3xl h-[75vh] min-h-[620px] max-h-[850px] shadow-2xl relative overflow-hidden flex items-center justify-center w-full touch-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
                   ref={mapContainerRef}
                   onPointerDown={onPointerDown}
                   onPointerMove={onPointerMove}
@@ -732,7 +742,7 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
                           transition: isDragging ? 'none' : 'transform 0.1s ease-out'
                         }}
                       >
-                        <div className="bg-zinc-900/60 shadow-2xl rounded-[1.5rem] p-1.5 md:p-3 flex flex-col items-center justify-center border border-white/10 relative w-max backdrop-blur-md">
+                        <div className="bg-zinc-900/60 shadow-2xl rounded-[2.5rem] py-10 px-8 sm:py-14 sm:px-12 flex flex-col items-center justify-center border border-white/10 relative w-max backdrop-blur-md">
 
                           {/* Norte */}
                           {parsedZones.find(z => z.zone_type === 'NORTE') && (

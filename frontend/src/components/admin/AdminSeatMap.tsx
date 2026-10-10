@@ -61,9 +61,13 @@ export default function AdminSeatMap({ zones, selectedSeatIds, onToggleSeat }: A
   const handleResetZoom = () => {
     if (mapContainerRef.current && innerContainerRef.current) {
       const containerWidth = mapContainerRef.current.clientWidth;
+      const containerHeight = mapContainerRef.current.clientHeight;
       const innerWidth = innerContainerRef.current.clientWidth;
-      const calculatedMinScale = containerWidth < innerWidth ? (containerWidth / innerWidth) * 0.88 : 1;
-      setScale(calculatedMinScale);
+      const innerHeight = innerContainerRef.current.clientHeight;
+      const scaleX = containerWidth < innerWidth ? (containerWidth / innerWidth) * 0.9 : 1;
+      const scaleY = containerHeight < innerHeight ? (containerHeight / innerHeight) * 0.9 : 1;
+      const calculatedMinScale = Math.min(scaleX, scaleY);
+      setScale(Math.max(calculatedMinScale, 0.4));
     } else {
       setScale(1);
     }
@@ -148,10 +152,16 @@ export default function AdminSeatMap({ zones, selectedSeatIds, onToggleSeat }: A
       setTimeout(() => {
         if (!mapContainerRef.current || !innerContainerRef.current) return;
         const containerWidth = mapContainerRef.current.clientWidth;
+        const containerHeight = mapContainerRef.current.clientHeight;
         const innerWidth = innerContainerRef.current.clientWidth;
-        const calculatedMinScale = containerWidth < innerWidth ? (containerWidth / innerWidth) * 0.88 : 1;
-        setMinScale(calculatedMinScale);
-        setScale(calculatedMinScale);
+        const innerHeight = innerContainerRef.current.clientHeight;
+        const scaleX = containerWidth < innerWidth ? (containerWidth / innerWidth) * 0.9 : 1;
+        const scaleY = containerHeight < innerHeight ? (containerHeight / innerHeight) * 0.9 : 1;
+        const calculatedFitScale = Math.min(scaleX, scaleY);
+        const initialScale = Math.max(calculatedFitScale, 0.4);
+
+        setMinScale(Math.min(initialScale * 0.7, 0.4));
+        setScale(initialScale);
         setPosition({ x: 0, y: 0 });
       }, 50);
     }
@@ -223,7 +233,7 @@ export default function AdminSeatMap({ zones, selectedSeatIds, onToggleSeat }: A
       </div>
 
       <div
-        className={`bg-zinc-950 border border-white/10 rounded-xl h-[350px] shadow-inner relative overflow-hidden flex items-center justify-center w-full touch-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        className={`bg-zinc-950 border border-white/10 rounded-2xl h-[480px] min-h-[400px] shadow-inner relative overflow-hidden flex items-center justify-center w-full touch-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         ref={mapContainerRef}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -244,7 +254,7 @@ export default function AdminSeatMap({ zones, selectedSeatIds, onToggleSeat }: A
                 transition: isDragging ? 'none' : 'transform 0.1s ease-out'
               }}
             >
-              <div className="bg-zinc-900/60 shadow-xl rounded-2xl p-4 flex flex-col items-center justify-center border border-white/10 relative w-max backdrop-blur-md">
+              <div className="bg-zinc-900/60 shadow-xl rounded-[2rem] py-8 px-6 flex flex-col items-center justify-center border border-white/10 relative w-max backdrop-blur-md">
                 {parsedZones.find(z => z.zone_type === 'NORTE') && (
                   <div className="flex justify-center mb-6">
                     {renderZone(parsedZones.find(z => z.zone_type === 'NORTE'), 'top')}
