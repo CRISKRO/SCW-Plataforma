@@ -27,6 +27,19 @@ def get_group_ticket_hash(order_id: int, item_ids: list) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()[:16].upper()
 
 
+def get_scw_logo_path():
+    """Look for SCW logo in media directory first, then fallback to frontend assets."""
+    candidates = [
+        os.path.join(settings.BASE_DIR, 'media', 'logo-scw.png'),
+        os.path.join(settings.BASE_DIR, '..', 'frontend', 'public', 'images', 'logo-scw.png'),
+        os.path.join(settings.BASE_DIR, 'media', 'fighters', 'logo_scw.jpg'),
+    ]
+    for p in candidates:
+        if os.path.exists(p):
+            return p
+    return None
+
+
 def generate_ticket_qr(order_id: int, item_id: int, item_name: str) -> BytesIO:
     """
     Generate a QR code image for a single ticket.
@@ -51,9 +64,9 @@ def generate_ticket_qr(order_id: int, item_id: int, item_name: str) -> BytesIO:
 
     img = qr.make_image(fill_color="#000000", back_color="#FFFFFF").convert('RGB')
     
-    logo_path = os.path.join(settings.BASE_DIR, '..', 'frontend', 'public', 'images', 'logo-scw.png')
+    logo_path = get_scw_logo_path()
     
-    if os.path.exists(logo_path):
+    if logo_path:
         try:
             logo = Image.open(logo_path)
             qr_width, qr_height = img.size
@@ -105,9 +118,9 @@ def generate_group_ticket_qr(order_id: int, item_ids: list, group_title: str) ->
 
     img = qr.make_image(fill_color="#000000", back_color="#FFFFFF").convert('RGB')
     
-    logo_path = os.path.join(settings.BASE_DIR, '..', 'frontend', 'public', 'images', 'logo-scw.png')
+    logo_path = get_scw_logo_path()
     
-    if os.path.exists(logo_path):
+    if logo_path:
         try:
             logo = Image.open(logo_path)
             qr_width, qr_height = img.size

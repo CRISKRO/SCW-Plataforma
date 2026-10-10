@@ -1,10 +1,11 @@
 """
 Email sending for SCW ticket confirmation.
-Sends a beautiful HTML email with QR codes attached for each purchased item.
+Sends a beautiful, modern HTML email with company logos and QR codes attached for each purchased item.
 """
 import base64
+import os
 from email.mime.image import MIMEImage
-from django.core.mail import EmailMultiAlternatives, get_connection
+from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 from .qr import generate_ticket_qr
 from api.models import get_active_config
@@ -22,6 +23,18 @@ def send_ticket_email(order):
         return False
 
     total_tickets = len(ticket_items)
+
+    # Check for logo candidates
+    logo_candidates = [
+        os.path.join(settings.BASE_DIR, 'media', 'logo-scw.png'),
+        os.path.join(settings.BASE_DIR, '..', 'frontend', 'public', 'images', 'logo-scw.png'),
+        os.path.join(settings.BASE_DIR, 'media', 'fighters', 'logo_scw.jpg'),
+    ]
+    logo_path = None
+    for p in logo_candidates:
+        if os.path.exists(p):
+            logo_path = p
+            break
 
     # Build QR attachments
     qr_images = []
@@ -55,73 +68,163 @@ def send_ticket_email(order):
         })
         
         items_html += f"""
-        <div style="background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:20px;margin-bottom:20px;text-align:center;">
-          <p style="color:#e00;font-size:11px;text-transform:uppercase;letter-spacing:2px;margin:0 0 4px;font-weight:bold;">{badge_text}</p>
-          <h3 style="color:#fff;margin:0 0 4px;font-size:18px;">{title}</h3>
-          <p style="color:#22c55e;font-size:14px;font-weight:bold;margin:0 0 16px;">{seat_info}</p>
-          <img src="cid:{cid_str}" width="220" height="220" alt="QR Boleto" style="border-radius:8px;"/>
-          <p style="color:#888;font-size:11px;margin:12px 0 0;">Presenta este código en la entrada (Válido para 1 acceso)</p>
+        <div style="background:#111216;border:1px solid #24252e;border-radius:16px;padding:24px 20px;margin-bottom:24px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.5);">
+          <p style="color:#dc2626;font-size:10px;text-transform:uppercase;letter-spacing:2.5px;margin:0 0 6px;font-weight:900;">
+            &#9733; BOLETO OFICIAL &nbsp;·&nbsp; {badge_text.upper()} &#9733;
+          </p>
+          <h3 style="color:#ffffff;margin:0 0 8px;font-size:20px;font-weight:900;letter-spacing:0.5px;text-transform:uppercase;">
+            {title}
+          </h3>
+          <div style="display:inline-block;background:#181920;border:1px solid #2e303d;border-radius:20px;padding:5px 14px;margin-bottom:18px;">
+            <span style="color:#22c55e;font-size:12px;font-weight:bold;letter-spacing:0.5px;">{seat_info}</span>
+          </div>
+          <div style="background:#ffffff;padding:12px;border-radius:12px;display:inline-block;margin:0 auto;box-shadow:0 4px 16px rgba(0,0,0,0.4);">
+            <img src="cid:{cid_str}" width="220" height="220" alt="QR Boleto" style="display:block;border-radius:4px;"/>
+          </div>
+          <p style="color:#888890;font-size:11px;margin:14px 0 2px;">
+            Presenta este código en la entrada (Válido para 1 acceso)
+          </p>
+          <p style="color:#52525b;font-size:10px;font-family:'Courier New',Courier,monospace;letter-spacing:1px;margin:2px 0 0;">
+            FOLIO DIGITAL: #SCW-ORD{order.id}-ITM{item.id}
+          </p>
         </div>
         """
 
+    logo_img_tag = '<div style="text-align:center;margin-bottom:12px;"><img src="cid:logo_scw@scw.boletos" width="68" height="68" alt="SCW" style="display:inline-block;border-radius:50%;border:2px solid rgba(255,255,255,0.15);background:#000000;" /></div>' if logo_path else ''
+
     html_body = f"""
     <!DOCTYPE html>
-    <html>
-    <head><meta charset="UTF-8"></head>
-    <body style="margin:0;padding:0;background:#000;font-family:'Helvetica Neue',Arial,sans-serif;">
-      <div style="max-width:600px;margin:0 auto;padding:40px 20px;">
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Boletos SCW</title>
+    </head>
+    <body style="margin:0;padding:0;background:#090a0d;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+      <div style="max-width:580px;margin:0 auto;padding:36px 18px;">
         
-        <!-- Header -->
-        <div style="text-align:center;margin-bottom:40px;">
-          <h1 style="color:#fff;font-size:32px;font-weight:900;letter-spacing:-1px;margin:0;text-transform:uppercase;">SCW</h1>
-          <p style="color:#e00;font-size:11px;letter-spacing:4px;text-transform:uppercase;margin:4px 0 0;">Pro Wrestling</p>
+        <!-- Header con Logo Oficial -->
+        <div style="text-align:center;margin-bottom:30px;padding-bottom:24px;border-bottom:1px solid #1e2028;">
+          {logo_img_tag}
+          <h1 style="color:#ffffff;font-size:20px;font-weight:900;letter-spacing:1px;margin:0;text-transform:uppercase;">STRONG CLASSIC WRESTLING</h1>
+          <p style="color:#dc2626;font-size:10px;font-weight:900;letter-spacing:3px;text-transform:uppercase;margin:4px 0 0;">BOLETERÍA OFICIAL · THE WRESTLING FACTORY</p>
         </div>
 
-        <!-- Confirmation Banner -->
-        <div style="background:linear-gradient(135deg,#16a34a,#15803d);border-radius:16px;padding:24px;text-align:center;margin-bottom:32px;">
-          <p style="font-size:32px;margin:0;">✅</p>
-          <h2 style="color:#fff;font-size:24px;font-weight:900;margin:8px 0 4px;">¡Pago Confirmado!</h2>
-          <p style="color:#d1fae5;margin:0;font-size:14px;">Orden #{order.id} · ${float(order.total_amount):.2f} MXN</p>
+        <!-- Banner de Confirmación (Elegante y Moderno, Sin Emojis) -->
+        <div style="background:linear-gradient(145deg,#0d1f14,#0a140e);border:1px solid rgba(34,197,94,0.3);border-radius:14px;padding:20px 24px;text-align:center;margin-bottom:28px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 8px;">
+            <tr>
+              <td style="width:26px;height:26px;border-radius:50%;background:rgba(34,197,94,0.15);border:1.5px solid #22c55e;text-align:center;vertical-align:middle;color:#22c55e;font-size:15px;font-weight:900;line-height:26px;">
+                &#10003;
+              </td>
+              <td style="padding-left:10px;color:#ffffff;font-size:17px;font-weight:900;letter-spacing:1px;text-transform:uppercase;vertical-align:middle;">
+                PAGO CONFIRMADO
+              </td>
+            </tr>
+          </table>
+          <p style="color:#a1a1aa;margin:0;font-size:13px;font-family:'Courier New',Courier,monospace;letter-spacing:0.5px;">
+            Orden #{order.id} &nbsp;·&nbsp; ${float(order.total_amount):.2f} MXN &nbsp;·&nbsp; <span style="color:#22c55e;font-weight:bold;">Aprobado</span>
+          </p>
         </div>
 
-        <!-- Instructions -->
-        <div style="background:#111;border:1px solid #222;border-radius:12px;padding:20px;margin-bottom:24px;">
-          <h3 style="color:#fff;font-size:14px;text-transform:uppercase;letter-spacing:2px;margin:0 0 12px;">Instrucciones</h3>
-          <ol style="color:#aaa;font-size:13px;line-height:2;margin:0;padding-left:20px;">
-            <li>Guarda este correo o toma captura de pantalla de cada código QR.</li>
-            <li>Cada código QR corresponde a un asiento o boleto individual.</li>
-            <li>Preséntalo en la entrada del evento.</li>
-            <li>El personal escaneará cada código para darte acceso a ti y a tus acompañantes.</li>
-          </ol>
+        <!-- Instrucciones de Acceso -->
+        <div style="background:#111216;border:1px solid #22232a;border-radius:14px;padding:20px 24px;margin-bottom:28px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:14px;">
+            <tr>
+              <td style="width:4px;height:16px;background:#dc2626;border-radius:2px;"></td>
+              <td style="padding-left:8px;color:#ffffff;font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;">
+                INSTRUCCIONES DE ACCESO
+              </td>
+            </tr>
+          </table>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+              <td style="vertical-align:top;width:24px;padding-bottom:10px;">
+                <span style="display:inline-block;width:18px;height:18px;line-height:18px;text-align:center;background:#1a1b22;border:1px solid #2e303d;border-radius:4px;color:#d4d4d8;font-size:10px;font-weight:bold;font-family:monospace;">1</span>
+              </td>
+              <td style="color:#a1a1aa;font-size:12px;line-height:1.6;padding-bottom:10px;padding-left:6px;">
+                Guarda este correo o toma captura de pantalla de cada código QR en tu teléfono.
+              </td>
+            </tr>
+            <tr>
+              <td style="vertical-align:top;width:24px;padding-bottom:10px;">
+                <span style="display:inline-block;width:18px;height:18px;line-height:18px;text-align:center;background:#1a1b22;border:1px solid #2e303d;border-radius:4px;color:#d4d4d8;font-size:10px;font-weight:bold;font-family:monospace;">2</span>
+              </td>
+              <td style="color:#a1a1aa;font-size:12px;line-height:1.6;padding-bottom:10px;padding-left:6px;">
+                Cada código QR es único y corresponde a un asiento o entrada individual.
+              </td>
+            </tr>
+            <tr>
+              <td style="vertical-align:top;width:24px;padding-bottom:10px;">
+                <span style="display:inline-block;width:18px;height:18px;line-height:18px;text-align:center;background:#1a1b22;border:1px solid #2e303d;border-radius:4px;color:#d4d4d8;font-size:10px;font-weight:bold;font-family:monospace;">3</span>
+              </td>
+              <td style="color:#a1a1aa;font-size:12px;line-height:1.6;padding-bottom:10px;padding-left:6px;">
+                Preséntalo directamente en la entrada de <strong style="color:#ffffff;">The Wrestling Factory</strong>.
+              </td>
+            </tr>
+            <tr>
+              <td style="vertical-align:top;width:24px;">
+                <span style="display:inline-block;width:18px;height:18px;line-height:18px;text-align:center;background:#1a1b22;border:1px solid #2e303d;border-radius:4px;color:#d4d4d8;font-size:10px;font-weight:bold;font-family:monospace;">4</span>
+              </td>
+              <td style="color:#a1a1aa;font-size:12px;line-height:1.6;padding-left:6px;">
+                El personal escaneará tu código para darte acceso inmediato a ti y a tus acompañantes.
+              </td>
+            </tr>
+          </table>
         </div>
 
-        <!-- QR Tickets -->
-        <h3 style="color:#fff;font-size:14px;text-transform:uppercase;letter-spacing:2px;margin:0 0 16px;">Tus Boletos</h3>
+        <!-- Boletos QR -->
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;">
+          <tr>
+            <td style="width:4px;height:16px;background:#dc2626;border-radius:2px;"></td>
+            <td style="padding-left:8px;color:#ffffff;font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;">
+              TUS BOLETOS DIGITALES
+            </td>
+          </tr>
+        </table>
         {items_html}
 
         <!-- Footer -->
-        <div style="text-align:center;padding-top:32px;border-top:1px solid #222;margin-top:32px;">
-          <p style="color:#555;font-size:12px;margin:0;">SCW Pro Wrestling · Todos los derechos reservados</p>
-          <p style="color:#555;font-size:11px;margin:4px 0 0;">¿Problemas? Responde a este correo.</p>
+        <div style="text-align:center;padding-top:28px;border-top:1px solid #1e2028;margin-top:28px;">
+          <p style="color:#71717a;font-size:11px;font-weight:bold;margin:0;letter-spacing:0.5px;">
+            Strong Classic Wrestling &nbsp;·&nbsp; The Wrestling Factory
+          </p>
+          <p style="color:#52525b;font-size:11px;margin:6px 0 0;">
+            ¿Tienes alguna duda con tu compra? Responde directamente a este correo.
+          </p>
+          <p style="color:#3f3f46;font-size:10px;margin:6px 0 0;">
+            Comprobante electrónico de acceso oficial. No compartas tus códigos QR con terceros.
+          </p>
         </div>
       </div>
     </body>
     </html>
     """
 
-    text_body = f"¡Pago confirmado! Orden #{order.id}. Encuentra tus boletos QR en la versión HTML de este correo."
+    text_body = f"Pago confirmado. Orden #{order.id}. Encuentra tus boletos QR en la versión HTML de este correo."
 
     config = get_active_config()
     from_email = config.default_from_email if config.default_from_email else settings.DEFAULT_FROM_EMAIL
 
     email = EmailMultiAlternatives(
-        subject=f"🎟️ Tus Boletos SCW – Orden #{order.id}",
+        subject=f"Tus Boletos SCW – Orden #{order.id}",
         body=text_body,
         from_email=from_email,
         to=[order.contact_email]
     )
     email.mixed_subtype = 'related'
     email.attach_alternative(html_body, "text/html")
+
+    # Attach SCW Logo if available
+    if logo_path:
+        try:
+            with open(logo_path, 'rb') as f:
+                logo_mime = MIMEImage(f.read(), _subtype='png' if logo_path.endswith('.png') else 'jpeg')
+                logo_mime.add_header('Content-ID', '<logo_scw@scw.boletos>')
+                logo_mime.add_header('Content-Disposition', 'inline', filename='logo_scw.png')
+                email.attach(logo_mime)
+        except Exception as e:
+            print(f"Error attaching logo to email: {e}")
 
     # Attach QR images inline
     for qr in qr_images:
@@ -137,5 +240,3 @@ def send_ticket_email(order):
     email.connection = connection
     email.send(fail_silently=False)
     return True
-
-
