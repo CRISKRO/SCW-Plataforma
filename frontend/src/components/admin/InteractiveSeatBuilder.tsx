@@ -480,13 +480,13 @@ export default function InteractiveSeatBuilder({
   return (
     <div className="space-y-6">
       {/* Top Action Toolbar */}
-      <div className="bg-zinc-950 border border-white/10 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-lg">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="glass-panel border border-white/10 p-4 flex flex-wrap items-center justify-between gap-3 shadow-2xl">
+        <div className="flex flex-wrap items-center gap-2.5">
           {/* Templates Button */}
           <button
             type="button"
             onClick={() => setIsTemplateModalOpen(true)}
-            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold text-xs uppercase tracking-wider px-4 py-2 rounded-lg transition-colors cursor-pointer"
+            className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white font-bold text-xs uppercase tracking-wider px-4 py-2.5 rounded-xl transition-all shadow-md shadow-red-950/30 active:scale-95 cursor-pointer whitespace-nowrap"
           >
             <LayoutTemplate className="w-4 h-4" />
             <span>Cargar Plantilla de Mapa</span>
@@ -497,26 +497,26 @@ export default function InteractiveSeatBuilder({
             <button
               type="button"
               onClick={() => setIsAddSeatOpen(true)}
-              className="flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-white/10 font-semibold text-xs uppercase tracking-wider px-3.5 py-2 rounded-lg transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-200 border border-white/10 font-bold text-xs uppercase tracking-wider px-3.5 py-2.5 rounded-xl transition-all active:scale-95 cursor-pointer"
             >
-              <Plus className="w-4 h-4 text-emerald-400" />
+              <Plus className="w-4 h-4 text-red-500" />
               <span>Agregar Asiento</span>
             </button>
           )}
 
           {/* Grid Snap Options (Only in Labrú mode) */}
           {isArenaMap && (
-            <div className="flex items-center gap-1.5 bg-zinc-900 border border-white/10 rounded-lg px-2.5 py-1 text-xs">
-              <span className="font-semibold text-zinc-400">Cuadrícula:</span>
+            <div className="flex items-center gap-1.5 bg-zinc-900/80 border border-white/10 rounded-xl px-3 py-1.5 text-xs">
+              <span className="font-bold text-zinc-400 uppercase text-[10px] tracking-wider">Cuadrícula:</span>
               <div className="flex items-center gap-1">
                 {[0, 5, 10, 20].map(val => (
                   <button
                     key={val}
                     type="button"
                     onClick={() => setGridSnap(val)}
-                    className={`px-2 py-0.5 rounded text-xs font-semibold transition-colors ${
+                    className={`px-2 py-0.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                       gridSnap === val
-                        ? 'bg-zinc-700 text-white'
+                        ? 'bg-red-600 text-white shadow-sm'
                         : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
                     }`}
                   >
@@ -532,24 +532,26 @@ export default function InteractiveSeatBuilder({
             <button
               type="button"
               onClick={() => setPreviewMode(!previewMode)}
-              className="flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-white/10 font-semibold text-xs uppercase tracking-wider px-3 py-2 rounded-lg transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-white/10 font-bold text-xs uppercase tracking-wider px-3.5 py-2.5 rounded-xl transition-all cursor-pointer active:scale-95"
             >
-              {previewMode ? <Eye className="w-4 h-4 text-amber-400" /> : <EyeOff className="w-4 h-4 text-zinc-400" />}
+              {previewMode ? <Eye className="w-4 h-4 text-red-500" /> : <EyeOff className="w-4 h-4 text-zinc-400" />}
               <span>{previewMode ? 'Vista Previa' : 'Modo Edición'}</span>
             </button>
           )}
 
           {/* Quick Selection Status Badge in Toolbar */}
           {selectedSeats.length > 0 && (
-            <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-1.5 text-xs text-amber-300 animate-fadeIn">
-              <CheckSquare className="w-3.5 h-3.5 text-amber-400" />
-              <span className="font-bold">{selectedSeats.length} {selectedSeats.length === 1 ? 'seleccionado' : 'seleccionados'}</span>
-              <div className="h-3.5 w-px bg-amber-500/30 mx-0.5" />
+            <div className="flex items-center gap-2.5 bg-zinc-900/90 border border-red-500/30 rounded-xl px-3 py-1.5 text-xs text-zinc-200 shadow-md">
+              <span className="flex items-center gap-1.5 font-black text-white">
+                <span className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_6px_#ef4444] animate-pulse" />
+                {selectedSeats.length} {selectedSeats.length === 1 ? 'seleccionado' : 'seleccionados'}
+              </span>
+              <div className="h-4 w-px bg-white/10" />
               <button
                 type="button"
                 disabled={isBulkUpdating}
                 onClick={() => handleBulkSetAvailability(true)}
-                className="text-emerald-400 hover:text-emerald-300 font-bold px-1.5 py-0.5 rounded hover:bg-emerald-500/10 transition-colors cursor-pointer"
+                className="text-emerald-400 hover:text-emerald-300 font-bold px-2 py-0.5 rounded-lg hover:bg-emerald-950/40 border border-emerald-500/20 transition-colors cursor-pointer text-xs uppercase tracking-wider"
                 title="Habilitar todos los seleccionados"
               >
                 Habilitar
@@ -558,7 +560,7 @@ export default function InteractiveSeatBuilder({
                 type="button"
                 disabled={isBulkUpdating}
                 onClick={() => handleBulkSetAvailability(false)}
-                className="text-zinc-300 hover:text-white font-bold px-1.5 py-0.5 rounded hover:bg-zinc-800 transition-colors cursor-pointer"
+                className="text-zinc-300 hover:text-white font-bold px-2 py-0.5 rounded-lg hover:bg-zinc-800 border border-white/10 transition-colors cursor-pointer text-xs uppercase tracking-wider"
                 title="Bloquear todos los seleccionados"
               >
                 Bloquear
@@ -566,7 +568,7 @@ export default function InteractiveSeatBuilder({
               <button
                 type="button"
                 onClick={handleClearSelection}
-                className="text-zinc-400 hover:text-white text-xs ml-0.5 cursor-pointer"
+                className="text-zinc-500 hover:text-white text-xs px-1 hover:bg-white/5 rounded transition-colors cursor-pointer"
                 title="Deseleccionar todos"
               >
                 ✕
@@ -579,17 +581,17 @@ export default function InteractiveSeatBuilder({
         {isArenaMap && (
           <div className="flex items-center gap-2">
             {hasUnsavedChanges && (
-              <span className="text-amber-400 text-xs font-bold flex items-center gap-1">
-                <AlertCircle className="w-3.5 h-3.5" /> Cambios sin guardar
+              <span className="text-red-400 text-xs font-bold flex items-center gap-1">
+                <AlertCircle className="w-3.5 h-3.5 text-red-500" /> Cambios sin guardar
               </span>
             )}
             <button
               type="button"
               disabled={isSaving || !hasUnsavedChanges}
               onClick={handleSaveChanges}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-xs uppercase tracking-wider transition-colors ${
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all ${
                 hasUnsavedChanges
-                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer'
+                  ? 'bg-gradient-to-r from-emerald-600 to-emerald-800 hover:from-emerald-500 hover:to-emerald-700 text-white shadow-lg shadow-emerald-950/40 cursor-pointer active:scale-95'
                   : 'bg-zinc-900 text-zinc-600 border border-white/5 cursor-not-allowed'
               }`}
             >
@@ -632,24 +634,24 @@ export default function InteractiveSeatBuilder({
         <div className="lg:col-span-1 space-y-4">
           {selectedSeats.length > 1 ? (
             /* MULTI-SEAT BULK INSPECTOR */
-            <div className="bg-zinc-950 border border-white/10 rounded-2xl p-5 shadow-lg space-y-4">
+            <div className="glass-panel border border-white/10 p-5 shadow-2xl space-y-4">
               {/* Header */}
               <div className="flex items-center justify-between border-b border-white/10 pb-3">
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <CheckSquare className="w-3.5 h-3.5 text-amber-400" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
+                    <Layers className="w-3.5 h-3.5 text-red-500" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-red-500">
                       Selección Múltiple
                     </span>
                   </div>
-                  <h3 className="text-base font-bold text-white mt-0.5">
+                  <h3 className="text-lg font-black text-white tracking-tight mt-0.5">
                     {selectedSeats.length} Asientos Seleccionados
                   </h3>
                 </div>
                 <button
                   type="button"
                   onClick={handleClearSelection}
-                  className="text-zinc-500 hover:text-white text-xs px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 transition-colors cursor-pointer"
+                  className="text-zinc-400 hover:text-white text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-white/10 transition-colors cursor-pointer"
                   title="Deseleccionar todos"
                 >
                   Limpiar
@@ -658,19 +660,19 @@ export default function InteractiveSeatBuilder({
 
               {/* Status Breakdown Pills */}
               <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="bg-emerald-950/40 border border-emerald-500/20 rounded-xl p-2.5 text-center">
-                  <span className="text-[10px] font-bold uppercase text-emerald-400 block tracking-wider">Habilitados</span>
-                  <span className="text-lg font-black text-emerald-400">{availableCount}</span>
+                <div className="bg-emerald-950/30 border border-emerald-500/20 rounded-xl p-3 text-center">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 block">Habilitados</span>
+                  <span className="text-xl font-black text-emerald-400 mt-0.5 block">{availableCount}</span>
                 </div>
-                <div className="bg-zinc-900 border border-white/10 rounded-xl p-2.5 text-center">
-                  <span className="text-[10px] font-bold uppercase text-zinc-400 block tracking-wider">Bloqueados</span>
-                  <span className="text-lg font-black text-zinc-300">{blockedCount}</span>
+                <div className="bg-zinc-900/80 border border-white/10 rounded-xl p-3 text-center">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 block">Bloqueados</span>
+                  <span className="text-xl font-black text-zinc-300 mt-0.5 block">{blockedCount}</span>
                 </div>
               </div>
 
               {/* Bulk Actions Section */}
               <div className="space-y-2 pt-1">
-                <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 block">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 block">
                   Acciones en Lote:
                 </label>
 
@@ -679,7 +681,7 @@ export default function InteractiveSeatBuilder({
                   type="button"
                   disabled={isBulkUpdating}
                   onClick={() => handleBulkSetAvailability(true)}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg font-bold text-xs uppercase tracking-wider bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md shadow-emerald-950/50 cursor-pointer disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider bg-gradient-to-r from-emerald-600 to-emerald-800 hover:from-emerald-500 hover:to-emerald-700 text-white transition-all shadow-lg shadow-emerald-950/30 cursor-pointer disabled:opacity-50 active:scale-95"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>{isBulkUpdating ? 'Procesando...' : `Habilitar Todos (${selectedSeats.length})`}</span>
@@ -690,9 +692,9 @@ export default function InteractiveSeatBuilder({
                   type="button"
                   disabled={isBulkUpdating}
                   onClick={() => handleBulkSetAvailability(false)}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg font-bold text-xs uppercase tracking-wider bg-zinc-900 hover:bg-zinc-800 text-amber-300 border border-amber-500/30 transition-all cursor-pointer disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-white/10 hover:border-white/20 transition-all cursor-pointer disabled:opacity-50 active:scale-95"
                 >
-                  <EyeOff className="w-4 h-4 text-amber-400" />
+                  <EyeOff className="w-4 h-4 text-zinc-400" />
                   <span>{isBulkUpdating ? 'Procesando...' : `Bloquear / Deshabilitar (${selectedSeats.length})`}</span>
                 </button>
 
@@ -702,7 +704,7 @@ export default function InteractiveSeatBuilder({
                     type="button"
                     disabled={isBulkUpdating}
                     onClick={handleBulkDeleteSeats}
-                    className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-semibold text-red-400 hover:text-red-300 bg-red-950/20 hover:bg-red-950/40 border border-red-500/20 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-1.5 py-2 px-4 text-xs font-bold uppercase tracking-wider text-red-400 hover:text-red-300 bg-red-950/20 hover:bg-red-950/50 border border-red-500/20 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     <span>Eliminar Asientos Seleccionados</span>
@@ -712,35 +714,35 @@ export default function InteractiveSeatBuilder({
 
               {/* Quick Selection Helpers */}
               <div className="pt-2 border-t border-white/10 space-y-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 block">
                   Ayudantes de Selección
                 </span>
-                <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                <div className="grid grid-cols-2 gap-1.5">
                   <button
                     type="button"
                     onClick={handleSelectRow}
-                    className="px-2 py-1.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-white/5 font-medium transition-colors cursor-pointer"
+                    className="px-2.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-850 text-zinc-300 hover:text-white border border-white/10 font-bold text-[10px] uppercase tracking-wider transition-colors cursor-pointer text-center"
                   >
                     + Fila Actual
                   </button>
                   <button
                     type="button"
                     onClick={handleSelectZone}
-                    className="px-2 py-1.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-white/5 font-medium transition-colors cursor-pointer"
+                    className="px-2.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-850 text-zinc-300 hover:text-white border border-white/10 font-bold text-[10px] uppercase tracking-wider transition-colors cursor-pointer text-center"
                   >
                     + Toda la Zona
                   </button>
                   <button
                     type="button"
                     onClick={handleInvertSelection}
-                    className="px-2 py-1.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-white/5 font-medium transition-colors cursor-pointer"
+                    className="px-2.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-850 text-zinc-300 hover:text-white border border-white/10 font-bold text-[10px] uppercase tracking-wider transition-colors cursor-pointer text-center"
                   >
                     Invertir
                   </button>
                   <button
                     type="button"
                     onClick={handleSelectAll}
-                    className="px-2 py-1.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-white/5 font-medium transition-colors cursor-pointer"
+                    className="px-2.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-850 text-zinc-300 hover:text-white border border-white/10 font-bold text-[10px] uppercase tracking-wider transition-colors cursor-pointer text-center"
                   >
                     Todo el Mapa
                   </button>
@@ -750,7 +752,7 @@ export default function InteractiveSeatBuilder({
               {/* List of Selected Seats with individual remove */}
               <div className="pt-2 border-t border-white/10 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
                     Detalle ({selectedSeats.length})
                   </span>
                   <button
@@ -767,16 +769,16 @@ export default function InteractiveSeatBuilder({
                     return (
                       <div
                         key={seat.id}
-                        className="flex items-center justify-between bg-zinc-900/80 border border-white/5 px-2.5 py-1.5 rounded-lg text-xs"
+                        className="flex items-center justify-between bg-zinc-900/90 border border-white/5 px-3 py-2 rounded-xl text-xs"
                       >
                         <div className="flex items-center gap-2 truncate">
                           <span className={`w-2 h-2 rounded-full shrink-0 ${seat.is_available ? 'bg-emerald-400 shadow-[0_0_6px_#34d399]' : 'bg-zinc-600'}`} />
-                          <span className="text-zinc-200 truncate">{title}</span>
+                          <span className="text-zinc-200 font-semibold truncate">{title}</span>
                         </div>
                         <button
                           type="button"
                           onClick={() => handleRemoveSeatFromSelection(seat.id)}
-                          className="text-zinc-500 hover:text-white p-0.5 ml-1 cursor-pointer"
+                          className="text-zinc-500 hover:text-white p-1 hover:bg-white/5 rounded-md ml-1 cursor-pointer transition-colors"
                           title="Quitar de selección"
                         >
                           ✕
@@ -789,18 +791,21 @@ export default function InteractiveSeatBuilder({
             </div>
           ) : selectedSeats.length === 1 && selectedSeat ? (
             /* SINGLE SEAT INSPECTOR */
-            <div className="bg-zinc-950 border border-white/10 rounded-2xl p-5 shadow-lg space-y-4">
+            <div className="glass-panel border border-white/10 p-5 shadow-2xl space-y-4">
               <div className="flex items-center justify-between border-b border-white/10 pb-3">
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500">1 Asiento Seleccionado</span>
-                  <h3 className="text-base font-bold text-white">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-red-500 flex items-center gap-1.5">
+                    <CheckSquare className="w-3 h-3 text-red-500" />
+                    1 Asiento Seleccionado
+                  </span>
+                  <h3 className="text-lg font-black text-white tracking-tight mt-0.5">
                     {formatSeatTitle(selectedSeat)}
                   </h3>
                 </div>
                 <button
                   type="button"
                   onClick={handleClearSelection}
-                  className="text-zinc-500 hover:text-white text-xs p-1 cursor-pointer"
+                  className="p-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-white/5 transition-colors cursor-pointer"
                   title="Deseleccionar"
                 >
                   ✕
@@ -809,14 +814,14 @@ export default function InteractiveSeatBuilder({
 
               {/* Position coordinates (Only in Labrú mode) */}
               {isArenaMap && (
-                <div className="bg-zinc-900/60 rounded-xl p-3 border border-white/5 space-y-2">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 block">Coordenadas:</span>
+                <div className="bg-zinc-900/60 rounded-xl p-3 border border-white/5 space-y-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 block">Coordenadas:</span>
                   <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                    <div className="bg-zinc-950 p-2 rounded border border-white/10">
+                    <div className="bg-zinc-950 p-2 rounded-lg border border-white/10">
                       <span className="text-zinc-500">X: </span>
                       <span className="text-white font-bold">{Math.round(selectedSeat.x || 0)}px</span>
                     </div>
-                    <div className="bg-zinc-950 p-2 rounded border border-white/10">
+                    <div className="bg-zinc-950 p-2 rounded-lg border border-white/10">
                       <span className="text-zinc-500">Y: </span>
                       <span className="text-white font-bold">{Math.round(selectedSeat.y || 0)}px</span>
                     </div>
@@ -825,17 +830,17 @@ export default function InteractiveSeatBuilder({
               )}
 
               {/* Zone info */}
-              <div className="space-y-1">
-                <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Zona</label>
-                <p className="text-sm font-semibold text-white bg-zinc-900 px-3 py-2 rounded-lg border border-white/5">
+              <div className="bg-zinc-900/60 border border-white/5 rounded-xl p-3 space-y-1">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 block">Zona</label>
+                <p className="text-sm font-bold text-white">
                   {selectedZone?.name || selectedZone?.zone_type} (${selectedZone?.price} MXN)
                 </p>
               </div>
 
               {/* Custom Label input (Only in Labrú mode) */}
               {isArenaMap && (
-                <div className="space-y-1">
-                  <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Etiqueta Personalizada</label>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 block">Etiqueta Personalizada</label>
                   <input
                     type="text"
                     value={selectedSeat.custom_label || ''}
@@ -852,7 +857,7 @@ export default function InteractiveSeatBuilder({
                       );
                       setHasUnsavedChanges(true);
                     }}
-                    className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:border-red-500 focus:outline-none"
+                    className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3.5 py-2 text-white text-xs focus:border-red-500 focus:outline-none transition-colors"
                     placeholder="Ej. VIP-1, 44..."
                   />
                 </div>
@@ -860,15 +865,15 @@ export default function InteractiveSeatBuilder({
 
               {/* Quick Selection Helpers for this single seat */}
               <div className="pt-2 border-t border-white/10 space-y-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 block">
                   Expandir Selección
                 </span>
-                <div className="flex flex-wrap gap-1.5 text-[11px]">
+                <div className="flex flex-wrap gap-1.5">
                   {selectedSeat.row_name && (
                     <button
                       type="button"
                       onClick={handleSelectRow}
-                      className="px-2.5 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-white/5 font-medium transition-colors cursor-pointer"
+                      className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-850 text-zinc-300 hover:text-white border border-white/10 font-bold text-[10px] uppercase tracking-wider transition-colors cursor-pointer"
                     >
                       + Toda la Fila {selectedSeat.row_name}
                     </button>
@@ -877,7 +882,7 @@ export default function InteractiveSeatBuilder({
                     <button
                       type="button"
                       onClick={handleSelectTable}
-                      className="px-2.5 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-white/5 font-medium transition-colors cursor-pointer"
+                      className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-850 text-zinc-300 hover:text-white border border-white/10 font-bold text-[10px] uppercase tracking-wider transition-colors cursor-pointer"
                     >
                       + Toda la Mesa #{selectedSeat.table_number}
                     </button>
@@ -885,7 +890,7 @@ export default function InteractiveSeatBuilder({
                   <button
                     type="button"
                     onClick={handleSelectZone}
-                    className="px-2.5 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-white/5 font-medium transition-colors cursor-pointer"
+                    className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-850 text-zinc-300 hover:text-white border border-white/10 font-bold text-[10px] uppercase tracking-wider transition-colors cursor-pointer"
                   >
                     + Toda la Zona
                   </button>
@@ -897,13 +902,14 @@ export default function InteractiveSeatBuilder({
                 <button
                   type="button"
                   onClick={() => handleToggleSeatAvailability(selectedSeat)}
-                  className={`w-full py-2.5 px-3 rounded-lg font-semibold text-xs uppercase tracking-wider transition-colors cursor-pointer ${
+                  className={`w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md flex items-center justify-center gap-2 active:scale-95 ${
                     selectedSeat.is_available
-                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                      : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300'
+                      ? 'bg-gradient-to-r from-emerald-600 to-emerald-800 hover:from-emerald-500 hover:to-emerald-700 text-white shadow-emerald-950/40'
+                      : 'bg-zinc-900 hover:bg-zinc-850 text-zinc-300 hover:text-white border border-white/10'
                   }`}
                 >
-                  {selectedSeat.is_available ? '✓ Habilitado (Público)' : '✕ Bloqueado / Oculto'}
+                  {selectedSeat.is_available ? <CheckCircle2 className="w-4 h-4" /> : <EyeOff className="w-4 h-4 text-zinc-400" />}
+                  <span>{selectedSeat.is_available ? 'Habilitado (Público)' : 'Bloqueado / Oculto'}</span>
                 </button>
 
                 {/* Delete Seat (Only in Labrú mode) */}
@@ -911,7 +917,7 @@ export default function InteractiveSeatBuilder({
                   <button
                     type="button"
                     onClick={() => handleDeleteSeat(selectedSeat.id)}
-                    className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-semibold text-red-400 hover:text-red-300 bg-zinc-900 hover:bg-zinc-850 rounded-lg transition-colors cursor-pointer"
+                    className="w-full flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold uppercase tracking-wider text-red-400 hover:text-red-300 bg-red-950/20 hover:bg-red-950/50 border border-red-500/20 rounded-xl transition-colors cursor-pointer active:scale-95"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     <span>Eliminar Asiento</span>
@@ -921,11 +927,11 @@ export default function InteractiveSeatBuilder({
             </div>
           ) : (
             /* EMPTY STATE INSPECTOR */
-            <div className="bg-zinc-950 border border-white/10 rounded-2xl p-5 shadow-lg text-center space-y-3">
-              <div className="w-9 h-9 rounded-full bg-zinc-900 border border-white/10 mx-auto flex items-center justify-center text-zinc-400">
-                <CheckSquare className="w-4 h-4 text-amber-400" />
+            <div className="glass-panel border border-white/10 p-6 shadow-2xl text-center space-y-4 rounded-2xl">
+              <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 mx-auto flex items-center justify-center text-red-500">
+                <CheckSquare className="w-6 h-6" />
               </div>
-              <h4 className="text-sm font-semibold text-white uppercase tracking-wider">Inspector y Selección de Asientos</h4>
+              <h4 className="text-sm font-extrabold text-white uppercase tracking-wider">Inspector y Selección de Asientos</h4>
               <p className="text-xs text-zinc-400 leading-relaxed">
                 Haz clic en cualquier asiento del mapa para seleccionarlo. Puedes hacer clic en múltiples asientos para seleccionarlos a la vez y gestionar su estado en lote (habilitar o bloquear).
               </p>
@@ -934,7 +940,7 @@ export default function InteractiveSeatBuilder({
                 <button
                   type="button"
                   onClick={handleSelectAll}
-                  className="w-full py-2 px-3 rounded-lg bg-zinc-900 hover:bg-zinc-850 border border-white/10 text-xs font-semibold text-zinc-200 uppercase tracking-wider transition-colors cursor-pointer"
+                  className="w-full py-2.5 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-850 text-zinc-200 hover:text-white border border-white/10 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer active:scale-95"
                 >
                   Seleccionar Todos los Asientos
                 </button>
@@ -954,19 +960,19 @@ export default function InteractiveSeatBuilder({
 
       {/* TEMPLATE SELECTION MODAL */}
       {isTemplateModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-zinc-950 border border-white/10 rounded-2xl max-w-2xl w-full p-6 space-y-5 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="glass-panel border border-white/10 rounded-2xl max-w-2xl w-full p-6 sm:p-7 space-y-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-red-500">
+                <span className="text-[10px] font-black uppercase tracking-widest text-red-500">
                   Plantillas de Sede
                 </span>
-                <h3 className="text-lg font-bold text-white mt-1">Selecciona una Plantilla para el Mapa</h3>
+                <h3 className="text-xl font-black text-white mt-0.5">Selecciona una Plantilla para el Mapa</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsTemplateModalOpen(false)}
-                className="text-zinc-500 hover:text-white p-1"
+                className="text-zinc-400 hover:text-white p-2 hover:bg-white/5 rounded-xl transition-colors cursor-pointer"
               >
                 ✕
               </button>
@@ -977,16 +983,16 @@ export default function InteractiveSeatBuilder({
               {/* Option 1: Labrú */}
               <div
                 onClick={() => setSelectedTemplate('ARENA_VIP')}
-                className={`p-4 rounded-xl border cursor-pointer transition-colors ${
+                className={`p-4 rounded-2xl border cursor-pointer transition-all ${
                   selectedTemplate === 'ARENA_VIP'
-                    ? 'bg-zinc-900 border-red-500 ring-1 ring-red-500'
-                    : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700'
+                    ? 'bg-red-950/20 border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)] ring-1 ring-red-500'
+                    : 'bg-zinc-900/60 border-white/10 hover:border-white/20 hover:bg-zinc-900/80'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold uppercase text-white">Labrú</span>
-                    <span className="text-[10px] bg-red-950 text-red-300 border border-red-800 px-2 py-0.5 rounded font-semibold">
+                    <span className="text-sm font-extrabold uppercase text-white">Labrú</span>
+                    <span className="text-[10px] bg-red-950/60 text-red-400 border border-red-800/60 px-2 py-0.5 rounded-full font-bold uppercase">
                       Sede Nueva
                     </span>
                   </div>
@@ -1000,16 +1006,16 @@ export default function InteractiveSeatBuilder({
               {/* Option 2: The Wrestling Factory */}
               <div
                 onClick={() => setSelectedTemplate('CLASSIC_RING')}
-                className={`p-4 rounded-xl border cursor-pointer transition-colors ${
+                className={`p-4 rounded-2xl border cursor-pointer transition-all ${
                   selectedTemplate === 'CLASSIC_RING'
-                    ? 'bg-zinc-900 border-red-500 ring-1 ring-red-500'
-                    : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700'
+                    ? 'bg-red-950/20 border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)] ring-1 ring-red-500'
+                    : 'bg-zinc-900/60 border-white/10 hover:border-white/20 hover:bg-zinc-900/80'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold uppercase text-white">The Wrestling Factory</span>
-                    <span className="text-[10px] bg-amber-950 text-amber-300 border border-amber-800 px-2 py-0.5 rounded font-semibold">
+                    <span className="text-sm font-extrabold uppercase text-white">The Wrestling Factory</span>
+                    <span className="text-[10px] bg-zinc-800 text-zinc-300 border border-zinc-700 px-2 py-0.5 rounded-full font-bold uppercase">
                       Sede Clásica
                     </span>
                   </div>
@@ -1022,83 +1028,83 @@ export default function InteractiveSeatBuilder({
             </div>
 
             {/* Price configuration for the template */}
-            <div className="space-y-3 bg-zinc-900/50 p-4 rounded-xl border border-white/5">
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-300 block">Precios de las Zonas (MXN):</span>
+            <div className="space-y-3 bg-zinc-900/60 p-4 rounded-2xl border border-white/10">
+              <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 block">Precios de las Zonas (MXN):</span>
               {selectedTemplate === 'ARENA_VIP' ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="text-[10px] font-semibold uppercase text-zinc-400 block mb-1">Mesas Ringside (1-8)</label>
+                    <label className="text-[10px] font-bold uppercase text-zinc-400 block mb-1">Mesas Ringside (1-8)</label>
                     <input
                       type="number"
                       value={templatePrices.MESAS_VIP_RINGSIDE}
                       onChange={(e) => setTemplatePrices({ ...templatePrices, MESAS_VIP_RINGSIDE: e.target.value })}
-                      className="w-full bg-zinc-950 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white"
+                      className="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:border-red-500 focus:outline-none transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-semibold uppercase text-zinc-400 block mb-1">Mesas VIP (1-12)</label>
+                    <label className="text-[10px] font-bold uppercase text-zinc-400 block mb-1">Mesas VIP (1-12)</label>
                     <input
                       type="number"
                       value={templatePrices.MESAS_VIP}
                       onChange={(e) => setTemplatePrices({ ...templatePrices, MESAS_VIP: e.target.value })}
-                      className="w-full bg-zinc-950 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white"
+                      className="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:border-red-500 focus:outline-none transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-semibold uppercase text-zinc-400 block mb-1">Primera Fila (1-44)</label>
+                    <label className="text-[10px] font-bold uppercase text-zinc-400 block mb-1">Primera Fila (1-44)</label>
                     <input
                       type="number"
                       value={templatePrices.PRIMERA_FILA}
                       onChange={(e) => setTemplatePrices({ ...templatePrices, PRIMERA_FILA: e.target.value })}
-                      className="w-full bg-zinc-950 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white"
+                      className="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:border-red-500 focus:outline-none transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-semibold uppercase text-zinc-400 block mb-1">Segunda Fila (1-44)</label>
+                    <label className="text-[10px] font-bold uppercase text-zinc-400 block mb-1">Segunda Fila (1-44)</label>
                     <input
                       type="number"
                       value={templatePrices.SEGUNDA_FILA}
                       onChange={(e) => setTemplatePrices({ ...templatePrices, SEGUNDA_FILA: e.target.value })}
-                      className="w-full bg-zinc-950 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white"
+                      className="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:border-red-500 focus:outline-none transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-semibold uppercase text-zinc-400 block mb-1">General</label>
+                    <label className="text-[10px] font-bold uppercase text-zinc-400 block mb-1">General</label>
                     <input
                       type="number"
                       value={templatePrices.GENERAL}
                       onChange={(e) => setTemplatePrices({ ...templatePrices, GENERAL: e.target.value })}
-                      className="w-full bg-zinc-950 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white"
+                      className="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:border-red-500 focus:outline-none transition-colors"
                     />
                   </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="text-[10px] font-semibold uppercase text-zinc-400 block mb-1">Norte / Sur</label>
+                    <label className="text-[10px] font-bold uppercase text-zinc-400 block mb-1">Norte / Sur</label>
                     <input
                       type="number"
                       value={templatePrices.NORTE}
                       onChange={(e) => setTemplatePrices({ ...templatePrices, NORTE: e.target.value, SUR: e.target.value })}
-                      className="w-full bg-zinc-950 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white"
+                      className="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:border-red-500 focus:outline-none transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-semibold uppercase text-zinc-400 block mb-1">Este / Oeste</label>
+                    <label className="text-[10px] font-bold uppercase text-zinc-400 block mb-1">Este / Oeste</label>
                     <input
                       type="number"
                       value={templatePrices.ESTE}
                       onChange={(e) => setTemplatePrices({ ...templatePrices, ESTE: e.target.value, OESTE: e.target.value })}
-                      className="w-full bg-zinc-950 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white"
+                      className="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:border-red-500 focus:outline-none transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-semibold uppercase text-zinc-400 block mb-1">General</label>
+                    <label className="text-[10px] font-bold uppercase text-zinc-400 block mb-1">General</label>
                     <input
                       type="number"
                       value={templatePrices.GENERAL}
                       onChange={(e) => setTemplatePrices({ ...templatePrices, GENERAL: e.target.value })}
-                      className="w-full bg-zinc-950 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white"
+                      className="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:border-red-500 focus:outline-none transition-colors"
                     />
                   </div>
                 </div>
@@ -1109,14 +1115,14 @@ export default function InteractiveSeatBuilder({
               <button
                 type="button"
                 onClick={() => setIsTemplateModalOpen(false)}
-                className="flex-1 py-2.5 rounded-lg border border-white/10 bg-zinc-900 hover:bg-zinc-800 font-semibold text-xs uppercase tracking-wider text-zinc-300 transition-colors"
+                className="flex-1 py-3 rounded-xl border border-white/10 bg-zinc-900 hover:bg-zinc-800 font-bold text-xs uppercase tracking-wider text-zinc-300 transition-all cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 type="button"
                 onClick={handleApplyTemplate}
-                className="flex-1 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 font-semibold text-xs uppercase tracking-wider text-white transition-colors cursor-pointer"
+                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 font-bold text-xs uppercase tracking-wider text-white shadow-lg shadow-red-950/40 transition-all cursor-pointer active:scale-95"
               >
                 Confirmar y Aplicar Plantilla
               </button>
@@ -1127,26 +1133,31 @@ export default function InteractiveSeatBuilder({
 
       {/* ADD CUSTOM SEAT MODAL */}
       {isAddSeatOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <form onSubmit={handleAddCustomSeat} className="bg-zinc-950 border border-white/10 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <h3 className="text-base font-bold text-white">Agregar Asiento Manual al Mapa</h3>
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <form onSubmit={handleAddCustomSeat} className="glass-panel border border-white/10 rounded-2xl max-w-md w-full p-6 sm:p-7 space-y-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-red-500">
+                  Nuevo Asiento
+                </span>
+                <h3 className="text-xl font-black text-white mt-0.5">Agregar Asiento Manual al Mapa</h3>
+              </div>
               <button
                 type="button"
                 onClick={() => setIsAddSeatOpen(false)}
-                className="text-zinc-500 hover:text-white p-1"
+                className="text-zinc-400 hover:text-white p-2 hover:bg-white/5 rounded-xl transition-colors cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3.5">
               <div>
-                <label className="text-[11px] font-semibold text-zinc-400 uppercase block mb-1">Zona</label>
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Zona</label>
                 <select
                   value={newSeatData.zone_id}
                   onChange={(e) => setNewSeatData({ ...newSeatData, zone_id: Number(e.target.value) })}
-                  className="w-full bg-zinc-900 border border-white/10 rounded-lg p-2.5 text-xs text-white"
+                  className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-xs text-white focus:border-red-500 focus:outline-none transition-colors"
                 >
                   {localZones.map(z => (
                     <option key={z.id} value={z.id}>
@@ -1158,54 +1169,54 @@ export default function InteractiveSeatBuilder({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-semibold text-zinc-400 uppercase block mb-1">Fila</label>
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Fila</label>
                   <input
                     type="text"
                     value={newSeatData.row_name}
                     onChange={(e) => setNewSeatData({ ...newSeatData, row_name: e.target.value })}
-                    className="w-full bg-zinc-900 border border-white/10 rounded-lg p-2.5 text-xs text-white"
+                    className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-xs text-white focus:border-red-500 focus:outline-none transition-colors"
                     placeholder="Ej. A, VIP 1"
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-semibold text-zinc-400 uppercase block mb-1">Número de Asiento</label>
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Número de Asiento</label>
                   <input
                     type="number"
                     value={newSeatData.seat_number}
                     onChange={(e) => setNewSeatData({ ...newSeatData, seat_number: Number(e.target.value) })}
-                    className="w-full bg-zinc-900 border border-white/10 rounded-lg p-2.5 text-xs text-white"
+                    className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-xs text-white focus:border-red-500 focus:outline-none transition-colors"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[11px] font-semibold text-zinc-400 uppercase block mb-1">Etiqueta Personalizada</label>
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Etiqueta Personalizada</label>
                 <input
                   type="text"
                   value={newSeatData.custom_label}
                   onChange={(e) => setNewSeatData({ ...newSeatData, custom_label: e.target.value })}
-                  className="w-full bg-zinc-900 border border-white/10 rounded-lg p-2.5 text-xs text-white"
+                  className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-xs text-white focus:border-red-500 focus:outline-none transition-colors"
                   placeholder="Ej. VIP-1, 44..."
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-semibold text-zinc-400 uppercase block mb-1">Posición X (px)</label>
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Posición X (px)</label>
                   <input
                     type="number"
                     value={newSeatData.x}
                     onChange={(e) => setNewSeatData({ ...newSeatData, x: Number(e.target.value) })}
-                    className="w-full bg-zinc-900 border border-white/10 rounded-lg p-2.5 text-xs text-white"
+                    className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-xs text-white focus:border-red-500 focus:outline-none transition-colors"
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-semibold text-zinc-400 uppercase block mb-1">Posición Y (px)</label>
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Posición Y (px)</label>
                   <input
                     type="number"
                     value={newSeatData.y}
                     onChange={(e) => setNewSeatData({ ...newSeatData, y: Number(e.target.value) })}
-                    className="w-full bg-zinc-900 border border-white/10 rounded-lg p-2.5 text-xs text-white"
+                    className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-xs text-white focus:border-red-500 focus:outline-none transition-colors"
                   />
                 </div>
               </div>
@@ -1215,13 +1226,13 @@ export default function InteractiveSeatBuilder({
               <button
                 type="button"
                 onClick={() => setIsAddSeatOpen(false)}
-                className="flex-1 py-2.5 rounded-lg border border-white/10 bg-zinc-900 hover:bg-zinc-800 font-semibold text-xs uppercase tracking-wider text-zinc-300 transition-colors"
+                className="flex-1 py-3 rounded-xl border border-white/10 bg-zinc-900 hover:bg-zinc-800 font-bold text-xs uppercase tracking-wider text-zinc-300 transition-all cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="flex-1 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 font-semibold text-xs uppercase tracking-wider text-white transition-colors cursor-pointer"
+                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 font-bold text-xs uppercase tracking-wider text-white shadow-lg shadow-red-950/40 transition-all cursor-pointer active:scale-95"
               >
                 Crear Asiento
               </button>

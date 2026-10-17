@@ -420,7 +420,7 @@ export default function ArenaSeatMap({
                       cx={cx}
                       cy={cy}
                       r="20"
-                      fill={hasSelectedSeat ? '#f59e0b' : !allAvailable ? '#27272a' : 'url(#goldTableGrad)'}
+                      fill={hasSelectedSeat ? '#ef4444' : !allAvailable ? '#27272a' : 'url(#goldTableGrad)'}
                       stroke={hasSelectedSeat || isTableSelected ? '#ffffff' : '#713f12'}
                       strokeWidth={hasSelectedSeat || isTableSelected ? 3 : 2}
                       className="transition-all duration-200"
@@ -432,7 +432,7 @@ export default function ArenaSeatMap({
                       x={cx}
                       y={cy + 5}
                       textAnchor="middle"
-                      fill={hasSelectedSeat ? '#000000' : !allAvailable ? '#71717a' : '#1c1917'}
+                      fill={hasSelectedSeat ? '#ffffff' : !allAvailable ? '#71717a' : '#1c1917'}
                       fontSize="14"
                       fontWeight="900"
                     >
@@ -521,7 +521,7 @@ export default function ArenaSeatMap({
                       cx={cx}
                       cy={cy}
                       r="20"
-                      fill={hasSelectedSeat ? '#f59e0b' : !allAvailable ? '#27272a' : 'url(#pinkTableGrad)'}
+                      fill={hasSelectedSeat ? '#ef4444' : !allAvailable ? '#27272a' : 'url(#pinkTableGrad)'}
                       stroke={hasSelectedSeat || isTableSelected ? '#ffffff' : '#831843'}
                       strokeWidth={hasSelectedSeat || isTableSelected ? 3 : 2}
                       className="transition-all duration-200"
@@ -533,7 +533,7 @@ export default function ArenaSeatMap({
                       x={cx}
                       y={cy + 5}
                       textAnchor="middle"
-                      fill={hasSelectedSeat ? '#000000' : !allAvailable ? '#71717a' : '#ffffff'}
+                      fill={hasSelectedSeat ? '#ffffff' : !allAvailable ? '#71717a' : '#ffffff'}
                       fontSize="14"
                       fontWeight="900"
                     >
@@ -618,8 +618,8 @@ export default function ArenaSeatMap({
                     width="24"
                     height="24"
                     rx="4"
-                    fill={isEditingCurrent ? '#f59e0b' : !isAvailable ? '#18181b' : isSelected ? '#ffffff' : '#dc2626'}
-                    stroke={isEditingCurrent ? '#ffffff' : isSelected ? '#ffffff' : '#991b1b'}
+                    fill={isEditingCurrent ? '#ffffff' : !isAvailable ? '#18181b' : isSelected ? '#ffffff' : '#dc2626'}
+                    stroke={isEditingCurrent ? '#ef4444' : isSelected ? '#ffffff' : '#991b1b'}
                     strokeWidth={isEditingCurrent ? 2.5 : 1.5}
                     filter={isEditingCurrent || isSelected ? 'url(#selectedGlow)' : isAvailable ? 'url(#redSeatGlow)' : ''}
                   />
@@ -627,7 +627,7 @@ export default function ArenaSeatMap({
                     x="0"
                     y="4"
                     textAnchor="middle"
-                    fill={isEditingCurrent ? '#000000' : !isAvailable ? '#71717a' : isSelected ? '#000000' : '#ffffff'}
+                    fill={isEditingCurrent ? '#dc2626' : !isAvailable ? '#71717a' : isSelected ? '#000000' : '#ffffff'}
                     fontSize="9.5"
                     fontWeight="900"
                   >
@@ -663,8 +663,8 @@ export default function ArenaSeatMap({
                     width="24"
                     height="24"
                     rx="4"
-                    fill={isEditingCurrent ? '#f59e0b' : !isAvailable ? '#18181b' : isSelected ? '#ffffff' : '#2563eb'}
-                    stroke={isEditingCurrent ? '#ffffff' : isSelected ? '#ffffff' : '#1d4ed8'}
+                    fill={isEditingCurrent ? '#ffffff' : !isAvailable ? '#18181b' : isSelected ? '#ffffff' : '#2563eb'}
+                    stroke={isEditingCurrent ? '#ef4444' : isSelected ? '#ffffff' : '#1d4ed8'}
                     strokeWidth={isEditingCurrent ? 2.5 : 1.5}
                     filter={isEditingCurrent || isSelected ? 'url(#selectedGlow)' : isAvailable ? 'url(#blueSeatGlow)' : ''}
                   />
@@ -672,7 +672,7 @@ export default function ArenaSeatMap({
                     x="0"
                     y="4"
                     textAnchor="middle"
-                    fill={isEditingCurrent ? '#000000' : !isAvailable ? '#71717a' : isSelected ? '#000000' : '#ffffff'}
+                    fill={isEditingCurrent ? '#dc2626' : !isAvailable ? '#71717a' : isSelected ? '#000000' : '#ffffff'}
                     fontSize="9.5"
                     fontWeight="900"
                   >
@@ -712,8 +712,8 @@ export default function ArenaSeatMap({
                       width="24"
                       height="24"
                       rx="4"
-                      fill={isEditingCurrent ? '#f59e0b' : !isAvailable ? '#18181b' : isSelected ? '#ffffff' : zoneColor}
-                      stroke={isEditingCurrent ? '#ffffff' : '#ffffff'}
+                      fill={isEditingCurrent ? '#ffffff' : !isAvailable ? '#18181b' : isSelected ? '#ffffff' : zoneColor}
+                      stroke={isEditingCurrent ? '#ef4444' : '#ffffff'}
                       strokeWidth={isEditingCurrent ? 2.5 : 1.5}
                       filter={isEditingCurrent ? 'url(#selectedGlow)' : ''}
                     />
@@ -721,7 +721,7 @@ export default function ArenaSeatMap({
                       x="0"
                       y="4"
                       textAnchor="middle"
-                      fill={isEditingCurrent ? '#000000' : !isAvailable ? '#71717a' : isSelected ? '#000000' : '#ffffff'}
+                      fill={isEditingCurrent ? '#dc2626' : !isAvailable ? '#71717a' : isSelected ? '#000000' : '#ffffff'}
                       fontSize="9.5"
                       fontWeight="900"
                     >

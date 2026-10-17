@@ -105,10 +105,10 @@ export default function ClassicWrestlingFactoryMap({
                         onClick={() => onSeatClick?.(seat, zone)}
                         className={`w-6 h-6 md:w-7 md:h-7 rounded text-[10px] font-bold flex items-center justify-center transition-all cursor-pointer ${
                           isSelected
-                            ? 'bg-amber-500 text-black border-2 border-white scale-110 z-20 shadow-lg shadow-amber-500/50 ring-2 ring-amber-400 font-black'
+                            ? 'bg-red-600 text-white border-2 border-white scale-110 z-20 shadow-[0_0_18px_rgba(239,68,68,0.85)] ring-2 ring-red-400 font-black'
                             : !isAvailable
-                            ? 'bg-zinc-900 text-zinc-600 border border-zinc-800 opacity-60'
-                            : 'bg-zinc-800 text-zinc-300 border border-zinc-700 hover:bg-zinc-700 hover:text-white'
+                            ? 'bg-zinc-950 text-zinc-600 border border-zinc-800/80 opacity-40 cursor-pointer'
+                            : 'bg-zinc-900 text-zinc-300 border border-zinc-700 hover:border-red-500 hover:bg-zinc-800 hover:text-white'
                         }`}
                         title={`Fila ${rowName} · Asiento ${displayNumber} (${zone.name || zone.zone_type}) - ${isAvailable ? 'Disponible' : 'Bloqueado'}`}
                       >
@@ -129,25 +129,25 @@ export default function ClassicWrestlingFactoryMap({
   };
 
   return (
-    <div className="bg-zinc-950 border border-white/10 rounded-2xl p-4 sm:p-5 relative shadow-xl overflow-hidden">
+    <div className="glass-panel border border-white/10 p-4 sm:p-5 relative shadow-2xl overflow-hidden">
       {/* Top Bar inside canvas */}
       <div className="flex items-center justify-between gap-4 mb-3 border-b border-white/10 pb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
-          <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
+        <div className="flex items-center gap-2.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-red-600 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+          <span className="text-xs font-black uppercase tracking-wider text-white">
             The Wrestling Factory · Ring Clásico SCW
           </span>
-          <span className="text-[11px] text-zinc-500 hidden sm:inline">
+          <span className="text-[11px] text-zinc-400 hidden sm:inline">
             (Haz clic en un asiento para seleccionarlo)
           </span>
         </div>
 
         {/* Simple Zoom Controls */}
-        <div className="flex items-center gap-1 bg-zinc-900 border border-white/10 rounded-lg p-1">
+        <div className="flex items-center gap-1 bg-zinc-900/90 border border-white/10 rounded-xl p-1 shadow-sm">
           <button
             type="button"
             onClick={handleZoomOut}
-            className="p-1.5 hover:bg-zinc-800 text-zinc-300 hover:text-white rounded transition-colors"
+            className="p-1.5 hover:bg-zinc-800 text-zinc-300 hover:text-white rounded-lg transition-colors cursor-pointer"
             title="Alejar"
           >
             <Minus className="w-3.5 h-3.5" />
@@ -155,7 +155,7 @@ export default function ClassicWrestlingFactoryMap({
           <button
             type="button"
             onClick={handleResetZoom}
-            className="px-2 py-0.5 text-xs font-semibold text-zinc-300 hover:bg-zinc-800 rounded transition-colors min-w-[45px] text-center"
+            className="px-2 py-0.5 text-xs font-bold text-white hover:bg-zinc-800 rounded-lg transition-colors min-w-[45px] text-center cursor-pointer"
             title="Restablecer Zoom"
           >
             {Math.round(scale * 100)}%
@@ -163,7 +163,7 @@ export default function ClassicWrestlingFactoryMap({
           <button
             type="button"
             onClick={handleZoomIn}
-            className="p-1.5 hover:bg-zinc-800 text-zinc-300 hover:text-white rounded transition-colors"
+            className="p-1.5 hover:bg-zinc-800 text-zinc-300 hover:text-white rounded-lg transition-colors cursor-pointer"
             title="Acercar"
           >
             <Plus className="w-3.5 h-3.5" />

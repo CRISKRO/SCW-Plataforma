@@ -385,69 +385,106 @@ export default function EventTicketsPage() {
   return (
     <div className="max-w-7xl mx-auto space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex items-start gap-4">
           <Link 
             href="/admin/events" 
-            className="flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-white/10 px-3.5 py-2 rounded-lg transition-colors text-xs font-semibold uppercase tracking-wider"
+            className="mt-1 flex items-center gap-2 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-white/10 px-3.5 py-2 rounded-xl transition-all text-xs font-bold uppercase tracking-wider active:scale-95 shadow-sm shrink-0"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4 text-red-500" />
             <span className="hidden sm:inline">Volver a Eventos</span>
           </Link>
           <div>
-            <p className="text-red-500 text-xs font-bold uppercase tracking-widest mb-1 flex items-center gap-2">
-              <span>Gestión de Boletos y Mapas</span>
-              <span className={`text-[10px] px-2 py-0.5 rounded font-semibold border ${
-                isArenaMap
-                  ? 'bg-red-950 text-red-300 border-red-800'
-                  : 'bg-amber-950 text-amber-300 border-amber-800'
-              }`}>
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <span className="text-red-500 text-xs font-black uppercase tracking-widest flex items-center gap-1.5">
+                <Ticket className="w-3.5 h-3.5" />
+                Gestión de Boletos y Mapas
+              </span>
+              <span className="text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider bg-red-950/60 text-red-400 border border-red-800/60">
                 {isArenaMap ? 'Sede: Labrú' : 'Sede: The Wrestling Factory'}
               </span>
-            </p>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">{event?.title}</h1>
-            <p className="text-zinc-400 mt-1 flex items-center gap-2 text-xs sm:text-sm">
-              <span>{new Date(event?.date_time).toLocaleString()}</span>
-              <span>·</span>
-              <span className="text-amber-400 font-semibold">{event?.location}</span>
-            </p>
+            </div>
+            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-400">
+              {event?.title}
+            </h1>
+            <div className="text-zinc-400 mt-1.5 flex flex-wrap items-center gap-3 text-xs sm:text-sm">
+              <span className="flex items-center gap-1.5 text-zinc-300">
+                <MapPin className="w-3.5 h-3.5 text-red-500" />
+                {event?.location}
+              </span>
+              <span className="text-zinc-600">·</span>
+              <span className="text-zinc-400">
+                {event?.date_time ? new Date(event.date_time).toLocaleString() : ''}
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-zinc-950 border border-white/10 rounded-xl p-4 shadow-sm">
-          <p className="text-zinc-400 text-xs font-semibold uppercase tracking-wider">Sede / Plantilla</p>
-          <p className="text-base font-bold text-amber-400 mt-1 truncate">
-            {isArenaMap ? 'Labrú' : 'The Wrestling Factory'}
-          </p>
+      {/* KPI Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="glass-panel p-5 border border-white/10 hover:border-white/20 transition-all rounded-2xl">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Sede / Plantilla</p>
+              <p className="text-lg sm:text-xl font-black text-white mt-1 truncate">
+                {isArenaMap ? 'Labrú' : 'The Wrestling Factory'}
+              </p>
+            </div>
+            <div className="p-3 bg-red-500/10 rounded-xl">
+              <MapPin className="w-6 h-6 text-red-400" />
+            </div>
+          </div>
         </div>
-        <div className="bg-zinc-950 border border-white/10 rounded-xl p-4 shadow-sm">
-          <p className="text-zinc-400 text-xs font-semibold uppercase tracking-wider">Zonas Creadas</p>
-          <p className="text-2xl font-bold text-white mt-1">{zones.length}</p>
+
+        <div className="glass-panel p-5 border border-white/10 hover:border-white/20 transition-all rounded-2xl">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Zonas Creadas</p>
+              <p className="text-3xl font-black text-white mt-1">{zones.length}</p>
+            </div>
+            <div className="p-3 bg-white/5 rounded-xl">
+              <Sliders className="w-6 h-6 text-zinc-400" />
+            </div>
+          </div>
         </div>
-        <div className="bg-zinc-950 border border-white/10 rounded-xl p-4 shadow-sm">
-          <p className="text-zinc-400 text-xs font-semibold uppercase tracking-wider">Total Asientos</p>
-          <p className="text-2xl font-bold text-white mt-1">{totalSeats}</p>
+
+        <div className="glass-panel p-5 border border-white/10 hover:border-white/20 transition-all rounded-2xl">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Total Asientos</p>
+              <p className="text-3xl font-black text-white mt-1">{totalSeats}</p>
+            </div>
+            <div className="p-3 bg-white/5 rounded-xl">
+              <Ticket className="w-6 h-6 text-zinc-400" />
+            </div>
+          </div>
         </div>
-        <div className="bg-zinc-950 border border-white/10 rounded-xl p-4 shadow-sm">
-          <p className="text-zinc-400 text-xs font-semibold uppercase tracking-wider">Disponibles</p>
-          <p className="text-2xl font-bold text-emerald-400 mt-1">
-            {zones.reduce((acc, z) => acc + (z.seats?.filter((s: any) => s.is_available && !s.is_locked).length || 0), 0)}
-          </p>
+
+        <div className="glass-panel p-5 border border-white/10 hover:border-white/20 transition-all rounded-2xl">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Disponibles</p>
+              <p className="text-3xl font-black text-emerald-400 mt-1">
+                {zones.reduce((acc, z) => acc + (z.seats?.filter((s: any) => s.is_available && !s.is_locked).length || 0), 0)}
+              </p>
+            </div>
+            <div className="p-3 bg-emerald-500/10 rounded-xl">
+              <CheckCircle className="w-6 h-6 text-emerald-400" />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Navigation Tabs - Simple Clean Style */}
-      <div className="bg-zinc-950 border border-white/10 p-1.5 rounded-xl flex gap-2 overflow-x-auto">
+      {/* Navigation Tabs - SCW Design Pattern */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-white/10 pb-4">
         <button
           type="button"
           onClick={() => setActiveTab('BUILDER')}
-          className={`flex items-center gap-2 py-2 px-4 rounded-lg font-semibold text-xs uppercase tracking-wider transition-colors shrink-0 ${
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap active:scale-95 ${
             activeTab === 'BUILDER'
-              ? 'bg-red-600 text-white'
-              : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+              ? 'bg-gradient-to-r from-red-600 to-red-800 text-white shadow-lg shadow-red-950/40'
+              : 'bg-zinc-900/60 text-zinc-400 hover:text-white hover:bg-zinc-800 border border-white/5'
           }`}
         >
           <Layout className="w-4 h-4" />
@@ -457,10 +494,10 @@ export default function EventTicketsPage() {
         <button
           type="button"
           onClick={() => setActiveTab('ZONES')}
-          className={`flex items-center gap-2 py-2 px-4 rounded-lg font-semibold text-xs uppercase tracking-wider transition-colors shrink-0 ${
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap active:scale-95 ${
             activeTab === 'ZONES'
-              ? 'bg-red-600 text-white'
-              : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+              ? 'bg-gradient-to-r from-red-600 to-red-800 text-white shadow-lg shadow-red-950/40'
+              : 'bg-zinc-900/60 text-zinc-400 hover:text-white hover:bg-zinc-800 border border-white/5'
           }`}
         >
           <Sliders className="w-4 h-4" />
@@ -470,10 +507,10 @@ export default function EventTicketsPage() {
         <button
           type="button"
           onClick={() => setActiveTab('AVAILABILITY')}
-          className={`flex items-center gap-2 py-2 px-4 rounded-lg font-semibold text-xs uppercase tracking-wider transition-colors shrink-0 ${
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap active:scale-95 ${
             activeTab === 'AVAILABILITY'
-              ? 'bg-red-600 text-white'
-              : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+              ? 'bg-gradient-to-r from-red-600 to-red-800 text-white shadow-lg shadow-red-950/40'
+              : 'bg-zinc-900/60 text-zinc-400 hover:text-white hover:bg-zinc-800 border border-white/5'
           }`}
         >
           <Ticket className="w-4 h-4" />
@@ -497,45 +534,45 @@ export default function EventTicketsPage() {
         <div className="space-y-8">
           {/* Existing Zones */}
           <div>
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <h2 className="text-xl font-black text-white mb-4 flex items-center gap-2">
               <Ticket className="w-5 h-5 text-red-500" />
               Zonas Configuradas
             </h2>
 
             {zones.length === 0 ? (
-              <div className="bg-zinc-950 border border-white/10 rounded-xl p-8 text-center text-zinc-500">
+              <div className="glass-panel border border-white/10 rounded-2xl p-8 text-center text-zinc-400">
                 No hay zonas configuradas aún. Usa el Editor Interactivo o agrega la primera zona abajo.
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {zones.map(zone => (
-                  <div key={zone.id} className={`border rounded-xl p-6 flex justify-between items-start ${ZONE_COLORS[zone.zone_type] || 'bg-zinc-900 border-white/10 text-white'}`}>
+                  <div key={zone.id} className={`glass-panel border rounded-2xl p-6 flex justify-between items-start transition-all ${ZONE_COLORS[zone.zone_type] || 'border-white/10 text-white'}`}>
                     {editingZone === zone.id ? (
                       <div className="flex-1 mr-4 space-y-3">
-                        <p className="font-black text-lg uppercase tracking-widest">
+                        <p className="font-black text-lg uppercase tracking-widest text-white">
                           {zone.name || ZONE_TYPES.find(zt => zt.value === zone.zone_type)?.label || zone.zone_type}
                         </p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
-                            <label className="text-xs uppercase tracking-widest font-bold opacity-70 mb-1 block">Precio por Día (MXN)</label>
+                            <label className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 mb-1 block">Precio por Día (MXN)</label>
                             <input 
                               type="number" 
                               step="0.01" 
                               value={editPrice}
                               onChange={e => setEditPrice(e.target.value)}
-                              className="w-full bg-zinc-950 border border-white/20 rounded px-3 py-2 text-white focus:outline-none focus:border-red-500 text-sm"
+                              className="w-full bg-zinc-950 border border-white/20 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-red-500 text-sm transition-colors"
                               placeholder="Ej. 320.00"
                             />
                           </div>
                           {event?.is_multi_day && (
                             <div>
-                              <label className="text-xs uppercase tracking-widest font-bold text-amber-400 mb-1 block">Precio Abono 2 Días (MXN)</label>
+                              <label className="text-[10px] uppercase tracking-widest font-bold text-red-400 mb-1 block">Precio Abono 2 Días (MXN)</label>
                               <input 
                                 type="number" 
                                 step="0.01" 
                                 value={editPriceAbono}
                                 onChange={e => setEditPriceAbono(e.target.value)}
-                                className="w-full bg-zinc-950 border border-amber-500/30 rounded px-3 py-2 text-white focus:outline-none focus:border-amber-500 text-sm"
+                                className="w-full bg-zinc-950 border border-red-500/30 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-red-500 text-sm transition-colors"
                                 placeholder="Ej. 550.00 (Opcional)"
                               />
                             </div>
@@ -545,14 +582,14 @@ export default function EventTicketsPage() {
                           <button 
                             onClick={() => handleUpdateZone(zone.id)}
                             disabled={saving}
-                            className="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg uppercase tracking-wider transition-colors disabled:opacity-50"
+                            className="bg-gradient-to-r from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white text-xs font-bold px-4 py-2 rounded-xl uppercase tracking-wider transition-all shadow-md shadow-red-950/40 active:scale-95 disabled:opacity-50 cursor-pointer"
                           >
                             {saving ? 'Guardando...' : 'Guardar'}
                           </button>
                           <button 
                             onClick={() => setEditingZone(null)}
                             disabled={saving}
-                            className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold px-3.5 py-1.5 rounded-lg uppercase tracking-wider transition-colors"
+                            className="bg-zinc-800 hover:bg-zinc-750 text-zinc-300 text-xs font-bold px-4 py-2 rounded-xl uppercase tracking-wider transition-colors cursor-pointer"
                           >
                             Cancelar
                           </button>
@@ -560,25 +597,25 @@ export default function EventTicketsPage() {
                       </div>
                     ) : (
                       <div>
-                        <p className="font-black text-lg uppercase tracking-widest">
+                        <p className="font-black text-lg uppercase tracking-widest text-white">
                           {zone.name || ZONE_TYPES.find(zt => zt.value === zone.zone_type)?.label || zone.zone_type}
                         </p>
                         <div className="mt-1 space-y-1">
-                          <p className="text-2xl font-bold">
-                            ${zone.price} <span className="text-sm font-normal opacity-70">MXN {event?.is_multi_day ? '/ día' : ''}</span>
+                          <p className="text-2xl font-black text-white">
+                            ${zone.price} <span className="text-sm font-medium text-zinc-400">MXN {event?.is_multi_day ? '/ día' : ''}</span>
                           </p>
                           {event?.is_multi_day && (
-                            <p className="text-xs font-medium flex items-center gap-1.5">
-                              <span className="text-amber-400 font-bold uppercase tracking-wider">Abono (2 Días):</span>
+                            <p className="text-xs font-semibold flex items-center gap-1.5">
+                              <span className="text-red-400 font-bold uppercase tracking-wider">Abono (2 Días):</span>
                               {zone.price_abono ? (
                                 <span className="text-white font-black text-sm">${zone.price_abono} MXN</span>
                               ) : (
-                                <span className="opacity-60 italic">No configurado</span>
+                                <span className="text-zinc-500 italic">No configurado</span>
                               )}
                             </p>
                           )}
                         </div>
-                        <p className="text-sm mt-2 opacity-70">
+                        <p className="text-xs mt-2 text-zinc-400 font-medium">
                           {zone.seats?.length || (zone.rows * zone.seats_per_row)} lugares configurados
                         </p>
                       </div>
@@ -592,14 +629,14 @@ export default function EventTicketsPage() {
                             setEditPrice(zone.price);
                             setEditPriceAbono(zone.price_abono || '');
                           }}
-                          className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold uppercase tracking-wider transition-colors"
+                          className="px-3.5 py-1.5 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 text-zinc-200 border border-white/10 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer active:scale-95"
                           title="Editar precio"
                         >
                           Editar
                         </button>
                         <button
                           onClick={() => handleDeleteZone(zone.id)}
-                          className="p-1.5 rounded-lg bg-zinc-800 hover:bg-red-950/60 text-zinc-400 hover:text-red-400 transition-colors"
+                          className="p-2 rounded-xl bg-zinc-900/80 hover:bg-red-950/50 text-zinc-400 hover:text-red-400 border border-white/10 hover:border-red-500/30 transition-all cursor-pointer"
                           title="Eliminar zona"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -614,27 +651,27 @@ export default function EventTicketsPage() {
 
           {/* Add New Zone */}
           <div>
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <h2 className="text-xl font-black text-white mb-4 flex items-center gap-2">
               <Plus className="w-5 h-5 text-red-500" />
               Agregar Nueva Zona Manualmente
             </h2>
 
             {availableZoneTypes.length === 0 ? (
-              <div className="bg-zinc-950 border border-white/10 rounded-xl p-6 text-zinc-500">
+              <div className="glass-panel border border-white/10 rounded-2xl p-6 text-zinc-400">
                 Ya configuraste todas las zonas disponibles para este evento.
               </div>
             ) : (
-              <form onSubmit={handleAddZone} className="bg-zinc-950 border border-white/10 rounded-xl p-6 space-y-6">
+              <form onSubmit={handleAddZone} className="glass-panel border border-white/10 rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xl">
                 <div className={`grid grid-cols-1 ${event?.is_multi_day ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-6`}>
                   <div className="space-y-2">
-                    <label className="text-sm font-bold text-white uppercase tracking-widest">Tipo de Zona</label>
+                    <label className="text-xs font-bold text-white uppercase tracking-widest">Tipo de Zona</label>
                     <select
                       value={newZone.zone_type}
                       onChange={e => {
                         const val = e.target.value;
                         setNewZone({ ...newZone, zone_type: val, seats_per_row: getDefaultSeats(val) });
                       }}
-                      className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
+                      className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
                     >
                       {availableZoneTypes.map(zt => (
                         <option key={zt.value} value={zt.value}>{zt.label}</option>
@@ -643,7 +680,7 @@ export default function EventTicketsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-bold text-white uppercase tracking-widest">
+                    <label className="text-xs font-bold text-white uppercase tracking-widest">
                       {event?.is_multi_day ? 'Precio por Día (MXN)' : 'Precio por Boleto (MXN)'}
                     </label>
                     <input
@@ -653,14 +690,14 @@ export default function EventTicketsPage() {
                       required
                       value={newZone.price}
                       onChange={e => setNewZone({ ...newZone, price: e.target.value })}
-                      className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
+                      className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
                       placeholder="Ej. 320.00"
                     />
                   </div>
 
                   {event?.is_multi_day && (
                     <div className="space-y-2">
-                      <label className="text-sm font-bold text-amber-400 uppercase tracking-widest flex items-center justify-between">
+                      <label className="text-xs font-bold text-red-400 uppercase tracking-widest flex items-center justify-between">
                         <span>Precio Abono 2 Días</span>
                         <span className="text-[10px] text-zinc-400 font-normal lowercase">(opcional)</span>
                       </label>
@@ -670,7 +707,7 @@ export default function EventTicketsPage() {
                         step="0.01"
                         value={newZone.price_abono}
                         onChange={e => setNewZone({ ...newZone, price_abono: e.target.value })}
-                        className="w-full bg-zinc-900 border border-amber-500/30 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500 transition-colors"
+                        className="w-full bg-zinc-900 border border-red-500/30 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
                         placeholder="Ej. 550.00"
                       />
                     </div>
@@ -680,7 +717,7 @@ export default function EventTicketsPage() {
                 {newZone.zone_type !== 'GENERAL' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-sm font-bold text-white uppercase tracking-widest">Número de Filas</label>
+                      <label className="text-xs font-bold text-white uppercase tracking-widest">Número de Filas</label>
                       <input
                         type="number"
                         min="1"
@@ -688,20 +725,20 @@ export default function EventTicketsPage() {
                         required
                         value={newZone.rows}
                         onChange={e => setNewZone({ ...newZone, rows: Number(e.target.value) })}
-                        className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
+                        className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
                       />
-                      <p className="text-xs text-zinc-500">Máx. 26 filas (A–Z)</p>
+                      <p className="text-xs text-zinc-500 font-medium">Máx. 26 filas (A–Z)</p>
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-bold text-white uppercase tracking-widest">Asientos por Fila</label>
+                      <label className="text-xs font-bold text-white uppercase tracking-widest">Asientos por Fila</label>
                       <input
                         type="number"
                         min="1"
                         required
                         value={newZone.seats_per_row}
                         onChange={e => setNewZone({ ...newZone, seats_per_row: Number(e.target.value) })}
-                        className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
+                        className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
                       />
                     </div>
                   </div>
@@ -710,7 +747,7 @@ export default function EventTicketsPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 font-semibold uppercase tracking-wider text-xs rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
+                  className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white px-6 py-3 font-bold uppercase tracking-wider text-xs rounded-xl shadow-lg shadow-red-950/40 transition-all disabled:opacity-50 cursor-pointer active:scale-95"
                 >
                   <Plus className="w-4 h-4" />
                   <span>{saving ? 'Creando...' : 'Crear Zona y Asientos'}</span>
@@ -723,13 +760,13 @@ export default function EventTicketsPage() {
 
       {/* TAB 3: LIVE AVAILABILITY MAP */}
       {activeTab === 'AVAILABILITY' && (
-        <div className="bg-zinc-950 border border-white/10 rounded-2xl p-6 shadow-2xl">
+        <div className="glass-panel border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl">
           <div className="mb-4">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            <h2 className="text-xl font-black text-white flex items-center gap-2">
               <Ticket className="w-5 h-5 text-red-500" />
               Disponibilidad de Asientos en Vivo
             </h2>
-            <p className="text-zinc-400 text-sm mt-1">
+            <p className="text-zinc-400 text-xs sm:text-sm mt-1">
               Haz clic en cualquier asiento o mesa para habilitarlo (disponible para el público) o deshabilitarlo (bloqueado/vendido).
             </p>
           </div>
@@ -743,16 +780,19 @@ export default function EventTicketsPage() {
           ) : (
             <div className="w-full">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-xs text-zinc-500 uppercase font-black tracking-wider">The Wrestling Factory (Clásico SCW)</span>
-                <div className="flex items-center gap-1 bg-zinc-900/90 backdrop-blur-md border border-white/10 rounded-2xl p-1 shadow-lg">
-                  <button onClick={handleZoomOut} className="p-2 hover:bg-white/10 rounded-xl text-zinc-300 hover:text-white transition-all active:scale-95" title="Alejar"><Minus className="w-4 h-4" /></button>
-                  <button onClick={handleResetZoom} className="px-3 py-1 hover:bg-white/10 rounded-xl text-xs font-black text-amber-400 tracking-wider transition-all" title="Restablecer">{Math.round(scale * 100)}%</button>
-                  <button onClick={handleZoomIn} className="p-2 hover:bg-white/10 rounded-xl text-zinc-300 hover:text-white transition-all active:scale-95" title="Acercar"><Plus className="w-4 h-4" /></button>
+                <span className="text-xs text-zinc-400 uppercase font-black tracking-wider flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-red-600 shadow-[0_0_6px_#ef4444]" />
+                  The Wrestling Factory (Clásico SCW)
+                </span>
+                <div className="flex items-center gap-1 bg-zinc-900/90 backdrop-blur-md border border-white/10 rounded-xl p-1 shadow-lg">
+                  <button onClick={handleZoomOut} className="p-1.5 hover:bg-white/10 rounded-lg text-zinc-300 hover:text-white transition-all active:scale-95 cursor-pointer" title="Alejar"><Minus className="w-4 h-4" /></button>
+                  <button onClick={handleResetZoom} className="px-3 py-1 hover:bg-white/10 rounded-lg text-xs font-black text-white tracking-wider transition-all cursor-pointer" title="Restablecer">{Math.round(scale * 100)}%</button>
+                  <button onClick={handleZoomIn} className="p-1.5 hover:bg-white/10 rounded-lg text-zinc-300 hover:text-white transition-all active:scale-95 cursor-pointer" title="Acercar"><Plus className="w-4 h-4" /></button>
                 </div>
               </div>
 
               <div 
-                className={`w-full h-[50vh] min-h-[400px] max-h-[600px] bg-zinc-900/20 border border-white/5 rounded-2xl overflow-hidden relative touch-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                className={`w-full h-[50vh] min-h-[400px] max-h-[600px] bg-zinc-950/80 border border-white/10 rounded-2xl overflow-hidden relative touch-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
                 ref={mapContainerRef}
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
