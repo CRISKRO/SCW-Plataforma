@@ -57,10 +57,16 @@ export default function ArenaSeatMap({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
 
-  // Dragging seat or table in editor
-  const [draggedSeat, setDraggedSeat] = useState<SeatItem | null>(null);
-  const [draggedTable, setDraggedTable] = useState<{ tableNumber: number; zoneType: string; initialX: number; initialY: number } | null>(null);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  // Dragging seat or table in editor with distance threshold (5px)
+  const dragInteractionRef = useRef<{
+    type: 'seat' | 'table';
+    item: any;
+    startClientX: number;
+    startClientY: number;
+    offset: { x: number; y: number };
+  } | null>(null);
+  const didDragOccurRef = useRef(false);
+  const [isActuallyDragging, setIsActuallyDragging] = useState(false);
 
   // Tooltip
   const [hoveredSeat, setHoveredSeat] = useState<{ seat: SeatItem; zone: any; x: number; y: number } | null>(null);
@@ -148,34 +154,54 @@ export default function ArenaSeatMap({
       return;
     }
 
-    // Dragging a seat in editor
-    if (isInteractiveEditing && draggedSeat && onSeatMove) {
-      const coords = getSvgCoordinates(e);
-      const newX = snap(coords.x - dragOffset.x);
-      const newY = snap(coords.y - dragOffset.y);
-      onSeatMove(draggedSeat.id, newX, newY);
-      return;
+    if (!isInteractiveEditing || !dragInteractionRef.current) return;
+
+    // Minimum drag threshold (5px) to differentiate click from intentional drag
+    const moveDist = Math.hypot(
+      e.clientX - dragInteractionRef.current.startClientX,
+      e.clientY - dragInteractionRef.current.startClientY
+    );
+
+    if (!didDragOccurRef.current) {
+      if (moveDist < 5) {
+        return; // Pure click: DO NOT MOVE SEAT OR SNAP
+      }
+      didDragOccurRef.current = true;
+      setIsActuallyDragging(true);
     }
 
-    // Dragging a table in editor
-    if (isInteractiveEditing && draggedTable && onTableMove) {
-      const coords = getSvgCoordinates(e);
-      const newX = snap(coords.x - dragOffset.x);
-      const newY = snap(coords.y - dragOffset.y);
-      onTableMove(draggedTable.tableNumber, draggedTable.zoneType, newX, newY);
-      return;
+    const coords = getSvgCoordinates(e);
+    const newX = snap(coords.x - dragInteractionRef.current.offset.x);
+    const newY = snap(coords.y - dragInteractionRef.current.offset.y);
+
+    if (dragInteractionRef.current.type === 'seat' && onSeatMove) {
+      onSeatMove(dragInteractionRef.current.item.id, newX, newY);
+    } else if (dragInteractionRef.current.type === 'table' && onTableMove) {
+      onTableMove(
+        dragInteractionRef.current.item.tableNumber,
+        dragInteractionRef.current.item.zoneType,
+        newX,
+        newY
+      );
     }
   };
 
   const handleCanvasPointerUp = () => {
     setIsPanning(false);
-    setDraggedSeat(null);
-    setDraggedTable(null);
+    setIsActuallyDragging(false);
+    // Keep didDragOccur briefly so onClick handler can check whether a drag occurred
+    setTimeout(() => {
+      dragInteractionRef.current = null;
+      didDragOccurRef.current = false;
+    }, 60);
   };
 
   // Seat interaction in Editor vs Public
   const handleSeatClick = (seat: SeatItem, zone: any, e: React.MouseEvent) => {
     e.stopPropagation();
+    // If user dragged the seat across the canvas, don't trigger selection/toggle
+    if (didDragOccurRef.current) return;
+
     if (isInteractiveEditing) {
       if (onSeatClickInEditor) onSeatClickInEditor(seat, zone);
     } else {
@@ -191,8 +217,14 @@ export default function ArenaSeatMap({
     const coords = getSvgCoordinates(e);
     const seatX = seat.x || 0;
     const seatY = seat.y || 0;
-    setDraggedSeat(seat);
-    setDragOffset({ x: coords.x - seatX, y: coords.y - seatY });
+    dragInteractionRef.current = {
+      type: 'seat',
+      item: seat,
+      startClientX: e.clientX,
+      startClientY: e.clientY,
+      offset: { x: coords.x - seatX, y: coords.y - seatY },
+    };
+    didDragOccurRef.current = false;
   };
 
   // Table Drag in Editor
@@ -200,13 +232,14 @@ export default function ArenaSeatMap({
     if (!isInteractiveEditing) return;
     e.stopPropagation();
     const coords = getSvgCoordinates(e);
-    setDraggedTable({
-      tableNumber: tableNum,
-      zoneType,
-      initialX: centerX,
-      initialY: centerY,
-    });
-    setDragOffset({ x: coords.x - centerX, y: coords.y - centerY });
+    dragInteractionRef.current = {
+      type: 'table',
+      item: { tableNumber: tableNum, zoneType },
+      startClientX: e.clientX,
+      startClientY: e.clientY,
+      offset: { x: coords.x - centerX, y: coords.y - centerY },
+    };
+    didDragOccurRef.current = false;
   };
 
   return (
@@ -269,7 +302,7 @@ export default function ArenaSeatMap({
           style={{
             transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
             transformOrigin: 'center center',
-            transition: isPanning || draggedSeat || draggedTable ? 'none' : 'transform 0.15s ease-out',
+            transition: isPanning || isActuallyDragging ? 'none' : 'transform 0.15s ease-out',
           }}
           className="w-full h-full flex items-center justify-center"
         >
@@ -610,7 +643,7 @@ export default function ArenaSeatMap({
                   onClick={(e) => handleSeatClick(seat, zoneF1, e)}
                   onMouseEnter={(e) => setHoveredSeat({ seat, zone: zoneF1, x: sx, y: sy })}
                   onMouseLeave={() => setHoveredSeat(null)}
-                  className={`cursor-pointer ${!isAvailable && !isEditingCurrent ? 'opacity-40 cursor-not-allowed' : 'hover:scale-110'} transition-transform`}
+                  className={`cursor-pointer group ${!isAvailable && !isEditingCurrent ? 'opacity-40 cursor-not-allowed' : ''}`}
                 >
                   <rect
                     x="-12"
@@ -621,6 +654,7 @@ export default function ArenaSeatMap({
                     fill={isEditingCurrent ? '#ef4444' : !isAvailable ? '#18181b' : isSelected ? '#ffffff' : '#dc2626'}
                     stroke={isEditingCurrent ? '#ffffff' : isSelected ? '#ffffff' : '#991b1b'}
                     strokeWidth={1.5}
+                    className="transition-colors group-hover:stroke-white group-hover:stroke-[2px]"
                     filter={isSelected ? 'url(#selectedGlow)' : isAvailable ? 'url(#redSeatGlow)' : ''}
                   />
                   <text
@@ -655,7 +689,7 @@ export default function ArenaSeatMap({
                   onClick={(e) => handleSeatClick(seat, zoneF2, e)}
                   onMouseEnter={(e) => setHoveredSeat({ seat, zone: zoneF2, x: sx, y: sy })}
                   onMouseLeave={() => setHoveredSeat(null)}
-                  className={`cursor-pointer ${!isAvailable && !isEditingCurrent ? 'opacity-40 cursor-not-allowed' : 'hover:scale-110'} transition-transform`}
+                  className={`cursor-pointer group ${!isAvailable && !isEditingCurrent ? 'opacity-40 cursor-not-allowed' : ''}`}
                 >
                   <rect
                     x="-12"
@@ -666,6 +700,7 @@ export default function ArenaSeatMap({
                     fill={isEditingCurrent ? '#ef4444' : !isAvailable ? '#18181b' : isSelected ? '#ffffff' : '#2563eb'}
                     stroke={isEditingCurrent ? '#ffffff' : isSelected ? '#ffffff' : '#1d4ed8'}
                     strokeWidth={1.5}
+                    className="transition-colors group-hover:stroke-white group-hover:stroke-[2px]"
                     filter={isSelected ? 'url(#selectedGlow)' : isAvailable ? 'url(#blueSeatGlow)' : ''}
                   />
                   <text
@@ -704,7 +739,7 @@ export default function ArenaSeatMap({
                     onClick={(e) => handleSeatClick(seat, zone, e)}
                     onMouseEnter={(e) => setHoveredSeat({ seat, zone, x: sx, y: sy })}
                     onMouseLeave={() => setHoveredSeat(null)}
-                    className="cursor-pointer hover:scale-110 transition-transform"
+                    className="cursor-pointer group"
                   >
                     <rect
                       x="-12"
@@ -715,6 +750,7 @@ export default function ArenaSeatMap({
                       fill={isEditingCurrent ? '#ef4444' : !isAvailable ? '#18181b' : isSelected ? '#ffffff' : zoneColor}
                       stroke={isEditingCurrent ? '#ffffff' : '#ffffff'}
                       strokeWidth={1.5}
+                      className="transition-colors group-hover:stroke-white group-hover:stroke-[2px]"
                       filter={isSelected ? 'url(#selectedGlow)' : ''}
                     />
                     <text
