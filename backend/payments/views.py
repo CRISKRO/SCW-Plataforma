@@ -1248,12 +1248,15 @@ class ValidateTicketView(APIView):
             from datetime import timedelta
             today = timezone.localtime(now).date()
 
-            # Comprobar expiración del evento
+            # Comprobar expiración del evento: válido hasta 6 horas después de la hora programada
             if item.event and item.event.date_time:
                 event_dt = item.event.date_time
-                event_expiry = event_dt + timedelta(days=2 if item.event.is_multi_day else 1)
+                if timezone.is_naive(event_dt):
+                    event_dt = timezone.make_aware(event_dt)
+                extra_days = 1 if getattr(item.event, 'is_multi_day', False) else 0
+                event_expiry = event_dt + timedelta(days=extra_days, hours=6)
                 if now > event_expiry:
-                    return Response({"valid": False, "message": "❌ Evento caducado/pasado."})
+                    return Response({"valid": False, "message": "❌ Evento caducado/pasado (más de 6 horas transcurridas)."})
 
             valid_day = item.valid_for_day or OrderItem.ValidForDay.ALL
             auth_message = "✅ Acceso autorizado"
@@ -1340,12 +1343,16 @@ class ValidateTicketView(APIView):
             from datetime import timedelta
             today = timezone.localtime(now).date()
 
-            # Check event expiry
+            # Check event expiry: válido hasta 6 horas después de la hora programada
             first_event = group_items[0].event
             if first_event and first_event.date_time:
-                event_expiry = first_event.date_time + timedelta(days=2 if first_event.is_multi_day else 1)
+                event_dt = first_event.date_time
+                if timezone.is_naive(event_dt):
+                    event_dt = timezone.make_aware(event_dt)
+                extra_days = 1 if getattr(first_event, 'is_multi_day', False) else 0
+                event_expiry = event_dt + timedelta(days=extra_days, hours=6)
                 if now > event_expiry:
-                    return Response({"valid": False, "message": "❌ Evento caducado/pasado."})
+                    return Response({"valid": False, "message": "❌ Evento caducado/pasado (más de 6 horas transcurridas)."})
 
             # Check if all items in the group are already scanned
             valid_day = group_items[0].valid_for_day or OrderItem.ValidForDay.ALL
@@ -1646,7 +1653,9 @@ class BoxOfficeEventsView(APIView):
         from tickets.models import EventZone
         from django.utils import timezone
         
-        events = Event.objects.filter(date_time__gte=timezone.now(), status__in=['SCHEDULED', 'LIVE'])
+        from datetime import timedelta
+        six_hours_ago = timezone.now() - timedelta(hours=6)
+        events = Event.objects.filter(date_time__gte=six_hours_ago, status__in=['SCHEDULED', 'LIVE'])
         data = []
         for event in events:
             zones_data = []

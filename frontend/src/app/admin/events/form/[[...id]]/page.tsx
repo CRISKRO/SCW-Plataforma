@@ -37,7 +37,13 @@ export default function EventFormPage() {
           let formattedDate = '';
           if (data.date_time) {
             const dateObj = new Date(data.date_time);
-            formattedDate = dateObj.toISOString().slice(0, 16);
+            const pad = (n: number) => n.toString().padStart(2, '0');
+            const year = dateObj.getFullYear();
+            const month = pad(dateObj.getMonth() + 1);
+            const day = pad(dateObj.getDate());
+            const hours = pad(dateObj.getHours());
+            const minutes = pad(dateObj.getMinutes());
+            formattedDate = `${year}-${month}-${day}T${hours}:${minutes}`;
           }
           
           setFormData({
