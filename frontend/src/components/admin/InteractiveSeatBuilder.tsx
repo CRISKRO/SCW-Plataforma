@@ -489,7 +489,7 @@ export default function InteractiveSeatBuilder({
             className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white font-bold text-xs uppercase tracking-wider px-4 py-2.5 rounded-xl transition-all shadow-md shadow-red-950/30 active:scale-95 cursor-pointer whitespace-nowrap"
           >
             <LayoutTemplate className="w-4 h-4" />
-            <span>Cargar Plantilla de Mapa</span>
+            <span>Cargar Plantilla</span>
           </button>
 
           {/* Add Seat (Only in Labrú mode) */}
@@ -539,39 +539,20 @@ export default function InteractiveSeatBuilder({
             </button>
           )}
 
-          {/* Quick Selection Status Badge in Toolbar */}
+          {/* Active Selection Indicator in Toolbar */}
           {selectedSeats.length > 0 && (
-            <div className="flex items-center gap-2.5 bg-zinc-900/90 border border-red-500/30 rounded-xl px-3 py-1.5 text-xs text-zinc-200 shadow-md">
-              <span className="flex items-center gap-1.5 font-black text-white">
-                <span className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_6px_#ef4444] animate-pulse" />
-                {selectedSeats.length} {selectedSeats.length === 1 ? 'seleccionado' : 'seleccionados'}
+            <div className="flex items-center gap-2 bg-zinc-900/90 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-zinc-300">
+              <span className="w-2 h-2 rounded-full bg-red-600" />
+              <span className="font-bold text-white">
+                {selectedSeats.length} {selectedSeats.length === 1 ? 'asiento seleccionado' : 'asientos seleccionados'}
               </span>
-              <div className="h-4 w-px bg-white/10" />
-              <button
-                type="button"
-                disabled={isBulkUpdating}
-                onClick={() => handleBulkSetAvailability(true)}
-                className="text-emerald-400 hover:text-emerald-300 font-bold px-2 py-0.5 rounded-lg hover:bg-emerald-950/40 border border-emerald-500/20 transition-colors cursor-pointer text-xs uppercase tracking-wider"
-                title="Habilitar todos los seleccionados"
-              >
-                Habilitar
-              </button>
-              <button
-                type="button"
-                disabled={isBulkUpdating}
-                onClick={() => handleBulkSetAvailability(false)}
-                className="text-zinc-300 hover:text-white font-bold px-2 py-0.5 rounded-lg hover:bg-zinc-800 border border-white/10 transition-colors cursor-pointer text-xs uppercase tracking-wider"
-                title="Bloquear todos los seleccionados"
-              >
-                Bloquear
-              </button>
               <button
                 type="button"
                 onClick={handleClearSelection}
-                className="text-zinc-500 hover:text-white text-xs px-1 hover:bg-white/5 rounded transition-colors cursor-pointer"
+                className="text-zinc-500 hover:text-white text-xs ml-1 hover:bg-white/5 rounded px-1 transition-colors cursor-pointer"
                 title="Deseleccionar todos"
               >
-                ✕
+                ✕ Limpiar
               </button>
             </div>
           )}
@@ -794,9 +775,8 @@ export default function InteractiveSeatBuilder({
             <div className="glass-panel border border-white/10 p-5 shadow-2xl space-y-4">
               <div className="flex items-center justify-between border-b border-white/10 pb-3">
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-red-500 flex items-center gap-1.5">
-                    <CheckSquare className="w-3 h-3 text-red-500" />
-                    1 Asiento Seleccionado
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 block">
+                    Detalles del Asiento
                   </span>
                   <h3 className="text-lg font-black text-white tracking-tight mt-0.5">
                     {formatSeatTitle(selectedSeat)}

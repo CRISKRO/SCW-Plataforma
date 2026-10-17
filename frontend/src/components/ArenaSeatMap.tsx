@@ -312,8 +312,8 @@ export default function ArenaSeatMap({
               </filter>
 
               {/* Selected Glow */}
-              <filter id="selectedGlow" x="-30%" y="-30%" width="160%" height="160%">
-                <feDropShadow dx="0" dy="0" stdDeviation="5" floodColor="#ffffff" floodOpacity="0.9" />
+              <filter id="selectedGlow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="1" stdDeviation="2" floodColor="#000000" floodOpacity="0.4" />
               </filter>
             </defs>
 
@@ -618,16 +618,16 @@ export default function ArenaSeatMap({
                     width="24"
                     height="24"
                     rx="4"
-                    fill={isEditingCurrent ? '#ffffff' : !isAvailable ? '#18181b' : isSelected ? '#ffffff' : '#dc2626'}
-                    stroke={isEditingCurrent ? '#ef4444' : isSelected ? '#ffffff' : '#991b1b'}
-                    strokeWidth={isEditingCurrent ? 2.5 : 1.5}
-                    filter={isEditingCurrent || isSelected ? 'url(#selectedGlow)' : isAvailable ? 'url(#redSeatGlow)' : ''}
+                    fill={isEditingCurrent ? '#ef4444' : !isAvailable ? '#18181b' : isSelected ? '#ffffff' : '#dc2626'}
+                    stroke={isEditingCurrent ? '#ffffff' : isSelected ? '#ffffff' : '#991b1b'}
+                    strokeWidth={1.5}
+                    filter={isSelected ? 'url(#selectedGlow)' : isAvailable ? 'url(#redSeatGlow)' : ''}
                   />
                   <text
                     x="0"
                     y="4"
                     textAnchor="middle"
-                    fill={isEditingCurrent ? '#dc2626' : !isAvailable ? '#71717a' : isSelected ? '#000000' : '#ffffff'}
+                    fill={isEditingCurrent ? '#ffffff' : !isAvailable ? '#71717a' : isSelected ? '#000000' : '#ffffff'}
                     fontSize="9.5"
                     fontWeight="900"
                   >
@@ -663,16 +663,16 @@ export default function ArenaSeatMap({
                     width="24"
                     height="24"
                     rx="4"
-                    fill={isEditingCurrent ? '#ffffff' : !isAvailable ? '#18181b' : isSelected ? '#ffffff' : '#2563eb'}
-                    stroke={isEditingCurrent ? '#ef4444' : isSelected ? '#ffffff' : '#1d4ed8'}
-                    strokeWidth={isEditingCurrent ? 2.5 : 1.5}
-                    filter={isEditingCurrent || isSelected ? 'url(#selectedGlow)' : isAvailable ? 'url(#blueSeatGlow)' : ''}
+                    fill={isEditingCurrent ? '#ef4444' : !isAvailable ? '#18181b' : isSelected ? '#ffffff' : '#2563eb'}
+                    stroke={isEditingCurrent ? '#ffffff' : isSelected ? '#ffffff' : '#1d4ed8'}
+                    strokeWidth={1.5}
+                    filter={isSelected ? 'url(#selectedGlow)' : isAvailable ? 'url(#blueSeatGlow)' : ''}
                   />
                   <text
                     x="0"
                     y="4"
                     textAnchor="middle"
-                    fill={isEditingCurrent ? '#dc2626' : !isAvailable ? '#71717a' : isSelected ? '#000000' : '#ffffff'}
+                    fill={isEditingCurrent ? '#ffffff' : !isAvailable ? '#71717a' : isSelected ? '#000000' : '#ffffff'}
                     fontSize="9.5"
                     fontWeight="900"
                   >
@@ -712,16 +712,16 @@ export default function ArenaSeatMap({
                       width="24"
                       height="24"
                       rx="4"
-                      fill={isEditingCurrent ? '#ffffff' : !isAvailable ? '#18181b' : isSelected ? '#ffffff' : zoneColor}
-                      stroke={isEditingCurrent ? '#ef4444' : '#ffffff'}
-                      strokeWidth={isEditingCurrent ? 2.5 : 1.5}
-                      filter={isEditingCurrent ? 'url(#selectedGlow)' : ''}
+                      fill={isEditingCurrent ? '#ef4444' : !isAvailable ? '#18181b' : isSelected ? '#ffffff' : zoneColor}
+                      stroke={isEditingCurrent ? '#ffffff' : '#ffffff'}
+                      strokeWidth={1.5}
+                      filter={isSelected ? 'url(#selectedGlow)' : ''}
                     />
                     <text
                       x="0"
                       y="4"
                       textAnchor="middle"
-                      fill={isEditingCurrent ? '#dc2626' : !isAvailable ? '#71717a' : isSelected ? '#000000' : '#ffffff'}
+                      fill={isEditingCurrent ? '#ffffff' : !isAvailable ? '#71717a' : isSelected ? '#000000' : '#ffffff'}
                       fontSize="9.5"
                       fontWeight="900"
                     >

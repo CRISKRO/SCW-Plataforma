@@ -103,9 +103,9 @@ export default function ClassicWrestlingFactoryMap({
                       <button
                         type="button"
                         onClick={() => onSeatClick?.(seat, zone)}
-                        className={`w-6 h-6 md:w-7 md:h-7 rounded text-[10px] font-bold flex items-center justify-center transition-all cursor-pointer ${
+                        className={`w-6 h-6 md:w-7 md:h-7 rounded text-[10px] font-bold flex items-center justify-center transition-colors cursor-pointer ${
                           isSelected
-                            ? 'bg-red-600 text-white border-2 border-white scale-110 z-20 shadow-[0_0_18px_rgba(239,68,68,0.85)] ring-2 ring-red-400 font-black'
+                            ? 'bg-red-600 text-white border border-white font-bold z-10 shadow-sm'
                             : !isAvailable
                             ? 'bg-zinc-950 text-zinc-600 border border-zinc-800/80 opacity-40 cursor-pointer'
                             : 'bg-zinc-900 text-zinc-300 border border-zinc-700 hover:border-red-500 hover:bg-zinc-800 hover:text-white'
@@ -132,13 +132,13 @@ export default function ClassicWrestlingFactoryMap({
     <div className="glass-panel border border-white/10 p-4 sm:p-5 relative shadow-2xl overflow-hidden">
       {/* Top Bar inside canvas */}
       <div className="flex items-center justify-between gap-4 mb-3 border-b border-white/10 pb-3">
-        <div className="flex items-center gap-2.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-red-600 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
-          <span className="text-xs font-black uppercase tracking-wider text-white">
-            The Wrestling Factory · Ring Clásico SCW
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-red-600" />
+          <span className="text-xs font-bold uppercase tracking-wider text-zinc-200">
+            Distribución del Cuadrilátero
           </span>
-          <span className="text-[11px] text-zinc-400 hidden sm:inline">
-            (Haz clic en un asiento para seleccionarlo)
+          <span className="text-[11px] text-zinc-500 hidden sm:inline">
+            · Clic para seleccionar
           </span>
         </div>
 

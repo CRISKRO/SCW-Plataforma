@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, Plus, Trash2, Ticket, Minus, MapPin, Layout, Sliders, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Ticket, Minus, MapPin, Layout, Sliders, CheckCircle, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { eventsService } from '@/services/events.services';
 import { adminService } from '@/services/admin.services';
@@ -381,6 +381,8 @@ export default function EventTicketsPage() {
   const zoneOeste = zones.find(z => z.zone_type === 'OESTE');
 
   const isArenaMap = event?.map_type === 'ARENA_VIP' || zones.some(z => ['MESAS_VIP_RINGSIDE', 'MESAS_VIP', 'PRIMERA_FILA', 'SEGUNDA_FILA'].includes(z.zone_type));
+  const availableSeatsCount = zones.reduce((acc, z) => acc + (z.seats?.filter((s: any) => s.is_available && !s.is_locked).length || 0), 0);
+  const blockedSeatsCount = Math.max(0, totalSeats - availableSeatsCount);
 
   return (
     <div className="max-w-7xl mx-auto space-y-8">
@@ -395,20 +397,17 @@ export default function EventTicketsPage() {
             <span className="hidden sm:inline">Volver a Eventos</span>
           </Link>
           <div>
-            <div className="flex items-center gap-2 flex-wrap mb-1">
+            <div className="flex items-center gap-2 mb-1">
               <span className="text-red-500 text-xs font-black uppercase tracking-widest flex items-center gap-1.5">
                 <Ticket className="w-3.5 h-3.5" />
                 Gestión de Boletos y Mapas
-              </span>
-              <span className="text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider bg-red-950/60 text-red-400 border border-red-800/60">
-                {isArenaMap ? 'Sede: Labrú' : 'Sede: The Wrestling Factory'}
               </span>
             </div>
             <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-400">
               {event?.title}
             </h1>
             <div className="text-zinc-400 mt-1.5 flex flex-wrap items-center gap-3 text-xs sm:text-sm">
-              <span className="flex items-center gap-1.5 text-zinc-300">
+              <span className="flex items-center gap-1.5 text-zinc-300 font-medium">
                 <MapPin className="w-3.5 h-3.5 text-red-500" />
                 {event?.location}
               </span>
@@ -421,18 +420,40 @@ export default function EventTicketsPage() {
         </div>
       </div>
 
-      {/* KPI Stats Cards */}
+      {/* KPI Stats Cards - Unique metrics, no duplicate venue names */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="glass-panel p-5 border border-white/10 hover:border-white/20 transition-all rounded-2xl">
           <div className="flex justify-between items-center">
             <div>
-              <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Sede / Plantilla</p>
-              <p className="text-lg sm:text-xl font-black text-white mt-1 truncate">
-                {isArenaMap ? 'Labrú' : 'The Wrestling Factory'}
-              </p>
+              <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Total Asientos</p>
+              <p className="text-3xl font-black text-white mt-1">{totalSeats}</p>
             </div>
             <div className="p-3 bg-red-500/10 rounded-xl">
-              <MapPin className="w-6 h-6 text-red-400" />
+              <Ticket className="w-6 h-6 text-red-400" />
+            </div>
+          </div>
+        </div>
+
+        <div className="glass-panel p-5 border border-white/10 hover:border-white/20 transition-all rounded-2xl">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Disponibles</p>
+              <p className="text-3xl font-black text-emerald-400 mt-1">{availableSeatsCount}</p>
+            </div>
+            <div className="p-3 bg-emerald-500/10 rounded-xl">
+              <CheckCircle className="w-6 h-6 text-emerald-400" />
+            </div>
+          </div>
+        </div>
+
+        <div className="glass-panel p-5 border border-white/10 hover:border-white/20 transition-all rounded-2xl">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Bloqueados / Ocultos</p>
+              <p className="text-3xl font-black text-zinc-300 mt-1">{blockedSeatsCount}</p>
+            </div>
+            <div className="p-3 bg-white/5 rounded-xl">
+              <EyeOff className="w-6 h-6 text-zinc-400" />
             </div>
           </div>
         </div>
@@ -448,35 +469,9 @@ export default function EventTicketsPage() {
             </div>
           </div>
         </div>
-
-        <div className="glass-panel p-5 border border-white/10 hover:border-white/20 transition-all rounded-2xl">
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Total Asientos</p>
-              <p className="text-3xl font-black text-white mt-1">{totalSeats}</p>
-            </div>
-            <div className="p-3 bg-white/5 rounded-xl">
-              <Ticket className="w-6 h-6 text-zinc-400" />
-            </div>
-          </div>
-        </div>
-
-        <div className="glass-panel p-5 border border-white/10 hover:border-white/20 transition-all rounded-2xl">
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Disponibles</p>
-              <p className="text-3xl font-black text-emerald-400 mt-1">
-                {zones.reduce((acc, z) => acc + (z.seats?.filter((s: any) => s.is_available && !s.is_locked).length || 0), 0)}
-              </p>
-            </div>
-            <div className="p-3 bg-emerald-500/10 rounded-xl">
-              <CheckCircle className="w-6 h-6 text-emerald-400" />
-            </div>
-          </div>
-        </div>
       </div>
 
-      {/* Navigation Tabs - SCW Design Pattern */}
+      {/* Navigation Tabs - Clean, distinct labels */}
       <div className="flex flex-wrap items-center gap-2 border-b border-white/10 pb-4">
         <button
           type="button"
@@ -488,7 +483,7 @@ export default function EventTicketsPage() {
           }`}
         >
           <Layout className="w-4 h-4" />
-          <span>Editor de Mapa ({isArenaMap ? 'Labrú' : 'The Wrestling Factory'})</span>
+          <span>Editor de Asientos</span>
         </button>
 
         <button
@@ -514,7 +509,7 @@ export default function EventTicketsPage() {
           }`}
         >
           <Ticket className="w-4 h-4" />
-          <span>Disponibilidad en Vivo ({totalSeats})</span>
+          <span>Disponibilidad en Vivo</span>
         </button>
       </div>
 
