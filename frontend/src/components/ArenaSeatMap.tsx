@@ -425,10 +425,11 @@ export default function ArenaSeatMap({
                         // Click table selects its seats
                         seatsInTable.forEach(s => handleSeatClick(s, zoneVip, e));
                       } else if (onSeatClickInEditor) {
+                        if (didDragOccurRef.current) return;
                         onSeatClickInEditor(firstSeat, zoneVip);
                       }
                     }}
-                    className="cursor-pointer group"
+                    className={`cursor-pointer group ${!allAvailable ? 'opacity-40' : ''}`}
                   >
                     {/* Chairs around table */}
                     {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => {
@@ -441,8 +442,8 @@ export default function ArenaSeatMap({
                           cx={chairX}
                           cy={chairY}
                           r="4"
-                          fill="#ca8a04"
-                          stroke="#713f12"
+                          fill={!allAvailable ? '#27272a' : '#ca8a04'}
+                          stroke={!allAvailable ? '#3f3f46' : '#713f12'}
                           strokeWidth="1"
                         />
                       );
@@ -453,8 +454,8 @@ export default function ArenaSeatMap({
                       cx={cx}
                       cy={cy}
                       r="20"
-                      fill={hasSelectedSeat ? '#ef4444' : !allAvailable ? '#27272a' : 'url(#goldTableGrad)'}
-                      stroke={hasSelectedSeat || isTableSelected ? '#ffffff' : '#713f12'}
+                      fill={!allAvailable ? '#18181b' : 'url(#goldTableGrad)'}
+                      stroke={hasSelectedSeat || isTableSelected ? '#ffffff' : !allAvailable ? '#3f3f46' : '#713f12'}
                       strokeWidth={hasSelectedSeat || isTableSelected ? 3 : 2}
                       className="transition-all duration-200"
                       filter={hasSelectedSeat ? 'url(#selectedGlow)' : ''}
@@ -465,7 +466,7 @@ export default function ArenaSeatMap({
                       x={cx}
                       y={cy + 5}
                       textAnchor="middle"
-                      fill={hasSelectedSeat ? '#ffffff' : !allAvailable ? '#71717a' : '#1c1917'}
+                      fill={!allAvailable ? '#71717a' : '#1c1917'}
                       fontSize="14"
                       fontWeight="900"
                     >
@@ -526,10 +527,11 @@ export default function ArenaSeatMap({
                       if (!isInteractiveEditing) {
                         seatsInTable.forEach(s => handleSeatClick(s, zoneRingside, e));
                       } else if (onSeatClickInEditor) {
+                        if (didDragOccurRef.current) return;
                         onSeatClickInEditor(firstSeat, zoneRingside);
                       }
                     }}
-                    className="cursor-pointer group"
+                    className={`cursor-pointer group ${!allAvailable ? 'opacity-40' : ''}`}
                   >
                     {/* Chairs */}
                     {[0, 60, 120, 180, 240, 300].map((angle, i) => {
@@ -542,8 +544,8 @@ export default function ArenaSeatMap({
                           cx={chairX}
                           cy={chairY}
                           r="4"
-                          fill="#be185d"
-                          stroke="#500724"
+                          fill={!allAvailable ? '#27272a' : '#be185d'}
+                          stroke={!allAvailable ? '#3f3f46' : '#500724'}
                           strokeWidth="1"
                         />
                       );
@@ -554,8 +556,8 @@ export default function ArenaSeatMap({
                       cx={cx}
                       cy={cy}
                       r="20"
-                      fill={hasSelectedSeat ? '#ef4444' : !allAvailable ? '#27272a' : 'url(#pinkTableGrad)'}
-                      stroke={hasSelectedSeat || isTableSelected ? '#ffffff' : '#831843'}
+                      fill={!allAvailable ? '#18181b' : 'url(#pinkTableGrad)'}
+                      stroke={hasSelectedSeat || isTableSelected ? '#ffffff' : !allAvailable ? '#3f3f46' : '#831843'}
                       strokeWidth={hasSelectedSeat || isTableSelected ? 3 : 2}
                       className="transition-all duration-200"
                       filter={hasSelectedSeat ? 'url(#selectedGlow)' : ''}
@@ -566,7 +568,7 @@ export default function ArenaSeatMap({
                       x={cx}
                       y={cy + 5}
                       textAnchor="middle"
-                      fill={hasSelectedSeat ? '#ffffff' : !allAvailable ? '#71717a' : '#ffffff'}
+                      fill={!allAvailable ? '#71717a' : '#ffffff'}
                       fontSize="14"
                       fontWeight="900"
                     >
@@ -643,7 +645,7 @@ export default function ArenaSeatMap({
                   onClick={(e) => handleSeatClick(seat, zoneF1, e)}
                   onMouseEnter={(e) => setHoveredSeat({ seat, zone: zoneF1, x: sx, y: sy })}
                   onMouseLeave={() => setHoveredSeat(null)}
-                  className={`cursor-pointer group ${!isAvailable && !isEditingCurrent ? 'opacity-40 cursor-not-allowed' : ''}`}
+                  className={`cursor-pointer group ${!isAvailable ? 'opacity-40 cursor-pointer' : ''}`}
                 >
                   <rect
                     x="-12"
@@ -651,9 +653,9 @@ export default function ArenaSeatMap({
                     width="24"
                     height="24"
                     rx="4"
-                    fill={isEditingCurrent ? '#ef4444' : !isAvailable ? '#18181b' : isSelected ? '#ffffff' : '#dc2626'}
-                    stroke={isEditingCurrent ? '#ffffff' : isSelected ? '#ffffff' : '#991b1b'}
-                    strokeWidth={1.5}
+                    fill={!isAvailable ? '#18181b' : isSelected ? '#ffffff' : '#dc2626'}
+                    stroke={isEditingCurrent || isSelected ? '#ffffff' : !isAvailable ? '#3f3f46' : '#991b1b'}
+                    strokeWidth={isEditingCurrent || isSelected ? 2.5 : 1.5}
                     className="transition-colors group-hover:stroke-white group-hover:stroke-[2px]"
                     filter={isSelected ? 'url(#selectedGlow)' : isAvailable ? 'url(#redSeatGlow)' : ''}
                   />
@@ -661,7 +663,7 @@ export default function ArenaSeatMap({
                     x="0"
                     y="4"
                     textAnchor="middle"
-                    fill={isEditingCurrent ? '#ffffff' : !isAvailable ? '#71717a' : isSelected ? '#000000' : '#ffffff'}
+                    fill={!isAvailable ? '#71717a' : isSelected ? '#000000' : '#ffffff'}
                     fontSize="9.5"
                     fontWeight="900"
                   >
@@ -689,7 +691,7 @@ export default function ArenaSeatMap({
                   onClick={(e) => handleSeatClick(seat, zoneF2, e)}
                   onMouseEnter={(e) => setHoveredSeat({ seat, zone: zoneF2, x: sx, y: sy })}
                   onMouseLeave={() => setHoveredSeat(null)}
-                  className={`cursor-pointer group ${!isAvailable && !isEditingCurrent ? 'opacity-40 cursor-not-allowed' : ''}`}
+                  className={`cursor-pointer group ${!isAvailable ? 'opacity-40 cursor-pointer' : ''}`}
                 >
                   <rect
                     x="-12"
@@ -697,9 +699,9 @@ export default function ArenaSeatMap({
                     width="24"
                     height="24"
                     rx="4"
-                    fill={isEditingCurrent ? '#ef4444' : !isAvailable ? '#18181b' : isSelected ? '#ffffff' : '#2563eb'}
-                    stroke={isEditingCurrent ? '#ffffff' : isSelected ? '#ffffff' : '#1d4ed8'}
-                    strokeWidth={1.5}
+                    fill={!isAvailable ? '#18181b' : isSelected ? '#ffffff' : '#2563eb'}
+                    stroke={isEditingCurrent || isSelected ? '#ffffff' : !isAvailable ? '#3f3f46' : '#1d4ed8'}
+                    strokeWidth={isEditingCurrent || isSelected ? 2.5 : 1.5}
                     className="transition-colors group-hover:stroke-white group-hover:stroke-[2px]"
                     filter={isSelected ? 'url(#selectedGlow)' : isAvailable ? 'url(#blueSeatGlow)' : ''}
                   />
@@ -707,7 +709,7 @@ export default function ArenaSeatMap({
                     x="0"
                     y="4"
                     textAnchor="middle"
-                    fill={isEditingCurrent ? '#ffffff' : !isAvailable ? '#71717a' : isSelected ? '#000000' : '#ffffff'}
+                    fill={!isAvailable ? '#71717a' : isSelected ? '#000000' : '#ffffff'}
                     fontSize="9.5"
                     fontWeight="900"
                   >
@@ -739,7 +741,7 @@ export default function ArenaSeatMap({
                     onClick={(e) => handleSeatClick(seat, zone, e)}
                     onMouseEnter={(e) => setHoveredSeat({ seat, zone, x: sx, y: sy })}
                     onMouseLeave={() => setHoveredSeat(null)}
-                    className="cursor-pointer group"
+                    className={`cursor-pointer group ${!isAvailable ? 'opacity-40 cursor-pointer' : ''}`}
                   >
                     <rect
                       x="-12"
@@ -747,9 +749,9 @@ export default function ArenaSeatMap({
                       width="24"
                       height="24"
                       rx="4"
-                      fill={isEditingCurrent ? '#ef4444' : !isAvailable ? '#18181b' : isSelected ? '#ffffff' : zoneColor}
-                      stroke={isEditingCurrent ? '#ffffff' : '#ffffff'}
-                      strokeWidth={1.5}
+                      fill={!isAvailable ? '#18181b' : isSelected ? '#ffffff' : zoneColor}
+                      stroke={isEditingCurrent || isSelected ? '#ffffff' : !isAvailable ? '#3f3f46' : zoneColor}
+                      strokeWidth={isEditingCurrent || isSelected ? 2.5 : 1.5}
                       className="transition-colors group-hover:stroke-white group-hover:stroke-[2px]"
                       filter={isSelected ? 'url(#selectedGlow)' : ''}
                     />
@@ -757,7 +759,7 @@ export default function ArenaSeatMap({
                       x="0"
                       y="4"
                       textAnchor="middle"
-                      fill={isEditingCurrent ? '#ffffff' : !isAvailable ? '#71717a' : isSelected ? '#000000' : '#ffffff'}
+                      fill={!isAvailable ? '#71717a' : isSelected ? '#000000' : '#ffffff'}
                       fontSize="9.5"
                       fontWeight="900"
                     >

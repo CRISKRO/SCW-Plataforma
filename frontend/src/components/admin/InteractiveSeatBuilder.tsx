@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  Move, Plus, Trash2, Save, LayoutTemplate, Grid, CheckCircle2, 
+  Move, Plus, Save, LayoutTemplate, Grid, CheckCircle2, 
   Eye, EyeOff, AlertCircle, CheckSquare, Layers, X
 } from 'lucide-react';
 import { adminService } from '@/services/admin.services';
@@ -139,20 +139,114 @@ export default function InteractiveSeatBuilder({
     );
   };
 
-  // Click on seat to toggle selection in editor (multi-select)
-  const handleSeatClickInEditor = (seat: SeatItem, zone: any) => {
+  // 1-Click Toggle Availability for single seat or whole table directly on click
+  const handleSeatClickInEditor = async (seat: SeatItem, zone: any) => {
     setLastSelectedZone(zone);
-    setSelectedSeats(prev => {
-      const exists = prev.some(s => s.id === seat.id);
-      if (exists) {
-        // Toggle OFF (unselect)
-        return prev.filter(s => s.id !== seat.id);
-      } else {
-        // Toggle ON (add to selection)
-        const freshSeat = zone?.seats?.find((s: SeatItem) => s.id === seat.id) || seat;
-        return [...prev, { ...freshSeat, zone }];
+
+    // Check if seat belongs to a table (VIP or Ringside)
+    const isTable = Boolean(seat.table_number) || zone?.zone_type === 'MESAS_VIP' || zone?.zone_type === 'MESAS_VIP_RINGSIDE';
+
+    if (isTable) {
+      const tableNum = seat.table_number || seat.seat_number;
+      const currentZone = localZones.find((z: any) => z.id === zone?.id || z.zone_type === zone?.zone_type);
+      const tableSeats: SeatItem[] = (currentZone?.seats || []).filter(
+        (s: SeatItem) => (s.table_number || s.seat_number) === tableNum
+      );
+
+      const seatsToUpdate = tableSeats.length > 0 ? tableSeats : [seat];
+      // If any seat in table is available, toggle to disabled; if all disabled, toggle to enabled
+      const anyAvailable = seatsToUpdate.some((s: SeatItem) => s.is_available);
+      const newStatus = !anyAvailable;
+      const targetIds = new Set(seatsToUpdate.map(s => s.id));
+
+      // Optimistic update
+      setLocalZones(prev =>
+        prev.map(z => {
+          if (z.id !== currentZone?.id && z.zone_type !== zone?.zone_type) return z;
+          return {
+            ...z,
+            seats: z.seats?.map((s: SeatItem) =>
+              targetIds.has(s.id) ? { ...s, is_available: newStatus } : s
+            ),
+          };
+        })
+      );
+
+      setSelectedSeats(
+        seatsToUpdate.map(s => ({ ...s, is_available: newStatus, zone: currentZone || zone }))
+      );
+
+      try {
+        await adminService.bulkUpdateSeatPositions({
+          seats: seatsToUpdate.map(s => ({ id: s.id, is_available: newStatus })),
+        });
+        useToastStore.getState().addToast(
+          `Mesa ${tableNum} ${newStatus ? 'habilitada' : 'deshabilitada'}`,
+          'info'
+        );
+      } catch (error) {
+        console.error('Error toggling table availability:', error);
+        // Rollback
+        setLocalZones(prev =>
+          prev.map(z => {
+            if (z.id !== currentZone?.id && z.zone_type !== zone?.zone_type) return z;
+            return {
+              ...z,
+              seats: z.seats?.map((s: SeatItem) => {
+                const orig = seatsToUpdate.find(o => o.id === s.id);
+                return orig ? { ...s, is_available: orig.is_available } : s;
+              }),
+            };
+          })
+        );
+        useToastStore.getState().addToast('Error al actualizar disponibilidad de la mesa', 'error');
       }
-    });
+      return;
+    }
+
+    // Individual seat toggle
+    const currentZone = localZones.find((z: any) => z.id === zone?.id || z.zone_type === zone?.zone_type);
+    const freshSeat = currentZone?.seats?.find((s: SeatItem) => s.id === seat.id) || seat;
+    const newStatus = !freshSeat.is_available;
+
+    // Optimistic update
+    setLocalZones(prev =>
+      prev.map(z => {
+        if (z.id !== currentZone?.id && z.zone_type !== zone?.zone_type) return z;
+        return {
+          ...z,
+          seats: z.seats?.map((s: SeatItem) =>
+            s.id === seat.id ? { ...s, is_available: newStatus } : s
+          ),
+        };
+      })
+    );
+
+    setSelectedSeats([{ ...freshSeat, is_available: newStatus, zone: currentZone || zone }]);
+
+    try {
+      await adminService.updateSeat(seat.id, { is_available: newStatus });
+      const label = seat.custom_label || (seat.row_name ? `${seat.row_name}-${seat.seat_number}` : seat.seat_number);
+      useToastStore.getState().addToast(
+        `Asiento ${label} ${newStatus ? 'habilitado' : 'deshabilitado'}`,
+        'info'
+      );
+    } catch (error) {
+      console.error('Error toggling seat availability:', error);
+      // Rollback
+      setLocalZones(prev =>
+        prev.map(z => {
+          if (z.id !== currentZone?.id && z.zone_type !== zone?.zone_type) return z;
+          return {
+            ...z,
+            seats: z.seats?.map((s: SeatItem) =>
+              s.id === seat.id ? { ...s, is_available: freshSeat.is_available } : s
+            ),
+          };
+        })
+      );
+      useToastStore.getState().addToast('Error al actualizar disponibilidad del asiento', 'error');
+    }
   };
 
   // Save all moved seats to backend
@@ -309,55 +403,7 @@ export default function InteractiveSeatBuilder({
     }
   };
 
-  // Bulk delete seats
-  const handleBulkDeleteSeats = async () => {
-    if (selectedSeats.length === 0) return;
-    const count = selectedSeats.length;
-    const confirmMsg = count === 1
-      ? '¿Eliminar este asiento del mapa?'
-      : `¿Eliminar los ${count} asientos seleccionados del mapa? Esta acción no se puede deshacer.`;
-    
-    if (!confirm(confirmMsg)) return;
 
-    try {
-      setIsBulkUpdating(true);
-      const targetIds = new Set(selectedSeats.map(s => s.id));
-      
-      await Promise.all(selectedSeats.map(s => adminService.deleteSeat(s.id)));
-
-      setLocalZones(prev =>
-        prev.map(z => ({
-          ...z,
-          seats: z.seats?.filter((s: any) => !targetIds.has(s.id)),
-        }))
-      );
-      setSelectedSeats([]);
-      useToastStore.getState().addToast(`${count} ${count === 1 ? 'asiento eliminado' : 'asientos eliminados'} del mapa`, 'info');
-    } catch (error) {
-      console.error('Error deleting seats:', error);
-      alert('Error al eliminar asientos seleccionados');
-    } finally {
-      setIsBulkUpdating(false);
-    }
-  };
-
-  // Delete individual seat
-  const handleDeleteSeat = async (seatId: number) => {
-    if (!confirm('¿Eliminar este asiento del mapa?')) return;
-    try {
-      await adminService.deleteSeat(seatId);
-      setLocalZones(prev =>
-        prev.map(z => ({
-          ...z,
-          seats: z.seats?.filter((s: any) => s.id !== seatId),
-        }))
-      );
-      setSelectedSeats(prev => prev.filter(s => s.id !== seatId));
-      useToastStore.getState().addToast('Asiento eliminado del mapa', 'info');
-    } catch (error) {
-      alert('Error al eliminar asiento');
-    }
-  };
 
   // Helper selectors
   const handleSelectRow = () => {
@@ -679,18 +725,6 @@ export default function InteractiveSeatBuilder({
                   <span>{isBulkUpdating ? 'Procesando...' : `Bloquear / Deshabilitar (${selectedSeats.length})`}</span>
                 </button>
 
-                {/* Bulk Delete (in Arena mode) */}
-                {isArenaMap && (
-                  <button
-                    type="button"
-                    disabled={isBulkUpdating}
-                    onClick={handleBulkDeleteSeats}
-                    className="w-full flex items-center justify-center gap-1.5 py-2 px-4 text-xs font-bold uppercase tracking-wider text-red-400 hover:text-red-300 bg-red-950/20 hover:bg-red-950/50 border border-red-500/20 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Eliminar Asientos Seleccionados</span>
-                  </button>
-                )}
               </div>
 
               {/* Quick Selection Helpers */}
@@ -892,17 +926,6 @@ export default function InteractiveSeatBuilder({
                   <span>{selectedSeat.is_available ? 'Habilitado (Público)' : 'Bloqueado / Oculto'}</span>
                 </button>
 
-                {/* Delete Seat (Only in Labrú mode) */}
-                {isArenaMap && (
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteSeat(selectedSeat.id)}
-                    className="w-full flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold uppercase tracking-wider text-red-400 hover:text-red-300 bg-red-950/20 hover:bg-red-950/50 border border-red-500/20 rounded-xl transition-colors cursor-pointer active:scale-95"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Eliminar Asiento</span>
-                  </button>
-                )}
               </div>
             </div>
           ) : (
@@ -913,7 +936,7 @@ export default function InteractiveSeatBuilder({
               </div>
               <h4 className="text-sm font-extrabold text-white uppercase tracking-wider">Inspector y Selección de Asientos</h4>
               <p className="text-xs text-zinc-400 leading-relaxed">
-                Haz clic en cualquier asiento del mapa para seleccionarlo. Puedes hacer clic en múltiples asientos para seleccionarlos a la vez y gestionar su estado en lote (habilitar o bloquear).
+                Haz clic directamente en cualquier asiento o mesa para habilitarlo o deshabilitarlo con 1 solo clic. Si le das un clic se desactiva/bloquea, y si lo vuelves a tocar se habilita.
               </p>
 
               <div className="pt-2 border-t border-white/5 flex flex-col gap-2">

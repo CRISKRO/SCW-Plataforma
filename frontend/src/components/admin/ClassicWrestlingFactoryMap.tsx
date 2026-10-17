@@ -103,14 +103,16 @@ export default function ClassicWrestlingFactoryMap({
                       <button
                         type="button"
                         onClick={() => onSeatClick?.(seat, zone)}
-                        className={`w-6 h-6 md:w-7 md:h-7 rounded text-[10px] font-bold flex items-center justify-center transition-colors cursor-pointer ${
-                          isSelected
-                            ? 'bg-red-600 text-white border border-white font-bold z-10 shadow-sm'
-                            : !isAvailable
-                            ? 'bg-zinc-950 text-zinc-600 border border-zinc-800/80 opacity-40 cursor-pointer'
+                        className={`w-6 h-6 md:w-7 md:h-7 rounded text-[10px] font-bold flex items-center justify-center transition-all cursor-pointer ${
+                          !isAvailable
+                            ? isSelected
+                              ? 'bg-zinc-950 text-zinc-500 border-2 border-white opacity-60 z-10'
+                              : 'bg-zinc-950 text-zinc-600 border border-zinc-800/80 opacity-40 hover:opacity-70'
+                            : isSelected
+                            ? 'bg-red-600 text-white border-2 border-white font-bold z-10 shadow-sm'
                             : 'bg-zinc-900 text-zinc-300 border border-zinc-700 hover:border-red-500 hover:bg-zinc-800 hover:text-white'
                         }`}
-                        title={`Fila ${rowName} · Asiento ${displayNumber} (${zone.name || zone.zone_type}) - ${isAvailable ? 'Disponible' : 'Bloqueado'}`}
+                        title={`Fila ${rowName} · Asiento ${displayNumber} (${zone.name || zone.zone_type}) - ${isAvailable ? 'Habilitado' : 'Deshabilitado'}`}
                       >
                         {displayNumber}
                       </button>
