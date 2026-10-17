@@ -737,7 +737,7 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
 
                   <button
                     onClick={() => setShowConfirmPanel(true)}
-                    className="mt-4 w-full bg-red-600 hover:bg-red-500 text-white font-bold uppercase tracking-widest py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+                    className="mt-4 w-full bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-500 hover:via-red-500 hover:to-red-600 border-2 border-white text-white font-black uppercase tracking-wider py-3.5 rounded-xl transition-all shadow-xl shadow-red-950/50 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
                   >
                     <CheckCircle className="w-5 h-5" />
                     Confirmar Selección
@@ -940,7 +940,7 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
                   </button>
                   <button
                     onClick={handleConfirm}
-                    className="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold text-xs sm:text-sm uppercase tracking-widest py-3 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-red-950/40"
+                    className="flex-1 bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-500 hover:via-red-500 hover:to-red-600 border-2 border-white text-white font-black text-xs sm:text-sm uppercase tracking-wider py-3 rounded-xl transition-all shadow-xl shadow-red-950/50 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
                   >
                     <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
                     Comprar Ahora

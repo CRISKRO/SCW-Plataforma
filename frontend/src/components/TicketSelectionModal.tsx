@@ -157,7 +157,7 @@ export function TicketSelectionModal({ isOpen, onClose, eventId, event }: Ticket
                   </button>
                   <button
                     onClick={confirmGeneralSelection}
-                    className="flex-1 py-3 px-4 rounded-xl bg-red-600 hover:bg-red-700 font-bold uppercase tracking-widest text-white transition-colors"
+                    className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-500 hover:via-red-500 hover:to-red-600 border-2 border-white font-black uppercase tracking-wider text-white shadow-xl shadow-red-950/50 transition-all transform hover:scale-[1.02] active:scale-95"
                   >
                     Agregar
                   </button>

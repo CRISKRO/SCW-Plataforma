@@ -72,7 +72,7 @@ export default function EventDetailClient({ event }: { event: any }) {
 
             <button
               onClick={() => setIsTicketModalOpen(true)}
-              className="w-full py-5 bg-gradient-to-r from-red-600 to-red-800 text-white font-black uppercase tracking-widest text-lg rounded-xl hover:from-red-500 hover:to-red-700 transition-all shadow-lg shadow-red-900/50 transform hover:scale-[1.02] active:scale-95"
+              className="w-full py-4 md:py-5 bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-500 hover:via-red-500 hover:to-red-600 border-2 border-white text-white font-black uppercase tracking-widest text-lg rounded-xl transition-all shadow-xl shadow-red-950/60 hover:shadow-red-600/40 transform hover:scale-[1.02] active:scale-95"
             >
               Comprar Boletos Ahora
             </button>
