@@ -542,13 +542,24 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
 
           {/* Cuerpo principal del ticket */}
           <div className="flex-1 p-5 sm:p-6 md:p-8 relative z-10 flex flex-col justify-between">
-            <div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight text-white drop-shadow-md">
-                {event.title}
-              </h1>
-              <p className="text-zinc-400 text-xs font-bold uppercase tracking-wider mt-1">
-                The Wrestling Factory · Acceso a Zona de Asientos
-              </p>
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+              <div>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight text-white drop-shadow-md">
+                  {event.title}
+                </h1>
+                <p className="text-zinc-400 text-xs font-bold uppercase tracking-wider mt-1">
+                  The Wrestling Factory · Acceso a Zona de Asientos
+                </p>
+              </div>
+
+              {/* Enlace para volver */}
+              <Link
+                href={`/eventos/${slug}`}
+                className="self-start md:self-auto py-2.5 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-white/10 text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-sm hover:border-white/20 active:scale-95 shrink-0"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 text-red-500" />
+                Volver al Evento
+              </Link>
             </div>
 
             {/* Cápsulas de datos */}
@@ -596,44 +607,6 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
                 </div>
               </a>
             </div>
-          </div>
-
-          {/* Troquelado y perforación */}
-          <div className="relative flex md:flex-col items-center justify-between pointer-events-none">
-            <div className="hidden md:block w-5 h-5 bg-black rounded-full -mt-2.5 border-b border-white/15 z-20" />
-            <div className="w-full md:w-0 md:h-full border-b md:border-b-0 md:border-r-2 border-dashed border-zinc-700/80 my-2 md:my-0" />
-            <div className="hidden md:block w-5 h-5 bg-black rounded-full -mb-2.5 border-t border-white/15 z-20" />
-          </div>
-
-          {/* Talón desprendible */}
-          <div className="w-full md:w-56 p-5 sm:p-6 bg-zinc-950/70 border-t md:border-t-0 md:border-l border-white/5 relative z-10 flex flex-col justify-between items-center text-center">
-            <div className="w-full flex items-center justify-center">
-              <span className="text-[10px] font-black uppercase tracking-widest text-red-500">
-                TALÓN DE CONTROL
-              </span>
-            </div>
-
-            {/* Código de barras estilo ticket */}
-            <div className="my-4 w-full flex flex-col items-center">
-              <div
-                className="w-36 h-10 rounded-sm opacity-80"
-                style={{
-                  background: 'repeating-linear-gradient(90deg, #ffffff 0px, #ffffff 2px, transparent 2px, transparent 4px, #ffffff 4px, #ffffff 7px, transparent 7px, transparent 9px, #ffffff 9px, #ffffff 10px, transparent 10px, transparent 13px, #ffffff 13px, #ffffff 16px, transparent 16px, transparent 17px, #ffffff 17px, #ffffff 21px, transparent 21px, transparent 23px)'
-                }}
-              />
-              <span className="text-[10px] font-mono tracking-widest text-zinc-500 mt-1">
-                * SCW · 2026 · {event.id || 'TKT'} *
-              </span>
-            </div>
-
-            {/* Enlace para volver */}
-            <Link
-              href={`/eventos/${slug}`}
-              className="w-full py-2.5 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-white/10 text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-sm hover:border-white/20 active:scale-95"
-            >
-              <ArrowLeft className="w-3.5 h-3.5 text-red-500" />
-              Volver al Evento
-            </Link>
           </div>
         </div>
 

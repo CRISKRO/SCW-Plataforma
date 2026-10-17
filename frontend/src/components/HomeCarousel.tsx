@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronRight, ChevronLeft, Calendar, MapPin, Ticket, PlayCircle, Clock } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Calendar, MapPin, PlayCircle, Clock } from 'lucide-react';
 import { TicketSelectionModal } from '@/components/TicketSelectionModal';
 import api, { getMediaUrl } from '@/services/api';
 import { eventsService } from '@/services/events.services';
@@ -361,7 +361,6 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                           }}
                           className="group inline-flex w-full sm:w-auto justify-center items-center gap-2.5 px-6 py-3.5 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-black uppercase tracking-wider text-black bg-white hover:bg-zinc-100 transition-all transform hover:scale-105 active:scale-95 rounded-xl shadow-2xl shadow-black/90"
                         >
-                          <Ticket className="w-4 h-4 md:w-5 md:h-5 text-red-600" />
                           {btn.label}
                           <ChevronRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
                         </button>
@@ -373,7 +372,6 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                         href={btn.href}
                         className={`group inline-flex w-full sm:w-auto justify-center items-center gap-2.5 px-6 py-3.5 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-black uppercase tracking-wider transition-all transform hover:scale-105 active:scale-95 rounded-xl shadow-2xl shadow-black/90 ${slide.type === 'raffle' ? 'bg-gradient-to-r from-yellow-500 to-amber-600 text-black hover:from-yellow-400 hover:to-amber-500 shadow-yellow-900/50' : 'text-black bg-white hover:bg-zinc-100'}`}
                       >
-                        <Ticket className={`w-4 h-4 md:w-5 md:h-5 ${slide.type === 'raffle' ? 'text-black' : 'text-red-600'}`} />
                         {btn.label}
                         <ChevronRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
                       </Link>
