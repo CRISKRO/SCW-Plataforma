@@ -43,7 +43,7 @@ export default function EventTicketsPage() {
   const [zones, setZones] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'BUILDER' | 'ZONES' | 'AVAILABILITY'>('BUILDER');
+  const [activeTab, setActiveTab] = useState<'BUILDER' | 'ZONES'>('BUILDER');
 
   const [editingZone, setEditingZone] = useState<number | null>(null);
   const [editPrice, setEditPrice] = useState('');
@@ -498,19 +498,6 @@ export default function EventTicketsPage() {
           <Sliders className="w-4 h-4" />
           <span>Zonas y Precios</span>
         </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('AVAILABILITY')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap active:scale-95 ${
-            activeTab === 'AVAILABILITY'
-              ? 'bg-gradient-to-r from-red-600 to-red-800 text-white shadow-lg shadow-red-950/40'
-              : 'bg-zinc-900/60 text-zinc-400 hover:text-white hover:bg-zinc-800 border border-white/5'
-          }`}
-        >
-          <Ticket className="w-4 h-4" />
-          <span>Disponibilidad en Vivo</span>
-        </button>
       </div>
 
       {/* TAB 1: INTERACTIVE SEAT BUILDER */}
@@ -753,90 +740,7 @@ export default function EventTicketsPage() {
         </div>
       )}
 
-      {/* TAB 3: LIVE AVAILABILITY MAP */}
-      {activeTab === 'AVAILABILITY' && (
-        <div className="glass-panel border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl">
-          <div className="mb-4">
-            <h2 className="text-xl font-black text-white flex items-center gap-2">
-              <Ticket className="w-5 h-5 text-red-500" />
-              Disponibilidad de Asientos en Vivo
-            </h2>
-            <p className="text-zinc-400 text-xs sm:text-sm mt-1">
-              Haz clic en cualquier asiento o mesa para habilitarlo (disponible para el público) o deshabilitarlo (bloqueado/vendido).
-            </p>
-          </div>
 
-          {isArenaMap ? (
-            <ArenaSeatMap
-              zones={zones}
-              isInteractiveEditing={false}
-              onToggleSeat={(seat, zone) => handleToggleSeat(zone.id, seat.id, seat.is_available)}
-            />
-          ) : (
-            <div className="w-full">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs text-zinc-400 uppercase font-black tracking-wider flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-red-600 shadow-[0_0_6px_#ef4444]" />
-                  The Wrestling Factory (Clásico SCW)
-                </span>
-                <div className="flex items-center gap-1 bg-zinc-900/90 backdrop-blur-md border border-white/10 rounded-xl p-1 shadow-lg">
-                  <button onClick={handleZoomOut} className="p-1.5 hover:bg-white/10 rounded-lg text-zinc-300 hover:text-white transition-all active:scale-95 cursor-pointer" title="Alejar"><Minus className="w-4 h-4" /></button>
-                  <button onClick={handleResetZoom} className="px-3 py-1 hover:bg-white/10 rounded-lg text-xs font-black text-white tracking-wider transition-all cursor-pointer" title="Restablecer">{Math.round(scale * 100)}%</button>
-                  <button onClick={handleZoomIn} className="p-1.5 hover:bg-white/10 rounded-lg text-zinc-300 hover:text-white transition-all active:scale-95 cursor-pointer" title="Acercar"><Plus className="w-4 h-4" /></button>
-                </div>
-              </div>
-
-              <div 
-                className={`w-full h-[50vh] min-h-[400px] max-h-[600px] bg-zinc-950/80 border border-white/10 rounded-2xl overflow-hidden relative touch-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-                ref={mapContainerRef}
-                onPointerDown={handlePointerDown}
-                onPointerMove={handlePointerMove}
-                onPointerUp={handlePointerUp}
-                onPointerLeave={handlePointerUp}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-              >
-                <div className="w-full h-full flex items-center justify-center">
-                  <div 
-                    style={{
-                      transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
-                      transition: isDragging ? 'none' : 'transform 0.1s ease-out'
-                    }}
-                  >
-                    <div className="bg-zinc-900/60 shadow-2xl rounded-[3rem] p-4 md:p-8 flex flex-col items-center justify-center border border-white/10 relative min-w-[700px] backdrop-blur-md">
-                      {zoneNorte && <div className="flex justify-center mb-2 md:mb-4">{renderZone(zoneNorte, 'top')}</div>}
-                      <div className="flex items-center justify-center w-full">
-                        <div className="flex-1 flex justify-end pr-2 md:pr-4 relative">
-                          <div className="absolute left-[-20px] top-1/2 -translate-y-1/2 -rotate-90 text-zinc-500 font-black text-3xl tracking-widest opacity-20 pointer-events-none">GENERAL</div>
-                          {renderZone(zoneOeste, 'left')}
-                        </div>
-                        <div className="relative w-48 h-48 md:w-64 md:h-64 bg-[#d4d4d8] border-[8px] border-zinc-950 rounded flex items-center justify-center shadow-[0_0_80px_rgba(255,255,255,0.05)] z-10 shrink-0 mx-8 md:mx-16 lg:mx-24">
-                          <div className="absolute inset-1 border-[1.5px] border-red-600/80 rounded-sm"></div>
-                          <div className="absolute inset-2 border-[1.5px] border-zinc-100 rounded-sm"></div>
-                          <div className="absolute inset-3 border-[1.5px] border-red-600/80 rounded-sm"></div>
-                          <div className="absolute -top-2 -left-2 w-5 h-5 bg-red-600 rounded-full shadow-lg border-2 border-black z-20"></div>
-                          <div className="absolute -top-2 -right-2 w-5 h-5 bg-blue-600 rounded-full shadow-lg border-2 border-black z-20"></div>
-                          <div className="absolute -bottom-2 -left-2 w-5 h-5 bg-blue-600 rounded-full shadow-lg border-2 border-black z-20"></div>
-                          <div className="absolute -bottom-2 -right-2 w-5 h-5 bg-red-600 rounded-full shadow-lg border-2 border-black z-20"></div>
-                          <div className="relative flex items-center justify-center w-24 h-24 border-4 border-zinc-400/50 rounded-full p-2 bg-black/10">
-                            <img src="/images/logo-scw.png" alt="SCW Logo" className="w-16 h-16 object-contain drop-shadow-md select-none pointer-events-none opacity-90" />
-                          </div>
-                        </div>
-                        <div className="flex-1 flex justify-start pl-2 md:pl-4 relative">
-                          <div className="absolute right-[-40px] top-1/2 -translate-y-1/2 rotate-90 text-zinc-500 font-black text-4xl tracking-widest opacity-30 pointer-events-none">ESCENARIO</div>
-                          {renderZone(zoneEste, 'right')}
-                        </div>
-                      </div>
-                      {zoneSur && <div className="flex justify-center mt-2 md:mt-4">{renderZone(zoneSur, 'bottom')}</div>}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }

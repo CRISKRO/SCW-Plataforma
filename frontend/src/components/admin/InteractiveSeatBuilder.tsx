@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  Plus, LayoutTemplate, CheckCircle2, 
+  LayoutTemplate, CheckCircle2, 
   EyeOff, CheckSquare, Layers, X
 } from 'lucide-react';
 import { adminService } from '@/services/admin.services';
@@ -61,19 +61,6 @@ export default function InteractiveSeatBuilder({
     OESTE: '320.00',
   });
 
-  // Add Seat modal / drawer
-  const [isAddSeatOpen, setIsAddSeatOpen] = useState(false);
-  const [newSeatData, setNewSeatData] = useState({
-    zone_id: zones[0]?.id || 0,
-    row_name: 'A',
-    seat_number: 1,
-    x: 520,
-    y: 200,
-    custom_label: '',
-    table_number: '',
-    is_available: true,
-  });
-
   // Check if map is Arena VIP (Labrú) or Classic Ring (The Wrestling Factory)
   const isArenaMap =
     event?.map_type === 'ARENA_VIP' ||
@@ -84,9 +71,6 @@ export default function InteractiveSeatBuilder({
   // Sync incoming zones
   useEffect(() => {
     setLocalZones(zones);
-    if (zones.length > 0 && !newSeatData.zone_id) {
-      setNewSeatData(prev => ({ ...prev, zone_id: zones[0].id }));
-    }
   }, [zones]);
 
 
@@ -358,23 +342,7 @@ export default function InteractiveSeatBuilder({
     setSelectedSeats(prev => prev.filter(s => s.id !== seatId));
   };
 
-  // Add a new custom seat
-  const handleAddCustomSeat = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      setIsSaving(true);
-      const created = await adminService.createCustomSeat(newSeatData);
-      setLocalZones(prev =>
-        prev.map(z => (z.id === Number(newSeatData.zone_id) ? { ...z, seats: [...(z.seats || []), created] } : z))
-      );
-      setIsAddSeatOpen(false);
-      useToastStore.getState().addToast('Nuevo asiento agregado al mapa', 'success');
-    } catch (error) {
-      alert('Error al crear asiento');
-    } finally {
-      setIsSaving(false);
-    }
-  };
+
 
   const getDisplayNumber = (zoneType?: string, seatNumber?: number) => {
     if (!seatNumber) return '';
@@ -409,17 +377,7 @@ export default function InteractiveSeatBuilder({
             <span>Cargar Plantilla</span>
           </button>
 
-          {/* Add Seat (Only in Labrú mode) */}
-          {isArenaMap && (
-            <button
-              type="button"
-              onClick={() => setIsAddSeatOpen(true)}
-              className="flex items-center gap-1.5 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-200 border border-white/10 font-bold text-xs uppercase tracking-wider px-3.5 py-2.5 rounded-xl transition-all active:scale-95 cursor-pointer"
-            >
-              <Plus className="w-4 h-4 text-red-500" />
-              <span>Agregar Asiento</span>
-            </button>
-          )}
+
 
           {/* Active Selection Indicator in Toolbar */}
           {selectedSeats.length > 0 && (
@@ -832,115 +790,7 @@ export default function InteractiveSeatBuilder({
         </div>
       )}
 
-      {/* ADD CUSTOM SEAT MODAL */}
-      {isAddSeatOpen && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-          <form onSubmit={handleAddCustomSeat} className="glass-panel border border-white/10 rounded-2xl max-w-md w-full p-6 sm:p-7 space-y-5 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
-              <div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-red-500">
-                  Nuevo Asiento
-                </span>
-                <h3 className="text-xl font-black text-white mt-0.5">Agregar Asiento Manual al Mapa</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsAddSeatOpen(false)}
-                className="text-zinc-400 hover:text-white p-2 hover:bg-white/5 rounded-xl transition-colors cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
 
-            <div className="space-y-3.5">
-              <div>
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Zona</label>
-                <select
-                  value={newSeatData.zone_id}
-                  onChange={(e) => setNewSeatData({ ...newSeatData, zone_id: Number(e.target.value) })}
-                  className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-xs text-white focus:border-red-500 focus:outline-none transition-colors"
-                >
-                  {localZones.map(z => (
-                    <option key={z.id} value={z.id}>
-                      {z.name || z.zone_type} (${z.price} MXN)
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Fila</label>
-                  <input
-                    type="text"
-                    value={newSeatData.row_name}
-                    onChange={(e) => setNewSeatData({ ...newSeatData, row_name: e.target.value })}
-                    className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-xs text-white focus:border-red-500 focus:outline-none transition-colors"
-                    placeholder="Ej. A, VIP 1"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Número de Asiento</label>
-                  <input
-                    type="number"
-                    value={newSeatData.seat_number}
-                    onChange={(e) => setNewSeatData({ ...newSeatData, seat_number: Number(e.target.value) })}
-                    className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-xs text-white focus:border-red-500 focus:outline-none transition-colors"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Etiqueta Personalizada</label>
-                <input
-                  type="text"
-                  value={newSeatData.custom_label}
-                  onChange={(e) => setNewSeatData({ ...newSeatData, custom_label: e.target.value })}
-                  className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-xs text-white focus:border-red-500 focus:outline-none transition-colors"
-                  placeholder="Ej. VIP-1, 44..."
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Posición X (px)</label>
-                  <input
-                    type="number"
-                    value={newSeatData.x}
-                    onChange={(e) => setNewSeatData({ ...newSeatData, x: Number(e.target.value) })}
-                    className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-xs text-white focus:border-red-500 focus:outline-none transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Posición Y (px)</label>
-                  <input
-                    type="number"
-                    value={newSeatData.y}
-                    onChange={(e) => setNewSeatData({ ...newSeatData, y: Number(e.target.value) })}
-                    className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-xs text-white focus:border-red-500 focus:outline-none transition-colors"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setIsAddSeatOpen(false)}
-                className="flex-1 py-3 rounded-xl border border-white/10 bg-zinc-900 hover:bg-zinc-800 font-bold text-xs uppercase tracking-wider text-zinc-300 transition-all cursor-pointer"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 font-bold text-xs uppercase tracking-wider text-white shadow-lg shadow-red-950/40 transition-all cursor-pointer active:scale-95"
-              >
-                Crear Asiento
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
     </div>
   );
 }
