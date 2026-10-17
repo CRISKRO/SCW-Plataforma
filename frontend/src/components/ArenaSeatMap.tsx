@@ -28,6 +28,7 @@ interface ArenaSeatMapProps {
   onTableMove?: (tableNumber: number, zoneType: string, newCenterX: number, newCenterY: number) => void;
   onSeatClickInEditor?: (seat: SeatItem, zone: any) => void;
   selectedSeatInEditor?: SeatItem | null;
+  selectedSeatIdsInEditor?: number[];
   selectedTableInEditor?: { tableNumber: number; zoneType: string } | null;
   gridSnap?: number; // 0, 5, 10, 20
   mapConfig?: any;
@@ -43,6 +44,7 @@ export default function ArenaSeatMap({
   onTableMove,
   onSeatClickInEditor,
   selectedSeatInEditor,
+  selectedSeatIdsInEditor = [],
   selectedTableInEditor,
   gridSnap = 0,
   mapConfig = {},
@@ -377,7 +379,7 @@ export default function ArenaSeatMap({
                 const cy = firstSeat.y ?? (tNum <= 6 ? 70 : 138);
 
                 const isTableSelected = selectedTableInEditor?.tableNumber === tNum && selectedTableInEditor?.zoneType === 'MESAS_VIP';
-                const hasSelectedSeat = seatsInTable.some(s => selectedSeatIds.includes(s.id));
+                const hasSelectedSeat = seatsInTable.some(s => selectedSeatIds.includes(s.id) || selectedSeatIdsInEditor.includes(s.id));
                 const allAvailable = seatsInTable.every(s => s.is_available && !s.is_locked);
 
                 return (
@@ -418,9 +420,9 @@ export default function ArenaSeatMap({
                       cx={cx}
                       cy={cy}
                       r="20"
-                      fill={!allAvailable ? '#27272a' : hasSelectedSeat ? '#ffffff' : 'url(#goldTableGrad)'}
-                      stroke={isTableSelected ? '#ffffff' : '#713f12'}
-                      strokeWidth={isTableSelected ? 3 : 2}
+                      fill={hasSelectedSeat ? '#f59e0b' : !allAvailable ? '#27272a' : 'url(#goldTableGrad)'}
+                      stroke={hasSelectedSeat || isTableSelected ? '#ffffff' : '#713f12'}
+                      strokeWidth={hasSelectedSeat || isTableSelected ? 3 : 2}
                       className="transition-all duration-200"
                       filter={hasSelectedSeat ? 'url(#selectedGlow)' : ''}
                     />
@@ -430,7 +432,7 @@ export default function ArenaSeatMap({
                       x={cx}
                       y={cy + 5}
                       textAnchor="middle"
-                      fill={!allAvailable ? '#71717a' : hasSelectedSeat ? '#000000' : '#1c1917'}
+                      fill={hasSelectedSeat ? '#000000' : !allAvailable ? '#71717a' : '#1c1917'}
                       fontSize="14"
                       fontWeight="900"
                     >
@@ -479,7 +481,7 @@ export default function ArenaSeatMap({
                 const cy = firstSeat.y ?? (210 + tNum * 62);
 
                 const isTableSelected = selectedTableInEditor?.tableNumber === tNum && selectedTableInEditor?.zoneType === 'MESAS_VIP_RINGSIDE';
-                const hasSelectedSeat = seatsInTable.some(s => selectedSeatIds.includes(s.id));
+                const hasSelectedSeat = seatsInTable.some(s => selectedSeatIds.includes(s.id) || selectedSeatIdsInEditor.includes(s.id));
                 const allAvailable = seatsInTable.every(s => s.is_available && !s.is_locked);
 
                 return (
@@ -519,9 +521,9 @@ export default function ArenaSeatMap({
                       cx={cx}
                       cy={cy}
                       r="20"
-                      fill={!allAvailable ? '#27272a' : hasSelectedSeat ? '#ffffff' : 'url(#pinkTableGrad)'}
-                      stroke={isTableSelected ? '#ffffff' : '#831843'}
-                      strokeWidth={isTableSelected ? 3 : 2}
+                      fill={hasSelectedSeat ? '#f59e0b' : !allAvailable ? '#27272a' : 'url(#pinkTableGrad)'}
+                      stroke={hasSelectedSeat || isTableSelected ? '#ffffff' : '#831843'}
+                      strokeWidth={hasSelectedSeat || isTableSelected ? 3 : 2}
                       className="transition-all duration-200"
                       filter={hasSelectedSeat ? 'url(#selectedGlow)' : ''}
                     />
@@ -531,7 +533,7 @@ export default function ArenaSeatMap({
                       x={cx}
                       y={cy + 5}
                       textAnchor="middle"
-                      fill={!allAvailable ? '#71717a' : hasSelectedSeat ? '#000000' : '#ffffff'}
+                      fill={hasSelectedSeat ? '#000000' : !allAvailable ? '#71717a' : '#ffffff'}
                       fontSize="14"
                       fontWeight="900"
                     >
@@ -595,7 +597,7 @@ export default function ArenaSeatMap({
               const sx = seat.x ?? 0;
               const sy = seat.y ?? 0;
               const isSelected = selectedSeatIds.includes(seat.id);
-              const isEditingCurrent = selectedSeatInEditor?.id === seat.id;
+              const isEditingCurrent = selectedSeatInEditor?.id === seat.id || selectedSeatIdsInEditor.includes(seat.id);
               const isAvailable = seat.is_available && !seat.is_locked;
               const label = seat.custom_label || seat.display_number || seat.seat_number;
 
@@ -608,7 +610,7 @@ export default function ArenaSeatMap({
                   onClick={(e) => handleSeatClick(seat, zoneF1, e)}
                   onMouseEnter={(e) => setHoveredSeat({ seat, zone: zoneF1, x: sx, y: sy })}
                   onMouseLeave={() => setHoveredSeat(null)}
-                  className={`cursor-pointer ${!isAvailable ? 'opacity-40 cursor-not-allowed' : 'hover:scale-110'} transition-transform`}
+                  className={`cursor-pointer ${!isAvailable && !isEditingCurrent ? 'opacity-40 cursor-not-allowed' : 'hover:scale-110'} transition-transform`}
                 >
                   <rect
                     x="-12"
@@ -616,16 +618,16 @@ export default function ArenaSeatMap({
                     width="24"
                     height="24"
                     rx="4"
-                    fill={!isAvailable ? '#18181b' : isSelected ? '#ffffff' : '#dc2626'}
-                    stroke={isEditingCurrent ? '#fbbf24' : isSelected ? '#ffffff' : '#991b1b'}
+                    fill={isEditingCurrent ? '#f59e0b' : !isAvailable ? '#18181b' : isSelected ? '#ffffff' : '#dc2626'}
+                    stroke={isEditingCurrent ? '#ffffff' : isSelected ? '#ffffff' : '#991b1b'}
                     strokeWidth={isEditingCurrent ? 2.5 : 1.5}
-                    filter={isSelected ? 'url(#selectedGlow)' : isAvailable ? 'url(#redSeatGlow)' : ''}
+                    filter={isEditingCurrent || isSelected ? 'url(#selectedGlow)' : isAvailable ? 'url(#redSeatGlow)' : ''}
                   />
                   <text
                     x="0"
                     y="4"
                     textAnchor="middle"
-                    fill={!isAvailable ? '#71717a' : isSelected ? '#000000' : '#ffffff'}
+                    fill={isEditingCurrent ? '#000000' : !isAvailable ? '#71717a' : isSelected ? '#000000' : '#ffffff'}
                     fontSize="9.5"
                     fontWeight="900"
                   >
@@ -640,7 +642,7 @@ export default function ArenaSeatMap({
               const sx = seat.x ?? 0;
               const sy = seat.y ?? 0;
               const isSelected = selectedSeatIds.includes(seat.id);
-              const isEditingCurrent = selectedSeatInEditor?.id === seat.id;
+              const isEditingCurrent = selectedSeatInEditor?.id === seat.id || selectedSeatIdsInEditor.includes(seat.id);
               const isAvailable = seat.is_available && !seat.is_locked;
               const label = seat.custom_label || seat.display_number || seat.seat_number;
 
@@ -653,7 +655,7 @@ export default function ArenaSeatMap({
                   onClick={(e) => handleSeatClick(seat, zoneF2, e)}
                   onMouseEnter={(e) => setHoveredSeat({ seat, zone: zoneF2, x: sx, y: sy })}
                   onMouseLeave={() => setHoveredSeat(null)}
-                  className={`cursor-pointer ${!isAvailable ? 'opacity-40 cursor-not-allowed' : 'hover:scale-110'} transition-transform`}
+                  className={`cursor-pointer ${!isAvailable && !isEditingCurrent ? 'opacity-40 cursor-not-allowed' : 'hover:scale-110'} transition-transform`}
                 >
                   <rect
                     x="-12"
@@ -661,16 +663,16 @@ export default function ArenaSeatMap({
                     width="24"
                     height="24"
                     rx="4"
-                    fill={!isAvailable ? '#18181b' : isSelected ? '#ffffff' : '#2563eb'}
-                    stroke={isEditingCurrent ? '#fbbf24' : isSelected ? '#ffffff' : '#1d4ed8'}
+                    fill={isEditingCurrent ? '#f59e0b' : !isAvailable ? '#18181b' : isSelected ? '#ffffff' : '#2563eb'}
+                    stroke={isEditingCurrent ? '#ffffff' : isSelected ? '#ffffff' : '#1d4ed8'}
                     strokeWidth={isEditingCurrent ? 2.5 : 1.5}
-                    filter={isSelected ? 'url(#selectedGlow)' : isAvailable ? 'url(#blueSeatGlow)' : ''}
+                    filter={isEditingCurrent || isSelected ? 'url(#selectedGlow)' : isAvailable ? 'url(#blueSeatGlow)' : ''}
                   />
                   <text
                     x="0"
                     y="4"
                     textAnchor="middle"
-                    fill={!isAvailable ? '#71717a' : isSelected ? '#000000' : '#ffffff'}
+                    fill={isEditingCurrent ? '#000000' : !isAvailable ? '#71717a' : isSelected ? '#000000' : '#ffffff'}
                     fontSize="9.5"
                     fontWeight="900"
                   >
@@ -688,7 +690,7 @@ export default function ArenaSeatMap({
                 const sx = seat.x ?? 100;
                 const sy = seat.y ?? 100;
                 const isSelected = selectedSeatIds.includes(seat.id);
-                const isEditingCurrent = selectedSeatInEditor?.id === seat.id;
+                const isEditingCurrent = selectedSeatInEditor?.id === seat.id || selectedSeatIdsInEditor.includes(seat.id);
                 const isAvailable = seat.is_available && !seat.is_locked;
                 const label = seat.custom_label || seat.display_number || seat.seat_number;
                 const zoneColor = zone.color || '#a855f7';
@@ -710,15 +712,16 @@ export default function ArenaSeatMap({
                       width="24"
                       height="24"
                       rx="4"
-                      fill={!isAvailable ? '#18181b' : isSelected ? '#ffffff' : zoneColor}
-                      stroke={isEditingCurrent ? '#fbbf24' : '#ffffff'}
-                      strokeWidth={1.5}
+                      fill={isEditingCurrent ? '#f59e0b' : !isAvailable ? '#18181b' : isSelected ? '#ffffff' : zoneColor}
+                      stroke={isEditingCurrent ? '#ffffff' : '#ffffff'}
+                      strokeWidth={isEditingCurrent ? 2.5 : 1.5}
+                      filter={isEditingCurrent ? 'url(#selectedGlow)' : ''}
                     />
                     <text
                       x="0"
                       y="4"
                       textAnchor="middle"
-                      fill={!isAvailable ? '#71717a' : isSelected ? '#000000' : '#ffffff'}
+                      fill={isEditingCurrent ? '#000000' : !isAvailable ? '#71717a' : isSelected ? '#000000' : '#ffffff'}
                       fontSize="9.5"
                       fontWeight="900"
                     >

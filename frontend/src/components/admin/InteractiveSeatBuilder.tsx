@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Move, Plus, Trash2, Save, LayoutTemplate, Grid, CheckCircle2, 
-  Eye, EyeOff, AlertCircle
+  Eye, EyeOff, AlertCircle, CheckSquare, Layers, X
 } from 'lucide-react';
 import { adminService } from '@/services/admin.services';
 import ArenaSeatMap, { SeatItem } from '@/components/ArenaSeatMap';
@@ -31,9 +31,23 @@ export default function InteractiveSeatBuilder({
   const [gridSnap, setGridSnap] = useState<number>(5);
   const [previewMode, setPreviewMode] = useState(false);
 
-  // Selected item in editor
-  const [selectedSeat, setSelectedSeat] = useState<SeatItem | null>(null);
-  const [selectedZone, setSelectedZone] = useState<any | null>(null);
+  // Selected items in editor (multi-selection)
+  const [selectedSeats, setSelectedSeats] = useState<SeatItem[]>([]);
+  const [lastSelectedZone, setLastSelectedZone] = useState<any | null>(null);
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+
+  const selectedSeatIds = useMemo(() => selectedSeats.map(s => s.id), [selectedSeats]);
+  const selectedSeat = selectedSeats.length === 1 ? selectedSeats[0] : null;
+
+  const getZoneForSeat = (seat: SeatItem) => {
+    return localZones.find(z => z.seats?.some((s: SeatItem) => s.id === seat.id)) || seat.zone || lastSelectedZone;
+  };
+
+  const selectedZone = selectedSeat ? getZoneForSeat(selectedSeat) : lastSelectedZone;
+
+  // Multi-select counts
+  const availableCount = useMemo(() => selectedSeats.filter(s => s.is_available).length, [selectedSeats]);
+  const blockedCount = useMemo(() => selectedSeats.length - availableCount, [selectedSeats, availableCount]);
 
   // Templates modal
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
@@ -90,9 +104,9 @@ export default function InteractiveSeatBuilder({
     );
     setHasUnsavedChanges(true);
 
-    if (selectedSeat && selectedSeat.id === seatId) {
-      setSelectedSeat(prev => (prev ? { ...prev, x: newX, y: newY } : null));
-    }
+    setSelectedSeats(prev =>
+      prev.map(s => (s.id === seatId ? { ...s, x: newX, y: newY } : s))
+    );
   };
 
   // Handle table drag/move (moves all seats in that table)
@@ -113,12 +127,32 @@ export default function InteractiveSeatBuilder({
       })
     );
     setHasUnsavedChanges(true);
+
+    setSelectedSeats(prev =>
+      prev.map(s => {
+        const tNum = s.table_number || s.seat_number;
+        if (tNum === tableNumber) {
+          return { ...s, x: newCenterX, y: newCenterY };
+        }
+        return s;
+      })
+    );
   };
 
-  // Click on seat to select in editor
+  // Click on seat to toggle selection in editor (multi-select)
   const handleSeatClickInEditor = (seat: SeatItem, zone: any) => {
-    setSelectedSeat(seat);
-    setSelectedZone(zone);
+    setLastSelectedZone(zone);
+    setSelectedSeats(prev => {
+      const exists = prev.some(s => s.id === seat.id);
+      if (exists) {
+        // Toggle OFF (unselect)
+        return prev.filter(s => s.id !== seat.id);
+      } else {
+        // Toggle ON (add to selection)
+        const freshSeat = zone?.seats?.find((s: SeatItem) => s.id === seat.id) || seat;
+        return [...prev, { ...freshSeat, zone }];
+      }
+    });
   };
 
   // Save all moved seats to backend
@@ -190,8 +224,8 @@ export default function InteractiveSeatBuilder({
       }
       setHasUnsavedChanges(false);
       setIsTemplateModalOpen(false);
-      setSelectedSeat(null);
-      setSelectedZone(null);
+      setSelectedSeats([]);
+      setLastSelectedZone(null);
       useToastStore.getState().addToast(`Plantilla de "${venueName}" aplicada con éxito`, 'success');
     } catch (error: any) {
       const data = error?.response?.data;
@@ -211,6 +245,102 @@ export default function InteractiveSeatBuilder({
     }
   };
 
+  // Bulk set availability (true = habilitar, false = bloquear)
+  const handleBulkSetAvailability = async (newStatus: boolean) => {
+    if (selectedSeats.length === 0) return;
+    try {
+      setIsBulkUpdating(true);
+      const targetIds = new Set(selectedSeats.map(s => s.id));
+
+      // Optimistic update
+      setLocalZones(prev =>
+        prev.map(zone => ({
+          ...zone,
+          seats: zone.seats?.map((s: SeatItem) =>
+            targetIds.has(s.id) ? { ...s, is_available: newStatus } : s
+          ),
+        }))
+      );
+
+      setSelectedSeats(prev =>
+        prev.map(s => ({ ...s, is_available: newStatus }))
+      );
+
+      // Backend bulk update
+      const payload = selectedSeats.map(s => ({
+        id: s.id,
+        is_available: newStatus,
+      }));
+
+      await adminService.bulkUpdateSeatPositions({ seats: payload });
+      useToastStore.getState().addToast(
+        `${selectedSeats.length} ${selectedSeats.length === 1 ? 'asiento' : 'asientos'} ${newStatus ? 'habilitados para el público' : 'bloqueados/deshabilitados'} exitosamente`,
+        'success'
+      );
+    } catch (error) {
+      console.error('Error in bulk availability update:', error);
+      alert('Error al actualizar la disponibilidad de los asientos seleccionados.');
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
+  // Toggle single seat availability in editor
+  const handleToggleSeatAvailability = async (seat: SeatItem) => {
+    const newStatus = !seat.is_available;
+    setLocalZones(prev =>
+      prev.map(z => ({
+        ...z,
+        seats: z.seats?.map((s: any) => (s.id === seat.id ? { ...s, is_available: newStatus } : s)),
+      }))
+    );
+    setSelectedSeats(prev =>
+      prev.map(s => (s.id === seat.id ? { ...s, is_available: newStatus } : s))
+    );
+    try {
+      await adminService.updateSeat(seat.id, { is_available: newStatus });
+      useToastStore.getState().addToast(
+        `Asiento ${newStatus ? 'habilitado' : 'bloqueado'} con éxito`,
+        'success'
+      );
+    } catch (error) {
+      console.error(error);
+      alert('Error al actualizar asiento');
+    }
+  };
+
+  // Bulk delete seats
+  const handleBulkDeleteSeats = async () => {
+    if (selectedSeats.length === 0) return;
+    const count = selectedSeats.length;
+    const confirmMsg = count === 1
+      ? '¿Eliminar este asiento del mapa?'
+      : `¿Eliminar los ${count} asientos seleccionados del mapa? Esta acción no se puede deshacer.`;
+    
+    if (!confirm(confirmMsg)) return;
+
+    try {
+      setIsBulkUpdating(true);
+      const targetIds = new Set(selectedSeats.map(s => s.id));
+      
+      await Promise.all(selectedSeats.map(s => adminService.deleteSeat(s.id)));
+
+      setLocalZones(prev =>
+        prev.map(z => ({
+          ...z,
+          seats: z.seats?.filter((s: any) => !targetIds.has(s.id)),
+        }))
+      );
+      setSelectedSeats([]);
+      useToastStore.getState().addToast(`${count} ${count === 1 ? 'asiento eliminado' : 'asientos eliminados'} del mapa`, 'info');
+    } catch (error) {
+      console.error('Error deleting seats:', error);
+      alert('Error al eliminar asientos seleccionados');
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
   // Delete individual seat
   const handleDeleteSeat = async (seatId: number) => {
     if (!confirm('¿Eliminar este asiento del mapa?')) return;
@@ -222,30 +352,93 @@ export default function InteractiveSeatBuilder({
           seats: z.seats?.filter((s: any) => s.id !== seatId),
         }))
       );
-      setSelectedSeat(null);
+      setSelectedSeats(prev => prev.filter(s => s.id !== seatId));
       useToastStore.getState().addToast('Asiento eliminado del mapa', 'info');
     } catch (error) {
       alert('Error al eliminar asiento');
     }
   };
 
-  // Toggle seat availability in editor
-  const handleToggleSeatAvailability = async (seat: SeatItem) => {
-    const newStatus = !seat.is_available;
-    setLocalZones(prev =>
-      prev.map(z => ({
-        ...z,
-        seats: z.seats?.map((s: any) => (s.id === seat.id ? { ...s, is_available: newStatus } : s)),
-      }))
+  // Helper selectors
+  const handleSelectRow = () => {
+    const baseSeat = selectedSeats[selectedSeats.length - 1];
+    if (!baseSeat) return;
+    const baseZone = getZoneForSeat(baseSeat);
+    if (!baseZone || !baseSeat.row_name) return;
+
+    const rowSeats: SeatItem[] = (baseZone.seats || []).filter(
+      (s: SeatItem) => s.row_name === baseSeat.row_name
     );
-    if (selectedSeat?.id === seat.id) {
-      setSelectedSeat(prev => (prev ? { ...prev, is_available: newStatus } : null));
-    }
-    try {
-      await adminService.updateSeat(seat.id, { is_available: newStatus });
-    } catch (error) {
-      console.error(error);
-    }
+
+    setSelectedSeats(prev => {
+      const existingIds = new Set(prev.map(s => s.id));
+      const toAdd = rowSeats.filter(s => !existingIds.has(s.id)).map(s => ({ ...s, zone: baseZone }));
+      return [...prev, ...toAdd];
+    });
+    useToastStore.getState().addToast(`Fila ${baseSeat.row_name} seleccionada (${rowSeats.length} asientos)`, 'info');
+  };
+
+  const handleSelectTable = () => {
+    const baseSeat = selectedSeats[selectedSeats.length - 1];
+    if (!baseSeat || !baseSeat.table_number) return;
+    const baseZone = getZoneForSeat(baseSeat);
+    if (!baseZone) return;
+
+    const tableSeats: SeatItem[] = (baseZone.seats || []).filter(
+      (s: SeatItem) => s.table_number === baseSeat.table_number
+    );
+
+    setSelectedSeats(prev => {
+      const existingIds = new Set(prev.map(s => s.id));
+      const toAdd = tableSeats.filter(s => !existingIds.has(s.id)).map(s => ({ ...s, zone: baseZone }));
+      return [...prev, ...toAdd];
+    });
+    useToastStore.getState().addToast(`Mesa #${baseSeat.table_number} seleccionada (${tableSeats.length} asientos)`, 'info');
+  };
+
+  const handleSelectZone = () => {
+    const baseSeat = selectedSeats[selectedSeats.length - 1];
+    const baseZone = baseSeat ? getZoneForSeat(baseSeat) : lastSelectedZone || localZones[0];
+    if (!baseZone || !baseZone.seats) return;
+
+    setSelectedSeats(prev => {
+      const existingIds = new Set(prev.map(s => s.id));
+      const toAdd = baseZone.seats.filter((s: SeatItem) => !existingIds.has(s.id)).map((s: SeatItem) => ({ ...s, zone: baseZone }));
+      return [...prev, ...toAdd];
+    });
+    useToastStore.getState().addToast(`Zona "${baseZone.name || baseZone.zone_type}" seleccionada (${baseZone.seats.length} asientos)`, 'info');
+  };
+
+  const handleSelectAll = () => {
+    const allSeats: SeatItem[] = [];
+    localZones.forEach(z => {
+      z.seats?.forEach((s: SeatItem) => {
+        allSeats.push({ ...s, zone: z });
+      });
+    });
+    setSelectedSeats(allSeats);
+    useToastStore.getState().addToast(`Todos los asientos seleccionados (${allSeats.length})`, 'info');
+  };
+
+  const handleInvertSelection = () => {
+    const currentIds = new Set(selectedSeats.map(s => s.id));
+    const inverted: SeatItem[] = [];
+    localZones.forEach(z => {
+      z.seats?.forEach((s: SeatItem) => {
+        if (!currentIds.has(s.id)) {
+          inverted.push({ ...s, zone: z });
+        }
+      });
+    });
+    setSelectedSeats(inverted);
+  };
+
+  const handleClearSelection = () => {
+    setSelectedSeats([]);
+  };
+
+  const handleRemoveSeatFromSelection = (seatId: number) => {
+    setSelectedSeats(prev => prev.filter(s => s.id !== seatId));
   };
 
   // Add a new custom seat
@@ -273,6 +466,15 @@ export default function InteractiveSeatBuilder({
     if (zoneType === 'SUR') return seatNumber + 27;
     if (zoneType === 'OESTE') return seatNumber + 44;
     return seatNumber;
+  };
+
+  const formatSeatTitle = (seat: SeatItem) => {
+    if (seat.table_number) {
+      return `Mesa #${seat.table_number}${seat.table_seat_number ? ` (Asiento ${seat.table_seat_number})` : ''}`;
+    }
+    const zone = getZoneForSeat(seat);
+    const num = seat.custom_label || getDisplayNumber(zone?.zone_type, seat.seat_number);
+    return `Fila ${seat.row_name} · Asiento ${num}`;
   };
 
   return (
@@ -336,6 +538,41 @@ export default function InteractiveSeatBuilder({
               <span>{previewMode ? 'Vista Previa' : 'Modo Edición'}</span>
             </button>
           )}
+
+          {/* Quick Selection Status Badge in Toolbar */}
+          {selectedSeats.length > 0 && (
+            <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-1.5 text-xs text-amber-300 animate-fadeIn">
+              <CheckSquare className="w-3.5 h-3.5 text-amber-400" />
+              <span className="font-bold">{selectedSeats.length} {selectedSeats.length === 1 ? 'seleccionado' : 'seleccionados'}</span>
+              <div className="h-3.5 w-px bg-amber-500/30 mx-0.5" />
+              <button
+                type="button"
+                disabled={isBulkUpdating}
+                onClick={() => handleBulkSetAvailability(true)}
+                className="text-emerald-400 hover:text-emerald-300 font-bold px-1.5 py-0.5 rounded hover:bg-emerald-500/10 transition-colors cursor-pointer"
+                title="Habilitar todos los seleccionados"
+              >
+                Habilitar
+              </button>
+              <button
+                type="button"
+                disabled={isBulkUpdating}
+                onClick={() => handleBulkSetAvailability(false)}
+                className="text-zinc-300 hover:text-white font-bold px-1.5 py-0.5 rounded hover:bg-zinc-800 transition-colors cursor-pointer"
+                title="Bloquear todos los seleccionados"
+              >
+                Bloquear
+              </button>
+              <button
+                type="button"
+                onClick={handleClearSelection}
+                className="text-zinc-400 hover:text-white text-xs ml-0.5 cursor-pointer"
+                title="Deseleccionar todos"
+              >
+                ✕
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Save Changes Button (Only in Labrú mode) */}
@@ -375,6 +612,7 @@ export default function InteractiveSeatBuilder({
               onTableMove={handleTableMove}
               onSeatClickInEditor={handleSeatClickInEditor}
               selectedSeatInEditor={selectedSeat}
+              selectedSeatIdsInEditor={selectedSeatIds}
               gridSnap={gridSnap}
               mapConfig={event?.map_config}
             />
@@ -382,9 +620,9 @@ export default function InteractiveSeatBuilder({
             <ClassicWrestlingFactoryMap
               zones={localZones}
               selectedSeatId={selectedSeat?.id}
+              selectedSeatIds={selectedSeatIds}
               onSeatClick={(seat, zone) => {
-                setSelectedSeat(seat);
-                setSelectedZone(zone);
+                handleSeatClickInEditor(seat, zone);
               }}
             />
           )}
@@ -392,23 +630,178 @@ export default function InteractiveSeatBuilder({
 
         {/* Sidebar Inspector / Details (1 column) */}
         <div className="lg:col-span-1 space-y-4">
-          {selectedSeat ? (
+          {selectedSeats.length > 1 ? (
+            /* MULTI-SEAT BULK INSPECTOR */
             <div className="bg-zinc-950 border border-white/10 rounded-2xl p-5 shadow-lg space-y-4">
+              {/* Header */}
               <div className="flex items-center justify-between border-b border-white/10 pb-3">
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-red-500">Asiento Seleccionado</span>
-                  <h3 className="text-base font-bold text-white">
-                    {selectedSeat.table_number
-                      ? `Mesa #${selectedSeat.table_number}`
-                      : isArenaMap
-                      ? `Fila ${selectedSeat.row_name} · #${selectedSeat.seat_number}`
-                      : `Fila ${selectedSeat.row_name} · Asiento ${selectedSeat.custom_label || getDisplayNumber(selectedZone?.zone_type, selectedSeat.seat_number)}`}
+                  <div className="flex items-center gap-1.5">
+                    <CheckSquare className="w-3.5 h-3.5 text-amber-400" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
+                      Selección Múltiple
+                    </span>
+                  </div>
+                  <h3 className="text-base font-bold text-white mt-0.5">
+                    {selectedSeats.length} Asientos Seleccionados
                   </h3>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setSelectedSeat(null)}
-                  className="text-zinc-500 hover:text-white text-xs p-1"
+                  onClick={handleClearSelection}
+                  className="text-zinc-500 hover:text-white text-xs px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 transition-colors cursor-pointer"
+                  title="Deseleccionar todos"
+                >
+                  Limpiar
+                </button>
+              </div>
+
+              {/* Status Breakdown Pills */}
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="bg-emerald-950/40 border border-emerald-500/20 rounded-xl p-2.5 text-center">
+                  <span className="text-[10px] font-bold uppercase text-emerald-400 block tracking-wider">Habilitados</span>
+                  <span className="text-lg font-black text-emerald-400">{availableCount}</span>
+                </div>
+                <div className="bg-zinc-900 border border-white/10 rounded-xl p-2.5 text-center">
+                  <span className="text-[10px] font-bold uppercase text-zinc-400 block tracking-wider">Bloqueados</span>
+                  <span className="text-lg font-black text-zinc-300">{blockedCount}</span>
+                </div>
+              </div>
+
+              {/* Bulk Actions Section */}
+              <div className="space-y-2 pt-1">
+                <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 block">
+                  Acciones en Lote:
+                </label>
+
+                {/* Habilitar Todos */}
+                <button
+                  type="button"
+                  disabled={isBulkUpdating}
+                  onClick={() => handleBulkSetAvailability(true)}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg font-bold text-xs uppercase tracking-wider bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md shadow-emerald-950/50 cursor-pointer disabled:opacity-50"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>{isBulkUpdating ? 'Procesando...' : `Habilitar Todos (${selectedSeats.length})`}</span>
+                </button>
+
+                {/* Bloquear / Deshabilitar Todos */}
+                <button
+                  type="button"
+                  disabled={isBulkUpdating}
+                  onClick={() => handleBulkSetAvailability(false)}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg font-bold text-xs uppercase tracking-wider bg-zinc-900 hover:bg-zinc-800 text-amber-300 border border-amber-500/30 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  <EyeOff className="w-4 h-4 text-amber-400" />
+                  <span>{isBulkUpdating ? 'Procesando...' : `Bloquear / Deshabilitar (${selectedSeats.length})`}</span>
+                </button>
+
+                {/* Bulk Delete (in Arena mode) */}
+                {isArenaMap && (
+                  <button
+                    type="button"
+                    disabled={isBulkUpdating}
+                    onClick={handleBulkDeleteSeats}
+                    className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-semibold text-red-400 hover:text-red-300 bg-red-950/20 hover:bg-red-950/40 border border-red-500/20 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Eliminar Asientos Seleccionados</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Quick Selection Helpers */}
+              <div className="pt-2 border-t border-white/10 space-y-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block">
+                  Ayudantes de Selección
+                </span>
+                <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={handleSelectRow}
+                    className="px-2 py-1.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-white/5 font-medium transition-colors cursor-pointer"
+                  >
+                    + Fila Actual
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSelectZone}
+                    className="px-2 py-1.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-white/5 font-medium transition-colors cursor-pointer"
+                  >
+                    + Toda la Zona
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleInvertSelection}
+                    className="px-2 py-1.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-white/5 font-medium transition-colors cursor-pointer"
+                  >
+                    Invertir
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSelectAll}
+                    className="px-2 py-1.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-white/5 font-medium transition-colors cursor-pointer"
+                  >
+                    Todo el Mapa
+                  </button>
+                </div>
+              </div>
+
+              {/* List of Selected Seats with individual remove */}
+              <div className="pt-2 border-t border-white/10 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+                    Detalle ({selectedSeats.length})
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleClearSelection}
+                    className="text-[10px] text-zinc-500 hover:text-zinc-300 cursor-pointer"
+                  >
+                    Deseleccionar todos
+                  </button>
+                </div>
+                <div className="max-h-48 overflow-y-auto space-y-1 pr-1">
+                  {selectedSeats.map(seat => {
+                    const title = formatSeatTitle(seat);
+                    return (
+                      <div
+                        key={seat.id}
+                        className="flex items-center justify-between bg-zinc-900/80 border border-white/5 px-2.5 py-1.5 rounded-lg text-xs"
+                      >
+                        <div className="flex items-center gap-2 truncate">
+                          <span className={`w-2 h-2 rounded-full shrink-0 ${seat.is_available ? 'bg-emerald-400 shadow-[0_0_6px_#34d399]' : 'bg-zinc-600'}`} />
+                          <span className="text-zinc-200 truncate">{title}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveSeatFromSelection(seat.id)}
+                          className="text-zinc-500 hover:text-white p-0.5 ml-1 cursor-pointer"
+                          title="Quitar de selección"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          ) : selectedSeats.length === 1 && selectedSeat ? (
+            /* SINGLE SEAT INSPECTOR */
+            <div className="bg-zinc-950 border border-white/10 rounded-2xl p-5 shadow-lg space-y-4">
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500">1 Asiento Seleccionado</span>
+                  <h3 className="text-base font-bold text-white">
+                    {formatSeatTitle(selectedSeat)}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleClearSelection}
+                  className="text-zinc-500 hover:text-white text-xs p-1 cursor-pointer"
+                  title="Deseleccionar"
                 >
                   ✕
                 </button>
@@ -448,7 +841,9 @@ export default function InteractiveSeatBuilder({
                     value={selectedSeat.custom_label || ''}
                     onChange={(e) => {
                       const val = e.target.value;
-                      setSelectedSeat({ ...selectedSeat, custom_label: val });
+                      setSelectedSeats(prev =>
+                        prev.map(s => (s.id === selectedSeat.id ? { ...s, custom_label: val } : s))
+                      );
                       setLocalZones(prev =>
                         prev.map(z => ({
                           ...z,
@@ -463,12 +858,46 @@ export default function InteractiveSeatBuilder({
                 </div>
               )}
 
-              {/* Status toggle */}
+              {/* Quick Selection Helpers for this single seat */}
+              <div className="pt-2 border-t border-white/10 space-y-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block">
+                  Expandir Selección
+                </span>
+                <div className="flex flex-wrap gap-1.5 text-[11px]">
+                  {selectedSeat.row_name && (
+                    <button
+                      type="button"
+                      onClick={handleSelectRow}
+                      className="px-2.5 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-white/5 font-medium transition-colors cursor-pointer"
+                    >
+                      + Toda la Fila {selectedSeat.row_name}
+                    </button>
+                  )}
+                  {selectedSeat.table_number && (
+                    <button
+                      type="button"
+                      onClick={handleSelectTable}
+                      className="px-2.5 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-white/5 font-medium transition-colors cursor-pointer"
+                    >
+                      + Toda la Mesa #{selectedSeat.table_number}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleSelectZone}
+                    className="px-2.5 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-white/5 font-medium transition-colors cursor-pointer"
+                  >
+                    + Toda la Zona
+                  </button>
+                </div>
+              </div>
+
+              {/* Status toggle & delete */}
               <div className="pt-2 border-t border-white/10 space-y-2">
                 <button
                   type="button"
                   onClick={() => handleToggleSeatAvailability(selectedSeat)}
-                  className={`w-full py-2.5 px-3 rounded-lg font-semibold text-xs uppercase tracking-wider transition-colors ${
+                  className={`w-full py-2.5 px-3 rounded-lg font-semibold text-xs uppercase tracking-wider transition-colors cursor-pointer ${
                     selectedSeat.is_available
                       ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
                       : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300'
@@ -482,7 +911,7 @@ export default function InteractiveSeatBuilder({
                   <button
                     type="button"
                     onClick={() => handleDeleteSeat(selectedSeat.id)}
-                    className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-semibold text-red-400 hover:text-red-300 bg-zinc-900 hover:bg-zinc-850 rounded-lg transition-colors"
+                    className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-semibold text-red-400 hover:text-red-300 bg-zinc-900 hover:bg-zinc-850 rounded-lg transition-colors cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     <span>Eliminar Asiento</span>
@@ -491,14 +920,26 @@ export default function InteractiveSeatBuilder({
               </div>
             </div>
           ) : (
+            /* EMPTY STATE INSPECTOR */
             <div className="bg-zinc-950 border border-white/10 rounded-2xl p-5 shadow-lg text-center space-y-3">
               <div className="w-9 h-9 rounded-full bg-zinc-900 border border-white/10 mx-auto flex items-center justify-center text-zinc-400">
-                <Move className="w-4 h-4" />
+                <CheckSquare className="w-4 h-4 text-amber-400" />
               </div>
-              <h4 className="text-sm font-semibold text-white uppercase tracking-wider">Inspector de Asientos</h4>
+              <h4 className="text-sm font-semibold text-white uppercase tracking-wider">Inspector y Selección de Asientos</h4>
               <p className="text-xs text-zinc-400 leading-relaxed">
-                Haz clic en cualquier asiento del mapa para seleccionarlo, ver sus datos o cambiar su disponibilidad (habilitar / bloquear).
+                Haz clic en cualquier asiento del mapa para seleccionarlo. Puedes hacer clic en múltiples asientos para seleccionarlos a la vez y gestionar su estado en lote (habilitar o bloquear).
               </p>
+
+              <div className="pt-2 border-t border-white/5 flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={handleSelectAll}
+                  className="w-full py-2 px-3 rounded-lg bg-zinc-900 hover:bg-zinc-850 border border-white/10 text-xs font-semibold text-zinc-200 uppercase tracking-wider transition-colors cursor-pointer"
+                >
+                  Seleccionar Todos los Asientos
+                </button>
+              </div>
+
               {isArenaMap && (
                 <div className="bg-zinc-900/50 rounded-xl p-3 text-[11px] text-zinc-400 text-left space-y-1">
                   <p>• <strong>Arrastra</strong> con el mouse para mover asientos o mesas completas.</p>

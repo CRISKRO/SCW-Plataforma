@@ -15,12 +15,14 @@ interface SeatItem {
 interface ClassicWrestlingFactoryMapProps {
   zones: any[];
   selectedSeatId?: number | null;
+  selectedSeatIds?: number[];
   onSeatClick?: (seat: SeatItem, zone: any) => void;
 }
 
 export default function ClassicWrestlingFactoryMap({
   zones,
   selectedSeatId,
+  selectedSeatIds = [],
   onSeatClick,
 }: ClassicWrestlingFactoryMapProps) {
   const [scale, setScale] = useState(1);
@@ -93,7 +95,7 @@ export default function ClassicWrestlingFactoryMap({
                   return a.seat_number - b.seat_number;
                 }).map(seat => {
                   const displayNumber = getDisplayNumber(zone.zone_type, seat.seat_number);
-                  const isSelected = selectedSeatId === seat.id;
+                  const isSelected = (selectedSeatIds && selectedSeatIds.includes(seat.id)) || selectedSeatId === seat.id;
                   const isAvailable = seat.is_available;
 
                   return (
@@ -102,10 +104,10 @@ export default function ClassicWrestlingFactoryMap({
                         type="button"
                         onClick={() => onSeatClick?.(seat, zone)}
                         className={`w-6 h-6 md:w-7 md:h-7 rounded text-[10px] font-bold flex items-center justify-center transition-all cursor-pointer ${
-                          !isAvailable
+                          isSelected
+                            ? 'bg-amber-500 text-black border-2 border-white scale-110 z-20 shadow-lg shadow-amber-500/50 ring-2 ring-amber-400 font-black'
+                            : !isAvailable
                             ? 'bg-zinc-900 text-zinc-600 border border-zinc-800 opacity-60'
-                            : isSelected
-                            ? 'bg-red-600 text-white border-2 border-white scale-110 z-20 shadow-lg'
                             : 'bg-zinc-800 text-zinc-300 border border-zinc-700 hover:bg-zinc-700 hover:text-white'
                         }`}
                         title={`Fila ${rowName} · Asiento ${displayNumber} (${zone.name || zone.zone_type}) - ${isAvailable ? 'Disponible' : 'Bloqueado'}`}
