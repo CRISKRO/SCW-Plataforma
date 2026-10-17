@@ -359,10 +359,9 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                             setSelectedEvent(btn.event);
                             setIsModalOpen(true);
                           }}
-                          className="group inline-flex w-full sm:w-auto justify-center items-center gap-2.5 px-6 py-3.5 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-black uppercase tracking-wider text-black bg-white hover:bg-zinc-100 transition-all transform hover:scale-105 active:scale-95 rounded-xl shadow-2xl shadow-black/90"
+                          className="inline-flex w-full sm:w-auto justify-center items-center px-6 py-3.5 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-black uppercase tracking-wider text-black bg-white hover:bg-zinc-100 transition-all transform hover:scale-105 active:scale-95 rounded-xl shadow-2xl shadow-black/90"
                         >
                           {btn.label}
-                          <ChevronRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
                         </button>
                       );
                     }
@@ -370,16 +369,15 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                       <Link
                         key={btn.label}
                         href={btn.href}
-                        className={`group inline-flex w-full sm:w-auto justify-center items-center gap-2.5 px-6 py-3.5 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-black uppercase tracking-wider transition-all transform hover:scale-105 active:scale-95 rounded-xl shadow-2xl shadow-black/90 ${slide.type === 'raffle' ? 'bg-gradient-to-r from-yellow-500 to-amber-600 text-black hover:from-yellow-400 hover:to-amber-500 shadow-yellow-900/50' : 'text-black bg-white hover:bg-zinc-100'}`}
+                        className={`inline-flex w-full sm:w-auto justify-center items-center px-6 py-3.5 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-black uppercase tracking-wider transition-all transform hover:scale-105 active:scale-95 rounded-xl shadow-2xl shadow-black/90 ${slide.type === 'raffle' ? 'bg-gradient-to-r from-yellow-500 to-amber-600 text-black hover:from-yellow-400 hover:to-amber-500 shadow-yellow-900/50' : 'text-black bg-white hover:bg-zinc-100'}`}
                       >
                         {btn.label}
-                        <ChevronRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
                       </Link>
                     ) : (
                       <Link
                         key={btn.label}
                         href={btn.href}
-                        className="inline-flex w-full sm:w-auto justify-center items-center gap-2 px-6 py-3.5 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-bold uppercase tracking-wider text-zinc-100 hover:text-white border border-zinc-700/90 hover:border-zinc-400 bg-[#0a0a0e] hover:bg-zinc-900 shadow-2xl shadow-black transition-all transform hover:scale-105 active:scale-95 rounded-xl"
+                        className="inline-flex w-full sm:w-auto justify-center items-center px-6 py-3.5 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-black uppercase tracking-wider text-white border border-white/20 hover:border-white bg-zinc-900/90 hover:bg-white hover:text-black transition-all transform hover:scale-105 active:scale-95 rounded-xl shadow-2xl shadow-black/90"
                       >
                         {btn.label}
                       </Link>
@@ -522,7 +520,10 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
         </div>
 
         <div className="mt-12 flex flex-col items-center">
-          <Link href="/roster" className="inline-flex items-center text-sm font-bold uppercase tracking-widest hover:text-zinc-300 transition-colors border-b border-white pb-1 hover:border-zinc-500">
+          <Link
+            href="/roster"
+            className="inline-flex items-center justify-center px-6 py-3.5 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-black uppercase tracking-wider text-white border border-white/20 hover:border-white bg-zinc-900/90 hover:bg-white hover:text-black transition-all transform hover:scale-105 active:scale-95 rounded-xl shadow-2xl shadow-black/90"
+          >
             Ver Roster Completo
           </Link>
         </div>
@@ -571,8 +572,11 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
               <h2 className="text-4xl font-black uppercase tracking-tight">Próximos Eventos</h2>
               <p className="text-zinc-500 mt-2">Asegura tu lugar en la historia.</p>
             </div>
-            <Link href="/eventos" className="hidden md:flex items-center text-sm font-bold uppercase tracking-widest hover:text-zinc-300 transition-colors">
-              Ver Cartelera Completa <ChevronRight className="w-4 h-4 ml-1" />
+            <Link
+              href="/eventos"
+              className="hidden md:inline-flex items-center justify-center px-6 py-3 text-xs sm:text-sm font-black uppercase tracking-wider text-white border border-white/20 hover:border-white bg-zinc-900/90 hover:bg-white hover:text-black transition-all transform hover:scale-105 active:scale-95 rounded-xl shadow-lg"
+            >
+              Ver Cartelera Completa
             </Link>
           </div>
 
@@ -751,7 +755,10 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
             </div>
             
             <div className="mt-16 text-center">
-              <Link href="/patrocinadores" className="inline-flex items-center text-sm font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors border-b border-transparent hover:border-white pb-1">
+              <Link
+                href="/patrocinadores"
+                className="inline-flex items-center justify-center px-6 py-3.5 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-black uppercase tracking-wider text-white border border-white/20 hover:border-white bg-zinc-900/90 hover:bg-white hover:text-black transition-all transform hover:scale-105 active:scale-95 rounded-xl shadow-2xl shadow-black/90"
+              >
                 Conoce a nuestros patrocinadores
               </Link>
             </div>
