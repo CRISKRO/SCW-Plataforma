@@ -57,16 +57,7 @@ export default function ArenaSeatMap({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
 
-  // Dragging seat or table in editor with distance threshold (5px)
-  const dragInteractionRef = useRef<{
-    type: 'seat' | 'table';
-    item: any;
-    startClientX: number;
-    startClientY: number;
-    offset: { x: number; y: number };
-  } | null>(null);
-  const didDragOccurRef = useRef(false);
-  const [isActuallyDragging, setIsActuallyDragging] = useState(false);
+
 
   // Tooltip
   const [hoveredSeat, setHoveredSeat] = useState<{ seat: SeatItem; zone: any; x: number; y: number } | null>(null);
@@ -137,8 +128,8 @@ export default function ArenaSeatMap({
 
   // Canvas Pan Handlers
   const handleCanvasPointerDown = (e: React.PointerEvent) => {
-    // If clicking on an element inside SVG that is a seat or table, don't start pan
-    if ((e.target as HTMLElement).closest('[data-draggable="true"]')) return;
+    // If clicking on an element inside SVG that is a seat, table or button, don't start pan
+    if ((e.target as HTMLElement).closest('.cursor-pointer')) return;
     if ((e.target as HTMLElement).closest('button')) return;
 
     setIsPanning(true);
@@ -146,100 +137,25 @@ export default function ArenaSeatMap({
   };
 
   const handleCanvasPointerMove = (e: React.PointerEvent) => {
-    if (isPanning) {
-      setPosition({
-        x: e.clientX - panStart.x,
-        y: e.clientY - panStart.y,
-      });
-      return;
-    }
-
-    if (!isInteractiveEditing || !dragInteractionRef.current) return;
-
-    // Minimum drag threshold (5px) to differentiate click from intentional drag
-    const moveDist = Math.hypot(
-      e.clientX - dragInteractionRef.current.startClientX,
-      e.clientY - dragInteractionRef.current.startClientY
-    );
-
-    if (!didDragOccurRef.current) {
-      if (moveDist < 5) {
-        return; // Pure click: DO NOT MOVE SEAT OR SNAP
-      }
-      didDragOccurRef.current = true;
-      setIsActuallyDragging(true);
-    }
-
-    const coords = getSvgCoordinates(e);
-    const newX = snap(coords.x - dragInteractionRef.current.offset.x);
-    const newY = snap(coords.y - dragInteractionRef.current.offset.y);
-
-    if (dragInteractionRef.current.type === 'seat' && onSeatMove) {
-      onSeatMove(dragInteractionRef.current.item.id, newX, newY);
-    } else if (dragInteractionRef.current.type === 'table' && onTableMove) {
-      onTableMove(
-        dragInteractionRef.current.item.tableNumber,
-        dragInteractionRef.current.item.zoneType,
-        newX,
-        newY
-      );
-    }
+    if (!isPanning) return;
+    setPosition({
+      x: e.clientX - panStart.x,
+      y: e.clientY - panStart.y,
+    });
   };
 
   const handleCanvasPointerUp = () => {
     setIsPanning(false);
-    setIsActuallyDragging(false);
-    // Keep didDragOccur briefly so onClick handler can check whether a drag occurred
-    setTimeout(() => {
-      dragInteractionRef.current = null;
-      didDragOccurRef.current = false;
-    }, 60);
   };
 
   // Seat interaction in Editor vs Public
   const handleSeatClick = (seat: SeatItem, zone: any, e: React.MouseEvent) => {
     e.stopPropagation();
-    // If user dragged the seat across the canvas, don't trigger selection/toggle
-    if (didDragOccurRef.current) return;
-
-    if (isInteractiveEditing) {
-      if (onSeatClickInEditor) onSeatClickInEditor(seat, zone);
-    } else {
-      if (onToggleSeat && (seat.is_available && !seat.is_locked)) {
-        onToggleSeat(seat, zone);
-      }
+    if (onSeatClickInEditor) {
+      onSeatClickInEditor(seat, zone);
+    } else if (onToggleSeat && (seat.is_available && !seat.is_locked)) {
+      onToggleSeat(seat, zone);
     }
-  };
-
-  const handleSeatMouseDown = (seat: SeatItem, e: React.MouseEvent) => {
-    if (!isInteractiveEditing) return;
-    e.stopPropagation();
-    const coords = getSvgCoordinates(e);
-    const seatX = seat.x || 0;
-    const seatY = seat.y || 0;
-    dragInteractionRef.current = {
-      type: 'seat',
-      item: seat,
-      startClientX: e.clientX,
-      startClientY: e.clientY,
-      offset: { x: coords.x - seatX, y: coords.y - seatY },
-    };
-    didDragOccurRef.current = false;
-  };
-
-  // Table Drag in Editor
-  const handleTableMouseDown = (tableNum: number, zoneType: string, centerX: number, centerY: number, e: React.MouseEvent) => {
-    if (!isInteractiveEditing) return;
-    e.stopPropagation();
-    const coords = getSvgCoordinates(e);
-    dragInteractionRef.current = {
-      type: 'table',
-      item: { tableNumber: tableNum, zoneType },
-      startClientX: e.clientX,
-      startClientY: e.clientY,
-      offset: { x: coords.x - centerX, y: coords.y - centerY },
-    };
-    didDragOccurRef.current = false;
   };
 
   return (
@@ -251,11 +167,6 @@ export default function ArenaSeatMap({
             <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse"></span>
             Arena SCW · Mapa Interactivo
           </span>
-          {isInteractiveEditing && (
-            <span className="text-[11px] bg-red-950/80 text-red-300 border border-red-800/80 px-2 py-0.5 rounded-full font-bold">
-              Modo Edición: Arrastra los asientos o mesas
-            </span>
-          )}
         </div>
 
         {/* Zoom controls */}
@@ -291,7 +202,7 @@ export default function ArenaSeatMap({
       <div
         ref={mapContainerRef}
         className={`w-full bg-[#0a0a0c] border border-white/10 rounded-3xl h-[620px] shadow-2xl relative overflow-hidden flex items-center justify-center touch-none ${
-          isPanning ? 'cursor-grabbing' : isInteractiveEditing ? 'cursor-default' : 'cursor-grab'
+          isPanning ? 'cursor-grabbing' : 'cursor-grab'
         }`}
         onPointerDown={handleCanvasPointerDown}
         onPointerMove={handleCanvasPointerMove}
@@ -302,7 +213,7 @@ export default function ArenaSeatMap({
           style={{
             transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
             transformOrigin: 'center center',
-            transition: isPanning || isActuallyDragging ? 'none' : 'transform 0.15s ease-out',
+            transition: isPanning ? 'none' : 'transform 0.15s ease-out',
           }}
           className="w-full h-full flex items-center justify-center"
         >
@@ -418,15 +329,12 @@ export default function ArenaSeatMap({
                 return (
                   <g
                     key={`vip-table-${tNum}`}
-                    data-draggable="true"
-                    onMouseDown={(e) => handleTableMouseDown(tNum, 'MESAS_VIP', cx, cy, e)}
                     onClick={(e) => {
-                      if (!isInteractiveEditing) {
-                        // Click table selects its seats
-                        seatsInTable.forEach(s => handleSeatClick(s, zoneVip, e));
-                      } else if (onSeatClickInEditor) {
-                        if (didDragOccurRef.current) return;
+                      e.stopPropagation();
+                      if (onSeatClickInEditor) {
                         onSeatClickInEditor(firstSeat, zoneVip);
+                      } else {
+                        seatsInTable.forEach(s => handleSeatClick(s, zoneVip, e));
                       }
                     }}
                     className={`cursor-pointer group ${!allAvailable ? 'opacity-40' : ''}`}
@@ -521,14 +429,12 @@ export default function ArenaSeatMap({
                 return (
                   <g
                     key={`ringside-table-${tNum}`}
-                    data-draggable="true"
-                    onMouseDown={(e) => handleTableMouseDown(tNum, 'MESAS_VIP_RINGSIDE', cx, cy, e)}
                     onClick={(e) => {
-                      if (!isInteractiveEditing) {
-                        seatsInTable.forEach(s => handleSeatClick(s, zoneRingside, e));
-                      } else if (onSeatClickInEditor) {
-                        if (didDragOccurRef.current) return;
+                      e.stopPropagation();
+                      if (onSeatClickInEditor) {
                         onSeatClickInEditor(firstSeat, zoneRingside);
+                      } else {
+                        seatsInTable.forEach(s => handleSeatClick(s, zoneRingside, e));
                       }
                     }}
                     className={`cursor-pointer group ${!allAvailable ? 'opacity-40' : ''}`}
@@ -639,9 +545,7 @@ export default function ArenaSeatMap({
               return (
                 <g
                   key={`f1-${seat.id}`}
-                  data-draggable="true"
                   transform={`translate(${sx}, ${sy})`}
-                  onMouseDown={(e) => handleSeatMouseDown(seat, e)}
                   onClick={(e) => handleSeatClick(seat, zoneF1, e)}
                   onMouseEnter={(e) => setHoveredSeat({ seat, zone: zoneF1, x: sx, y: sy })}
                   onMouseLeave={() => setHoveredSeat(null)}
@@ -685,9 +589,7 @@ export default function ArenaSeatMap({
               return (
                 <g
                   key={`f2-${seat.id}`}
-                  data-draggable="true"
                   transform={`translate(${sx}, ${sy})`}
-                  onMouseDown={(e) => handleSeatMouseDown(seat, e)}
                   onClick={(e) => handleSeatClick(seat, zoneF2, e)}
                   onMouseEnter={(e) => setHoveredSeat({ seat, zone: zoneF2, x: sx, y: sy })}
                   onMouseLeave={() => setHoveredSeat(null)}
@@ -735,9 +637,7 @@ export default function ArenaSeatMap({
                 return (
                   <g
                     key={`custom-${seat.id}`}
-                    data-draggable="true"
                     transform={`translate(${sx}, ${sy})`}
-                    onMouseDown={(e) => handleSeatMouseDown(seat, e)}
                     onClick={(e) => handleSeatClick(seat, zone, e)}
                     onMouseEnter={(e) => setHoveredSeat({ seat, zone, x: sx, y: sy })}
                     onMouseLeave={() => setHoveredSeat(null)}

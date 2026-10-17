@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  Move, Plus, Save, LayoutTemplate, Grid, CheckCircle2, 
-  Eye, EyeOff, AlertCircle, CheckSquare, Layers, X
+  Plus, LayoutTemplate, CheckCircle2, 
+  EyeOff, CheckSquare, Layers, X
 } from 'lucide-react';
 import { adminService } from '@/services/admin.services';
 import ArenaSeatMap, { SeatItem } from '@/components/ArenaSeatMap';
@@ -26,10 +26,7 @@ export default function InteractiveSeatBuilder({
   onEventUpdated,
 }: InteractiveSeatBuilderProps) {
   const [localZones, setLocalZones] = useState<any[]>(zones);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [gridSnap, setGridSnap] = useState<number>(5);
-  const [previewMode, setPreviewMode] = useState(false);
 
   // Selected items in editor (multi-selection)
   const [selectedSeats, setSelectedSeats] = useState<SeatItem[]>([]);
@@ -92,52 +89,7 @@ export default function InteractiveSeatBuilder({
     }
   }, [zones]);
 
-  // Handle seat drag/move
-  const handleSeatMove = (seatId: number, newX: number, newY: number) => {
-    setLocalZones(prevZones =>
-      prevZones.map(zone => ({
-        ...zone,
-        seats: zone.seats?.map((seat: SeatItem) =>
-          seat.id === seatId ? { ...seat, x: newX, y: newY } : seat
-        ),
-      }))
-    );
-    setHasUnsavedChanges(true);
 
-    setSelectedSeats(prev =>
-      prev.map(s => (s.id === seatId ? { ...s, x: newX, y: newY } : s))
-    );
-  };
-
-  // Handle table drag/move (moves all seats in that table)
-  const handleTableMove = (tableNumber: number, zoneType: string, newCenterX: number, newCenterY: number) => {
-    setLocalZones(prevZones =>
-      prevZones.map(zone => {
-        if (zone.zone_type !== zoneType) return zone;
-        return {
-          ...zone,
-          seats: zone.seats?.map((seat: SeatItem) => {
-            const tNum = seat.table_number || seat.seat_number;
-            if (tNum === tableNumber) {
-              return { ...seat, x: newCenterX, y: newCenterY };
-            }
-            return seat;
-          }),
-        };
-      })
-    );
-    setHasUnsavedChanges(true);
-
-    setSelectedSeats(prev =>
-      prev.map(s => {
-        const tNum = s.table_number || s.seat_number;
-        if (tNum === tableNumber) {
-          return { ...s, x: newCenterX, y: newCenterY };
-        }
-        return s;
-      })
-    );
-  };
 
   // 1-Click Toggle Availability for single seat or whole table directly on click
   const handleSeatClickInEditor = async (seat: SeatItem, zone: any) => {
@@ -249,39 +201,7 @@ export default function InteractiveSeatBuilder({
     }
   };
 
-  // Save all moved seats to backend
-  const handleSaveChanges = async () => {
-    try {
-      setIsSaving(true);
-      const allSeats: any[] = [];
-      localZones.forEach(z => {
-        z.seats?.forEach((s: SeatItem) => {
-          allSeats.push({
-            id: s.id,
-            x: s.x,
-            y: s.y,
-            custom_label: s.custom_label,
-            row_name: s.row_name,
-            seat_number: s.seat_number,
-            table_number: s.table_number,
-            table_seat_number: s.table_seat_number,
-            is_available: s.is_available,
-            zone_id: z.id,
-          });
-        });
-      });
 
-      await adminService.bulkUpdateSeatPositions({ seats: allSeats });
-      setHasUnsavedChanges(false);
-      onZonesUpdated(localZones);
-      useToastStore.getState().addToast('¡Mapa guardado exitosamente!', 'success');
-    } catch (error) {
-      console.error('Error saving seat positions:', error);
-      alert('Hubo un error al guardar las posiciones de los asientos.');
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   // Apply template (Labrú o The Wrestling Factory)
   const handleApplyTemplate = async () => {
@@ -316,7 +236,6 @@ export default function InteractiveSeatBuilder({
           map_config: result.map_config || {},
         });
       }
-      setHasUnsavedChanges(false);
       setIsTemplateModalOpen(false);
       setSelectedSeats([]);
       setLastSelectedZone(null);
@@ -405,55 +324,7 @@ export default function InteractiveSeatBuilder({
 
 
 
-  // Helper selectors
-  const handleSelectRow = () => {
-    const baseSeat = selectedSeats[selectedSeats.length - 1];
-    if (!baseSeat) return;
-    const baseZone = getZoneForSeat(baseSeat);
-    if (!baseZone || !baseSeat.row_name) return;
 
-    const rowSeats: SeatItem[] = (baseZone.seats || []).filter(
-      (s: SeatItem) => s.row_name === baseSeat.row_name
-    );
-
-    setSelectedSeats(prev => {
-      const existingIds = new Set(prev.map(s => s.id));
-      const toAdd = rowSeats.filter(s => !existingIds.has(s.id)).map(s => ({ ...s, zone: baseZone }));
-      return [...prev, ...toAdd];
-    });
-    useToastStore.getState().addToast(`Fila ${baseSeat.row_name} seleccionada (${rowSeats.length} asientos)`, 'info');
-  };
-
-  const handleSelectTable = () => {
-    const baseSeat = selectedSeats[selectedSeats.length - 1];
-    if (!baseSeat || !baseSeat.table_number) return;
-    const baseZone = getZoneForSeat(baseSeat);
-    if (!baseZone) return;
-
-    const tableSeats: SeatItem[] = (baseZone.seats || []).filter(
-      (s: SeatItem) => s.table_number === baseSeat.table_number
-    );
-
-    setSelectedSeats(prev => {
-      const existingIds = new Set(prev.map(s => s.id));
-      const toAdd = tableSeats.filter(s => !existingIds.has(s.id)).map(s => ({ ...s, zone: baseZone }));
-      return [...prev, ...toAdd];
-    });
-    useToastStore.getState().addToast(`Mesa #${baseSeat.table_number} seleccionada (${tableSeats.length} asientos)`, 'info');
-  };
-
-  const handleSelectZone = () => {
-    const baseSeat = selectedSeats[selectedSeats.length - 1];
-    const baseZone = baseSeat ? getZoneForSeat(baseSeat) : lastSelectedZone || localZones[0];
-    if (!baseZone || !baseZone.seats) return;
-
-    setSelectedSeats(prev => {
-      const existingIds = new Set(prev.map(s => s.id));
-      const toAdd = baseZone.seats.filter((s: SeatItem) => !existingIds.has(s.id)).map((s: SeatItem) => ({ ...s, zone: baseZone }));
-      return [...prev, ...toAdd];
-    });
-    useToastStore.getState().addToast(`Zona "${baseZone.name || baseZone.zone_type}" seleccionada (${baseZone.seats.length} asientos)`, 'info');
-  };
 
   const handleSelectAll = () => {
     const allSeats: SeatItem[] = [];
@@ -550,41 +421,6 @@ export default function InteractiveSeatBuilder({
             </button>
           )}
 
-          {/* Grid Snap Options (Only in Labrú mode) */}
-          {isArenaMap && (
-            <div className="flex items-center gap-1.5 bg-zinc-900/80 border border-white/10 rounded-xl px-3 py-1.5 text-xs">
-              <span className="font-bold text-zinc-400 uppercase text-[10px] tracking-wider">Cuadrícula:</span>
-              <div className="flex items-center gap-1">
-                {[0, 5, 10, 20].map(val => (
-                  <button
-                    key={val}
-                    type="button"
-                    onClick={() => setGridSnap(val)}
-                    className={`px-2 py-0.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                      gridSnap === val
-                        ? 'bg-red-600 text-white shadow-sm'
-                        : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
-                    }`}
-                  >
-                    {val === 0 ? 'Libre' : `${val}px`}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Preview Toggle (Only in Labrú mode) */}
-          {isArenaMap && (
-            <button
-              type="button"
-              onClick={() => setPreviewMode(!previewMode)}
-              className="flex items-center gap-1.5 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-white/10 font-bold text-xs uppercase tracking-wider px-3.5 py-2.5 rounded-xl transition-all cursor-pointer active:scale-95"
-            >
-              {previewMode ? <Eye className="w-4 h-4 text-red-500" /> : <EyeOff className="w-4 h-4 text-zinc-400" />}
-              <span>{previewMode ? 'Vista Previa' : 'Modo Edición'}</span>
-            </button>
-          )}
-
           {/* Active Selection Indicator in Toolbar */}
           {selectedSeats.length > 0 && (
             <div className="flex items-center gap-2 bg-zinc-900/90 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-zinc-300">
@@ -604,29 +440,11 @@ export default function InteractiveSeatBuilder({
           )}
         </div>
 
-        {/* Save Changes Button (Only in Labrú mode) */}
-        {isArenaMap && (
-          <div className="flex items-center gap-2">
-            {hasUnsavedChanges && (
-              <span className="text-red-400 text-xs font-bold flex items-center gap-1">
-                <AlertCircle className="w-3.5 h-3.5 text-red-500" /> Cambios sin guardar
-              </span>
-            )}
-            <button
-              type="button"
-              disabled={isSaving || !hasUnsavedChanges}
-              onClick={handleSaveChanges}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all ${
-                hasUnsavedChanges
-                  ? 'bg-gradient-to-r from-emerald-600 to-emerald-800 hover:from-emerald-500 hover:to-emerald-700 text-white shadow-lg shadow-emerald-950/40 cursor-pointer active:scale-95'
-                  : 'bg-zinc-900 text-zinc-600 border border-white/5 cursor-not-allowed'
-              }`}
-            >
-              <Save className="w-4 h-4" />
-              <span>{isSaving ? 'Guardando...' : 'Guardar Mapa'}</span>
-            </button>
-          </div>
-        )}
+        {/* Automatic Save Indicator */}
+        <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-500/20 px-3.5 py-2 rounded-xl">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          <span>Guardado automático</span>
+        </div>
       </div>
 
       {/* Main Interactive Workspace Area */}
@@ -636,13 +454,9 @@ export default function InteractiveSeatBuilder({
           {isArenaMap ? (
             <ArenaSeatMap
               zones={localZones}
-              isInteractiveEditing={!previewMode}
-              onSeatMove={handleSeatMove}
-              onTableMove={handleTableMove}
               onSeatClickInEditor={handleSeatClickInEditor}
               selectedSeatInEditor={selectedSeat}
               selectedSeatIdsInEditor={selectedSeatIds}
-              gridSnap={gridSnap}
               mapConfig={event?.map_config}
             />
           ) : (
@@ -727,42 +541,7 @@ export default function InteractiveSeatBuilder({
 
               </div>
 
-              {/* Quick Selection Helpers */}
-              <div className="pt-2 border-t border-white/10 space-y-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 block">
-                  Ayudantes de Selección
-                </span>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <button
-                    type="button"
-                    onClick={handleSelectRow}
-                    className="px-2.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-850 text-zinc-300 hover:text-white border border-white/10 font-bold text-[10px] uppercase tracking-wider transition-colors cursor-pointer text-center"
-                  >
-                    + Fila Actual
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleSelectZone}
-                    className="px-2.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-850 text-zinc-300 hover:text-white border border-white/10 font-bold text-[10px] uppercase tracking-wider transition-colors cursor-pointer text-center"
-                  >
-                    + Toda la Zona
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleInvertSelection}
-                    className="px-2.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-850 text-zinc-300 hover:text-white border border-white/10 font-bold text-[10px] uppercase tracking-wider transition-colors cursor-pointer text-center"
-                  >
-                    Invertir
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleSelectAll}
-                    className="px-2.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-850 text-zinc-300 hover:text-white border border-white/10 font-bold text-[10px] uppercase tracking-wider transition-colors cursor-pointer text-center"
-                  >
-                    Todo el Mapa
-                  </button>
-                </div>
-              </div>
+
 
               {/* List of Selected Seats with individual remove */}
               <div className="pt-2 border-t border-white/10 space-y-2">
@@ -826,90 +605,7 @@ export default function InteractiveSeatBuilder({
                 </button>
               </div>
 
-              {/* Position coordinates (Only in Labrú mode) */}
-              {isArenaMap && (
-                <div className="bg-zinc-900/60 rounded-xl p-3 border border-white/5 space-y-1.5">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 block">Coordenadas:</span>
-                  <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                    <div className="bg-zinc-950 p-2 rounded-lg border border-white/10">
-                      <span className="text-zinc-500">X: </span>
-                      <span className="text-white font-bold">{Math.round(selectedSeat.x || 0)}px</span>
-                    </div>
-                    <div className="bg-zinc-950 p-2 rounded-lg border border-white/10">
-                      <span className="text-zinc-500">Y: </span>
-                      <span className="text-white font-bold">{Math.round(selectedSeat.y || 0)}px</span>
-                    </div>
-                  </div>
-                </div>
-              )}
 
-              {/* Zone info */}
-              <div className="bg-zinc-900/60 border border-white/5 rounded-xl p-3 space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 block">Zona</label>
-                <p className="text-sm font-bold text-white">
-                  {selectedZone?.name || selectedZone?.zone_type} (${selectedZone?.price} MXN)
-                </p>
-              </div>
-
-              {/* Custom Label input (Only in Labrú mode) */}
-              {isArenaMap && (
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 block">Etiqueta Personalizada</label>
-                  <input
-                    type="text"
-                    value={selectedSeat.custom_label || ''}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setSelectedSeats(prev =>
-                        prev.map(s => (s.id === selectedSeat.id ? { ...s, custom_label: val } : s))
-                      );
-                      setLocalZones(prev =>
-                        prev.map(z => ({
-                          ...z,
-                          seats: z.seats?.map((s: any) => (s.id === selectedSeat.id ? { ...s, custom_label: val } : s)),
-                        }))
-                      );
-                      setHasUnsavedChanges(true);
-                    }}
-                    className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3.5 py-2 text-white text-xs focus:border-red-500 focus:outline-none transition-colors"
-                    placeholder="Ej. VIP-1, 44..."
-                  />
-                </div>
-              )}
-
-              {/* Quick Selection Helpers for this single seat */}
-              <div className="pt-2 border-t border-white/10 space-y-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 block">
-                  Expandir Selección
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {selectedSeat.row_name && (
-                    <button
-                      type="button"
-                      onClick={handleSelectRow}
-                      className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-850 text-zinc-300 hover:text-white border border-white/10 font-bold text-[10px] uppercase tracking-wider transition-colors cursor-pointer"
-                    >
-                      + Toda la Fila {selectedSeat.row_name}
-                    </button>
-                  )}
-                  {selectedSeat.table_number && (
-                    <button
-                      type="button"
-                      onClick={handleSelectTable}
-                      className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-850 text-zinc-300 hover:text-white border border-white/10 font-bold text-[10px] uppercase tracking-wider transition-colors cursor-pointer"
-                    >
-                      + Toda la Mesa #{selectedSeat.table_number}
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={handleSelectZone}
-                    className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-850 text-zinc-300 hover:text-white border border-white/10 font-bold text-[10px] uppercase tracking-wider transition-colors cursor-pointer"
-                  >
-                    + Toda la Zona
-                  </button>
-                </div>
-              </div>
 
               {/* Status toggle & delete */}
               <div className="pt-2 border-t border-white/10 space-y-2">
@@ -949,13 +645,15 @@ export default function InteractiveSeatBuilder({
                 </button>
               </div>
 
-              {isArenaMap && (
-                <div className="bg-zinc-900/50 rounded-xl p-3 text-[11px] text-zinc-400 text-left space-y-1">
-                  <p>• <strong>Arrastra</strong> con el mouse para mover asientos o mesas completas.</p>
-                  <p>• Usa los controles de zoom para acercar áreas específicas.</p>
-                  <p>• Recuerda hacer clic en <strong>Guardar Mapa</strong> para persistir cambios.</p>
-                </div>
-              )}
+              <div className="bg-zinc-900/50 rounded-xl p-3 text-[11px] text-zinc-400 text-left space-y-1.5">
+                <p className="flex items-center gap-1.5 text-emerald-400 font-bold">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Guardado automático activado</span>
+                </p>
+                <p>• Da 1 clic sobre cualquier asiento para bloquearlo o habilitarlo.</p>
+                <p>• Haz clic en una mesa para alternar todas sus sillas al mismo tiempo.</p>
+                <p>• Usa los controles de zoom (+ / -) y arrastra el mapa para navegarlo.</p>
+              </div>
             </div>
           )}
         </div>
