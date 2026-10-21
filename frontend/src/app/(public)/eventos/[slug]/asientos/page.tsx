@@ -95,6 +95,7 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
   const [actualEventId, setActualEventId] = useState<number | null>(null);
   const [zones, setZones] = useState<any[]>([]);
   const [selectedSeats, setSelectedSeats] = useState<SelectedSeat[]>([]);
+  const [generalCount, setGeneralCount] = useState<number>(0);
   const [selectedDay, setSelectedDay] = useState<'DAY_1' | 'DAY_2' | 'BOTH'>('DAY_1');
   const [showConfirmPanel, setShowConfirmPanel] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -368,29 +369,26 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
     }
   };
 
-  const handleSelectGeneral = (zone: any) => {
-    const isAbono = !!event?.is_multi_day && selectedDay === 'BOTH';
-    const effectivePrice = isAbono
-      ? (zone.price_abono ? parseFloat(zone.price_abono) : parseFloat(zone.price) * 2)
-      : parseFloat(zone.price);
+  const generalZone = useMemo(() => zones.find(z => z.zone_type === 'GENERAL'), [zones]);
+  const isAbono = !!event?.is_multi_day && selectedDay === 'BOTH';
+  const effectiveGeneralPrice = useMemo(() => {
+    if (!generalZone) return 0;
+    return isAbono && generalZone.price_abono
+      ? parseFloat(generalZone.price_abono)
+      : parseFloat(generalZone.price);
+  }, [generalZone, isAbono]);
 
-    const isMultiDay = !!event.is_multi_day;
-    const effectiveDay = isMultiDay ? selectedDay : 'ALL';
-    const dayLabel = isMultiDay ? (selectedDay === 'DAY_1' ? day1Label : selectedDay === 'DAY_2' ? day2Label : ' (Pase 2 Días - Abono)') : '';
-    const daySuffix = isMultiDay ? (selectedDay === 'DAY_1' ? '1' : selectedDay === 'DAY_2' ? '2' : '3') : '0';
+  const handleAddGeneral = () => {
+    setGeneralCount(prev => prev + 1);
+    useToastStore.getState().addToast(`Se agregó 1 boleto General a tu selección`, 'success');
+  };
 
-    addItem({
-      id: parseInt(`${actualEventId}999${daySuffix}`),
-      name: `Boleto: ${event.title}`,
-      price: effectivePrice,
-      quantity: 1,
-      image_url: event.banner_url || '',
-      size: `General (Sin Numeración)${dayLabel}`,
-      event_id: actualEventId!,
-      valid_for_day: effectiveDay,
-      session_id: sessionId,
-    });
-    useToastStore.getState().addToast(`Se agregó 1 boleto General al carrito`, 'success');
+  const handleRemoveGeneral = () => {
+    setGeneralCount(prev => Math.max(0, prev - 1));
+  };
+
+  const handleClearGeneral = () => {
+    setGeneralCount(0);
   };
 
   const removeSeat = (seatId: number) => {
@@ -433,8 +431,14 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
     return true;
   };
 
+  const totalItemsCount = selectedSeats.length + generalCount;
+  const seatsTotal = selectedSeats.reduce((acc, s) => acc + s.price, 0);
+  const generalTotal = generalCount * effectiveGeneralPrice;
+  const totalPrice = seatsTotal + generalTotal;
+
   const handleConfirm = async () => {
     if (!event || !actualEventId) return;
+    if (totalItemsCount === 0) return;
     if (!validateOrphanSeats()) return;
     
     try {
@@ -443,34 +447,59 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
       const effectiveDay = isMultiDay ? selectedDay : 'ALL';
       const seatIds = selectedSeats.map(s => s.seatId);
 
-      await api.post('/tickets/seats/lock_seats/', { seat_ids: seatIds, session_id: sessionId, day: effectiveDay });
+      if (seatIds.length > 0) {
+        await api.post('/tickets/seats/lock_seats/', { seat_ids: seatIds, session_id: sessionId, day: effectiveDay });
+      }
 
       const dayLabel = isMultiDay ? (selectedDay === 'DAY_1' ? day1Label : selectedDay === 'DAY_2' ? day2Label : ' (Pase 2 Días - Abono)') : '';
       const daySuffix = isMultiDay ? (selectedDay === 'DAY_1' ? '1' : selectedDay === 'DAY_2' ? '2' : '3') : '0';
 
       selectedSeats.forEach(seat => {
+        const isTable = seat.zoneType === 'MESAS_VIP' || seat.zoneType === 'MESAS_VIP_RINGSIDE';
+        const labelDetail = isTable 
+          ? `Mesa ${seat.seatNumber}` 
+          : (seat.zoneType === 'PRIMERA_FILA' || seat.zoneType === 'SEGUNDA_FILA')
+            ? `Asiento ${seat.seatNumber}`
+            : `Fila ${seat.rowName} - Asiento ${seat.seatNumber}`;
+
         addItem({
           id: parseInt(`${actualEventId}${seat.seatId}${daySuffix}`),
           name: `Boleto: ${event.title}`,
           price: seat.price,
           quantity: 1,
           image_url: event.banner_url || '',
-          size: `${ZONE_LABELS[seat.zoneType] || seat.zoneType} · Fila ${seat.rowName} - Asiento ${seat.seatNumber}${dayLabel}`,
+          size: `${ZONE_LABELS[seat.zoneType] || seat.zoneType} · ${labelDetail}${dayLabel}`,
           seat_id: seat.seatId,
           event_id: actualEventId,
           valid_for_day: effectiveDay,
           session_id: sessionId,
         });
       });
+
+      if (generalCount > 0 && generalZone) {
+        addItem({
+          id: parseInt(`${actualEventId}999${daySuffix}`),
+          name: `Boleto General: ${event.title}`,
+          price: effectiveGeneralPrice,
+          quantity: generalCount,
+          image_url: event.banner_url || '',
+          size: `General (Sin Numeración)${dayLabel}`,
+          event_id: actualEventId,
+          valid_for_day: effectiveDay,
+          session_id: sessionId,
+        });
+      }
+
       setSelectedSeats([]);
+      setGeneralCount(0);
       setShowConfirmPanel(false);
-      useToastStore.getState().addToast(`Se agregaron ${selectedSeats.length} boleto(s) al carrito y se reservaron por 10 min`, 'success');
+      useToastStore.getState().addToast(`Se agregaron ${totalItemsCount} boleto(s) al carrito`, 'success');
 
       // Smoothly scroll to the top since the page height will shrink and leave the user stranded at the bottom
       window.scrollTo({ top: 0, behavior: 'smooth' });
       router.push('/carrito');
     } catch (error: any) {
-      useToastStore.getState().addToast(error.response?.data?.error || "Error al reservar asientos.", "error");
+      useToastStore.getState().addToast(error.response?.data?.error || "Error al reservar boletos.", "error");
       // Refetch to get current state
       const zonesRes = await api.get(`/tickets/zones/by_event/?event_id=${actualEventId}&day=${selectedDay}`);
       setZones(zonesRes.data);
@@ -481,8 +510,6 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
       setLoading(false);
     }
   };
-
-  const totalPrice = selectedSeats.reduce((acc, s) => acc + s.price, 0);
 
   const renderPublicZone = (zone: any, position: 'top' | 'bottom' | 'left' | 'right' = 'top') => {
     if (!zone) return null;
@@ -548,7 +575,7 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
                   {event.title}
                 </h1>
                 <p className="text-zinc-400 text-xs font-bold uppercase tracking-wider mt-1">
-                  The Wrestling Factory · Acceso a Zona de Asientos
+                  {event.location || (isArenaMap ? 'Labrú' : 'The Wrestling Factory')} · Acceso a Zona de Asientos
                 </p>
               </div>
 
@@ -693,66 +720,178 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
           </div>
         )}
 
-        <div className={`flex flex-col-reverse lg:flex-row gap-8 items-start transition-all duration-500`}>
+        <div className="flex flex-col-reverse lg:flex-row gap-8 items-start">
 
-          {/* --- LEFT / CART: Selected seats summary --- */}
-          <div className={`w-full lg:w-1/3 space-y-6 sticky top-24 ${selectedSeats.length > 0 ? 'block' : 'hidden'}`}>
+          {/* --- LEFT / SIDEBAR: Zonas, Precios y Carrito de Selección --- */}
+          <div className="w-full lg:w-80 xl:w-96 shrink-0 space-y-5 sticky top-24 z-20">
 
-            {/* Selected seats list */}
-            <AnimatePresence>
-              {selectedSeats.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="bg-zinc-950 border border-white/10 rounded-2xl p-5 shadow-2xl"
-                >
-                  <h3 className="font-bold uppercase tracking-widest text-sm text-white mb-4 flex items-center gap-2">
-                    <ShoppingCart className="w-4 h-4 text-red-500" />
-                    Asientos Seleccionados ({selectedSeats.length})
-                  </h3>
-                  <ul className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                    {selectedSeats.map(seat => (
-                      <li key={seat.seatId} className="flex items-center justify-between text-sm">
-                        <span className="text-zinc-300">
-                          <span className={`font-bold ${ZONE_COLORS[seat.zoneType]?.split(' ')[0] || ''}`}>
-                            {ZONE_LABELS[seat.zoneType]}
-                          </span>
-                          {' · '}Fila {seat.rowName} Asiento {seat.seatNumber}
+            {/* 1. Selector de Zonas y Precios */}
+            <div className="bg-zinc-950 border border-white/10 rounded-2xl p-5 shadow-2xl">
+              <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-2.5">
+                <h3 className="font-bold uppercase tracking-widest text-xs text-zinc-300 flex items-center gap-2">
+                  <Ticket className="w-3.5 h-3.5 text-red-500" />
+                  Zonas y Precios
+                </h3>
+                <span className="text-[10px] font-mono text-zinc-500 uppercase">Boletos</span>
+              </div>
+              <div className="space-y-2">
+                {zones.map((zone) => {
+                  const isGeneral = zone.zone_type === 'GENERAL';
+                  const isAbonoActive = !!event?.is_multi_day && selectedDay === 'BOTH';
+                  const priceVal = isAbonoActive && zone.price_abono ? parseFloat(zone.price_abono) : parseFloat(zone.price);
+                  const isTable = zone.zone_type === 'MESAS_VIP' || zone.zone_type === 'MESAS_VIP_RINGSIDE';
+
+                  return (
+                    <div key={zone.id} className="flex items-center justify-between p-2 rounded-xl bg-zinc-900/60 border border-white/5 text-xs">
+                      <div className="flex items-center gap-2 min-w-0 pr-2">
+                        <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                          zone.zone_type === 'MESAS_VIP_RINGSIDE' ? 'bg-pink-500' :
+                          zone.zone_type === 'MESAS_VIP' ? 'bg-amber-400' :
+                          zone.zone_type === 'PRIMERA_FILA' ? 'bg-red-500' :
+                          zone.zone_type === 'SEGUNDA_FILA' ? 'bg-blue-500' :
+                          zone.zone_type === 'GENERAL' ? 'bg-emerald-400' : 'bg-red-500'
+                        }`} />
+                        <div className="truncate">
+                          <span className="font-bold text-white block truncate">{ZONE_LABELS[zone.zone_type] || zone.name || zone.zone_type}</span>
+                          <span className="text-[10px] text-zinc-400 font-mono">${priceVal.toFixed(2)} MXN</span>
+                        </div>
+                      </div>
+                      {isGeneral ? (
+                        <div className="shrink-0">
+                          {generalCount === 0 ? (
+                            <button
+                              type="button"
+                              onClick={handleAddGeneral}
+                              className="px-2.5 py-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 rounded-lg text-[11px] font-bold flex items-center gap-1 transition-colors active:scale-95"
+                            >
+                              <PlusIcon className="w-3 h-3" /> Agregar
+                            </button>
+                          ) : (
+                            <div className="flex items-center gap-1.5 bg-zinc-950 border border-emerald-500/50 rounded-lg px-2 py-0.5">
+                              <button type="button" onClick={handleRemoveGeneral} className="p-0.5 text-zinc-400 hover:text-white transition-colors" title="Quitar">
+                                <Minus className="w-3 h-3" />
+                              </button>
+                              <span className="text-xs font-bold text-emerald-400 font-mono w-4 text-center">{generalCount}</span>
+                              <button type="button" onClick={handleAddGeneral} className="p-0.5 text-zinc-400 hover:text-white transition-colors" title="Agregar otro">
+                                <PlusIcon className="w-3 h-3" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-[10px] text-zinc-500 font-medium shrink-0 bg-zinc-950/80 px-2 py-0.5 rounded border border-white/5">
+                          {isTable ? 'En el mapa (Mesa)' : 'En el mapa'}
                         </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 2. Carrito de Boletos Seleccionados */}
+            <div className="bg-zinc-950 border border-white/10 rounded-2xl p-5 shadow-2xl">
+              <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-2.5">
+                <h3 className="font-bold uppercase tracking-widest text-xs text-white flex items-center gap-2">
+                  <ShoppingCart className="w-3.5 h-3.5 text-red-500" />
+                  Boletos Seleccionados ({totalItemsCount})
+                </h3>
+                {totalItemsCount > 0 && (
+                  <button
+                    onClick={() => {
+                      setSelectedSeats([]);
+                      setGeneralCount(0);
+                    }}
+                    className="text-[10px] text-zinc-500 hover:text-red-400 transition-colors uppercase font-mono"
+                  >
+                    Limpiar
+                  </button>
+                )}
+              </div>
+
+              {totalItemsCount === 0 ? (
+                <div className="py-6 text-center">
+                  <ShoppingCart className="w-8 h-8 text-zinc-700 mx-auto mb-2 opacity-50" />
+                  <p className="text-xs text-zinc-400 font-medium">Ningún boleto seleccionado aún</p>
+                  <p className="text-[11px] text-zinc-600 mt-1">Haz clic en los asientos o zonas del mapa para agregarlos aquí.</p>
+                </div>
+              ) : (
+                <>
+                  <ul className="space-y-2 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
+                    {selectedSeats.map(seat => {
+                      const isTable = seat.zoneType === 'MESAS_VIP' || seat.zoneType === 'MESAS_VIP_RINGSIDE';
+                      const labelDetail = isTable
+                        ? `Mesa ${seat.seatNumber}`
+                        : (seat.zoneType === 'PRIMERA_FILA' || seat.zoneType === 'SEGUNDA_FILA')
+                          ? `Asiento ${seat.seatNumber}`
+                          : `Fila ${seat.rowName} Asiento ${seat.seatNumber}`;
+
+                      return (
+                        <li key={seat.seatId} className="flex items-center justify-between text-xs bg-zinc-900/70 border border-white/5 rounded-xl p-2.5">
+                          <span className="text-zinc-300 pr-2">
+                            <span className={`font-bold ${ZONE_COLORS[seat.zoneType]?.split(' ')[0] || 'text-white'}`}>
+                              {ZONE_LABELS[seat.zoneType]}
+                            </span>
+                            {' · '}{labelDetail}
+                          </span>
+                          <div className="flex items-center gap-2 text-right shrink-0">
+                            <span className="text-white font-bold font-mono">${seat.price.toFixed(2)}</span>
+                            <button onClick={() => removeSeat(seat.seatId)} className="text-zinc-500 hover:text-red-400 transition-colors p-0.5" title="Eliminar">
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </li>
+                      );
+                    })}
+
+                    {generalCount > 0 && generalZone && (
+                      <li className="flex items-center justify-between text-xs bg-zinc-900/70 border border-emerald-500/20 rounded-xl p-2.5">
+                        <div className="pr-2">
+                          <span className="font-bold text-emerald-400 block">General</span>
+                          <span className="text-[10px] text-zinc-400 font-medium">Sin Numeración ({generalCount}x)</span>
+                        </div>
                         <div className="flex items-center gap-2 text-right shrink-0">
-                          <span className="text-white font-bold">${seat.price}</span>
-                          <button onClick={() => removeSeat(seat.seatId)} className="text-zinc-600 hover:text-red-500 transition-colors">
-                            <X className="w-3 h-3" />
+                          <div className="flex items-center gap-1 bg-zinc-950 border border-emerald-500/40 rounded px-1.5 py-0.5 mr-1">
+                            <button type="button" onClick={handleRemoveGeneral} className="text-zinc-400 hover:text-white">
+                              <Minus className="w-2.5 h-2.5" />
+                            </button>
+                            <span className="text-[11px] font-bold text-emerald-400 font-mono px-1">{generalCount}</span>
+                            <button type="button" onClick={handleAddGeneral} className="text-zinc-400 hover:text-white">
+                              <PlusIcon className="w-2.5 h-2.5" />
+                            </button>
+                          </div>
+                          <span className="text-white font-bold font-mono">${generalTotal.toFixed(2)}</span>
+                          <button onClick={handleClearGeneral} className="text-zinc-500 hover:text-red-400 transition-colors p-0.5" title="Eliminar">
+                            <X className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </li>
-                    ))}
+                    )}
                   </ul>
 
-                  <div className="border-t border-white/10 mt-4 pt-4 flex justify-between font-bold">
-                    <span className="text-zinc-400 uppercase tracking-widest text-sm">Total</span>
-                    <span className="text-white text-lg">${totalPrice.toFixed(2)} MXN</span>
+                  <div className="border-t border-white/10 mt-3 pt-3 flex justify-between items-center font-bold">
+                    <span className="text-zinc-400 uppercase tracking-widest text-xs">Total</span>
+                    <span className="text-white text-base font-black font-mono">${totalPrice.toFixed(2)} <span className="text-[10px] text-zinc-500 font-normal">MXN</span></span>
                   </div>
 
                   <button
                     onClick={() => setShowConfirmPanel(true)}
                     className="mt-4 w-full bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-500 hover:via-red-500 hover:to-red-600 border-2 border-white text-white font-black uppercase tracking-wider py-3.5 rounded-xl transition-all shadow-xl shadow-red-950/50 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
                   >
-                    <CheckCircle className="w-5 h-5" />
+                    <CheckCircle className="w-4 h-4" />
                     Confirmar Selección
                   </button>
-                </motion.div>
+                </>
               )}
-            </AnimatePresence>
+            </div>
           </div>
 
           {/* --- RIGHT: Seat map --- */}
-          <div className={`w-full ${selectedSeats.length > 0 ? 'lg:w-2/3' : 'lg:w-full'} transition-all duration-500`}>
+          <div className="w-full flex-1 min-w-0 transition-all duration-500">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
               <h2 className="text-xl md:text-3xl font-black uppercase tracking-tight flex items-center justify-between">
                 <span>Selecciona tus Asientos</span>
-                {selectedSeats.length === 0 && <span className="text-sm font-medium text-zinc-500 tracking-normal hidden md:inline-block ml-4">Haz clic en un asiento para comenzar</span>}
+                {totalItemsCount === 0 && <span className="text-sm font-medium text-zinc-500 tracking-normal hidden md:inline-block ml-4">Haz clic en un asiento o zona para comenzar</span>}
               </h2>
 
               {/* Controles de Zoom para mapa clásico */}
@@ -775,8 +914,9 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
               <ArenaSeatMap
                 zones={zones}
                 selectedSeatIds={selectedSeats.map(s => s.seatId)}
+                selectedGeneralCount={generalCount}
                 onToggleSeat={(seat, zone) => toggleSeat(seat, zone)}
-                onSelectGeneral={handleSelectGeneral}
+                onSelectGeneral={handleAddGeneral}
               />
             ) : (
               <>
@@ -864,6 +1004,23 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
           </div>
         </div>
 
+        {/* Floating Mobile Cart Bar */}
+        {totalItemsCount > 0 && (
+          <div className="lg:hidden fixed bottom-4 left-4 right-4 z-40 bg-zinc-950/95 border border-white/20 rounded-2xl p-4 shadow-2xl backdrop-blur-md flex items-center justify-between">
+            <div>
+              <span className="text-xs text-zinc-400 block font-bold uppercase">{totalItemsCount} boleto(s)</span>
+              <span className="text-base font-black text-white font-mono">${totalPrice.toFixed(2)} MXN</span>
+            </div>
+            <button
+              onClick={() => setShowConfirmPanel(true)}
+              className="bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-wider py-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-lg shadow-red-600/30 active:scale-95 transition-all"
+            >
+              <CheckCircle className="w-4 h-4" />
+              Confirmar
+            </button>
+          </div>
+        )}
+
       {/* === CONFIRMATION MODAL === */}
       <AnimatePresence>
         {showConfirmPanel && (
@@ -898,31 +1055,66 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
 
                 {/* Lista de asientos con scroll interno */}
                 <ul className="space-y-3 mb-4 overflow-y-auto pr-1.5 flex-1 min-h-0 custom-scrollbar">
-                  {selectedSeats.map(seat => (
-                    <li key={seat.seatId} className="flex justify-between items-center bg-zinc-900 border border-white/5 rounded-xl px-4 py-3 shrink-0">
+                  {selectedSeats.map(seat => {
+                    const isTable = seat.zoneType === 'MESAS_VIP' || seat.zoneType === 'MESAS_VIP_RINGSIDE';
+                    const labelDetail = isTable 
+                      ? `Mesa ${seat.seatNumber}` 
+                      : (seat.zoneType === 'PRIMERA_FILA' || seat.zoneType === 'SEGUNDA_FILA')
+                        ? `Asiento ${seat.seatNumber}`
+                        : `Fila ${seat.rowName} · Asiento ${seat.seatNumber}`;
+
+                    return (
+                      <li key={seat.seatId} className="flex justify-between items-center bg-zinc-900 border border-white/5 rounded-xl px-4 py-3 shrink-0">
+                        <div>
+                          <p className="font-bold text-white text-sm">
+                            {ZONE_LABELS[seat.zoneType] || seat.zoneType}
+                          </p>
+                          <p className="text-zinc-400 text-xs mt-0.5">
+                            {labelDetail}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="font-black text-white font-mono">${seat.price.toFixed(2)}</span>
+                          <button
+                            onClick={() => {
+                              removeSeat(seat.seatId);
+                              if (selectedSeats.length <= 1 && generalCount === 0) setShowConfirmPanel(false);
+                            }}
+                            className="text-zinc-600 hover:text-red-500 transition-colors p-1"
+                            title="Eliminar asiento"
+                          >
+                            <Minus className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </li>
+                    );
+                  })}
+
+                  {generalCount > 0 && generalZone && (
+                    <li className="flex justify-between items-center bg-zinc-900 border border-emerald-500/20 rounded-xl px-4 py-3 shrink-0">
                       <div>
-                        <p className="font-bold text-white text-sm">
-                          {ZONE_LABELS[seat.zoneType] || seat.zoneType}
+                        <p className="font-bold text-emerald-400 text-sm">
+                          General
                         </p>
                         <p className="text-zinc-400 text-xs mt-0.5">
-                          Fila {seat.rowName} · Asiento {seat.seatNumber}
+                          Acceso General ({generalCount} boletos)
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="font-black text-white">${seat.price}</span>
+                        <span className="font-black text-white font-mono">${generalTotal.toFixed(2)}</span>
                         <button
                           onClick={() => {
-                            removeSeat(seat.seatId);
-                            if (selectedSeats.length <= 1) setShowConfirmPanel(false);
+                            setGeneralCount(0);
+                            if (selectedSeats.length === 0) setShowConfirmPanel(false);
                           }}
                           className="text-zinc-600 hover:text-red-500 transition-colors p-1"
-                          title="Eliminar asiento"
+                          title="Eliminar boletos generales"
                         >
                           <Minus className="w-4 h-4" />
                         </button>
                       </div>
                     </li>
-                  ))}
+                  )}
                 </ul>
 
                 {/* Footer fijo con total a pagar y botones de acción */}

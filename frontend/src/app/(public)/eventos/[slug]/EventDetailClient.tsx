@@ -10,6 +10,14 @@ import { getMediaUrl } from '@/services/api';
 export default function EventDetailClient({ event }: { event: any }) {
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
 
+  const eventSlug = event.slug || event.title?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') || event.id;
+  const isLabru = 
+    event?.map_type === 'ARENA_VIP' || 
+    event?.location?.toLowerCase().includes('bru') || 
+    event?.location?.toLowerCase().includes('labru') ||
+    event?.title?.toLowerCase().includes('rebrulucion') ||
+    event?.title?.toLowerCase().includes('rebru');
+
   return (
     <div className="bg-black min-h-screen text-white pt-24 pb-12">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -70,12 +78,21 @@ export default function EventDetailClient({ event }: { event: any }) {
               {event.description}
             </p>
 
-            <button
-              onClick={() => setIsTicketModalOpen(true)}
-              className="w-full py-4 md:py-5 bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-500 hover:via-red-500 hover:to-red-600 border-2 border-white text-white font-black uppercase tracking-widest text-lg rounded-xl transition-all shadow-xl shadow-red-950/60 hover:shadow-red-600/40 transform hover:scale-[1.02] active:scale-95"
-            >
-              Comprar Boletos Ahora
-            </button>
+            {isLabru ? (
+              <Link
+                href={`/eventos/${eventSlug}/asientos`}
+                className="w-full py-4 md:py-5 bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-500 hover:via-red-500 hover:to-red-600 border-2 border-white text-white font-black uppercase tracking-widest text-lg rounded-xl transition-all shadow-xl shadow-red-950/60 hover:shadow-red-600/40 transform hover:scale-[1.02] active:scale-95 text-center flex items-center justify-center gap-2"
+              >
+                Comprar Boletos Ahora
+              </Link>
+            ) : (
+              <button
+                onClick={() => setIsTicketModalOpen(true)}
+                className="w-full py-4 md:py-5 bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-500 hover:via-red-500 hover:to-red-600 border-2 border-white text-white font-black uppercase tracking-widest text-lg rounded-xl transition-all shadow-xl shadow-red-950/60 hover:shadow-red-600/40 transform hover:scale-[1.02] active:scale-95"
+              >
+                Comprar Boletos Ahora
+              </button>
+            )}
           </motion.div>
         </div>
 

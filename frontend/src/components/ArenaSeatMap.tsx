@@ -21,6 +21,7 @@ export interface SeatItem {
 interface ArenaSeatMapProps {
   zones: any[];
   selectedSeatIds?: number[];
+  selectedGeneralCount?: number;
   onToggleSeat?: (seat: SeatItem, zone: any) => void;
   onSelectGeneral?: (zone: any) => void;
   isInteractiveEditing?: boolean;
@@ -37,6 +38,7 @@ interface ArenaSeatMapProps {
 export default function ArenaSeatMap({
   zones,
   selectedSeatIds = [],
+  selectedGeneralCount = 0,
   onToggleSeat,
   onSelectGeneral,
   isInteractiveEditing = false,
@@ -274,9 +276,29 @@ export default function ArenaSeatMap({
               onClick={() => onSelectGeneral && zoneGeneral && onSelectGeneral(zoneGeneral)}
               className={onSelectGeneral ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}
             >
-              <rect x="260" y="40" width="310" height="135" rx="8" fill="#132a24" stroke="#10b981" strokeWidth="1.5" strokeOpacity="0.4" />
-              <text x="415" y="115" textAnchor="middle" fill="#34d399" fontSize="22" fontWeight="900" letterSpacing="6" opacity="0.4">
-                GENERAL
+              <rect
+                x="260"
+                y="40"
+                width="310"
+                height="135"
+                rx="8"
+                fill={selectedGeneralCount > 0 ? '#18473a' : '#132a24'}
+                stroke="#10b981"
+                strokeWidth={selectedGeneralCount > 0 ? 3 : 1.5}
+                strokeOpacity={selectedGeneralCount > 0 ? 0.95 : 0.4}
+                filter={selectedGeneralCount > 0 ? 'url(#selectedGlow)' : ''}
+              />
+              <text
+                x="415"
+                y="115"
+                textAnchor="middle"
+                fill={selectedGeneralCount > 0 ? '#ffffff' : '#34d399'}
+                fontSize="22"
+                fontWeight="900"
+                letterSpacing="6"
+                opacity={selectedGeneralCount > 0 ? 0.95 : 0.4}
+              >
+                GENERAL {selectedGeneralCount > 0 ? `(${selectedGeneralCount})` : ''}
               </text>
             </g>
 
@@ -285,9 +307,29 @@ export default function ArenaSeatMap({
               onClick={() => onSelectGeneral && zoneGeneral && onSelectGeneral(zoneGeneral)}
               className={onSelectGeneral ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}
             >
-              <rect x="835" y="195" width="335" height="590" rx="8" fill="#132a24" stroke="#10b981" strokeWidth="1.5" strokeOpacity="0.4" />
-              <text x="1002" y="495" textAnchor="middle" fill="#34d399" fontSize="34" fontWeight="900" letterSpacing="10" opacity="0.4">
-                GENERAL
+              <rect
+                x="835"
+                y="195"
+                width="335"
+                height="590"
+                rx="8"
+                fill={selectedGeneralCount > 0 ? '#18473a' : '#132a24'}
+                stroke="#10b981"
+                strokeWidth={selectedGeneralCount > 0 ? 3 : 1.5}
+                strokeOpacity={selectedGeneralCount > 0 ? 0.95 : 0.4}
+                filter={selectedGeneralCount > 0 ? 'url(#selectedGlow)' : ''}
+              />
+              <text
+                x="1002"
+                y="495"
+                textAnchor="middle"
+                fill={selectedGeneralCount > 0 ? '#ffffff' : '#34d399'}
+                fontSize="34"
+                fontWeight="900"
+                letterSpacing="10"
+                opacity={selectedGeneralCount > 0 ? 0.95 : 0.4}
+              >
+                GENERAL {selectedGeneralCount > 0 ? `(${selectedGeneralCount})` : ''}
               </text>
             </g>
 
@@ -296,9 +338,29 @@ export default function ArenaSeatMap({
               onClick={() => onSelectGeneral && zoneGeneral && onSelectGeneral(zoneGeneral)}
               className={onSelectGeneral ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}
             >
-              <rect x="260" y="785" width="555" height="95" rx="8" fill="#132a24" stroke="#10b981" strokeWidth="1.5" strokeOpacity="0.4" />
-              <text x="537" y="842" textAnchor="middle" fill="#34d399" fontSize="26" fontWeight="900" letterSpacing="8" opacity="0.4">
-                GENERAL
+              <rect
+                x="260"
+                y="785"
+                width="555"
+                height="95"
+                rx="8"
+                fill={selectedGeneralCount > 0 ? '#18473a' : '#132a24'}
+                stroke="#10b981"
+                strokeWidth={selectedGeneralCount > 0 ? 3 : 1.5}
+                strokeOpacity={selectedGeneralCount > 0 ? 0.95 : 0.4}
+                filter={selectedGeneralCount > 0 ? 'url(#selectedGlow)' : ''}
+              />
+              <text
+                x="537"
+                y="842"
+                textAnchor="middle"
+                fill={selectedGeneralCount > 0 ? '#ffffff' : '#34d399'}
+                fontSize="26"
+                fontWeight="900"
+                letterSpacing="8"
+                opacity={selectedGeneralCount > 0 ? 0.95 : 0.4}
+              >
+                GENERAL {selectedGeneralCount > 0 ? `(${selectedGeneralCount})` : ''}
               </text>
             </g>
 
@@ -730,11 +792,21 @@ export default function ArenaSeatMap({
               <g
                 transform="translate(935, 38)"
                 onClick={() => onSelectGeneral && zoneGeneral && onSelectGeneral(zoneGeneral)}
-                className={onSelectGeneral ? 'cursor-pointer hover:opacity-80' : ''}
+                className={onSelectGeneral ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}
               >
-                <rect x="-14" y="-14" width="28" height="28" rx="4" fill="#132a24" stroke="#10b981" strokeWidth="1.5" />
+                <rect
+                  x="-14"
+                  y="-14"
+                  width="28"
+                  height="28"
+                  rx="4"
+                  fill={selectedGeneralCount > 0 ? '#10b981' : '#132a24'}
+                  stroke="#10b981"
+                  strokeWidth={selectedGeneralCount > 0 ? 2.5 : 1.5}
+                  filter={selectedGeneralCount > 0 ? 'url(#selectedGlow)' : ''}
+                />
                 <text x="25" y="-5" fill="#ffffff" fontSize="12" fontWeight="900" letterSpacing="1">
-                  GENERAL
+                  GENERAL {selectedGeneralCount > 0 ? `(${selectedGeneralCount} SEL.)` : ''}
                 </text>
                 <text x="25" y="14" fill="#34d399" fontSize="11" fontWeight="700">
                   (SIN NUMERACIÓN) {zoneGeneral?.price ? `· $${zoneGeneral.price} MXN` : ''}
