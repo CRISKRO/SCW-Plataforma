@@ -53,13 +53,17 @@ export default function ArenaSeatMap({
 }: ArenaSeatMapProps) {
   // Zoom & Pan state
   const [scale, setScale] = useState(1);
+  const [fitScale, setFitScale] = useState(1);
+  const [minScale, setMinScale] = useState(0.2);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
-  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const hasDraggedRef = useRef(false);
+  const panStartRef = useRef({ x: 0, y: 0 });
+  const touchStartPos = useRef({ x: 0, y: 0 });
+  const initialPinchDist = useRef<number | null>(null);
+  const pinchStartScale = useRef<number>(1);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
-
-
 
   // Tooltip
   const [hoveredSeat, setHoveredSeat] = useState<{ seat: SeatItem; zone: any; x: number; y: number } | null>(null);
@@ -103,11 +107,50 @@ export default function ArenaSeatMap({
     return tables;
   }, [zoneVip]);
 
+  // Auto-fit initial scale to viewport / container dimensions
+  const updateFitScale = () => {
+    if (!mapContainerRef.current) return;
+    const cw = mapContainerRef.current.clientWidth;
+    const ch = mapContainerRef.current.clientHeight;
+    if (cw <= 0 || ch <= 0) return;
+
+    // Margin factor so the map doesn't touch the container edges:
+    const margin = cw < 640 ? 0.94 : 0.90;
+    const scaleX = (cw / 1200) * margin;
+    const scaleY = (ch / 980) * margin;
+    const calculatedFit = Math.min(scaleX, scaleY);
+
+    setFitScale(calculatedFit);
+    setMinScale(Math.max(calculatedFit * 0.75, 0.15));
+    setScale(calculatedFit);
+    setPosition({ x: 0, y: 0 });
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(updateFitScale, 60);
+    window.addEventListener('resize', updateFitScale);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', updateFitScale);
+    };
+  }, [zones]);
+
+  // Prevent native browser pinch-zoom inside the map container
+  useEffect(() => {
+    const el = mapContainerRef.current;
+    if (!el) return;
+    const preventZoom = (e: TouchEvent) => {
+      if (e.touches.length >= 2) e.preventDefault();
+    };
+    el.addEventListener('touchmove', preventZoom, { passive: false });
+    return () => el.removeEventListener('touchmove', preventZoom);
+  }, []);
+
   // Zoom controls
-  const handleZoomIn = () => setScale(s => Math.min(s + 0.2, 3));
-  const handleZoomOut = () => setScale(s => Math.max(s - 0.2, 0.5));
+  const handleZoomIn = () => setScale(s => Math.min(s + 0.15, 3));
+  const handleZoomOut = () => setScale(s => Math.max(s - 0.15, minScale));
   const handleResetZoom = () => {
-    setScale(1);
+    setScale(fitScale);
     setPosition({ x: 0, y: 0 });
   };
 
@@ -128,31 +171,118 @@ export default function ArenaSeatMap({
     return Math.round(val / gridSnap) * gridSnap;
   };
 
-  // Canvas Pan Handlers
+  // Mouse Pan Handlers
   const handleCanvasPointerDown = (e: React.PointerEvent) => {
-    // If clicking on an element inside SVG that is a seat, table or button, don't start pan
-    if ((e.target as HTMLElement).closest('.cursor-pointer')) return;
-    if ((e.target as HTMLElement).closest('button')) return;
-
+    if (e.pointerType !== 'mouse') return;
+    hasDraggedRef.current = false;
+    touchStartPos.current = { x: e.clientX, y: e.clientY };
     setIsPanning(true);
-    setPanStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+    panStartRef.current = { x: e.clientX - position.x, y: e.clientY - position.y };
   };
 
   const handleCanvasPointerMove = (e: React.PointerEvent) => {
-    if (!isPanning) return;
+    if (e.pointerType !== 'mouse' || !isPanning) return;
+    const dx = e.clientX - touchStartPos.current.x;
+    const dy = e.clientY - touchStartPos.current.y;
+    if (Math.hypot(dx, dy) > 5) {
+      hasDraggedRef.current = true;
+    }
     setPosition({
-      x: e.clientX - panStart.x,
-      y: e.clientY - panStart.y,
+      x: e.clientX - panStartRef.current.x,
+      y: e.clientY - panStartRef.current.y,
     });
   };
 
-  const handleCanvasPointerUp = () => {
+  const handleCanvasPointerUp = (e: React.PointerEvent) => {
+    if (e.pointerType !== 'mouse') return;
     setIsPanning(false);
+    setTimeout(() => {
+      hasDraggedRef.current = false;
+    }, 60);
+  };
+
+  // Touch Handlers for Mobile (1-finger pan, 2-finger pinch-to-zoom)
+  const handleTouchStart = (e: React.TouchEvent) => {
+    hasDraggedRef.current = false;
+    if (e.touches.length === 1) {
+      setIsPanning(true);
+      touchStartPos.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+      };
+      panStartRef.current = {
+        x: e.touches[0].clientX - position.x,
+        y: e.touches[0].clientY - position.y,
+      };
+    } else if (e.touches.length === 2) {
+      setIsPanning(true);
+      hasDraggedRef.current = true;
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      initialPinchDist.current = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+      pinchStartScale.current = scale;
+      const midX = (t1.clientX + t2.clientX) / 2;
+      const midY = (t1.clientY + t2.clientY) / 2;
+      panStartRef.current = {
+        x: midX - position.x,
+        y: midY - position.y,
+      };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      const dx = e.touches[0].clientX - touchStartPos.current.x;
+      const dy = e.touches[0].clientY - touchStartPos.current.y;
+      if (Math.hypot(dx, dy) > 6) {
+        hasDraggedRef.current = true;
+      }
+      setPosition({
+        x: e.touches[0].clientX - panStartRef.current.x,
+        y: e.touches[0].clientY - panStartRef.current.y,
+      });
+    } else if (e.touches.length === 2 && initialPinchDist.current !== null) {
+      hasDraggedRef.current = true;
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+      const factor = dist / initialPinchDist.current;
+      const newScale = Math.min(Math.max(pinchStartScale.current * factor, minScale), 3);
+      setScale(newScale);
+
+      const midX = (t1.clientX + t2.clientX) / 2;
+      const midY = (t1.clientY + t2.clientY) / 2;
+      setPosition({
+        x: midX - panStartRef.current.x,
+        y: midY - panStartRef.current.y,
+      });
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (e.touches.length === 0) {
+      setIsPanning(false);
+      initialPinchDist.current = null;
+      setTimeout(() => {
+        hasDraggedRef.current = false;
+      }, 60);
+    } else if (e.touches.length === 1) {
+      initialPinchDist.current = null;
+      touchStartPos.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+      };
+      panStartRef.current = {
+        x: e.touches[0].clientX - position.x,
+        y: e.touches[0].clientY - position.y,
+      };
+    }
   };
 
   // Seat interaction in Editor vs Public
   const handleSeatClick = (seat: SeatItem, zone: any, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (hasDraggedRef.current) return;
     if (onSeatClickInEditor) {
       onSeatClickInEditor(seat, zone);
     } else if (onToggleSeat && (seat.is_available && !seat.is_locked)) {
@@ -160,19 +290,25 @@ export default function ArenaSeatMap({
     }
   };
 
+  // General zone click
+  const handleGeneralClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (hasDraggedRef.current) return;
+    if (onSelectGeneral && zoneGeneral) {
+      onSelectGeneral(zoneGeneral);
+    }
+  };
+
   return (
     <div className="w-full relative select-none flex flex-col items-center">
-      {/* Zoom / Controls Header */}
-      <div className="w-full flex items-center justify-between gap-4 mb-3 px-2">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-black uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse"></span>
-            Arena SCW · Mapa Interactivo
-          </span>
-        </div>
+      {/* Zoom / Controls Header (Clean, without pulsating dot or redundant titles) */}
+      <div className="w-full flex items-center justify-between mb-3 px-1">
+        <span className="text-xs font-bold text-zinc-400 hidden sm:inline">
+          Haz clic o toca un asiento para seleccionarlo
+        </span>
 
         {/* Zoom controls */}
-        <div className="flex items-center gap-1 bg-zinc-900 border border-white/10 rounded-xl p-1 shadow-lg z-20">
+        <div className="flex items-center gap-1 bg-zinc-900 border border-white/10 rounded-xl p-1 shadow-lg z-20 ml-auto">
           <button
             type="button"
             onClick={handleZoomOut}
@@ -185,9 +321,9 @@ export default function ArenaSeatMap({
             type="button"
             onClick={handleResetZoom}
             className="px-2.5 py-1 hover:bg-zinc-800 rounded-lg text-xs font-bold text-white transition-colors min-w-[55px]"
-            title="Restablecer vista"
+            title="Restablecer vista completa"
           >
-            {Math.round(scale * 100)}%
+            {Math.round((scale / (fitScale || 1)) * 100)}%
           </button>
           <button
             type="button"
@@ -203,13 +339,17 @@ export default function ArenaSeatMap({
       {/* Main Interactive Map Viewer Container */}
       <div
         ref={mapContainerRef}
-        className={`w-full bg-[#0a0a0c] border border-white/10 rounded-3xl h-[620px] shadow-2xl relative overflow-hidden flex items-center justify-center touch-none ${
+        className={`w-full bg-[#0a0a0c] border border-white/10 rounded-3xl h-[460px] sm:h-[540px] md:h-[620px] shadow-2xl relative overflow-hidden flex items-center justify-center touch-none ${
           isPanning ? 'cursor-grabbing' : 'cursor-grab'
         }`}
         onPointerDown={handleCanvasPointerDown}
         onPointerMove={handleCanvasPointerMove}
         onPointerUp={handleCanvasPointerUp}
         onPointerLeave={handleCanvasPointerUp}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
       >
         <div
           style={{
@@ -273,7 +413,7 @@ export default function ArenaSeatMap({
             {/* === GENERAL ZONES (Dark Green Background Areas) === */}
             {/* Top-Left General */}
             <g
-              onClick={() => onSelectGeneral && zoneGeneral && onSelectGeneral(zoneGeneral)}
+              onClick={handleGeneralClick}
               className={onSelectGeneral ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}
             >
               <rect
@@ -304,7 +444,7 @@ export default function ArenaSeatMap({
 
             {/* Right Side General */}
             <g
-              onClick={() => onSelectGeneral && zoneGeneral && onSelectGeneral(zoneGeneral)}
+              onClick={handleGeneralClick}
               className={onSelectGeneral ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}
             >
               <rect
@@ -335,7 +475,7 @@ export default function ArenaSeatMap({
 
             {/* Bottom General */}
             <g
-              onClick={() => onSelectGeneral && zoneGeneral && onSelectGeneral(zoneGeneral)}
+              onClick={handleGeneralClick}
               className={onSelectGeneral ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}
             >
               <rect
@@ -393,6 +533,7 @@ export default function ArenaSeatMap({
                     key={`vip-table-${tNum}`}
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (hasDraggedRef.current) return;
                       if (onSeatClickInEditor) {
                         onSeatClickInEditor(firstSeat, zoneVip);
                       } else {
@@ -493,6 +634,7 @@ export default function ArenaSeatMap({
                     key={`ringside-table-${tNum}`}
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (hasDraggedRef.current) return;
                       if (onSeatClickInEditor) {
                         onSeatClickInEditor(firstSeat, zoneRingside);
                       } else {
@@ -732,66 +874,66 @@ export default function ArenaSeatMap({
               })}
 
             {/* === LEGEND AT BOTTOM (Matching the Image) === */}
-            <g transform="translate(40, 890)">
+            <g transform="translate(40, 885)">
               {/* Legend background bar */}
-              <rect x="0" y="0" width="1120" height="75" rx="8" fill="#000000" stroke="#27272a" strokeWidth="1.5" />
+              <rect x="0" y="0" width="1120" height="85" rx="10" fill="#000000" stroke="#27272a" strokeWidth="2" />
 
               {/* 1. Pink Table: Mesas VIP Ringside */}
-              <g transform="translate(40, 38)">
+              <g transform="translate(40, 42)">
                 <circle cx="0" cy="0" r="16" fill="url(#pinkTableGrad)" stroke="#be185d" strokeWidth="1.5" />
                 <circle cx="-16" cy="0" r="3.5" fill="#f472b6" />
                 <circle cx="16" cy="0" r="3.5" fill="#f472b6" />
                 <circle cx="0" cy="-16" r="3.5" fill="#f472b6" />
                 <circle cx="0" cy="16" r="3.5" fill="#f472b6" />
-                <text x="35" y="-5" fill="#ffffff" fontSize="12" fontWeight="900" letterSpacing="1">
+                <text x="35" y="-5" fill="#ffffff" fontSize="13" fontWeight="900" letterSpacing="1">
                   MESAS VIP RINGSIDE
                 </text>
-                <text x="35" y="14" fill="#f472b6" fontSize="11" fontWeight="700">
-                  (1 - 8) {zoneRingside?.price ? `· $${zoneRingside.price} MXN` : ''}
+                <text x="35" y="16" fill="#f472b6" fontSize="13" fontWeight="800">
+                  (1 - 8) {zoneRingside?.price ? `· $${parseFloat(zoneRingside.price).toFixed(2)} MXN` : ''}
                 </text>
               </g>
 
               {/* 2. Gold Table: Mesas VIP */}
-              <g transform="translate(290, 38)">
+              <g transform="translate(290, 42)">
                 <circle cx="0" cy="0" r="16" fill="url(#goldTableGrad)" stroke="#ca8a04" strokeWidth="1.5" />
                 <circle cx="-16" cy="0" r="3.5" fill="#facc15" />
                 <circle cx="16" cy="0" r="3.5" fill="#facc15" />
                 <circle cx="0" cy="-16" r="3.5" fill="#facc15" />
                 <circle cx="0" cy="16" r="3.5" fill="#facc15" />
-                <text x="35" y="-5" fill="#ffffff" fontSize="12" fontWeight="900" letterSpacing="1">
+                <text x="35" y="-5" fill="#ffffff" fontSize="13" fontWeight="900" letterSpacing="1">
                   MESAS VIP
                 </text>
-                <text x="35" y="14" fill="#facc15" fontSize="11" fontWeight="700">
-                  (1 - 12) {zoneVip?.price ? `· $${zoneVip.price} MXN` : ''}
+                <text x="35" y="16" fill="#facc15" fontSize="13" fontWeight="800">
+                  (1 - 12) {zoneVip?.price ? `· $${parseFloat(zoneVip.price).toFixed(2)} MXN` : ''}
                 </text>
               </g>
 
               {/* 3. Red Chair: Primera Fila */}
-              <g transform="translate(510, 38)">
+              <g transform="translate(510, 42)">
                 <rect x="-12" y="-12" width="24" height="24" rx="4" fill="#dc2626" stroke="#991b1b" strokeWidth="1.5" />
-                <text x="25" y="-5" fill="#ffffff" fontSize="12" fontWeight="900" letterSpacing="1">
+                <text x="25" y="-5" fill="#ffffff" fontSize="13" fontWeight="900" letterSpacing="1">
                   PRIMERA FILA
                 </text>
-                <text x="25" y="14" fill="#f87171" fontSize="11" fontWeight="700">
-                  (1 - 44) {zoneF1?.price ? `· $${zoneF1.price} MXN` : ''}
+                <text x="25" y="16" fill="#f87171" fontSize="13" fontWeight="800">
+                  (1 - 44) {zoneF1?.price ? `· $${parseFloat(zoneF1.price).toFixed(2)} MXN` : ''}
                 </text>
               </g>
 
               {/* 4. Blue Chair: Segunda Fila */}
-              <g transform="translate(730, 38)">
+              <g transform="translate(730, 42)">
                 <rect x="-12" y="-12" width="24" height="24" rx="4" fill="#2563eb" stroke="#1d4ed8" strokeWidth="1.5" />
-                <text x="25" y="-5" fill="#ffffff" fontSize="12" fontWeight="900" letterSpacing="1">
+                <text x="25" y="-5" fill="#ffffff" fontSize="13" fontWeight="900" letterSpacing="1">
                   SEGUNDA FILA
                 </text>
-                <text x="25" y="14" fill="#60a5fa" fontSize="11" fontWeight="700">
-                  (1 - 44) {zoneF2?.price ? `· $${zoneF2.price} MXN` : ''}
+                <text x="25" y="16" fill="#60a5fa" fontSize="13" fontWeight="800">
+                  (1 - 44) {zoneF2?.price ? `· $${parseFloat(zoneF2.price).toFixed(2)} MXN` : ''}
                 </text>
               </g>
 
               {/* 5. Green Box: General */}
               <g
-                transform="translate(935, 38)"
-                onClick={() => onSelectGeneral && zoneGeneral && onSelectGeneral(zoneGeneral)}
+                transform="translate(935, 42)"
+                onClick={handleGeneralClick}
                 className={onSelectGeneral ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}
               >
                 <rect
@@ -805,11 +947,11 @@ export default function ArenaSeatMap({
                   strokeWidth={selectedGeneralCount > 0 ? 2.5 : 1.5}
                   filter={selectedGeneralCount > 0 ? 'url(#selectedGlow)' : ''}
                 />
-                <text x="25" y="-5" fill="#ffffff" fontSize="12" fontWeight="900" letterSpacing="1">
+                <text x="25" y="-5" fill="#ffffff" fontSize="13" fontWeight="900" letterSpacing="1">
                   GENERAL {selectedGeneralCount > 0 ? `(${selectedGeneralCount} SEL.)` : ''}
                 </text>
-                <text x="25" y="14" fill="#34d399" fontSize="11" fontWeight="700">
-                  (SIN NUMERACIÓN) {zoneGeneral?.price ? `· $${zoneGeneral.price} MXN` : ''}
+                <text x="25" y="16" fill="#34d399" fontSize="13" fontWeight="800">
+                  (SIN NUMERACIÓN) {zoneGeneral?.price ? `· $${parseFloat(zoneGeneral.price).toFixed(2)} MXN` : ''}
                 </text>
               </g>
             </g>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, MapPin, Ticket, ShoppingCart, X, CheckCircle, Minus, Plus as PlusIcon, Clock, ArrowLeft } from 'lucide-react';
+import { Calendar, MapPin, Ticket, ShoppingCart, X, CheckCircle, Minus, Plus as PlusIcon, Clock, ArrowLeft, Info } from 'lucide-react';
 import api from '@/services/api';
 import { useCartStore } from '@/store/cartStore';
 import { useToastStore } from '@/store/toastStore';
@@ -723,18 +723,26 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
         <div className="flex flex-col-reverse lg:flex-row gap-8 items-start">
 
           {/* --- LEFT / SIDEBAR: Zonas, Precios y Carrito de Selección --- */}
-          <div className="w-full lg:w-80 xl:w-96 shrink-0 space-y-5 sticky top-24 z-20">
+          <div className="w-full lg:w-96 xl:w-[420px] shrink-0 space-y-6 sticky top-24 z-20">
 
-            {/* 1. Selector de Zonas y Precios */}
-            <div className="bg-zinc-950 border border-white/10 rounded-2xl p-5 shadow-2xl">
-              <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-2.5">
-                <h3 className="font-bold uppercase tracking-widest text-xs text-zinc-300 flex items-center gap-2">
-                  <Ticket className="w-3.5 h-3.5 text-red-500" />
-                  Zonas y Precios
-                </h3>
-                <span className="text-[10px] font-mono text-zinc-500 uppercase">Boletos</span>
+            {/* 1. Selector de Zonas y Precios (Amplio y de alta legibilidad) */}
+            <div className="bg-[#0e0f13] border border-white/15 rounded-2xl p-5 sm:p-6 shadow-2xl shadow-black/80">
+              <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
+                <div>
+                  <h3 className="font-black uppercase tracking-wider text-base sm:text-lg text-white flex items-center gap-2.5">
+                    <Ticket className="w-5 h-5 text-red-500" />
+                    Zonas y Precios
+                  </h3>
+                  <p className="text-xs text-zinc-400 mt-0.5 font-medium">
+                    Precios oficiales por boleto
+                  </p>
+                </div>
+                <span className="text-xs font-black font-mono text-zinc-300 uppercase tracking-widest px-2.5 py-1 rounded-md bg-zinc-900 border border-white/10">
+                  {zones.length} ZONAS
+                </span>
               </div>
-              <div className="space-y-2">
+
+              <div className="space-y-3">
                 {zones.map((zone) => {
                   const isGeneral = zone.zone_type === 'GENERAL';
                   const isAbonoActive = !!event?.is_multi_day && selectedDay === 'BOTH';
@@ -742,46 +750,93 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
                   const isTable = zone.zone_type === 'MESAS_VIP' || zone.zone_type === 'MESAS_VIP_RINGSIDE';
 
                   return (
-                    <div key={zone.id} className="flex items-center justify-between p-2 rounded-xl bg-zinc-900/60 border border-white/5 text-xs">
-                      <div className="flex items-center gap-2 min-w-0 pr-2">
-                        <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${
-                          zone.zone_type === 'MESAS_VIP_RINGSIDE' ? 'bg-pink-500' :
-                          zone.zone_type === 'MESAS_VIP' ? 'bg-amber-400' :
-                          zone.zone_type === 'PRIMERA_FILA' ? 'bg-red-500' :
-                          zone.zone_type === 'SEGUNDA_FILA' ? 'bg-blue-500' :
-                          zone.zone_type === 'GENERAL' ? 'bg-emerald-400' : 'bg-red-500'
-                        }`} />
-                        <div className="truncate">
-                          <span className="font-bold text-white block truncate">{ZONE_LABELS[zone.zone_type] || zone.name || zone.zone_type}</span>
-                          <span className="text-[10px] text-zinc-400 font-mono">${priceVal.toFixed(2)} MXN</span>
+                    <div
+                      key={zone.id}
+                      className={`p-3.5 sm:p-4 rounded-xl border transition-all ${
+                        isGeneral && generalCount > 0
+                          ? 'bg-emerald-950/20 border-emerald-500/40 ring-1 ring-emerald-500/30'
+                          : 'bg-zinc-900/80 hover:bg-zinc-900 border-white/10 hover:border-white/20'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        {/* Indicador de color y Nombre de Zona */}
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span
+                            className={`w-3.5 h-3.5 rounded-full shrink-0 shadow-md ${
+                              zone.zone_type === 'MESAS_VIP_RINGSIDE'
+                                ? 'bg-pink-500 shadow-pink-500/50'
+                                : zone.zone_type === 'MESAS_VIP'
+                                ? 'bg-amber-400 shadow-amber-400/50'
+                                : zone.zone_type === 'PRIMERA_FILA'
+                                ? 'bg-red-500 shadow-red-500/50'
+                                : zone.zone_type === 'SEGUNDA_FILA'
+                                ? 'bg-blue-500 shadow-blue-500/50'
+                                : zone.zone_type === 'GENERAL'
+                                ? 'bg-emerald-400 shadow-emerald-400/50'
+                                : 'bg-red-500'
+                            }`}
+                          />
+                          <div className="min-w-0">
+                            <span className="font-black text-sm sm:text-base text-white block tracking-tight truncate">
+                              {ZONE_LABELS[zone.zone_type] || zone.name || zone.zone_type}
+                            </span>
+                            <span className="text-[11px] sm:text-xs text-zinc-400 block font-medium mt-0.5">
+                              {isTable
+                                ? 'Mesa VIP · Elige en el mapa'
+                                : isGeneral
+                                ? 'Entrada Libre · Sin numeración'
+                                : 'Asiento asignado · Elige en el mapa'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Precio en grande y bien destacado */}
+                        <div className="text-right shrink-0">
+                          <div className="text-base sm:text-xl font-black text-amber-400 font-mono tracking-tight">
+                            ${priceVal.toFixed(2)}
+                            <span className="text-xs text-zinc-400 font-bold ml-1">MXN</span>
+                          </div>
                         </div>
                       </div>
-                      {isGeneral ? (
-                        <div className="shrink-0">
+
+                      {/* Acción específica si es General: botón claro y grande para agregar */}
+                      {isGeneral && (
+                        <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between gap-3">
+                          <span className="text-xs font-bold text-zinc-300">
+                            Boletos Generales:
+                          </span>
                           {generalCount === 0 ? (
                             <button
                               type="button"
                               onClick={handleAddGeneral}
-                              className="px-2.5 py-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 rounded-lg text-[11px] font-bold flex items-center gap-1 transition-colors active:scale-95"
+                              className="py-1.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-400/60 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-md shadow-emerald-950/60 hover:scale-[1.02] active:scale-95"
                             >
-                              <PlusIcon className="w-3 h-3" /> Agregar
+                              <PlusIcon className="w-4 h-4" /> Agregar
                             </button>
                           ) : (
-                            <div className="flex items-center gap-1.5 bg-zinc-950 border border-emerald-500/50 rounded-lg px-2 py-0.5">
-                              <button type="button" onClick={handleRemoveGeneral} className="p-0.5 text-zinc-400 hover:text-white transition-colors" title="Quitar">
-                                <Minus className="w-3 h-3" />
+                            <div className="flex items-center gap-2 bg-black border-2 border-emerald-500 rounded-xl px-2 py-1 shadow-inner">
+                              <button
+                                type="button"
+                                onClick={handleRemoveGeneral}
+                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white font-bold transition-colors active:scale-95"
+                                title="Quitar 1 boleto"
+                              >
+                                <Minus className="w-3.5 h-3.5" />
                               </button>
-                              <span className="text-xs font-bold text-emerald-400 font-mono w-4 text-center">{generalCount}</span>
-                              <button type="button" onClick={handleAddGeneral} className="p-0.5 text-zinc-400 hover:text-white transition-colors" title="Agregar otro">
-                                <PlusIcon className="w-3 h-3" />
+                              <span className="text-sm sm:text-base font-black text-emerald-400 font-mono min-w-[28px] text-center">
+                                {generalCount}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={handleAddGeneral}
+                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-colors active:scale-95"
+                                title="Agregar otro boleto"
+                              >
+                                <PlusIcon className="w-3.5 h-3.5" />
                               </button>
                             </div>
                           )}
                         </div>
-                      ) : (
-                        <span className="text-[10px] text-zinc-500 font-medium shrink-0 bg-zinc-950/80 px-2 py-0.5 rounded border border-white/5">
-                          {isTable ? 'En el mapa (Mesa)' : 'En el mapa'}
-                        </span>
                       )}
                     </div>
                   );
@@ -910,6 +965,12 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
               )}
             </div>
 
+            {/* Show overlay hint on mobile */}
+            <div className="md:hidden text-center text-zinc-400 text-xs mb-3 font-semibold flex items-center justify-center gap-1.5 bg-zinc-900/80 py-2 px-3 rounded-xl border border-white/10 shadow-sm">
+              <Info className="w-4 h-4 text-red-500 shrink-0" />
+              <span>Usa un dedo para mover el mapa, dos para hacer zoom</span>
+            </div>
+
             {isArenaMap ? (
               <ArenaSeatMap
                 zones={zones}
@@ -920,10 +981,6 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
               />
             ) : (
               <>
-                {/* Show overlay hint on mobile */}
-                <div className="md:hidden text-center text-zinc-500 text-xs mb-2 uppercase tracking-widest">
-                  Usa un dedo para mover el mapa, dos para hacer zoom
-                </div>
                 <div
                   className={`bg-zinc-950 border border-white/10 rounded-2xl sm:rounded-3xl h-[420px] sm:h-[680px] lg:h-[750px] min-h-[360px] sm:min-h-[580px] max-h-[850px] shadow-2xl relative overflow-hidden flex items-center justify-center w-full touch-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
                   ref={mapContainerRef}
