@@ -75,8 +75,7 @@ export default function EventDetailClient({ event }: { event: any }) {
 
             <div className="flex items-stretch gap-4 mb-8">
               <div
-                className="bg-red-600 px-6 py-3 flex flex-col items-center justify-center shrink-0"
-                style={{ clipPath: 'polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%)' }}
+                className="bg-red-600 rounded-2xl px-6 py-3 flex flex-col items-center justify-center shrink-0"
               >
                 <span className="text-[11px] font-black uppercase tracking-[0.2em] leading-none mb-1">
                   {eventDate.toLocaleDateString('es-MX', { weekday: 'short' }).replace('.', '')} · {eventDate.toLocaleDateString('es-MX', { month: 'short' }).replace('.', '')}

@@ -945,104 +945,96 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
               exit={{ opacity: 0, scale: 0.95, y: 24 }}
               className="fixed inset-0 flex items-center justify-center z-[101] p-4 sm:p-6"
             >
-              <div className="bg-zinc-950 border border-white/10 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl max-h-[85vh] flex flex-col my-auto relative">
-                <div className="flex justify-between items-center mb-4 shrink-0">
-                  <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white">
-                    Confirmar Compra
-                  </h3>
+              <div className="bg-[#0e0f13] border border-white/10 rounded-2xl max-w-lg w-full shadow-2xl shadow-black/60 max-h-[85vh] flex flex-col my-auto relative overflow-hidden">
+                <div className="flex justify-between items-start gap-4 px-5 sm:px-6 pt-5 sm:pt-6 pb-4 shrink-0">
+                  <div className="min-w-0">
+                    <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white leading-none">
+                      Confirmar compra
+                    </h3>
+                    <p className="text-zinc-400 text-xs sm:text-sm font-semibold mt-2 truncate">{event.title}</p>
+                  </div>
                   <button
                     onClick={() => setShowConfirmPanel(false)}
-                    className="text-zinc-500 hover:text-white transition-colors p-1"
+                    className="shrink-0 rounded-xl bg-zinc-900 border border-white/10 hover:border-white/30 text-zinc-400 hover:text-white transition-colors p-2"
+                    aria-label="Cerrar"
                   >
-                    <X className="w-6 h-6" />
+                    <X className="w-5 h-5" />
                   </button>
                 </div>
 
-                <p className="text-zinc-400 text-xs sm:text-sm mb-4 uppercase tracking-widest font-bold shrink-0">{event.title}</p>
+                <h4 className="text-xs font-black uppercase tracking-[0.18em] text-zinc-400 px-5 sm:px-6 pb-2 shrink-0">
+                  Tu selección ({totalItemsCount})
+                </h4>
 
                 {/* Lista de asientos con scroll interno */}
-                <ul className="space-y-3 mb-4 overflow-y-auto pr-1.5 flex-1 min-h-0 custom-scrollbar">
+                <ul className="overflow-y-auto flex-1 min-h-0 custom-scrollbar">
                   {selectedSeats.map(seat => {
                     const isTable = seat.zoneType === 'MESAS_VIP' || seat.zoneType === 'MESAS_VIP_RINGSIDE';
-                    const labelDetail = isTable 
-                      ? `Mesa ${seat.seatNumber}` 
+                    const labelDetail = isTable
+                      ? `Mesa ${seat.seatNumber}`
                       : (seat.zoneType === 'PRIMERA_FILA' || seat.zoneType === 'SEGUNDA_FILA')
                         ? `Asiento ${seat.seatNumber}`
                         : `Fila ${seat.rowName} · Asiento ${seat.seatNumber}`;
 
                     return (
-                      <li key={seat.seatId} className="flex justify-between items-center bg-zinc-900 border border-white/5 rounded-xl px-4 py-3 shrink-0">
-                        <div>
-                          <p className="font-bold text-white text-sm">
-                            {ZONE_LABELS[seat.zoneType] || seat.zoneType}
-                          </p>
-                          <p className="text-zinc-400 text-xs mt-0.5">
-                            {labelDetail}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="font-black text-white font-mono">${seat.price.toFixed(2)}</span>
-                          <button
-                            onClick={() => {
-                              removeSeat(seat.seatId);
-                              if (selectedSeats.length <= 1 && generalCount === 0) setShowConfirmPanel(false);
-                            }}
-                            className="text-zinc-600 hover:text-red-500 transition-colors p-1"
-                            title="Eliminar asiento"
-                          >
-                            <Minus className="w-4 h-4" />
-                          </button>
-                        </div>
+                      <li key={seat.seatId} className="flex items-center gap-3 px-5 sm:px-6 py-3 border-t border-white/5 text-sm">
+                        <span className="w-3.5 h-3.5 shrink-0 rounded-full" style={{ background: ZONE_DOT[seat.zoneType] || '#ef4444' }} />
+                        <span className="flex-1 min-w-0 font-semibold text-white truncate">
+                          {ZONE_LABELS[seat.zoneType] || seat.zoneType} · {labelDetail}
+                        </span>
+                        <span className="text-zinc-200">{fmtPrice(seat.price)}</span>
+                        <button
+                          onClick={() => {
+                            removeSeat(seat.seatId);
+                            if (selectedSeats.length <= 1 && generalCount === 0) setShowConfirmPanel(false);
+                          }}
+                          className="text-zinc-500 hover:text-red-400 transition-colors p-1"
+                          title="Quitar"
+                          aria-label={`Quitar ${labelDetail}`}
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
                       </li>
                     );
                   })}
 
                   {generalCount > 0 && generalZone && (
-                    <li className="flex justify-between items-center bg-zinc-900 border border-emerald-500/20 rounded-xl px-4 py-3 shrink-0">
-                      <div>
-                        <p className="font-bold text-emerald-400 text-sm">
-                          General
-                        </p>
-                        <p className="text-zinc-400 text-xs mt-0.5">
-                          Acceso General ({generalCount} boletos)
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="font-black text-white font-mono">${generalTotal.toFixed(2)}</span>
-                        <button
-                          onClick={() => {
-                            setGeneralCount(0);
-                            if (selectedSeats.length === 0) setShowConfirmPanel(false);
-                          }}
-                          className="text-zinc-600 hover:text-red-500 transition-colors p-1"
-                          title="Eliminar boletos generales"
-                        >
-                          <Minus className="w-4 h-4" />
-                        </button>
-                      </div>
+                    <li className="flex items-center gap-3 px-5 sm:px-6 py-3 border-t border-white/5 text-sm">
+                      <span className="w-3.5 h-3.5 shrink-0 rounded-full" style={{ background: ZONE_DOT.GENERAL }} />
+                      <span className="flex-1 min-w-0 font-semibold text-white truncate">
+                        General · {generalCount} boleto{generalCount === 1 ? '' : 's'}
+                      </span>
+                      <span className="text-zinc-200">{fmtPrice(generalTotal)}</span>
+                      <button
+                        onClick={() => {
+                          setGeneralCount(0);
+                          if (selectedSeats.length === 0) setShowConfirmPanel(false);
+                        }}
+                        className="text-zinc-500 hover:text-red-400 transition-colors p-1"
+                        title="Quitar"
+                        aria-label="Quitar boletos General"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
                     </li>
                   )}
                 </ul>
 
                 {/* Footer fijo con total a pagar y botones de acción */}
-                <div className="border-t border-white/10 pt-4 pb-4 flex justify-between items-center font-bold text-base sm:text-lg shrink-0">
-                  <span className="text-zinc-400">Total a pagar</span>
-                  <span className="text-white font-black">${totalPrice.toFixed(2)} <span className="text-xs sm:text-sm text-zinc-500 font-normal">MXN</span></span>
+                <div className="flex items-baseline justify-between px-5 sm:px-6 py-4 border-t border-white/10 shrink-0">
+                  <span className="text-sm text-zinc-400">Total a pagar</span>
+                  <span className="text-2xl font-black text-white">{fmtPrice(totalPrice)} <span className="text-xs text-zinc-400 font-semibold">MXN</span></span>
                 </div>
 
-                <div className="flex gap-3 sm:gap-4 shrink-0">
+                <div className="flex gap-3 px-5 sm:px-6 pb-5 sm:pb-6 shrink-0">
                   <button
                     onClick={() => setShowConfirmPanel(false)}
-                    className="flex-1 border border-white/10 text-zinc-400 hover:text-white hover:border-white/30 font-bold text-xs sm:text-sm uppercase tracking-widest py-3 rounded-xl transition-colors"
+                    className="flex-1 rounded-xl bg-zinc-900 border border-white/10 hover:border-white/30 text-zinc-300 hover:text-white font-bold text-xs sm:text-sm uppercase tracking-wider py-3.5 transition-colors"
                   >
-                    Seguir Eligiendo
+                    Seguir eligiendo
                   </button>
-                  <button
-                    onClick={handleConfirm}
-                    className="flex-1 bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-500 hover:via-red-500 hover:to-red-600 border-2 border-white text-white font-black text-xs sm:text-sm uppercase tracking-wider py-3 rounded-xl transition-all shadow-xl shadow-red-950/50 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
-                  >
-                    <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
-                    Comprar Ahora
+                  <button onClick={handleConfirm} className="btn-cartel flex-1 py-3.5 text-xs sm:text-sm">
+                    Comprar ahora
                   </button>
                 </div>
               </div>

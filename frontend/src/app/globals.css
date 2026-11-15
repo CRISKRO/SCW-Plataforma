@@ -25,7 +25,7 @@ body {
   }
 }
 
-/* Botones estilo "Cartel": inclinados como los rótulos del póster */
+/* Botones estilo "Cartel": rojo sólido, letra pesada en cursiva y esquinas redondeadas */
 .btn-cartel {
   display: inline-flex;
   align-items: center;
@@ -38,7 +38,7 @@ body {
   letter-spacing: 0.06em;
   color: #fff;
   background: #dc2626;
-  clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
+  border-radius: 0.75rem;
   transition: background-color 0.15s, color 0.15s, transform 0.15s;
   cursor: pointer;
 }
