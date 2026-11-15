@@ -20,6 +20,15 @@ export default function EventDetailClient({ event }: { event: any }) {
 
   const eventDate = new Date(event.date_time);
 
+  const posterClass = "relative z-10 w-full bg-zinc-900 rounded-3xl overflow-hidden shadow-2xl shadow-black/80 border border-white/10 flex items-center justify-center cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99]";
+  const posterImg = (
+    <img
+      src={getMediaUrl(event.banner_url)}
+      alt={`Póster oficial de ${event.title}`}
+      className="w-full h-auto object-contain"
+    />
+  );
+
   const buyButton = isLabru ? (
     <Link href={`/eventos/${eventSlug}/asientos`} className="btn-cartel w-full py-4 md:py-5 text-base md:text-lg">
       Comprar Boletos Ahora
@@ -48,13 +57,15 @@ export default function EventDetailClient({ event }: { event: any }) {
               />
             </div>
 
-            <div className="relative z-10 w-full bg-zinc-900 rounded-3xl overflow-hidden shadow-2xl shadow-black/80 border border-white/10 flex items-center justify-center">
-              <img 
-                src={getMediaUrl(event.banner_url)}
-                alt={`Póster oficial de ${event.title}`}
-                className="w-full h-auto object-contain"
-              />
-            </div>
+            {isLabru ? (
+              <Link href={`/eventos/${eventSlug}/asientos`} className={posterClass} aria-label={`Comprar boletos para ${event.title}`}>
+                {posterImg}
+              </Link>
+            ) : (
+              <button type="button" onClick={() => setIsTicketModalOpen(true)} className={posterClass} aria-label={`Comprar boletos para ${event.title}`}>
+                {posterImg}
+              </button>
+            )}
           </motion.div>
 
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
