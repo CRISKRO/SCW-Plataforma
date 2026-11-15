@@ -74,6 +74,7 @@ export default function ArenaSeatMap({
   const pinchStartScale = useRef<number>(1);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const lastFitSizeRef = useRef({ w: 0, h: 0 });
 
   // Tooltip
   const [hoveredSeat, setHoveredSeat] = useState<{ seat: SeatItem; zone: any; x: number; y: number } | null>(null);
@@ -123,6 +124,11 @@ export default function ArenaSeatMap({
     const cw = mapContainerRef.current.clientWidth;
     const ch = mapContainerRef.current.clientHeight;
     if (cw <= 0 || ch <= 0) return;
+
+    // Solo se reajusta si cambió el tamaño del contenedor; así no se pierde
+    // el zoom del usuario cuando se refrescan los asientos o al seleccionar.
+    if (lastFitSizeRef.current.w === cw && lastFitSizeRef.current.h === ch) return;
+    lastFitSizeRef.current = { w: cw, h: ch };
 
     // Margin factor so the map doesn't touch the container edges:
     const margin = compact ? 0.98 : cw < 640 ? 0.94 : 0.90;
@@ -337,8 +343,20 @@ export default function ArenaSeatMap({
     <div className="w-full relative select-none flex flex-col items-center">
       {/* Zoom / Controls Header (Clean, without pulsating dot or redundant titles) */}
       <div className="w-full flex items-center justify-between mb-3 px-1">
-        <span className={compact ? 'text-xs sm:text-sm text-zinc-400' : 'text-xs font-bold text-zinc-400 hidden sm:inline'}>
-          {compact ? 'Toca un asiento para elegirlo' : 'Haz clic o toca un asiento para seleccionarlo'}
+        <span className={compact ? 'text-xs sm:text-sm text-zinc-400 min-w-0 pr-3' : 'text-xs font-bold text-zinc-400 hidden sm:inline'}>
+          {compact
+            ? hoveredSeat
+              ? (
+                <span className="text-white font-semibold">
+                  {hoveredSeat.zone?.name || hoveredSeat.zone?.zone_type}
+                  {' · '}
+                  {hoveredSeat.seat.table_number ? `Mesa ${hoveredSeat.seat.table_number}` : `Asiento ${hoveredSeat.seat.custom_label || hoveredSeat.seat.seat_number}`}
+                  {' · '}
+                  <span className="text-red-400">${parseFloat(hoveredSeat.zone?.price || '0').toLocaleString('es-MX')}</span>
+                </span>
+              )
+              : 'Toca un asiento para elegirlo'
+            : 'Haz clic o toca un asiento para seleccionarlo'}
         </span>
 
         {/* Zoom controls */}
@@ -995,7 +1013,7 @@ export default function ArenaSeatMap({
         </div>
 
         {/* Hover Tooltip */}
-        {hoveredSeat && !isInteractiveEditing && (
+        {hoveredSeat && !isInteractiveEditing && !compact && (
           <div
             className="absolute bg-zinc-950/95 border border-white/20 px-3 py-2 rounded-xl text-xs shadow-2xl pointer-events-none z-30 backdrop-blur-md"
             style={{
