@@ -152,15 +152,15 @@ class Command(BaseCommand):
                 top_left_xs = [335.0, 360.0, 385.0, 410.0, 435.0, 460.0]
                 for i, x_pos in enumerate(top_left_xs):
                     s_num = i + 1
-                    Seat.objects.create(zone=z_f1, row_name='NORTE', seat_number=s_num, custom_label=str(s_num), x=x_pos, y=205.0)
-                    Seat.objects.create(zone=z_f2, row_name='NORTE', seat_number=s_num, custom_label=str(s_num), x=x_pos, y=242.0)
+                    Seat.objects.create(zone=z_f1, row_name='NORTE', seat_number=s_num, custom_label=str(s_num), x=x_pos, y=242.0)
+                    Seat.objects.create(zone=z_f2, row_name='NORTE', seat_number=s_num, custom_label=str(s_num), x=x_pos, y=205.0)
 
                 # Top - Derecha de Pasillo: 7 a 12
                 top_right_xs = [580.0, 605.0, 630.0, 655.0, 680.0, 705.0]
                 for i, x_pos in enumerate(top_right_xs):
                     s_num = i + 7
-                    Seat.objects.create(zone=z_f1, row_name='NORTE', seat_number=s_num, custom_label=str(s_num), x=x_pos, y=205.0)
-                    Seat.objects.create(zone=z_f2, row_name='NORTE', seat_number=s_num, custom_label=str(s_num), x=x_pos, y=242.0)
+                    Seat.objects.create(zone=z_f1, row_name='NORTE', seat_number=s_num, custom_label=str(s_num), x=x_pos, y=242.0)
+                    Seat.objects.create(zone=z_f2, row_name='NORTE', seat_number=s_num, custom_label=str(s_num), x=x_pos, y=205.0)
 
                 # Derecha: 13 a 28 (vertical)
                 for i in range(16):
