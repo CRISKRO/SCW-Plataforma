@@ -71,7 +71,7 @@ export default function EventDetailClient({ event }: { event: any }) {
 
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
             <p className="text-red-500 text-xs font-black uppercase tracking-[0.25em] mb-3">SCW presenta</p>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black italic uppercase tracking-tighter leading-[0.95] mb-6">{event.title}</h1>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black uppercase tracking-tight leading-[0.95] mb-6">{event.title}</h1>
 
             <div className="flex items-stretch gap-4 mb-8">
               <div

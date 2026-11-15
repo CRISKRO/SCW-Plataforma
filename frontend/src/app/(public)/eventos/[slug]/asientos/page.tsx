@@ -576,14 +576,14 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
         <div className="flex items-center gap-3 sm:gap-4 pb-4 mb-5 border-b border-white/10">
           <Link
             href={`/eventos/${slug}`}
-            className="shrink-0 flex items-center gap-2 border border-zinc-700 hover:border-white px-3 py-2.5 text-xs font-black uppercase tracking-widest text-zinc-300 hover:text-white transition-colors"
+            className="shrink-0 flex items-center gap-2 rounded-xl bg-zinc-900 border border-white/10 hover:border-white/30 px-3 py-2.5 text-xs font-black uppercase tracking-widest text-zinc-300 hover:text-white transition-colors"
             aria-label="Volver al evento"
           >
             <ArrowLeft className="w-4 h-4 text-red-500" />
             <span className="hidden sm:inline">Volver</span>
           </Link>
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-black italic uppercase tracking-tight leading-none truncate">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tight leading-none truncate">
               {event.title}
             </h1>
             <p className="text-zinc-400 text-xs sm:text-sm font-semibold mt-1.5 truncate first-letter:uppercase">
@@ -691,9 +691,9 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
                 key={zone.id}
                 type="button"
                 onClick={() => (isGeneral ? handleAddGeneral() : setFocusZone(active ? null : zone.zone_type))}
-                className={`shrink-0 flex items-center gap-2 border px-3 py-2 text-xs font-bold whitespace-nowrap transition-colors ${active ? 'border-red-500 bg-zinc-900' : 'border-zinc-700'}`}
+                className={`shrink-0 flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-bold whitespace-nowrap transition-colors ${active ? 'border-red-500 bg-zinc-900' : 'border-white/15 bg-zinc-900/60'}`}
               >
-                <span className="w-3 h-3 shrink-0" style={{ background: zoneDot(zone) }} />
+                <span className="w-3 h-3 shrink-0 rounded-full" style={{ background: zoneDot(zone) }} />
                 {ZONE_LABELS[zone.zone_type] || zone.name || zone.zone_type} {fmtPrice(zonePrice(zone))}
                 {isGeneral && <PlusIcon className="w-3.5 h-3.5 text-zinc-400" />}
               </button>
@@ -708,7 +708,7 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
             {!isArenaMap && parsedZones.length > 0 && (
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs sm:text-sm text-zinc-400">Toca un asiento para elegirlo</span>
-                <div className="flex items-center gap-1 bg-zinc-900 border border-white/10 p-1">
+                <div className="flex items-center gap-1 bg-zinc-900 border border-white/10 rounded-xl p-1">
                   <button onClick={handleZoomOut} className="p-2 hover:bg-zinc-800 text-white transition-colors" title="Alejar">
                     <Minus className="w-4 h-4" />
                   </button>
@@ -813,7 +813,7 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
           </div>
 
           {/* --- Panel: zonas, selección y total --- */}
-          <aside className="w-full lg:w-[340px] shrink-0 lg:sticky lg:top-24 border border-white/10 bg-[#0b0b0d]">
+          <aside className="w-full lg:w-[340px] shrink-0 lg:sticky lg:top-24 rounded-2xl overflow-hidden border border-white/10 bg-[#0e0f13] shadow-2xl shadow-black/60">
             <div className="hidden lg:block">
               <h3 className="text-xs font-black uppercase tracking-[0.18em] text-zinc-400 px-4 pt-4 pb-2">Zonas y precios</h3>
               {zones.map((zone) => {
@@ -827,7 +827,7 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
                       className="flex-1 min-w-0 flex items-center gap-3 px-4 py-3 text-left hover:bg-zinc-900/70 transition-colors"
                       title={isGeneral ? 'Agregar un boleto General' : 'Resaltar esta zona en el mapa'}
                     >
-                      <span className="w-3.5 h-3.5 shrink-0" style={{ background: zoneDot(zone) }} />
+                      <span className="w-3.5 h-3.5 shrink-0 rounded-full" style={{ background: zoneDot(zone) }} />
                       <span className="flex-1 min-w-0">
                         <span className="block text-sm font-semibold text-white truncate">{ZONE_LABELS[zone.zone_type] || zone.name || zone.zone_type}</span>
                         {isGeneral && <span className="block text-[11px] text-zinc-500 mt-0.5">Sin numeración · toca para agregar</span>}
@@ -868,7 +868,7 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
                         : `Fila ${seat.rowName} Asiento ${seat.seatNumber}`;
                     return (
                       <li key={seat.seatId} className="flex items-center gap-3 px-4 py-3 border-t border-white/5 text-sm">
-                        <span className="w-3.5 h-3.5 shrink-0" style={{ background: ZONE_DOT[seat.zoneType] || '#ef4444' }} />
+                        <span className="w-3.5 h-3.5 shrink-0 rounded-full" style={{ background: ZONE_DOT[seat.zoneType] || '#ef4444' }} />
                         <span className="flex-1 min-w-0 font-semibold text-white truncate">{ZONE_LABELS[seat.zoneType]} · {labelDetail}</span>
                         <span className="text-zinc-200">{fmtPrice(seat.price)}</span>
                         <button onClick={() => removeSeat(seat.seatId)} className="text-zinc-500 hover:text-red-400 transition-colors p-1" title="Quitar" aria-label={`Quitar ${labelDetail}`}>
@@ -880,9 +880,9 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
 
                   {generalCount > 0 && generalZone && (
                     <li className="flex items-center gap-3 px-4 py-3 border-t border-white/5 text-sm">
-                      <span className="w-3.5 h-3.5 shrink-0" style={{ background: ZONE_DOT.GENERAL }} />
+                      <span className="w-3.5 h-3.5 shrink-0 rounded-full" style={{ background: ZONE_DOT.GENERAL }} />
                       <span className="flex-1 min-w-0 font-semibold text-white">General</span>
-                      <span className="flex items-center border border-zinc-700">
+                      <span className="flex items-center rounded-lg border border-white/15 bg-zinc-900">
                         <button type="button" onClick={handleRemoveGeneral} className="p-1.5 text-zinc-300 hover:text-white" title="Quitar 1 boleto" aria-label="Quitar un boleto General">
                           <Minus className="w-3.5 h-3.5" />
                         </button>
@@ -917,7 +917,7 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
 
         {/* Barra de compra en celular */}
         {totalItemsCount > 0 && (
-          <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0b0b0d]/95 backdrop-blur-md border-t border-white/10 px-4 pt-3 pb-[calc(0.9rem+env(safe-area-inset-bottom))] flex items-center gap-4">
+          <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 rounded-t-2xl bg-[#0e0f13]/95 backdrop-blur-md border-t border-white/10 px-4 pt-3 pb-[calc(0.9rem+env(safe-area-inset-bottom))] flex items-center gap-4">
             <div className="leading-tight">
               <span className="text-xs text-zinc-400 block">{totalItemsCount} boleto{totalItemsCount === 1 ? '' : 's'}</span>
               <span className="text-xl font-black text-white">{fmtPrice(totalPrice)}</span>

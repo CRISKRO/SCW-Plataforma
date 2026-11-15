@@ -360,7 +360,7 @@ export default function ArenaSeatMap({
         </span>
 
         {/* Zoom controls */}
-        <div className={`flex items-center gap-1 bg-zinc-900 border border-white/10 p-1 z-20 ml-auto ${compact ? '' : 'rounded-xl shadow-lg'}`}>
+        <div className="flex items-center gap-1 bg-zinc-900 border border-white/10 rounded-xl p-1 shadow-lg z-20 ml-auto">
           <button
             type="button"
             onClick={handleZoomOut}
@@ -391,7 +391,7 @@ export default function ArenaSeatMap({
       {/* Main Interactive Map Viewer Container */}
       <div
         ref={mapContainerRef}
-        className={`w-full bg-[#0a0a0c] border border-white/10 ${compact ? 'aspect-[1200/890] lg:aspect-auto lg:h-[calc(100vh-300px)] lg:min-h-[520px]' : 'rounded-3xl h-[460px] sm:h-[540px] md:h-[620px] shadow-2xl'} relative overflow-hidden flex items-center justify-center touch-none ${
+        className={`w-full bg-[#0a0a0c] border border-white/10 ${compact ? 'rounded-t-2xl aspect-[1200/890] lg:aspect-auto lg:h-[calc(100vh-300px)] lg:min-h-[520px]' : 'rounded-3xl h-[460px] sm:h-[540px] md:h-[620px] shadow-2xl'} relative overflow-hidden flex items-center justify-center touch-none ${
           isPanning ? 'cursor-grabbing' : 'cursor-grab'
         }`}
         onPointerDown={handleCanvasPointerDown}
@@ -1031,10 +1031,10 @@ export default function ArenaSeatMap({
       </div>
 
       {compact && (
-        <div className="w-full flex flex-wrap items-center gap-x-5 gap-y-2 border border-t-0 border-white/10 bg-[#0a0a0c] px-4 py-3 text-xs text-zinc-300">
-          <span className="flex items-center gap-2"><span className="w-3.5 h-3.5 bg-red-600" /> Disponible (color de su zona)</span>
-          <span className="flex items-center gap-2"><span className="w-3.5 h-3.5 bg-zinc-900 border border-zinc-600" /> Vendido</span>
-          <span className="flex items-center gap-2"><span className="w-3.5 h-3.5 bg-white ring-2 ring-red-500 ring-offset-1 ring-offset-black" /> Tu selección</span>
+        <div className="w-full flex flex-wrap items-center gap-x-5 gap-y-2 rounded-b-2xl border border-t-0 border-white/10 bg-[#0a0a0c] px-4 py-3 text-xs text-zinc-300">
+          <span className="flex items-center gap-2"><span className="w-3.5 h-3.5 rounded bg-red-600" /> Disponible (color de su zona)</span>
+          <span className="flex items-center gap-2"><span className="w-3.5 h-3.5 rounded bg-zinc-900 border border-zinc-600" /> Vendido</span>
+          <span className="flex items-center gap-2"><span className="w-3.5 h-3.5 rounded bg-white ring-2 ring-red-500 ring-offset-1 ring-offset-black" /> Tu selección</span>
         </div>
       )}
     </div>
