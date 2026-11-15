@@ -31,7 +31,7 @@ export default function EventDetailClient({ event }: { event: any }) {
   );
 
   return (
-    <div className="bg-black min-h-screen text-white pt-24 pb-28 lg:pb-12">
+    <div className="bg-black min-h-screen text-white pt-24 pb-12">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start mt-4 lg:mt-8">
@@ -95,6 +95,8 @@ export default function EventDetailClient({ event }: { event: any }) {
               </div>
             </div>
 
+            <div className="mb-8">{buyButton}</div>
+
             <div className="h-px bg-gradient-to-r from-red-600 via-zinc-800 to-transparent mb-8" />
 
             {event.description ? (
@@ -102,14 +104,7 @@ export default function EventDetailClient({ event }: { event: any }) {
                 {event.description}
               </p>
             ) : null}
-
-            <div className="hidden lg:block">{buyButton}</div>
           </motion.div>
-        </div>
-
-        {/* Barra de compra fija en celular */}
-        <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-black/90 backdrop-blur-md border-t border-white/10 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-          {buyButton}
         </div>
 
         {/* Modal */}
