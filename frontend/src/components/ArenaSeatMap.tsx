@@ -373,7 +373,7 @@ export default function ArenaSeatMap({
       {/* Main Interactive Map Viewer Container */}
       <div
         ref={mapContainerRef}
-        className={`w-full bg-[#0a0a0c] border border-white/10 ${compact ? 'h-[58vh] min-h-[360px] lg:h-[calc(100vh-300px)] lg:min-h-[520px]' : 'rounded-3xl h-[460px] sm:h-[540px] md:h-[620px] shadow-2xl'} relative overflow-hidden flex items-center justify-center touch-none ${
+        className={`w-full bg-[#0a0a0c] border border-white/10 ${compact ? 'aspect-[1200/890] lg:aspect-auto lg:h-[calc(100vh-300px)] lg:min-h-[520px]' : 'rounded-3xl h-[460px] sm:h-[540px] md:h-[620px] shadow-2xl'} relative overflow-hidden flex items-center justify-center touch-none ${
           isPanning ? 'cursor-grabbing' : 'cursor-grab'
         }`}
         onPointerDown={handleCanvasPointerDown}
