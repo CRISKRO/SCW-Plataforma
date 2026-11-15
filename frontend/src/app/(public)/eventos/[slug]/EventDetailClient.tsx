@@ -6,6 +6,7 @@ import { MapPin, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { TicketSelectionModal } from '@/components/TicketSelectionModal';
 import { getMediaUrl } from '@/services/api';
+import { getEventMapUrl } from '@/services/eventLocation';
 
 export default function EventDetailClient({ event }: { event: any }) {
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
@@ -90,11 +91,7 @@ export default function EventDetailClient({ event }: { event: any }) {
                   {eventDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}
                 </span>
                 <a
-                  href={
-                    event.location?.toLowerCase().includes('dojo')
-                      ? 'https://share.google/zSjJUeXVE9kBjhAzr'
-                      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location || '')}`
-                  }
+                  href={getEventMapUrl(event.location)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-white text-base md:text-lg font-semibold underline underline-offset-4 decoration-red-600 hover:text-red-400 transition-colors"

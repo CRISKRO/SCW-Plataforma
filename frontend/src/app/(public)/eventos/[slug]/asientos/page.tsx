@@ -9,6 +9,7 @@ import { useToastStore } from '@/store/toastStore';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { eventsService } from '@/services/events.services';
+import { getEventMapUrl } from '@/services/eventLocation';
 import ArenaSeatMap from '@/components/ArenaSeatMap';
 
 interface SelectedSeat {
@@ -615,11 +616,7 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
 
               {/* Sede con enlace */}
               <a
-                href={
-                  event.location?.toLowerCase().includes('dojo')
-                    ? 'https://share.google/zSjJUeXVE9kBjhAzr'
-                    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location || '')}`
-                }
+                href={getEventMapUrl(event.location)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2.5 bg-zinc-900/90 border border-white/10 hover:border-red-500/40 px-3.5 py-2 rounded-xl transition-all group/loc"
