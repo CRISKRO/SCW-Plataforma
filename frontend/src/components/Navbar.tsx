@@ -115,11 +115,11 @@ export default function Navbar() {
               {isAuthenticated ? (
                 <div className="flex items-center gap-2 2xl:gap-6">
                   {['SUPERADMIN', 'ADMIN', 'STAFF', 'REPORTER'].includes(user?.role || '') && (
-                    <Link href="/admin" className="text-red-500 hover:text-red-400 text-[10px] lg:text-[11px] 2xl:text-sm font-bold uppercase tracking-widest transition-colors flex items-center gap-1 whitespace-nowrap">
-                      [Panel Admin]
+                    <Link href="/admin" className="rounded-xl bg-red-600/10 border border-red-500/30 text-red-400 hover:bg-red-600 hover:border-red-600 hover:text-white px-2.5 py-1.5 2xl:px-4 2xl:py-2 text-[10px] lg:text-[11px] 2xl:text-sm font-black uppercase tracking-widest transition-colors flex items-center gap-1 whitespace-nowrap">
+                      Panel Admin
                     </Link>
                   )}
-                  <Link href="/dashboard" className="flex items-center gap-2 text-[10px] lg:text-[11px] 2xl:text-sm font-medium text-white hover:text-zinc-300 transition-colors whitespace-nowrap">
+                  <Link href="/dashboard" className="flex items-center gap-2 rounded-full bg-zinc-900 border border-white/10 hover:border-white/30 pl-1 pr-3 py-1 2xl:pr-4 text-[10px] lg:text-[11px] 2xl:text-sm font-bold text-white transition-colors whitespace-nowrap" title="Mi perfil">
                     <div className="w-7 h-7 2xl:w-8 2xl:h-8 rounded-full bg-white text-black flex items-center justify-center font-bold text-xs">
                       {user?.first_name?.charAt(0) || 'U'}
                     </div>
@@ -131,7 +131,7 @@ export default function Navbar() {
                   <Link href="/login" className="text-zinc-300 hover:text-white text-sm font-medium uppercase tracking-widest transition-colors">
                     Login
                   </Link>
-                  <Link href="/register" className="bg-white text-black hover:bg-zinc-200 px-5 py-2.5 text-sm font-bold uppercase tracking-widest transition-all hover:scale-105">
+                  <Link href="/register" className="rounded-xl bg-white text-black hover:bg-zinc-200 px-5 py-2.5 text-sm font-black uppercase tracking-widest transition-colors">
                     Unirse
                   </Link>
                 </div>
@@ -174,7 +174,7 @@ export default function Navbar() {
               <div className="pt-4 flex flex-col gap-3 px-3">
                 <Link 
                   href="/dashboard" 
-                  className="flex items-center gap-3 text-white border border-white/20 py-3 px-4 uppercase tracking-widest font-medium"
+                  className="flex items-center gap-3 rounded-xl bg-zinc-900 border border-white/10 text-white py-3 px-4 uppercase tracking-widest font-bold"
                   onClick={() => setIsOpen(false)}
                 >
                   <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center font-bold">
@@ -185,7 +185,7 @@ export default function Navbar() {
                 {['SUPERADMIN', 'ADMIN', 'STAFF', 'REPORTER'].includes(user?.role || '') && (
                   <Link 
                     href="/admin" 
-                    className="text-center text-red-500 border border-red-500/20 py-3 uppercase tracking-widest font-medium"
+                    className="text-center rounded-xl bg-red-600/10 border border-red-500/30 text-red-400 py-3 uppercase tracking-widest font-black"
                     onClick={() => setIsOpen(false)}
                   >
                     Panel Admin
@@ -194,10 +194,10 @@ export default function Navbar() {
               </div>
             ) : (
               <div className="pt-4 flex flex-col gap-3 px-3">
-                <Link href="/login" onClick={() => setIsOpen(false)} className="text-center text-white border border-white/20 py-3 uppercase tracking-widest font-medium">
+                <Link href="/login" onClick={() => setIsOpen(false)} className="text-center rounded-xl bg-zinc-900 border border-white/10 text-white py-3 uppercase tracking-widest font-bold">
                   Login
                 </Link>
-                <Link href="/register" onClick={() => setIsOpen(false)} className="text-center bg-white text-black py-3 uppercase tracking-widest font-bold">
+                <Link href="/register" onClick={() => setIsOpen(false)} className="text-center rounded-xl bg-white text-black py-3 uppercase tracking-widest font-black">
                   Unirse
                 </Link>
               </div>
