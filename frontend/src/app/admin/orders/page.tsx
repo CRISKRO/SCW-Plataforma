@@ -21,9 +21,14 @@ import {
   ChevronDown,
   Mail
 } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import api from '@/services/api';
 import { adminService } from '@/services/admin.services';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
+
+function isTicketItem(item: { event?: number | null; product_name?: string }) {
+  return item.event != null || !!item.product_name?.toLowerCase().includes('boleto');
+}
 
 const STATUS_MAP: Record<string, { label: string, color: string, icon: any }> = {
   PENDING: { label: 'Pendiente', color: 'bg-zinc-800 text-zinc-400 border-zinc-700', icon: AlertCircle },
@@ -42,7 +47,18 @@ export default function AdminOrdersPage() {
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [resendingId, setResendingId] = useState<number | null>(null);
   
-  const [activeTab, setActiveTab] = useState<'MERCH' | 'TICKETS'>('MERCH');
+  const params = useSearchParams();
+  const view = params.get('view');
+  const paidOnly = view === 'paid-tickets';
+  const activeTab = paidOnly || view === 'tickets' ? 'TICKETS' : 'MERCH';
+
+  function selectView(nextView: 'paid-tickets' | 'tickets' | 'merch') {
+    const url = new URL(window.location.href);
+    if (nextView === 'merch') url.searchParams.delete('view');
+    else url.searchParams.set('view', nextView);
+    window.history.replaceState(null, '', url);
+  }
+
   const [selectedEventId, setSelectedEventId] = useState<string>('ALL');
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
 
@@ -116,7 +132,7 @@ export default function AdminOrdersPage() {
       return;
     }
 
-    const itemsList = order.items.filter((i: any) => !i.product_name.toLowerCase().includes('boleto'))
+    const itemsList = order.items.filter((i: any) => !isTicketItem(i))
       .map((i: any) => `<li>${i.quantity}x ${i.product_name} ${i.size ? `(${i.size})` : ''}</li>`).join('');
 
     const html = `
@@ -215,8 +231,8 @@ export default function AdminOrdersPage() {
     printWindow.document.close();
   };
 
-  const isMerchOrder = (order: any) => order.items?.some((i: any) => !i.product_name.toLowerCase().includes('boleto'));
-  const isTicketOrder = (order: any) => order.items?.some((i: any) => i.product_name.toLowerCase().includes('boleto'));
+  const isMerchOrder = (order: any) => order.items?.some((i: any) => !isTicketItem(i));
+  const isTicketOrder = (order: any) => order.items?.some(isTicketItem);
 
   // Categorize a ticket item into General, 1ª Fila, 2ª Fila, 3ª Fila or Other
   const getTicketCategory = (item: any) => {
@@ -272,12 +288,13 @@ export default function AdminOrdersPage() {
       }
 
       if (activeTab === 'TICKETS') {
-        const isTicket = !isMerchOrder(o) && isTicketOrder(o);
-        if (!isTicket) return false;
+        if (!isTicketOrder(o)) return false;
+        if (paidOnly && o.status !== 'PAID') return false;
 
         if (selectedEventId !== 'ALL') {
           const selectedIdNum = parseInt(selectedEventId);
           const hasMatchingEvent = o.items?.some((item: any) => {
+            if (!isTicketItem(item)) return false;
             if (item.event === selectedIdNum || item.event_id === selectedIdNum) return true;
             if (selectedEventObj?.title) {
               const itemTitle = item.event_title || item.product_name || '';
@@ -292,7 +309,7 @@ export default function AdminOrdersPage() {
 
       return false;
     });
-  }, [orders, activeTab, searchQuery, selectedEventId, selectedEventObj]);
+  }, [orders, activeTab, paidOnly, searchQuery, selectedEventId, selectedEventObj]);
 
   // Compute breakdown stats for tickets (using PAID status orders for financial/ticket precision)
   const ticketStats = useMemo(() => {
@@ -307,7 +324,7 @@ export default function AdminOrdersPage() {
 
     paidOrders.forEach(order => {
       order.items?.forEach((item: any) => {
-        if (item.product_name?.toLowerCase().includes('boleto')) {
+        if (isTicketItem(item)) {
           // Check event match if selected
           if (selectedEventId !== 'ALL') {
             const selectedIdNum = parseInt(selectedEventId);
@@ -371,7 +388,7 @@ export default function AdminOrdersPage() {
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
         <div className="flex gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
           <button
-            onClick={() => setActiveTab('MERCH')}
+            onClick={() => selectView('merch')}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap ${
               activeTab === 'MERCH' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-800 border border-white/5'
             }`}
@@ -380,15 +397,23 @@ export default function AdminOrdersPage() {
             Productos Físicos
           </button>
           <button
-            onClick={() => setActiveTab('TICKETS')}
+            onClick={() => selectView(paidOnly ? 'paid-tickets' : 'tickets')}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap ${
               activeTab === 'TICKETS' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-800 border border-white/5'
             }`}
           >
             <Ticket className="w-4 h-4" />
-            Solo Boletos
+            Boletos
           </button>
         </div>
+
+        {activeTab === 'TICKETS' && (
+          <label className="flex items-center gap-2 text-sm text-zinc-300">
+            <input type="checkbox" checked={paidOnly} className="accent-blue-600"
+              onChange={event => selectView(event.target.checked ? 'paid-tickets' : 'tickets')} />
+            Solo pedidos pagados
+          </label>
+        )}
 
         {/* Counter Pill */}
         <div className="text-xs text-zinc-400 bg-zinc-900 border border-white/5 px-3 py-1.5 rounded-lg font-medium hidden sm:block">

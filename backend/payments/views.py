@@ -592,10 +592,16 @@ class CreateOrderView(APIView):
         print("Serializer Validation Errors:", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class IsOrderAdmin(IsAdminUser):
+    def has_permission(self, request, view):
+        from users.models import Role
+        return super().has_permission(request, view) and request.user.role in (Role.ADMIN, Role.SUPERADMIN)
+
+
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.select_related('coupon', 'user').prefetch_related('items__event', 'items__seat__zone').all().order_by('-created_at')
     serializer_class = OrderSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsOrderAdmin]
 
     def perform_update(self, serializer):
         old_status = serializer.instance.status
@@ -672,7 +678,7 @@ class OrderViewSet(viewsets.ModelViewSet):
                 except Exception as e:
                     print("Error sending status update email:", e)
 
-    @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
+    @action(detail=True, methods=['post'])
     def resend_email(self, request, pk=None):
         order = self.get_object()
         try:

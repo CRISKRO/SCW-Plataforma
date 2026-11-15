@@ -30,6 +30,8 @@ import { useAuthStore } from '@/store/authStore';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
+import { canAccessAdminPath } from './permissions';
+
 const sidebarItems = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Eventos', href: '/admin/events', icon: CalendarDays },
@@ -48,15 +50,6 @@ const sidebarItems = [
   { name: 'Configuración', href: '/admin/settings', icon: Settings },
 ];
 
-const ALLOWED_ROLES = ['SUPERADMIN', 'ADMIN', 'STAFF', 'REPORTER'];
-
-const ROLE_PERMISSIONS: Record<string, string[]> = {
-  SUPERADMIN: ['*'],
-  ADMIN: ['*'],
-  STAFF: ['/admin', '/admin/events', '/admin/fighters', '/admin/school'],
-  REPORTER: ['/admin', '/admin/chronicles'],
-};
-
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -64,21 +57,19 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  const hasPanelAccess = canAccessAdminPath(user?.role, '/admin');
+  const hasPageAccess = canAccessAdminPath(user?.role, pathname);
+
   useEffect(() => {
     setMounted(true);
     if (!isLoading) {
-      if (!isAuthenticated || !user || !ALLOWED_ROLES.includes(user.role)) {
+      if (!isAuthenticated || !user || !hasPanelAccess) {
         router.push('/login');
-      } else {
-        const permissions = ROLE_PERMISSIONS[user.role] || [];
-        const isAllowed = permissions.includes('*') || permissions.some(path => pathname === path || (pathname.startsWith(`${path}/`) && path !== '/admin'));
-        
-        if (!isAllowed) {
-          router.push('/admin');
-        }
+      } else if (!hasPageAccess) {
+        router.push('/admin');
       }
     }
-  }, [isAuthenticated, user, isLoading, router, pathname]);
+  }, [isAuthenticated, user, isLoading, router, hasPanelAccess, hasPageAccess]);
 
   // Cerrar sidebar al cambiar de ruta en móviles
   useEffect(() => {
@@ -90,7 +81,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     router.push('/login');
   };
 
-  if (!mounted || isLoading || !isAuthenticated || !user || !ALLOWED_ROLES.includes(user.role)) {
+  if (!mounted || isLoading || !isAuthenticated || !user || !hasPageAccess) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center text-white">
         <div className="animate-pulse flex flex-col items-center">
@@ -101,10 +92,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     );
   }
 
-  const permissions = ROLE_PERMISSIONS[user.role] || [];
-  const filteredSidebarItems = sidebarItems.filter(item => {
-    return permissions.includes('*') || permissions.includes(item.href);
-  });
+  const filteredSidebarItems = sidebarItems.filter(item => canAccessAdminPath(user.role, item.href));
 
   return (
     <div className="flex min-h-screen bg-black text-white relative">

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { CalendarDays, Trophy, Users, TrendingUp, AlertTriangle, Package } from 'lucide-react';
+import { CalendarDays, Trophy, Users, TrendingUp, AlertTriangle, Package, Ticket } from 'lucide-react';
 import { adminService } from '@/services/admin.services';
 import {
   LineChart,
@@ -13,9 +13,13 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import { useAuthStore } from '@/store/authStore';
+import { canAccessAdminPath } from './permissions';
 import Link from 'next/link';
 
 export default function AdminDashboard() {
+  const canViewOrders = useAuthStore(state => canAccessAdminPath(state.user?.role, '/admin/orders'));
   const [statsData, setStatsData] = useState({
     active_events: 0,
     roster_count: 0,
@@ -49,10 +53,13 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-white">Resumen General</h1>
-        <p className="text-zinc-400 mt-2">Bienvenido al centro de mando de SCW.</p>
-      </div>
+      <AdminPageHeader
+        title="Resumen General"
+        subtitle="Bienvenido al centro de mando de SCW."
+        actionLabel="Ver boletos vendidos"
+        actionHref={canViewOrders ? '/admin/orders?view=paid-tickets' : undefined}
+        actionIcon={<Ticket className="w-4 h-4" />}
+      />
 
       {loading ? (
         <div className="text-zinc-500">Cargando estadísticas...</div>
