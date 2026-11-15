@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, ChevronLeft, Clock } from 'lucide-react';
+import { MapPin, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { TicketSelectionModal } from '@/components/TicketSelectionModal';
 import { getMediaUrl } from '@/services/api';
@@ -18,11 +18,23 @@ export default function EventDetailClient({ event }: { event: any }) {
     event?.title?.toLowerCase().includes('rebrulucion') ||
     event?.title?.toLowerCase().includes('rebru');
 
+  const eventDate = new Date(event.date_time);
+
+  const buyButton = isLabru ? (
+    <Link href={`/eventos/${eventSlug}/asientos`} className="btn-cartel w-full py-4 md:py-5 text-base md:text-lg">
+      Comprar Boletos Ahora
+    </Link>
+  ) : (
+    <button onClick={() => setIsTicketModalOpen(true)} className="btn-cartel w-full py-4 md:py-5 text-base md:text-lg">
+      Comprar Boletos Ahora
+    </button>
+  );
+
   return (
-    <div className="bg-black min-h-screen text-white pt-24 pb-12">
+    <div className="bg-black min-h-screen text-white pt-24 pb-28 lg:pb-12">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start mt-4 lg:mt-8">
           <motion.div 
             initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
             className="w-full relative rounded-3xl overflow-visible"
@@ -46,54 +58,58 @@ export default function EventDetailClient({ event }: { event: any }) {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-            <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tight mb-4">{event.title}</h1>
-            
-            <div className="flex flex-wrap items-center gap-3 text-red-500 text-sm font-bold uppercase tracking-widest mb-4">
-              <span className="flex items-center gap-2">
-                <Calendar className="w-5 h-5" />
-                {new Date(event.date_time).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}
-              </span>
-              <span className="inline-flex items-center gap-1.5 text-white bg-red-600/90 px-3 py-1 rounded-full text-xs font-black shadow-md shadow-red-950/40">
-                <Clock className="w-3.5 h-3.5" />
-                {new Date(event.date_time).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}
-              </span>
-            </div>
-            
-            <a 
-              href={
-                event.location?.toLowerCase().includes('dojo')
-                  ? 'https://share.google/zSjJUeXVE9kBjhAzr'
-                  : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location || '')}`
-              }
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-zinc-300 text-lg mb-8 underline underline-offset-4 decoration-zinc-600 hover:text-white hover:decoration-white transition-all"
-              title="Abrir en Google Maps"
-            >
-              <MapPin className="w-5 h-5 shrink-0 text-red-500" />
-              <span className="text-blue-400 font-semibold hover:text-blue-300">{event.location}</span>
-            </a>
-            
-            <p className="text-zinc-300 text-lg whitespace-pre-line leading-relaxed mb-10">
-              {event.description}
-            </p>
+            <p className="text-red-500 text-xs font-black uppercase tracking-[0.25em] mb-3">SCW presenta</p>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black italic uppercase tracking-tighter leading-[0.95] mb-6">{event.title}</h1>
 
-            {isLabru ? (
-              <Link
-                href={`/eventos/${eventSlug}/asientos`}
-                className="btn-cartel w-full py-4 md:py-5 text-lg"
+            <div className="flex items-stretch gap-4 mb-8">
+              <div
+                className="bg-red-600 px-6 py-3 flex flex-col items-center justify-center shrink-0"
+                style={{ clipPath: 'polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%)' }}
               >
-                Comprar Boletos Ahora
-              </Link>
-            ) : (
-              <button
-                onClick={() => setIsTicketModalOpen(true)}
-                className="btn-cartel w-full py-4 md:py-5 text-lg"
-              >
-                Comprar Boletos Ahora
-              </button>
-            )}
+                <span className="text-[11px] font-black uppercase tracking-[0.2em] leading-none mb-1">
+                  {eventDate.toLocaleDateString('es-MX', { weekday: 'short' }).replace('.', '')} · {eventDate.toLocaleDateString('es-MX', { month: 'short' }).replace('.', '')}
+                </span>
+                <span className="text-4xl md:text-5xl font-black italic leading-none">{eventDate.getDate()}</span>
+                <span className="text-[11px] font-bold tracking-[0.2em] leading-none mt-1 text-white/80">{eventDate.getFullYear()}</span>
+              </div>
+
+              <div className="flex flex-col justify-center gap-2 min-w-0">
+                <span className="flex items-center gap-2 text-xl md:text-2xl font-black uppercase leading-none">
+                  <Clock className="w-5 h-5 shrink-0 text-red-500" />
+                  {eventDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                </span>
+                <a
+                  href={
+                    event.location?.toLowerCase().includes('dojo')
+                      ? 'https://share.google/zSjJUeXVE9kBjhAzr'
+                      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location || '')}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-white text-base md:text-lg font-semibold underline underline-offset-4 decoration-red-600 hover:text-red-400 transition-colors"
+                  title="Abrir en Google Maps"
+                >
+                  <MapPin className="w-5 h-5 shrink-0 text-red-500" />
+                  <span className="truncate">{event.location}</span>
+                </a>
+              </div>
+            </div>
+
+            <div className="h-px bg-gradient-to-r from-red-600 via-zinc-800 to-transparent mb-8" />
+
+            {event.description ? (
+              <p className="text-zinc-300 text-lg whitespace-pre-line leading-relaxed mb-10">
+                {event.description}
+              </p>
+            ) : null}
+
+            <div className="hidden lg:block">{buyButton}</div>
           </motion.div>
+        </div>
+
+        {/* Barra de compra fija en celular */}
+        <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-black/90 backdrop-blur-md border-t border-white/10 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+          {buyButton}
         </div>
 
         {/* Modal */}
