@@ -81,14 +81,14 @@ export default function EventDetailClient({ event }: { event: any }) {
             {isLabru ? (
               <Link
                 href={`/eventos/${eventSlug}/asientos`}
-                className="w-full py-4 md:py-5 bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-500 hover:via-red-500 hover:to-red-600 border-2 border-white text-white font-black uppercase tracking-widest text-lg rounded-xl transition-all shadow-xl shadow-red-950/60 hover:shadow-red-600/40 transform hover:scale-[1.02] active:scale-95 text-center flex items-center justify-center gap-2"
+                className="btn-cartel w-full py-4 md:py-5 text-lg"
               >
                 Comprar Boletos Ahora
               </Link>
             ) : (
               <button
                 onClick={() => setIsTicketModalOpen(true)}
-                className="w-full py-4 md:py-5 bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-500 hover:via-red-500 hover:to-red-600 border-2 border-white text-white font-black uppercase tracking-widest text-lg rounded-xl transition-all shadow-xl shadow-red-950/60 hover:shadow-red-600/40 transform hover:scale-[1.02] active:scale-95"
+                className="btn-cartel w-full py-4 md:py-5 text-lg"
               >
                 Comprar Boletos Ahora
               </button>

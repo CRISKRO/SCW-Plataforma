@@ -24,3 +24,42 @@ body {
     @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl;
   }
 }
+
+/* Botones estilo "Cartel": inclinados como los rótulos del póster */
+.btn-cartel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-align: center;
+  font-weight: 900;
+  font-style: italic;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #fff;
+  background: #dc2626;
+  clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
+  transition: background-color 0.15s, color 0.15s, transform 0.15s;
+  cursor: pointer;
+}
+.btn-cartel:hover,
+.btn-cartel:focus-visible {
+  background: #fff;
+  color: #000;
+  outline: none;
+}
+.btn-cartel:active {
+  transform: scale(0.97);
+}
+.btn-cartel-dark {
+  background: #27272a;
+}
+.btn-cartel-dark:hover,
+.btn-cartel-dark:focus-visible {
+  background: #3f3f46;
+  color: #fff;
+}
+.btn-cartel-gold {
+  background: #eab308;
+  color: #000;
+}

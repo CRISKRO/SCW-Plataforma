@@ -359,7 +359,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                             setSelectedEvent(btn.event);
                             setIsModalOpen(true);
                           }}
-                          className="inline-flex w-full sm:w-auto justify-center items-center px-6 py-3.5 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-black uppercase tracking-wider text-white bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-500 hover:via-red-500 hover:to-red-600 border-2 border-white shadow-xl shadow-red-950/60 hover:shadow-red-600/40 transition-all transform hover:scale-105 active:scale-95 rounded-xl"
+                          className="btn-cartel w-full sm:w-auto px-7 py-3.5 md:px-9 md:py-4 text-xs sm:text-sm md:text-base"
                         >
                           {btn.label}
                         </button>
@@ -369,7 +369,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                       <Link
                         key={btn.label}
                         href={btn.href}
-                        className={`inline-flex w-full sm:w-auto justify-center items-center px-6 py-3.5 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-black uppercase tracking-wider text-white border-2 border-white shadow-xl transition-all transform hover:scale-105 active:scale-95 rounded-xl ${slide.type === 'raffle' ? 'bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 shadow-yellow-900/50' : 'bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-500 hover:via-red-500 hover:to-red-600 shadow-red-950/60 hover:shadow-red-600/40'}`}
+                        className={`btn-cartel w-full sm:w-auto px-7 py-3.5 md:px-9 md:py-4 text-xs sm:text-sm md:text-base${slide.type === 'raffle' ? ' btn-cartel-gold' : ''}`}
                       >
                         {btn.label}
                       </Link>
@@ -377,7 +377,7 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                       <Link
                         key={btn.label}
                         href={btn.href}
-                        className="inline-flex w-full sm:w-auto justify-center items-center px-6 py-3.5 md:px-8 md:py-4 text-xs sm:text-sm md:text-base font-black uppercase tracking-wider text-white border border-white/20 hover:border-white bg-zinc-900/90 hover:bg-white hover:text-black transition-all transform hover:scale-105 active:scale-95 rounded-xl shadow-2xl shadow-black/90"
+                        className="btn-cartel btn-cartel-dark w-full sm:w-auto px-7 py-3.5 md:px-9 md:py-4 text-xs sm:text-sm md:text-base"
                       >
                         {btn.label}
                       </Link>
