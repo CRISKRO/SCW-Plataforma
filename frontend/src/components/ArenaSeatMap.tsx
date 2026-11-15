@@ -33,6 +33,10 @@ interface ArenaSeatMapProps {
   selectedTableInEditor?: { tableNumber: number; zoneType: string } | null;
   gridSnap?: number; // 0, 5, 10, 20
   mapConfig?: any;
+  /** Vista pública simplificada: sin leyenda de precios dentro del mapa y con leyenda de estados */
+  compact?: boolean;
+  /** Resalta una zona y atenúa las demás (solo vista pública) */
+  focusZoneType?: string | null;
 }
 
 export default function ArenaSeatMap({
@@ -50,7 +54,13 @@ export default function ArenaSeatMap({
   selectedTableInEditor,
   gridSnap = 0,
   mapConfig = {},
+  compact = false,
+  focusZoneType = null,
 }: ArenaSeatMapProps) {
+  const MAP_H = compact ? 890 : 980;
+  const soldClass = compact ? 'opacity-60 cursor-not-allowed' : 'opacity-40 cursor-pointer';
+  const dimClass = (zoneType?: string, keep?: boolean) =>
+    compact && focusZoneType && zoneType !== focusZoneType && !keep ? ' opacity-25' : '';
   // Zoom & Pan state
   const [scale, setScale] = useState(1);
   const [fitScale, setFitScale] = useState(1);
@@ -115,9 +125,9 @@ export default function ArenaSeatMap({
     if (cw <= 0 || ch <= 0) return;
 
     // Margin factor so the map doesn't touch the container edges:
-    const margin = cw < 640 ? 0.94 : 0.90;
+    const margin = compact ? 0.98 : cw < 640 ? 0.94 : 0.90;
     const scaleX = (cw / 1200) * margin;
-    const scaleY = (ch / 980) * margin;
+    const scaleY = (ch / MAP_H) * margin;
     const calculatedFit = Math.min(scaleX, scaleY);
 
     setFitScale(calculatedFit);
@@ -147,6 +157,30 @@ export default function ArenaSeatMap({
   }, []);
 
   // Zoom controls
+  // En celular, al elegir una zona el mapa se acerca a ella
+  useEffect(() => {
+    if (!compact || !mapContainerRef.current) return;
+    const cw = mapContainerRef.current.clientWidth;
+    const ch = mapContainerRef.current.clientHeight;
+    if (cw <= 0 || cw >= 768) return;
+    if (!focusZoneType) {
+      setScale(fitScale);
+      setPosition({ x: 0, y: 0 });
+      return;
+    }
+    const zone = zones.find(z => z.zone_type === focusZoneType);
+    const pts = ((zone?.seats || []) as SeatItem[]).filter(p => p.x != null && p.y != null);
+    if (pts.length === 0) return;
+    const xs = pts.map(p => p.x as number);
+    const ys = pts.map(p => p.y as number);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    const target = Math.min(3, Math.max(fitScale, Math.min(cw / (maxX - minX + 120), ch / (maxY - minY + 120))));
+    setScale(target);
+    setPosition({ x: (600 - (minX + maxX) / 2) * target, y: (MAP_H / 2 - (minY + maxY) / 2) * target });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusZoneType]);
+
   const handleZoomIn = () => setScale(s => Math.min(s + 0.15, 3));
   const handleZoomOut = () => setScale(s => Math.max(s - 0.15, minScale));
   const handleResetZoom = () => {
@@ -303,12 +337,12 @@ export default function ArenaSeatMap({
     <div className="w-full relative select-none flex flex-col items-center">
       {/* Zoom / Controls Header (Clean, without pulsating dot or redundant titles) */}
       <div className="w-full flex items-center justify-between mb-3 px-1">
-        <span className="text-xs font-bold text-zinc-400 hidden sm:inline">
-          Haz clic o toca un asiento para seleccionarlo
+        <span className={compact ? 'text-xs sm:text-sm text-zinc-400' : 'text-xs font-bold text-zinc-400 hidden sm:inline'}>
+          {compact ? 'Toca un asiento para elegirlo' : 'Haz clic o toca un asiento para seleccionarlo'}
         </span>
 
         {/* Zoom controls */}
-        <div className="flex items-center gap-1 bg-zinc-900 border border-white/10 rounded-xl p-1 shadow-lg z-20 ml-auto">
+        <div className={`flex items-center gap-1 bg-zinc-900 border border-white/10 p-1 z-20 ml-auto ${compact ? '' : 'rounded-xl shadow-lg'}`}>
           <button
             type="button"
             onClick={handleZoomOut}
@@ -339,7 +373,7 @@ export default function ArenaSeatMap({
       {/* Main Interactive Map Viewer Container */}
       <div
         ref={mapContainerRef}
-        className={`w-full bg-[#0a0a0c] border border-white/10 rounded-3xl h-[460px] sm:h-[540px] md:h-[620px] shadow-2xl relative overflow-hidden flex items-center justify-center touch-none ${
+        className={`w-full bg-[#0a0a0c] border border-white/10 ${compact ? 'h-[58vh] min-h-[360px] lg:h-[calc(100vh-300px)] lg:min-h-[520px]' : 'rounded-3xl h-[460px] sm:h-[540px] md:h-[620px] shadow-2xl'} relative overflow-hidden flex items-center justify-center touch-none ${
           isPanning ? 'cursor-grabbing' : 'cursor-grab'
         }`}
         onPointerDown={handleCanvasPointerDown}
@@ -361,9 +395,9 @@ export default function ArenaSeatMap({
         >
           <svg
             ref={svgRef}
-            viewBox="0 0 1200 980"
-            className="w-[1200px] h-[980px] drop-shadow-2xl overflow-visible select-none"
-            style={{ maxWidth: 'none', maxHeight: 'none' }}
+            viewBox={`0 0 1200 ${MAP_H}`}
+            className="w-[1200px] drop-shadow-2xl overflow-visible select-none"
+            style={{ maxWidth: 'none', maxHeight: 'none', height: MAP_H }}
           >
             <defs>
               {/* Floor ambient lighting */}
@@ -404,8 +438,8 @@ export default function ArenaSeatMap({
             </defs>
 
             {/* Arena Flooring Background */}
-            <rect x="0" y="0" width="1200" height="980" fill="#0d0e12" rx="16" />
-            <rect x="15" y="15" width="1170" height="950" fill="none" stroke="#27272a" strokeWidth="2" strokeDasharray="6 6" rx="12" />
+            <rect x="0" y="0" width="1200" height={MAP_H} fill="#0d0e12" rx="16" />
+            <rect x="15" y="15" width="1170" height={MAP_H - 30} fill="none" stroke="#27272a" strokeWidth="2" strokeDasharray="6 6" rx="12" />
 
             {/* Spotlight on ring area */}
             <circle cx="520" cy="480" r="420" fill="url(#ringSpotlight)" />
@@ -540,7 +574,7 @@ export default function ArenaSeatMap({
                         seatsInTable.forEach(s => handleSeatClick(s, zoneVip, e));
                       }
                     }}
-                    className={`cursor-pointer group ${!allAvailable ? 'opacity-40' : ''}`}
+                    className={`cursor-pointer group transition-opacity ${!allAvailable ? (compact ? 'opacity-60' : 'opacity-40') : ''}${dimClass('MESAS_VIP', hasSelectedSeat)}`}
                   >
                     {/* Chairs around table */}
                     {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => {
@@ -641,7 +675,7 @@ export default function ArenaSeatMap({
                         seatsInTable.forEach(s => handleSeatClick(s, zoneRingside, e));
                       }
                     }}
-                    className={`cursor-pointer group ${!allAvailable ? 'opacity-40' : ''}`}
+                    className={`cursor-pointer group transition-opacity ${!allAvailable ? (compact ? 'opacity-60' : 'opacity-40') : ''}${dimClass('MESAS_VIP_RINGSIDE', hasSelectedSeat)}`}
                   >
                     {/* Chairs */}
                     {[0, 60, 120, 180, 240, 300].map((angle, i) => {
@@ -753,7 +787,7 @@ export default function ArenaSeatMap({
                   onClick={(e) => handleSeatClick(seat, zoneF1, e)}
                   onMouseEnter={(e) => setHoveredSeat({ seat, zone: zoneF1, x: sx, y: sy })}
                   onMouseLeave={() => setHoveredSeat(null)}
-                  className={`cursor-pointer group ${!isAvailable ? 'opacity-40 cursor-pointer' : ''}`}
+                  className={`cursor-pointer group transition-opacity ${!isAvailable ? soldClass : ''}${dimClass('PRIMERA_FILA', isSelected)}`}
                 >
                   <rect
                     x="-12"
@@ -797,7 +831,7 @@ export default function ArenaSeatMap({
                   onClick={(e) => handleSeatClick(seat, zoneF2, e)}
                   onMouseEnter={(e) => setHoveredSeat({ seat, zone: zoneF2, x: sx, y: sy })}
                   onMouseLeave={() => setHoveredSeat(null)}
-                  className={`cursor-pointer group ${!isAvailable ? 'opacity-40 cursor-pointer' : ''}`}
+                  className={`cursor-pointer group transition-opacity ${!isAvailable ? soldClass : ''}${dimClass('SEGUNDA_FILA', isSelected)}`}
                 >
                   <rect
                     x="-12"
@@ -845,7 +879,7 @@ export default function ArenaSeatMap({
                     onClick={(e) => handleSeatClick(seat, zone, e)}
                     onMouseEnter={(e) => setHoveredSeat({ seat, zone, x: sx, y: sy })}
                     onMouseLeave={() => setHoveredSeat(null)}
-                    className={`cursor-pointer group ${!isAvailable ? 'opacity-40 cursor-pointer' : ''}`}
+                    className={`cursor-pointer group transition-opacity ${!isAvailable ? soldClass : ''}${dimClass(zone.zone_type, isSelected)}`}
                   >
                     <rect
                       x="-12"
@@ -874,6 +908,7 @@ export default function ArenaSeatMap({
               })}
 
             {/* === LEGEND AT BOTTOM (Matching the Image) === */}
+            {!compact && (
             <g transform="translate(40, 885)">
               {/* Legend background bar */}
               <rect x="0" y="0" width="1120" height="85" rx="10" fill="#000000" stroke="#27272a" strokeWidth="2" />
@@ -955,6 +990,7 @@ export default function ArenaSeatMap({
                 </text>
               </g>
             </g>
+            )}
           </svg>
         </div>
 
@@ -975,6 +1011,14 @@ export default function ArenaSeatMap({
           </div>
         )}
       </div>
+
+      {compact && (
+        <div className="w-full flex flex-wrap items-center gap-x-5 gap-y-2 border border-t-0 border-white/10 bg-[#0a0a0c] px-4 py-3 text-xs text-zinc-300">
+          <span className="flex items-center gap-2"><span className="w-3.5 h-3.5 bg-red-600" /> Disponible (color de su zona)</span>
+          <span className="flex items-center gap-2"><span className="w-3.5 h-3.5 bg-zinc-900 border border-zinc-600" /> Vendido</span>
+          <span className="flex items-center gap-2"><span className="w-3.5 h-3.5 bg-white ring-2 ring-red-500 ring-offset-1 ring-offset-black" /> Tu selección</span>
+        </div>
+      )}
     </div>
   );
 }

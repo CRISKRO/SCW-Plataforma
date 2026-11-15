@@ -47,6 +47,17 @@ const ZONE_COLORS: Record<string, string> = {
   CUSTOM: 'text-purple-400 border-purple-500',
 };
 
+const ZONE_DOT: Record<string, string> = {
+  MESAS_VIP_RINGSIDE: '#d946ef',
+  MESAS_VIP: '#eab308',
+  PRIMERA_FILA: '#ef4444',
+  SEGUNDA_FILA: '#3b82f6',
+  GENERAL: '#10b981',
+};
+
+const fmtPrice = (n: number) =>
+  `$${n.toLocaleString('es-MX', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 })}`;
+
 const getEventDays = (dateTimeStr?: string) => {
   if (!dateTimeStr) {
     return {
@@ -99,6 +110,7 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
   const [generalCount, setGeneralCount] = useState<number>(0);
   const [selectedDay, setSelectedDay] = useState<'DAY_1' | 'DAY_2' | 'BOTH'>('DAY_1');
   const [showConfirmPanel, setShowConfirmPanel] = useState(false);
+  const [focusZone, setFocusZone] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const addItem = useCartStore((state) => state.addItem);
   const [sessionId] = useState(() => Math.random().toString(36).substring(2, 15));
@@ -340,6 +352,10 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
 
   const isArenaMap = event?.map_type === 'ARENA_VIP' || zones.some(z => ['MESAS_VIP_RINGSIDE', 'MESAS_VIP', 'PRIMERA_FILA', 'SEGUNDA_FILA'].includes(z.zone_type));
 
+  const zoneDot = (zone: any) => ZONE_DOT[zone.zone_type] || zone.color || '#ef4444';
+  const zonePrice = (zone: any) =>
+    !!event?.is_multi_day && selectedDay === 'BOTH' && zone.price_abono ? parseFloat(zone.price_abono) : parseFloat(zone.price);
+
   const isSeatSelected = (seatId: number) =>
     selectedSeats.some(s => s.seatId === seatId);
 
@@ -556,81 +572,29 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
     <div className="bg-black min-h-screen text-white pt-24 pb-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        {/* Event Header - Boleto Físico Coleccionable SCW */}
-        <div className="relative w-full rounded-2xl bg-[#0e0f13] border border-white/15 shadow-2xl shadow-black/80 overflow-hidden flex flex-col md:flex-row mb-10 group">
-          {/* Fondo con textura sutil e iluminación ambiental */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-red-950/30 via-zinc-950/80 to-[#090a0d] pointer-events-none" />
-
-          {/* Franja roja lateral conmemorativa */}
-          <div className="hidden md:flex w-9 bg-gradient-to-b from-red-600 via-red-700 to-red-900 items-center justify-center shrink-0 border-r border-red-500/40 relative">
-            <span className="text-[10px] font-black tracking-[0.3em] uppercase text-white rotate-[-90deg] whitespace-nowrap drop-shadow">
-              ★ PASE OFICIAL SCW ★
-            </span>
-          </div>
-
-          {/* Cuerpo principal del ticket */}
-          <div className="flex-1 p-5 sm:p-6 md:p-8 relative z-10 flex flex-col justify-between">
-            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-              <div>
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight text-white drop-shadow-md">
-                  {event.title}
-                </h1>
-                <p className="text-zinc-400 text-xs font-bold uppercase tracking-wider mt-1">
-                  {event.location || (isArenaMap ? 'Labrú' : 'The Wrestling Factory')} · Acceso a Zona de Asientos
-                </p>
-              </div>
-
-              {/* Enlace para volver */}
-              <Link
-                href={`/eventos/${slug}`}
-                className="self-start md:self-auto py-2.5 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-white/10 text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-sm hover:border-white/20 active:scale-95 shrink-0"
-              >
-                <ArrowLeft className="w-3.5 h-3.5 text-red-500" />
-                Volver al Evento
-              </Link>
-            </div>
-
-            {/* Cápsulas de datos */}
-            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 mt-5 pt-4 border-t border-white/10">
-              {/* Fecha */}
-              <div className="flex items-center gap-2.5 bg-zinc-900/90 border border-white/10 px-3.5 py-2 rounded-xl">
-                <Calendar className="w-4 h-4 text-red-500 shrink-0" />
-                <div className="leading-tight">
-                  <span className="text-[9px] uppercase font-bold text-zinc-400 block tracking-wider">FECHA</span>
-                  <span className="text-xs font-black text-white uppercase tracking-tight">
-                    {new Date(event.date_time).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
-                  </span>
-                </div>
-              </div>
-
-              {/* Hora */}
-              <div className="flex items-center gap-2.5 bg-zinc-900/90 border border-white/10 px-3.5 py-2 rounded-xl">
-                <Clock className="w-4 h-4 text-red-500 shrink-0" />
-                <div className="leading-tight">
-                  <span className="text-[9px] uppercase font-bold text-zinc-400 block tracking-wider">HORARIO</span>
-                  <span className="text-xs font-black text-white uppercase tracking-tight">
-                    {new Date(event.date_time).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}
-                  </span>
-                </div>
-              </div>
-
-              {/* Sede con enlace */}
-              <a
-                href={getEventMapUrl(event.location)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2.5 bg-zinc-900/90 border border-white/10 hover:border-red-500/40 px-3.5 py-2 rounded-xl transition-all group/loc"
-                title="Ver ubicación en Google Maps"
-              >
-                <MapPin className="w-4 h-4 text-red-500 shrink-0 group-hover/loc:scale-110 transition-transform" />
-                <div className="leading-tight">
-                  <span className="text-[9px] uppercase font-bold text-zinc-400 block tracking-wider">SEDE</span>
-                  <span className="text-xs font-black text-zinc-200 group-hover/loc:text-white uppercase tracking-tight">
-                    {event.location || 'The Wrestling Factory'}
-                  </span>
-                </div>
+        {/* Encabezado compacto */}
+        <div className="flex items-center gap-3 sm:gap-4 pb-4 mb-5 border-b border-white/10">
+          <Link
+            href={`/eventos/${slug}`}
+            className="shrink-0 flex items-center gap-2 border border-zinc-700 hover:border-white px-3 py-2.5 text-xs font-black uppercase tracking-widest text-zinc-300 hover:text-white transition-colors"
+            aria-label="Volver al evento"
+          >
+            <ArrowLeft className="w-4 h-4 text-red-500" />
+            <span className="hidden sm:inline">Volver</span>
+          </Link>
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-black italic uppercase tracking-tight leading-none truncate">
+              {event.title}
+            </h1>
+            <p className="text-zinc-400 text-xs sm:text-sm font-semibold mt-1.5 truncate first-letter:uppercase">
+              {new Date(event.date_time).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' })}
+              {' · '}
+              {new Date(event.date_time).toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit', hour12: true })}
+              {' · '}
+              <a href={getEventMapUrl(event.location)} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 decoration-red-600 hover:text-white">
+                {event.location || (isArenaMap ? 'La Bru' : 'The Wrestling Factory')}
               </a>
-            </div>
+            </p>
           </div>
         </div>
 
@@ -717,256 +681,46 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
           </div>
         )}
 
-        <div className="flex flex-col-reverse lg:flex-row gap-8 items-start">
+        {/* Zonas como etiquetas (celular) */}
+        <div className="lg:hidden flex gap-2 overflow-x-auto pb-2 mb-3 -mx-4 px-4">
+          {zones.map((zone) => {
+            const isGeneral = zone.zone_type === 'GENERAL';
+            const active = !isGeneral && focusZone === zone.zone_type;
+            return (
+              <button
+                key={zone.id}
+                type="button"
+                onClick={() => (isGeneral ? handleAddGeneral() : setFocusZone(active ? null : zone.zone_type))}
+                className={`shrink-0 flex items-center gap-2 border px-3 py-2 text-xs font-bold whitespace-nowrap transition-colors ${active ? 'border-red-500 bg-zinc-900' : 'border-zinc-700'}`}
+              >
+                <span className="w-3 h-3 shrink-0" style={{ background: zoneDot(zone) }} />
+                {ZONE_LABELS[zone.zone_type] || zone.name || zone.zone_type} {fmtPrice(zonePrice(zone))}
+                {isGeneral && <PlusIcon className="w-3.5 h-3.5 text-zinc-400" />}
+              </button>
+            );
+          })}
+        </div>
 
-          {/* --- LEFT / SIDEBAR: Zonas, Precios y Carrito de Selección --- */}
-          <div className="w-full lg:w-96 xl:w-[420px] shrink-0 space-y-6 sticky top-24 z-20">
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
 
-            {/* 1. Selector de Zonas y Precios (Amplio y de alta legibilidad) */}
-            <div className="bg-[#0e0f13] border border-white/15 rounded-2xl p-5 sm:p-6 shadow-2xl shadow-black/80">
-              <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
-                <div>
-                  <h3 className="font-black uppercase tracking-wider text-base sm:text-lg text-white flex items-center gap-2.5">
-                    <Ticket className="w-5 h-5 text-red-500" />
-                    Zonas y Precios
-                  </h3>
-                  <p className="text-xs text-zinc-400 mt-0.5 font-medium">
-                    Precios oficiales por boleto
-                  </p>
-                </div>
-                <span className="text-xs font-black font-mono text-zinc-300 uppercase tracking-widest px-2.5 py-1 rounded-md bg-zinc-900 border border-white/10">
-                  {zones.length} ZONAS
-                </span>
-              </div>
-
-              <div className="space-y-3">
-                {zones.map((zone) => {
-                  const isGeneral = zone.zone_type === 'GENERAL';
-                  const isAbonoActive = !!event?.is_multi_day && selectedDay === 'BOTH';
-                  const priceVal = isAbonoActive && zone.price_abono ? parseFloat(zone.price_abono) : parseFloat(zone.price);
-                  const isTable = zone.zone_type === 'MESAS_VIP' || zone.zone_type === 'MESAS_VIP_RINGSIDE';
-
-                  return (
-                    <div
-                      key={zone.id}
-                      className={`p-3.5 sm:p-4 rounded-xl border transition-all ${
-                        isGeneral && generalCount > 0
-                          ? 'bg-emerald-950/20 border-emerald-500/40 ring-1 ring-emerald-500/30'
-                          : 'bg-zinc-900/80 hover:bg-zinc-900 border-white/10 hover:border-white/20'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        {/* Indicador de color y Nombre de Zona */}
-                        <div className="flex items-center gap-3 min-w-0">
-                          <span
-                            className={`w-3.5 h-3.5 rounded-full shrink-0 shadow-md ${
-                              zone.zone_type === 'MESAS_VIP_RINGSIDE'
-                                ? 'bg-pink-500 shadow-pink-500/50'
-                                : zone.zone_type === 'MESAS_VIP'
-                                ? 'bg-amber-400 shadow-amber-400/50'
-                                : zone.zone_type === 'PRIMERA_FILA'
-                                ? 'bg-red-500 shadow-red-500/50'
-                                : zone.zone_type === 'SEGUNDA_FILA'
-                                ? 'bg-blue-500 shadow-blue-500/50'
-                                : zone.zone_type === 'GENERAL'
-                                ? 'bg-emerald-400 shadow-emerald-400/50'
-                                : 'bg-red-500'
-                            }`}
-                          />
-                          <div className="min-w-0">
-                            <span className="font-black text-sm sm:text-base text-white block tracking-tight truncate">
-                              {ZONE_LABELS[zone.zone_type] || zone.name || zone.zone_type}
-                            </span>
-                            <span className="text-[11px] sm:text-xs text-zinc-400 block font-medium mt-0.5">
-                              {isTable
-                                ? 'Mesa VIP · Elige en el mapa'
-                                : isGeneral
-                                ? 'Entrada Libre · Sin numeración'
-                                : 'Asiento asignado · Elige en el mapa'}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Precio en grande y bien destacado */}
-                        <div className="text-right shrink-0">
-                          <div className="text-base sm:text-xl font-black text-amber-400 font-mono tracking-tight">
-                            ${priceVal.toFixed(2)}
-                            <span className="text-xs text-zinc-400 font-bold ml-1">MXN</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Acción específica si es General: botón claro y grande para agregar */}
-                      {isGeneral && (
-                        <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between gap-3">
-                          <span className="text-xs font-bold text-zinc-300">
-                            Boletos Generales:
-                          </span>
-                          {generalCount === 0 ? (
-                            <button
-                              type="button"
-                              onClick={handleAddGeneral}
-                              className="py-1.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-400/60 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-md shadow-emerald-950/60 hover:scale-[1.02] active:scale-95"
-                            >
-                              <PlusIcon className="w-4 h-4" /> Agregar
-                            </button>
-                          ) : (
-                            <div className="flex items-center gap-2 bg-black border-2 border-emerald-500 rounded-xl px-2 py-1 shadow-inner">
-                              <button
-                                type="button"
-                                onClick={handleRemoveGeneral}
-                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white font-bold transition-colors active:scale-95"
-                                title="Quitar 1 boleto"
-                              >
-                                <Minus className="w-3.5 h-3.5" />
-                              </button>
-                              <span className="text-sm sm:text-base font-black text-emerald-400 font-mono min-w-[28px] text-center">
-                                {generalCount}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={handleAddGeneral}
-                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-colors active:scale-95"
-                                title="Agregar otro boleto"
-                              >
-                                <PlusIcon className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* 2. Carrito de Boletos Seleccionados */}
-            <div className="bg-zinc-950 border border-white/10 rounded-2xl p-5 shadow-2xl">
-              <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-2.5">
-                <h3 className="font-bold uppercase tracking-widest text-xs text-white flex items-center gap-2">
-                  <ShoppingCart className="w-3.5 h-3.5 text-red-500" />
-                  Boletos Seleccionados ({totalItemsCount})
-                </h3>
-                {totalItemsCount > 0 && (
-                  <button
-                    onClick={() => {
-                      setSelectedSeats([]);
-                      setGeneralCount(0);
-                    }}
-                    className="text-[10px] text-zinc-500 hover:text-red-400 transition-colors uppercase font-mono"
-                  >
-                    Limpiar
-                  </button>
-                )}
-              </div>
-
-              {totalItemsCount === 0 ? (
-                <div className="py-6 text-center">
-                  <ShoppingCart className="w-8 h-8 text-zinc-700 mx-auto mb-2 opacity-50" />
-                  <p className="text-xs text-zinc-400 font-medium">Ningún boleto seleccionado aún</p>
-                  <p className="text-[11px] text-zinc-600 mt-1">Haz clic en los asientos o zonas del mapa para agregarlos aquí.</p>
-                </div>
-              ) : (
-                <>
-                  <ul className="space-y-2 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
-                    {selectedSeats.map(seat => {
-                      const isTable = seat.zoneType === 'MESAS_VIP' || seat.zoneType === 'MESAS_VIP_RINGSIDE';
-                      const labelDetail = isTable
-                        ? `Mesa ${seat.seatNumber}`
-                        : (seat.zoneType === 'PRIMERA_FILA' || seat.zoneType === 'SEGUNDA_FILA')
-                          ? `Asiento ${seat.seatNumber}`
-                          : `Fila ${seat.rowName} Asiento ${seat.seatNumber}`;
-
-                      return (
-                        <li key={seat.seatId} className="flex items-center justify-between text-xs bg-zinc-900/70 border border-white/5 rounded-xl p-2.5">
-                          <span className="text-zinc-300 pr-2">
-                            <span className={`font-bold ${ZONE_COLORS[seat.zoneType]?.split(' ')[0] || 'text-white'}`}>
-                              {ZONE_LABELS[seat.zoneType]}
-                            </span>
-                            {' · '}{labelDetail}
-                          </span>
-                          <div className="flex items-center gap-2 text-right shrink-0">
-                            <span className="text-white font-bold font-mono">${seat.price.toFixed(2)}</span>
-                            <button onClick={() => removeSeat(seat.seatId)} className="text-zinc-500 hover:text-red-400 transition-colors p-0.5" title="Eliminar">
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </li>
-                      );
-                    })}
-
-                    {generalCount > 0 && generalZone && (
-                      <li className="flex items-center justify-between text-xs bg-zinc-900/70 border border-emerald-500/20 rounded-xl p-2.5">
-                        <div className="pr-2">
-                          <span className="font-bold text-emerald-400 block">General</span>
-                          <span className="text-[10px] text-zinc-400 font-medium">Sin Numeración ({generalCount}x)</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-right shrink-0">
-                          <div className="flex items-center gap-1 bg-zinc-950 border border-emerald-500/40 rounded px-1.5 py-0.5 mr-1">
-                            <button type="button" onClick={handleRemoveGeneral} className="text-zinc-400 hover:text-white">
-                              <Minus className="w-2.5 h-2.5" />
-                            </button>
-                            <span className="text-[11px] font-bold text-emerald-400 font-mono px-1">{generalCount}</span>
-                            <button type="button" onClick={handleAddGeneral} className="text-zinc-400 hover:text-white">
-                              <PlusIcon className="w-2.5 h-2.5" />
-                            </button>
-                          </div>
-                          <span className="text-white font-bold font-mono">${generalTotal.toFixed(2)}</span>
-                          <button onClick={handleClearGeneral} className="text-zinc-500 hover:text-red-400 transition-colors p-0.5" title="Eliminar">
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </li>
-                    )}
-                  </ul>
-
-                  <div className="border-t border-white/10 mt-3 pt-3 flex justify-between items-center font-bold">
-                    <span className="text-zinc-400 uppercase tracking-widest text-xs">Total</span>
-                    <span className="text-white text-base font-black font-mono">${totalPrice.toFixed(2)} <span className="text-[10px] text-zinc-500 font-normal">MXN</span></span>
-                  </div>
-
-                  <button
-                    onClick={() => setShowConfirmPanel(true)}
-                    className="mt-4 w-full bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-500 hover:via-red-500 hover:to-red-600 border-2 border-white text-white font-black uppercase tracking-wider py-3.5 rounded-xl transition-all shadow-xl shadow-red-950/50 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    Confirmar Selección
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* --- RIGHT: Seat map --- */}
-          <div className="w-full flex-1 min-w-0 transition-all duration-500">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-              <h2 className="text-xl md:text-3xl font-black uppercase tracking-tight flex items-center justify-between">
-                <span>Selecciona tus Asientos</span>
-                {totalItemsCount === 0 && <span className="text-sm font-medium text-zinc-500 tracking-normal hidden md:inline-block ml-4">Haz clic en un asiento o zona para comenzar</span>}
-              </h2>
-
-              {/* Controles de Zoom para mapa clásico */}
-              {!isArenaMap && parsedZones.length > 0 && (
-                <div className="flex items-center gap-1 bg-zinc-900 border border-white/10 rounded-lg p-1">
-                  <button onClick={handleZoomOut} className="p-2 hover:bg-zinc-800 rounded text-white transition-colors" title="Alejar">
+          {/* --- Mapa --- */}
+          <div className="w-full flex-1 min-w-0">
+            {!isArenaMap && parsedZones.length > 0 && (
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs sm:text-sm text-zinc-400">Toca un asiento para elegirlo</span>
+                <div className="flex items-center gap-1 bg-zinc-900 border border-white/10 p-1">
+                  <button onClick={handleZoomOut} className="p-2 hover:bg-zinc-800 text-white transition-colors" title="Alejar">
                     <Minus className="w-4 h-4" />
                   </button>
-                  <button onClick={handleResetZoom} className="px-3 py-1 hover:bg-zinc-800 rounded text-xs font-bold text-white transition-colors min-w-[60px]" title="Restablecer vista">
+                  <button onClick={handleResetZoom} className="px-3 py-1 hover:bg-zinc-800 text-xs font-bold text-white transition-colors min-w-[60px]" title="Restablecer vista">
                     {Math.round(scale * 100)}%
                   </button>
-                  <button onClick={handleZoomIn} className="p-2 hover:bg-zinc-800 rounded text-white transition-colors" title="Acercar">
+                  <button onClick={handleZoomIn} className="p-2 hover:bg-zinc-800 text-white transition-colors" title="Acercar">
                     <PlusIcon className="w-4 h-4" />
                   </button>
                 </div>
-              )}
-            </div>
-
-            {/* Show overlay hint on mobile */}
-            <div className="md:hidden text-center text-zinc-400 text-xs mb-3 font-semibold flex items-center justify-center gap-1.5 bg-zinc-900/80 py-2 px-3 rounded-xl border border-white/10 shadow-sm">
-              <Info className="w-4 h-4 text-red-500 shrink-0" />
-              <span>Usa un dedo para mover el mapa, dos para hacer zoom</span>
-            </div>
+              </div>
+            )}
 
             {isArenaMap ? (
               <ArenaSeatMap
@@ -975,6 +729,8 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
                 selectedGeneralCount={generalCount}
                 onToggleSeat={(seat, zone) => toggleSeat(seat, zone)}
                 onSelectGeneral={handleAddGeneral}
+                compact
+                focusZoneType={focusZone}
               />
             ) : (
               <>
@@ -1054,23 +810,120 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
                 </div>
               </>
             )}
-            </div>
           </div>
-        </div>
 
-        {/* Floating Mobile Cart Bar */}
-        {totalItemsCount > 0 && (
-          <div className="lg:hidden fixed bottom-4 left-4 right-4 z-40 bg-zinc-950/95 border border-white/20 rounded-2xl p-4 shadow-2xl backdrop-blur-md flex items-center justify-between">
-            <div>
-              <span className="text-xs text-zinc-400 block font-bold uppercase">{totalItemsCount} boleto(s)</span>
-              <span className="text-base font-black text-white font-mono">${totalPrice.toFixed(2)} MXN</span>
+          {/* --- Panel: zonas, selección y total --- */}
+          <aside className="w-full lg:w-[340px] shrink-0 lg:sticky lg:top-24 border border-white/10 bg-[#0b0b0d]">
+            <div className="hidden lg:block">
+              <h3 className="text-xs font-black uppercase tracking-[0.18em] text-zinc-400 px-4 pt-4 pb-2">Zonas y precios</h3>
+              {zones.map((zone) => {
+                const isGeneral = zone.zone_type === 'GENERAL';
+                const active = !isGeneral && focusZone === zone.zone_type;
+                return (
+                  <div key={zone.id} className={`flex items-center gap-3 border-t border-white/5 ${active ? 'bg-zinc-900 shadow-[inset_3px_0_0_#ef4444]' : ''}`}>
+                    <button
+                      type="button"
+                      onClick={() => (isGeneral ? handleAddGeneral() : setFocusZone(active ? null : zone.zone_type))}
+                      className="flex-1 min-w-0 flex items-center gap-3 px-4 py-3 text-left hover:bg-zinc-900/70 transition-colors"
+                      title={isGeneral ? 'Agregar un boleto General' : 'Resaltar esta zona en el mapa'}
+                    >
+                      <span className="w-3.5 h-3.5 shrink-0" style={{ background: zoneDot(zone) }} />
+                      <span className="flex-1 min-w-0">
+                        <span className="block text-sm font-semibold text-white truncate">{ZONE_LABELS[zone.zone_type] || zone.name || zone.zone_type}</span>
+                        {isGeneral && <span className="block text-[11px] text-zinc-500 mt-0.5">Sin numeración · toca para agregar</span>}
+                      </span>
+                      <span className="text-sm font-extrabold text-white">{fmtPrice(zonePrice(zone))}</span>
+                    </button>
+                  </div>
+                );
+              })}
             </div>
-            <button
-              onClick={() => setShowConfirmPanel(true)}
-              className="bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-wider py-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-lg shadow-red-600/30 active:scale-95 transition-all"
-            >
-              <CheckCircle className="w-4 h-4" />
-              Confirmar
+
+            <div className="flex items-center justify-between px-4 pt-4 pb-2 lg:border-t lg:border-white/10">
+              <h3 className="text-xs font-black uppercase tracking-[0.18em] text-zinc-400">Tu selección ({totalItemsCount})</h3>
+              {totalItemsCount > 0 && (
+                <button
+                  onClick={() => {
+                    setSelectedSeats([]);
+                    setGeneralCount(0);
+                  }}
+                  className="text-[11px] text-zinc-500 hover:text-red-400 transition-colors uppercase font-bold tracking-wider"
+                >
+                  Limpiar
+                </button>
+              )}
+            </div>
+
+            {totalItemsCount === 0 ? (
+              <p className="px-4 pb-5 pt-1 text-sm text-zinc-500">Aún no eliges boletos. Toca un asiento, una mesa o la zona General en el mapa.</p>
+            ) : (
+              <>
+                <ul className="max-h-64 overflow-y-auto custom-scrollbar">
+                  {selectedSeats.map(seat => {
+                    const isTable = seat.zoneType === 'MESAS_VIP' || seat.zoneType === 'MESAS_VIP_RINGSIDE';
+                    const labelDetail = isTable
+                      ? `Mesa ${seat.seatNumber}`
+                      : (seat.zoneType === 'PRIMERA_FILA' || seat.zoneType === 'SEGUNDA_FILA')
+                        ? `Asiento ${seat.seatNumber}`
+                        : `Fila ${seat.rowName} Asiento ${seat.seatNumber}`;
+                    return (
+                      <li key={seat.seatId} className="flex items-center gap-3 px-4 py-3 border-t border-white/5 text-sm">
+                        <span className="w-3.5 h-3.5 shrink-0" style={{ background: ZONE_DOT[seat.zoneType] || '#ef4444' }} />
+                        <span className="flex-1 min-w-0 font-semibold text-white truncate">{ZONE_LABELS[seat.zoneType]} · {labelDetail}</span>
+                        <span className="text-zinc-200">{fmtPrice(seat.price)}</span>
+                        <button onClick={() => removeSeat(seat.seatId)} className="text-zinc-500 hover:text-red-400 transition-colors p-1" title="Quitar" aria-label={`Quitar ${labelDetail}`}>
+                          <X className="w-4 h-4" />
+                        </button>
+                      </li>
+                    );
+                  })}
+
+                  {generalCount > 0 && generalZone && (
+                    <li className="flex items-center gap-3 px-4 py-3 border-t border-white/5 text-sm">
+                      <span className="w-3.5 h-3.5 shrink-0" style={{ background: ZONE_DOT.GENERAL }} />
+                      <span className="flex-1 min-w-0 font-semibold text-white">General</span>
+                      <span className="flex items-center border border-zinc-700">
+                        <button type="button" onClick={handleRemoveGeneral} className="p-1.5 text-zinc-300 hover:text-white" title="Quitar 1 boleto" aria-label="Quitar un boleto General">
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <span className="px-2 text-sm font-bold text-white min-w-[28px] text-center">{generalCount}</span>
+                        <button type="button" onClick={handleAddGeneral} className="p-1.5 text-zinc-300 hover:text-white" title="Agregar otro boleto" aria-label="Agregar un boleto General">
+                          <PlusIcon className="w-3.5 h-3.5" />
+                        </button>
+                      </span>
+                      <span className="text-zinc-200">{fmtPrice(generalTotal)}</span>
+                      <button onClick={handleClearGeneral} className="text-zinc-500 hover:text-red-400 transition-colors p-1" title="Quitar" aria-label="Quitar boletos General">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </li>
+                  )}
+                </ul>
+
+                <div className="flex items-baseline justify-between px-4 py-4 border-t border-white/10">
+                  <span className="text-sm text-zinc-400">Total</span>
+                  <span className="text-2xl font-black text-white">{fmtPrice(totalPrice)} <span className="text-xs text-zinc-400 font-semibold">MXN</span></span>
+                </div>
+
+                <div className="hidden lg:block px-4 pb-4">
+                  <button onClick={() => setShowConfirmPanel(true)} className="btn-cartel w-full py-4 text-sm">
+                    Continuar
+                  </button>
+                </div>
+              </>
+            )}
+          </aside>
+        </div>
+      </div>
+
+        {/* Barra de compra en celular */}
+        {totalItemsCount > 0 && (
+          <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0b0b0d]/95 backdrop-blur-md border-t border-white/10 px-4 pt-3 pb-[calc(0.9rem+env(safe-area-inset-bottom))] flex items-center gap-4">
+            <div className="leading-tight">
+              <span className="text-xs text-zinc-400 block">{totalItemsCount} boleto{totalItemsCount === 1 ? '' : 's'}</span>
+              <span className="text-xl font-black text-white">{fmtPrice(totalPrice)}</span>
+            </div>
+            <button onClick={() => setShowConfirmPanel(true)} className="btn-cartel flex-1 py-3.5 text-sm">
+              Continuar
             </button>
           </div>
         )}
