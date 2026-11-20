@@ -53,7 +53,7 @@ export default async function Home() {
     if (fightersRes && Array.isArray(fightersRes)) fightersData = fightersRes;
     if (chroniclesRes && Array.isArray(chroniclesRes)) chroniclesData = chroniclesRes;
     if (videosRes) {
-      premiumVideos = videosRes.data || (Array.isArray(videosRes) ? videosRes : []);
+      premiumVideos = videosRes.results || videosRes.data || (Array.isArray(videosRes) ? videosRes : []);
     }
     if (sponsorsRes && Array.isArray(sponsorsRes)) sponsorsData = sponsorsRes;
     if (rafflesRes && Array.isArray(rafflesRes)) rafflesData = rafflesRes;
@@ -69,7 +69,6 @@ export default async function Home() {
   const events = publishedEvents.slice(0, 3);
   const roster = fightersData.slice(0, 4);
   const chronicles = chroniclesData.slice(0, 3);
-  premiumVideos = premiumVideos.slice(0, 2);
   const sponsors = sponsorsData.filter((s: any) => s.is_active);
   const activeRaffles = rafflesData.filter((r: any) => r.is_active);
   const activeEventPosts = eventPostsData.filter((p: any) => p.is_active && p.event_status !== 'DRAFT');

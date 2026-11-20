@@ -180,8 +180,8 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
         if (!premiumVideos || premiumVideos.length === 0) {
           const vRes = await api.get('/premium/videos/').catch(() => null);
           if (vRes && vRes.data) {
-            const vList = Array.isArray(vRes.data) ? vRes.data : (vRes.data.data || []);
-            if (vList.length > 0) setLocalVideos(vList.slice(0, 2));
+            const vList = Array.isArray(vRes.data) ? vRes.data : (vRes.data.results || vRes.data.data || []);
+            if (vList.length > 0) setLocalVideos(vList);
           }
         }
       } catch (e) {
@@ -665,26 +665,65 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
       {/* Premium Video Section */}
       <section className="py-12 lg:py-16 bg-black relative border-t border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center w-full max-w-4xl mx-auto">
+          <div className="text-center w-full">
             <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight mb-4">¿Quieres ver más acción?</h2>
             <p className="text-zinc-500 mb-8 max-w-2xl mx-auto">Disfruta de contenido exclusivo en nuestra plataforma SCW Premium.</p>
-            <div className={`grid grid-cols-1 ${localVideos.length > 1 ? 'md:grid-cols-2' : ''} gap-6 mb-8`}>
+            <div
+              className={`grid grid-cols-1 ${
+                localVideos.length >= 3
+                  ? 'sm:grid-cols-2 lg:grid-cols-3'
+                  : localVideos.length === 2
+                    ? 'md:grid-cols-2 max-w-4xl mx-auto'
+                    : 'max-w-md mx-auto'
+              } gap-6 mb-8`}
+            >
               {localVideos.length > 0 ? (
                 localVideos.map((video: any, idx: number) => {
-                  const thumb = video.youtube_id ? `https://i.ytimg.com/vi/${video.youtube_id}/hqdefault.jpg` : (video.video_url ? getYoutubeThumbnail(video.video_url) : '');
+                  const thumb = video.youtube_id
+                    ? `https://i.ytimg.com/vi/${video.youtube_id}/hqdefault.jpg`
+                    : (video.video_url
+                      ? getYoutubeThumbnail(video.video_url)
+                      : (video.thumbnail ? getMediaUrl(video.thumbnail) : ''));
+                  const releaseLabel = video.release_date
+                    ? new Date(video.release_date).toLocaleDateString('es-MX', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                        timeZone: 'America/Mexico_City',
+                      })
+                    : 'VOD';
                   return (
-                    <Link key={idx} href="/premium" className="block relative aspect-video w-full rounded-xl overflow-hidden group border border-white/10 hover:border-red-500/50 transition-colors bg-zinc-900">
-                      <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors z-10"></div>
-                      {thumb ? (
-                        <Image src={thumb} alt={video.title || "SCW Premium"} fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
-                      ) : (
-                        <Image src="/images/scwpremium.webp" alt="SCW Premium" fill className="object-cover transform group-hover:scale-105 transition-transform duration-500" />
-                      )}
-                      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center">
-                        <div className="w-14 h-14 rounded-full bg-red-600/90 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg mb-3">
-                          <PlayCircle className="w-8 h-8 text-white" />
+                    <Link
+                      key={video.id ?? idx}
+                      href="/premium"
+                      className="group flex flex-col rounded-xl overflow-hidden border border-white/10 hover:border-red-500/50 transition-all duration-300 hover:-translate-y-1 bg-zinc-900 text-left"
+                    >
+                      <div className="relative aspect-video w-full bg-zinc-950 overflow-hidden">
+                        <div className="absolute inset-0 bg-black/30 group-hover:bg-black/15 transition-colors z-10"></div>
+                        <Image
+                          src={thumb || '/images/scwpremium.webp'}
+                          alt={video.title || 'SCW Premium'}
+                          fill
+                          className="object-cover transform group-hover:scale-105 transition-transform duration-500"
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        />
+                        <div className="absolute inset-0 z-20 flex items-center justify-center">
+                          <div className="w-14 h-14 rounded-full bg-red-600/90 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+                            <PlayCircle className="w-8 h-8 text-white" />
+                          </div>
                         </div>
-                        <span className="bg-black/80 backdrop-blur-md text-white font-black uppercase tracking-widest px-4 py-2 rounded text-xs shadow-xl border border-white/10">Explora Premium</span>
+                        <div className="absolute top-3 left-3 z-20 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded">
+                          PREMIUM
+                        </div>
+                      </div>
+                      <div className="p-4 flex-1 flex flex-col justify-between gap-2">
+                        <h3 className="text-base sm:text-lg font-black uppercase tracking-tight text-white group-hover:text-red-400 transition-colors line-clamp-2">
+                          {video.title || 'SCW Premium'}
+                        </h3>
+                        <div className="flex items-center justify-between text-xs font-bold uppercase tracking-widest text-zinc-400">
+                          <span>{releaseLabel}</span>
+                          <span className="text-red-500 group-hover:text-red-400">Explora Premium</span>
+                        </div>
                       </div>
                     </Link>
                   );
@@ -702,6 +741,13 @@ export default function HomeCarousel({ events, upcomingEvents, roster, chronicle
                 </Link>
               )}
             </div>
+            {localVideos.length > 0 && (
+              <div className="flex justify-center">
+                <Link href="/premium" className="btn-cartel px-8 py-3.5 text-xs sm:text-sm">
+                  Explora SCW Premium
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </section>
