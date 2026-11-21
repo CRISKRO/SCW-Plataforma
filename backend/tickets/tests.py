@@ -2,13 +2,12 @@ from datetime import timedelta
 
 from django.test import TestCase
 from django.utils import timezone
-from rest_framework.test import APIRequestFactory
+from rest_framework.test import APIClient
 
 from events.models import Event
 from payments.models import Order, OrderItem
 from .models import EventZone, Seat
 from .serializers import SeatSerializer
-from .views import SeatViewSet
 
 
 class SeatHoldProtectionTests(TestCase):
@@ -25,13 +24,13 @@ class SeatHoldProtectionTests(TestCase):
             Seat.objects.create(zone=self.zone, row_name="A", seat_number=i)
             for i in range(1, 21)
         ]
-        self.factory = APIRequestFactory()
+        self.client = APIClient()
 
     def lock(self, ids, session="session123", ip="192.0.2.1", day="ALL"):
-        request = self.factory.post("/api/tickets/seats/lock_seats/", {
+        # Use the real URL router so @action permission_classes=[AllowAny] applies.
+        return self.client.post("/api/tickets/seats/lock_seats/", {
             "seat_ids": ids, "session_id": session, "day": day
         }, format="json", REMOTE_ADDR=ip)
-        return SeatViewSet.as_view({"post": "lock_seats"})(request)
 
     def test_request_rejects_more_than_six_seats(self):
         response = self.lock([s.id for s in self.seats[:7]])
@@ -70,10 +69,9 @@ class SeatHoldProtectionTests(TestCase):
     def test_same_session_can_unlock_after_network_change(self):
         seat = self.seats[0]
         self.assertEqual(self.lock([seat.id]).status_code, 200)
-        req = self.factory.post("/api/tickets/seats/unlock_seats/", {
+        response = self.client.post("/api/tickets/seats/unlock_seats/", {
             "seat_ids": [seat.id], "session_id": "session123"
         }, format="json", REMOTE_ADDR="198.51.100.1")
-        response = SeatViewSet.as_view({"post": "unlock_seats"})(req)
         seat.refresh_from_db()
         self.assertEqual(response.status_code, 200)
         self.assertIsNone(seat.locked_at)
@@ -81,10 +79,9 @@ class SeatHoldProtectionTests(TestCase):
     def test_different_session_cannot_unlock_reservation(self):
         seat = self.seats[0]
         self.assertEqual(self.lock([seat.id]).status_code, 200)
-        req = self.factory.post("/api/tickets/seats/unlock_seats/", {
+        response = self.client.post("/api/tickets/seats/unlock_seats/", {
             "seat_ids": [seat.id], "session_id": "another123"
         }, format="json")
-        response = SeatViewSet.as_view({"post": "unlock_seats"})(req)
         seat.refresh_from_db()
         self.assertEqual(response.status_code, 200)
         self.assertIsNotNone(seat.locked_at)
