@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.utils import timezone
-from datetime import timedelta
+from .locking import SEAT_HOLD_TTL
 from .models import EventZone, Seat
 
 class SeatSerializer(serializers.ModelSerializer):
@@ -9,13 +9,13 @@ class SeatSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Seat
-        fields = '__all__'
+        exclude = ('locked_at', 'locked_by_session')
 
     def get_is_locked(self, obj):
         if not obj.is_available:
             return True
         if obj.locked_at:
-            if timezone.now() < obj.locked_at + timedelta(minutes=10):
+            if timezone.now() < obj.locked_at + SEAT_HOLD_TTL:
                 return True
         return False
 

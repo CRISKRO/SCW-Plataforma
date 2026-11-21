@@ -365,6 +365,10 @@ export default function EventDetail({ params }: { params: Promise<{ slug: string
     if (isSeatSelected(seat.id)) {
       setSelectedSeats(prev => prev.filter(s => s.seatId !== seat.id));
     } else {
+      if (selectedSeats.length >= 6) {
+        useToastStore.getState().addToast('Puedes reservar como máximo 6 asientos por compra.', 'error');
+        return;
+      }
       const isAbono = !!event?.is_multi_day && selectedDay === 'BOTH';
       const effectivePrice = isAbono
         ? (zone.price_abono ? parseFloat(zone.price_abono) : parseFloat(zone.price) * 2)
