@@ -47,10 +47,10 @@ class SeatHoldProtectionTests(TestCase):
         self.assertEqual(self.lock([s.id for s in self.seats[:6]]).status_code, 200)
         self.assertEqual(self.lock([self.seats[6].id]).status_code, 429)
 
-    def test_changing_sessions_does_not_bypass_ip_limit(self):
+    def test_different_buyers_behind_same_proxy_can_each_reserve(self):
         self.assertEqual(self.lock([s.id for s in self.seats[:6]]).status_code, 200)
         self.assertEqual(self.lock([s.id for s in self.seats[6:12]], "session456").status_code, 200)
-        self.assertEqual(self.lock([self.seats[12].id], "session789").status_code, 429)
+        self.assertEqual(self.lock([self.seats[12].id], "session789").status_code, 200)
 
     def test_expired_holds_are_reclaimable_and_read_as_unlocked(self):
         seat = self.seats[0]
@@ -67,12 +67,23 @@ class SeatHoldProtectionTests(TestCase):
         self.assertEqual(self.lock([seat.id]).status_code, 200)
         self.assertEqual(Seat.objects.get(pk=seat.pk).locked_at, original)
 
-    def test_other_ip_cannot_unlock_reservation(self):
+    def test_same_session_can_unlock_after_network_change(self):
         seat = self.seats[0]
         self.assertEqual(self.lock([seat.id]).status_code, 200)
         req = self.factory.post("/api/tickets/seats/unlock_seats/", {
             "seat_ids": [seat.id], "session_id": "session123"
         }, format="json", REMOTE_ADDR="198.51.100.1")
+        response = SeatViewSet.as_view({"post": "unlock_seats"})(req)
+        seat.refresh_from_db()
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(seat.locked_at)
+
+    def test_different_session_cannot_unlock_reservation(self):
+        seat = self.seats[0]
+        self.assertEqual(self.lock([seat.id]).status_code, 200)
+        req = self.factory.post("/api/tickets/seats/unlock_seats/", {
+            "seat_ids": [seat.id], "session_id": "another123"
+        }, format="json")
         response = SeatViewSet.as_view({"post": "unlock_seats"})(req)
         seat.refresh_from_db()
         self.assertEqual(response.status_code, 200)
