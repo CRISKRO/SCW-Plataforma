@@ -47,11 +47,13 @@ class TrackPageView(APIView):
         if not cache.add(f"scw:audit:page:{key}", 1, timeout=20):
             return Response({"registered": False}, status=200)
 
-        record_event(
+        entry = record_event(
             request=request, category="NAVEGACION", action="VISITA_PAGINA",
             method="VIEW", path=path, visitor_id=str(parsed),
             status_code=200, details={"origen": "navegador"},
         )
+        if entry is None:
+            return Response({"error": "Registro de navegación no disponible."}, status=503)
         return Response({"registered": True}, status=201)
 
 

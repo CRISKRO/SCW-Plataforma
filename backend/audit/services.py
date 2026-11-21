@@ -83,7 +83,9 @@ def audit_api_request(request, response):
             or path.startswith(PRIVATE_PREFIXES)):
         return
     # El acceso exitoso se registra con el usuario real desde AuditedTokenObtainPairView.
-    if path in ("/api/auth/login/", "/api/auth/login") and response.status_code < 400:
+    if (path in ("/api/auth/login/", "/api/auth/login",
+                 "/api/auth/login/google/", "/api/auth/login/google")
+            and response.status_code < 400):
         return
     # Los holds aceptados se registran con ID de asientos y evento en la vista.
     if (path.startswith(("/api/tickets/seats/lock_seats/", "/api/tickets/seats/unlock_seats/"))
