@@ -9,9 +9,8 @@ from django.db.models import Q
 from datetime import timedelta
 from django.utils import timezone
 from .locking import (
-    SEAT_HOLD_TTL, MAX_SEATS_PER_SESSION, MAX_SEATS_PER_IP,
-    VALID_DAYS, SESSION_ID_PATTERN, client_fingerprint,
-    lock_owner, owned_by_request,
+    SEAT_HOLD_TTL, MAX_SEATS_PER_SESSION, VALID_DAYS,
+    SESSION_ID_PATTERN, lock_owner, owned_by_request,
 )
 
 class IsAdminOrReadOnly(BasePermission):
@@ -431,7 +430,6 @@ class SeatViewSet(viewsets.ModelViewSet):
         now = timezone.now()
         cutoff = now - SEAT_HOLD_TTL
         owner = lock_owner(session_id, request)
-        fingerprint = client_fingerprint(request)
 
         with transaction.atomic():
             event_ids = set(Seat.objects.filter(id__in=seat_ids).values_list(
@@ -451,21 +449,15 @@ class SeatViewSet(viewsets.ModelViewSet):
                 zone__event_id=event_id, locked_at__gt=cutoff
             )
             own_locks = active_locks.filter(
-                Q(locked_by_session__startswith=f"{owner}::")
-                | Q(locked_by_session__startswith=f"{session_id}::")
+                Q(locked_by_session__startswith=f"{session_id}::")
+                | Q(locked_by_session__startswith=f"{session_id}~")
             )
             already_own_ids = set(own_locks.values_list('id', flat=True))
             if len(already_own_ids | set(seat_ids)) > MAX_SEATS_PER_SESSION:
                 return Response({"error": "Ya tienes el máximo de 6 asientos reservados."}, status=429)
 
-            ip_hold_ids = set(active_locks.filter(
-                locked_by_session__contains=f"~{fingerprint}::"
-            ).values_list('id', flat=True))
-            new_hold_ids = set(seat_ids) - already_own_ids
-            if len(ip_hold_ids | new_hold_ids) > MAX_SEATS_PER_IP:
-                return Response({
-                    "error": "Demasiados asientos reservados desde esta conexión. Intenta más tarde."
-                }, status=429)
+            # No establecer cupos globales por REMOTE_ADDR: detrás de un
+            # proxy/NAT varios clientes legítimos comparten la misma IP.
 
             for seat in seats:
                 if not seat.is_available:
