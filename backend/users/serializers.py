@@ -13,8 +13,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'first_name', 'last_name', 'phone_number', 'address', 'city', 'state', 'zipcode', 'role', 'is_premium')
-        read_only_fields = ('id', 'role', 'email', 'is_premium')
+        fields = ('id', 'email', 'first_name', 'last_name', 'phone_number', 'address', 'city', 'state', 'zipcode', 'role', 'is_premium', 'is_superuser')
+        read_only_fields = ('id', 'role', 'email', 'is_premium', 'is_superuser')
 
     def get_role(self, obj):
         return obj.role

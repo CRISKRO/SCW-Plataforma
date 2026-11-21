@@ -11,6 +11,7 @@ interface User {
   state?: string;
   zipcode?: string;
   role: string;
+  is_superuser?: boolean;
   is_premium?: boolean;
 }
 
