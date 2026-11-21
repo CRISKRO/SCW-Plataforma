@@ -401,6 +401,14 @@ class GoogleLoginView(APIView):
             from rest_framework_simplejwt.tokens import RefreshToken
             refresh = RefreshToken.for_user(user)
 
+            from audit.services import record_event
+            record_event(
+                request=request, actor=user, category="ACCESOS",
+                action="INICIO_SESION_GOOGLE", method="POST",
+                path="/api/auth/login/google/", status_code=200,
+                details={"resultado": "aceptado"},
+            )
+
             return Response({
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),

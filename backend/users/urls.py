@@ -8,7 +8,8 @@ from .views import (
     SendRegisterWhatsAppOTPView, VerifyRegisterWhatsAppOTPView,
     GoogleLoginView
 )
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenRefreshView
+from audit.login import AuditedTokenObtainPairView
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
@@ -23,7 +24,7 @@ urlpatterns = [
     path('verify-register-whatsapp-otp/', VerifyRegisterWhatsAppOTPView.as_view(), name='verify_register_whatsapp_otp'),
     path('password-reset-otp/', SendPasswordResetOTPView.as_view(), name='send_password_reset_otp'),
     path('password-reset-confirm/', ResetPasswordWithOTPView.as_view(), name='reset_password_with_otp'),
-    path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('login/', AuditedTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('login/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('login/google/', GoogleLoginView.as_view(), name='google_login'),
     path('profile/', UserProfileView.as_view(), name='auth_profile'),

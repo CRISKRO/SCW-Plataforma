@@ -31,6 +31,7 @@ urlpatterns = [
     path('api/gallery/', include('gallery.urls')),
     path('api/settings/', include('api.urls')),
     path('api/raffles/', include('raffles.urls')),
+    path('api/audit/', include('audit.urls')),
 ]
 
 from django.views.static import serve

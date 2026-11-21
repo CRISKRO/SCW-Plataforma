@@ -23,7 +23,8 @@ import {
   Star,
   Gift,
   Ticket,
-  Image as ImageIcon
+  Image as ImageIcon,
+  ScrollText
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
@@ -48,6 +49,7 @@ const sidebarItems = [
   { name: 'Rifas', href: '/admin/raffles', icon: Gift },
   { name: 'Premium', href: '/admin/premium', icon: Video },
   { name: 'Configuración', href: '/admin/settings', icon: Settings },
+  { name: 'Auditoría', href: '/admin/auditoria', icon: ScrollText },
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
@@ -58,7 +60,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const hasPanelAccess = canAccessAdminPath(user?.role, '/admin');
-  const hasPageAccess = canAccessAdminPath(user?.role, pathname);
+  const hasPageAccess = canAccessAdminPath(user?.role, pathname, user?.is_superuser === true);
 
   useEffect(() => {
     setMounted(true);
@@ -92,7 +94,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     );
   }
 
-  const filteredSidebarItems = sidebarItems.filter(item => canAccessAdminPath(user.role, item.href));
+  const filteredSidebarItems = sidebarItems.filter(item => canAccessAdminPath(user.role, item.href, user.is_superuser === true));
 
   return (
     <div className="flex min-h-screen bg-black text-white relative">

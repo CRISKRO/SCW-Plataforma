@@ -502,6 +502,14 @@ class SeatViewSet(viewsets.ModelViewSet):
                     seat.locked_by_session = f"{owner}::{requested_day}"
                     seat.save(update_fields=['locked_at', 'locked_by_session'])
 
+        # El registro usa IDs y día, sin guardar identidad inventada ni datos de pago.
+        from audit.services import record_event
+        record_event(
+            request=request, category="ASIENTOS", action="RESERVAR_ASIENTOS",
+            method="POST", path="/api/tickets/seats/lock_seats/",
+            status_code=200, resource_id=event_id,
+            details={"evento_id": event_id, "asientos": seat_ids, "dia": requested_day},
+        )
         return Response({"status": "locked", "expires_in_seconds": int(SEAT_HOLD_TTL.total_seconds())})
 
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
@@ -514,6 +522,7 @@ class SeatViewSet(viewsets.ModelViewSet):
                 or any(type(seat_id) is not int or seat_id <= 0 for seat_id in seat_ids)):
             return Response({"error": "Asientos inválidos."}, status=400)
 
+        released_ids = []
         with transaction.atomic():
             seats = Seat.objects.select_for_update().filter(id__in=seat_ids)
             for seat in seats:
@@ -521,4 +530,13 @@ class SeatViewSet(viewsets.ModelViewSet):
                     seat.locked_at = None
                     seat.locked_by_session = None
                     seat.save(update_fields=['locked_at', 'locked_by_session'])
+                    released_ids.append(seat.id)
+
+        if released_ids:
+            from audit.services import record_event
+            record_event(
+                request=request, category="ASIENTOS", action="LIBERAR_ASIENTOS",
+                method="POST", path="/api/tickets/seats/unlock_seats/",
+                status_code=200, details={"asientos": released_ids},
+            )
         return Response({"status": "unlocked"})

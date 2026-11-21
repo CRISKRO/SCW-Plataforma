@@ -16,6 +16,7 @@ export const viewport = {
 
 import AuthProvider from "@/components/AuthProvider";
 import ToastProvider from "@/components/ToastProvider";
+import ActivityTracker from "@/components/ActivityTracker";
 
 import GoogleProvider from "@/components/GoogleProvider";
 
@@ -29,6 +30,7 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased bg-black text-white`}>
         <GoogleProvider>
           <AuthProvider>
+            <ActivityTracker />
             {children}
             <ToastProvider />
           </AuthProvider>
