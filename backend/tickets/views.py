@@ -4,6 +4,14 @@ from .models import EventZone, Seat
 from .serializers import EventZoneSerializer, SeatSerializer
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.db import transaction
+from django.db.models import Q
+from django.utils import timezone
+from .locking import (
+    SEAT_HOLD_TTL, MAX_SEATS_PER_SESSION, MAX_SEATS_PER_IP,
+    VALID_DAYS, SESSION_ID_PATTERN, client_fingerprint,
+    lock_owner, owned_by_request,
+)
 
 class IsAdminOrReadOnly(BasePermission):
     def has_permission(self, request, view):
@@ -75,22 +83,13 @@ class EventZoneViewSet(viewsets.ModelViewSet):
                     elif requested_day == 'BOTH' and len(occupied_days) > 0:
                         is_sold_for_day = True
 
-                    is_temp_locked = False
-                    if seat_obj and seat_obj.locked_at and now < seat_obj.locked_at + timedelta(minutes=10):
-                        lock_info = seat_obj.locked_by_session or ""
-                        if "::" in lock_info:
-                            _, lock_day = lock_info.split("::", 1)
-                        else:
-                            lock_day = 'ALL'
-
-                        if lock_day in ['ALL', 'BOTH']:
-                            is_temp_locked = True
-                        elif requested_day == 'DAY_1' and lock_day == 'DAY_1':
-                            is_temp_locked = True
-                        elif requested_day == 'DAY_2' and lock_day == 'DAY_2':
-                            is_temp_locked = True
-                        elif requested_day == 'BOTH':
-                            is_temp_locked = True
+                    # Un registro Seat sólo admite un hold activo a la vez.
+                    # Mostrarlo ocupado en todos los días evita vender dos veces
+                    # durante esta ventana breve.
+                    is_temp_locked = bool(
+                        seat_obj and seat_obj.locked_at
+                        and now < seat_obj.locked_at + SEAT_HOLD_TTL
+                    )
 
                     is_disabled = not seat_data.get('is_available', True)
                     seat_data['is_locked'] = bool(is_sold_for_day or is_temp_locked or is_disabled)
@@ -407,87 +406,126 @@ class SeatViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def lock_seats(self, request):
-        seat_ids = request.data.get('seat_ids', [])
         session_id = request.data.get('session_id')
+        seat_ids = request.data.get('seat_ids')
         requested_day = request.data.get('day', 'ALL')
-        
-        if not seat_ids or not session_id:
-            return Response({"error": "seat_ids y session_id son requeridos"}, status=400)
-            
-        from django.utils import timezone
-        from datetime import timedelta
+
+        if not isinstance(session_id, str) or not SESSION_ID_PATTERN.fullmatch(session_id):
+            return Response({"error": "Sesión de reserva inválida."}, status=400)
+        if requested_day not in VALID_DAYS:
+            return Response({"error": "Día seleccionado inválido."}, status=400)
+        if not isinstance(seat_ids, list) or not 1 <= len(seat_ids) <= MAX_SEATS_PER_SESSION:
+            return Response({"error": "Máximo 6 asientos por compra."}, status=400)
+        # No permitir duplicados, booleanos ni ids arbitrarios.
+        if any(type(seat_id) is not int or seat_id <= 0 for seat_id in seat_ids):
+            return Response({"error": "Identificadores de asientos inválidos."}, status=400)
+        if len(set(seat_ids)) != len(seat_ids):
+            return Response({"error": "Asientos duplicados."}, status=400)
+
+        # La fila del evento serializa las reservas del mismo mapa, incluso
+        # cuando el atacante cambia de sesión o envía requests simultáneas.
+        from events.models import Event
         from payments.models import Order, OrderItem
-        
-        # Verify no seat is already locked by someone else or sold
-        seats = Seat.objects.filter(id__in=seat_ids)
-        if len(seats) != len(seat_ids):
-            return Response({"error": "Algunos asientos no existen"}, status=404)
-            
-        for seat in seats:
-            if not seat.is_available:
-                return Response({"error": f"El asiento {seat.seat_number} de la fila {seat.row_name} no está disponible."}, status=400)
 
-            paid_items = OrderItem.objects.filter(
-                seat=seat,
-                order__status=Order.Status.PAID
-            ).values_list('valid_for_day', flat=True)
-
-            occupied_days = set(paid_items)
-            is_sold = False
-            if 'ALL' in occupied_days or 'BOTH' in occupied_days:
-                is_sold = True
-            elif requested_day == 'DAY_1' and ('DAY_1' in occupied_days or 'BOTH' in occupied_days or 'ALL' in occupied_days):
-                is_sold = True
-            elif requested_day == 'DAY_2' and ('DAY_2' in occupied_days or 'BOTH' in occupied_days or 'ALL' in occupied_days):
-                is_sold = True
-            elif requested_day == 'BOTH' and len(occupied_days) > 0:
-                is_sold = True
-
-            if is_sold:
-                return Response({"error": f"El asiento {seat.seat_number} de la fila {seat.row_name} ya fue vendido para el día seleccionado."}, status=400)
-
-            if seat.locked_at and timezone.now() < seat.locked_at + timedelta(minutes=10):
-                lock_info = seat.locked_by_session or ""
-                if "::" in lock_info:
-                    lock_sess, lock_day = lock_info.split("::", 1)
-                else:
-                    lock_sess, lock_day = lock_info, 'ALL'
-
-                is_conflicting_lock = False
-                if lock_day in ['ALL', 'BOTH']:
-                    is_conflicting_lock = True
-                elif requested_day == 'DAY_1' and lock_day == 'DAY_1':
-                    is_conflicting_lock = True
-                elif requested_day == 'DAY_2' and lock_day == 'DAY_2':
-                    is_conflicting_lock = True
-                elif requested_day == 'BOTH':
-                    is_conflicting_lock = True
-
-                if is_conflicting_lock and lock_sess != session_id:
-                    return Response({"error": f"El asiento {seat.seat_number} de la fila {seat.row_name} está reservado temporalmente por otro usuario."}, status=400)
-                    
-        # Lock them with session and day
         now = timezone.now()
-        for seat in seats:
-            seat.locked_at = now
-            seat.locked_by_session = f"{session_id}::{requested_day}"
-            seat.save(update_fields=['locked_at', 'locked_by_session'])
-            
-        return Response({"status": "locked"})
+        cutoff = now - SEAT_HOLD_TTL
+        owner = lock_owner(session_id, request)
+        fingerprint = client_fingerprint(request)
+
+        with transaction.atomic():
+            event_ids = set(Seat.objects.filter(id__in=seat_ids).values_list(
+                'zone__event_id', flat=True
+            ))
+            if len(event_ids) != 1:
+                return Response({"error": "Los asientos deben pertenecer al mismo evento."}, status=400)
+            event_id = next(iter(event_ids))
+            Event.objects.select_for_update().get(pk=event_id)
+            seats = list(Seat.objects.select_for_update().filter(
+                id__in=seat_ids
+            ).order_by('id'))
+            if len(seats) != len(seat_ids):
+                return Response({"error": "Algunos asientos no existen."}, status=404)
+
+            active_locks = Seat.objects.filter(
+                zone__event_id=event_id, locked_at__gt=cutoff
+            )
+            own_locks = active_locks.filter(
+                Q(locked_by_session__startswith=f"{owner}::")
+                | Q(locked_by_session__startswith=f"{session_id}::")
+            )
+            already_own_ids = set(own_locks.values_list('id', flat=True))
+            if len(already_own_ids | set(seat_ids)) > MAX_SEATS_PER_SESSION:
+                return Response({"error": "Ya tienes el máximo de 6 asientos reservados."}, status=429)
+
+            ip_hold_ids = set(active_locks.filter(
+                locked_by_session__contains=f"~{fingerprint}::"
+            ).values_list('id', flat=True))
+            new_hold_ids = set(seat_ids) - already_own_ids
+            if len(ip_hold_ids | new_hold_ids) > MAX_SEATS_PER_IP:
+                return Response({
+                    "error": "Demasiados asientos reservados desde esta conexión. Intenta más tarde."
+                }, status=429)
+
+            for seat in seats:
+                if not seat.is_available:
+                    return Response({"error": f"El asiento {seat.seat_number} ya fue vendido."}, status=409)
+
+                occupied_days = set(OrderItem.objects.filter(
+                    seat=seat, order__status=Order.Status.PAID
+                ).values_list('valid_for_day', flat=True))
+                is_sold = (
+                    bool(occupied_days & {"ALL", "BOTH"})
+                    or requested_day in {"ALL", "BOTH"} and bool(occupied_days)
+                    or requested_day in occupied_days
+                )
+                if is_sold:
+                    return Response({"error": f"El asiento {seat.seat_number} ya fue vendido."}, status=409)
+
+                # Una orden iniciada debe conservar su oportunidad de pagar;
+                # no liberar ni sobrescribir pagos legítimos en curso.
+                pending_cutoff = now - timedelta(minutes=15)
+                pending_days = set(OrderItem.objects.filter(
+                    seat=seat,
+                    order__status=Order.Status.PENDING,
+                    order__created_at__gte=pending_cutoff,
+                ).values_list('valid_for_day', flat=True))
+                if pending_days & {"ALL", "BOTH"} or (
+                    requested_day in {"ALL", "BOTH"} and pending_days
+                ) or requested_day in pending_days:
+                    return Response({
+                        "error": f"El asiento {seat.seat_number} está en una compra pendiente."
+                    }, status=409)
+
+                if seat.locked_at and seat.locked_at > cutoff:
+                    if not owned_by_request(seat.locked_by_session, session_id, request):
+                        return Response({
+                            "error": f"El asiento {seat.seat_number} está reservado temporalmente."
+                        }, status=409)
+
+            # Operación todo-o-nada. Repetir la solicitud NO renueva el plazo.
+            for seat in seats:
+                if seat.id not in already_own_ids:
+                    seat.locked_at = now
+                    seat.locked_by_session = f"{owner}::{requested_day}"
+                    seat.save(update_fields=['locked_at', 'locked_by_session'])
+
+        return Response({"status": "locked", "expires_in_seconds": int(SEAT_HOLD_TTL.total_seconds())})
 
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def unlock_seats(self, request):
-        seat_ids = request.data.get('seat_ids', [])
+        seat_ids = request.data.get('seat_ids')
         session_id = request.data.get('session_id')
-        
-        if not seat_ids or not session_id:
-            return Response({"error": "seat_ids y session_id son requeridos"}, status=400)
-            
-        seats = Seat.objects.filter(id__in=seat_ids)
-        for seat in seats:
-            if seat.locked_by_session and (seat.locked_by_session == session_id or seat.locked_by_session.startswith(f"{session_id}::")):
-                seat.locked_at = None
-                seat.locked_by_session = None
-                seat.save(update_fields=['locked_at', 'locked_by_session'])
-                
+        if not isinstance(session_id, str) or not SESSION_ID_PATTERN.fullmatch(session_id):
+            return Response({"error": "Sesión inválida."}, status=400)
+        if (not isinstance(seat_ids, list) or len(seat_ids) > MAX_SEATS_PER_SESSION
+                or any(type(seat_id) is not int or seat_id <= 0 for seat_id in seat_ids)):
+            return Response({"error": "Asientos inválidos."}, status=400)
+
+        with transaction.atomic():
+            seats = Seat.objects.select_for_update().filter(id__in=seat_ids)
+            for seat in seats:
+                if owned_by_request(seat.locked_by_session, session_id, request):
+                    seat.locked_at = None
+                    seat.locked_by_session = None
+                    seat.save(update_fields=['locked_at', 'locked_by_session'])
         return Response({"status": "unlocked"})
