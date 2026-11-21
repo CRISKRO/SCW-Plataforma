@@ -16,8 +16,6 @@ import {
   Ticket,
   Calendar,
   Filter,
-  DollarSign,
-  Layers,
   ChevronDown,
   Mail
 } from 'lucide-react';
@@ -29,6 +27,62 @@ import AdminPageHeader from '@/components/admin/AdminPageHeader';
 function isTicketItem(item: { event?: number | null; product_name?: string }) {
   return item.event != null || !!item.product_name?.toLowerCase().includes('boleto');
 }
+
+function isCourtesy(order: any, item?: any) {
+  if (order?.payment_method === 'COURTESY') return true;
+  const name = (item?.product_name || '').toLowerCase();
+  return name.includes('cortesía') || name.includes('cortesia');
+}
+
+const ZONE_LABELS: Record<string, string> = {
+  MESAS_VIP_RINGSIDE: 'Mesas VIP Ringside',
+  MESAS_VIP: 'Mesas VIP',
+  PRIMERA_FILA: 'Primera fila',
+  SEGUNDA_FILA: 'Segunda fila',
+  NORTE: 'Norte',
+  SUR: 'Sur',
+  ESTE: 'Este',
+  OESTE: 'Oeste',
+  GENERAL: 'General',
+  CUSTOM: 'Zona especial',
+};
+
+// Zona del boleto: primero el asiento real, luego lo que diga el nombre del boleto
+function getTicketZone(item: any): string {
+  const zt = item.seat_details?.zone_type;
+  if (zt) return zt;
+  const text = `${item.product_name || ''} ${item.size || ''}`.toUpperCase();
+  const keys = ['MESAS_VIP_RINGSIDE', 'MESAS_VIP', 'PRIMERA_FILA', 'SEGUNDA_FILA', 'NORTE', 'SUR', 'ESTE', 'OESTE', 'GENERAL'];
+  const found = keys.find(k => text.includes(k) || text.includes(k.replace(/_/g, ' ')));
+  return found || 'OTRO';
+}
+
+// Proporción que realmente se cobró después de cupones de descuento
+function orderPaidRatio(order: any) {
+  const subtotal = (order.items || []).reduce((acc: number, i: any) => acc + parseFloat(i.price || 0) * (i.quantity || 1), 0);
+  const discount = parseFloat(order.discount_amount || 0);
+  if (!subtotal || !discount) return 1;
+  return Math.max(0, subtotal - discount) / subtotal;
+}
+
+const PAYMENT_LABELS: Record<string, string> = {
+  MERCADOPAGO: 'Mercado Pago',
+  TRANSFER: 'Transferencia',
+  BOX_OFFICE: 'Taquilla',
+  STRIPE: 'Tarjeta (Stripe)',
+};
+
+function matchesTicketFilter(o: any, f: string) {
+  switch (f) {
+    case 'PAID': return o.status === 'PAID' && !isCourtesy(o);
+    case 'COURTESY': return isCourtesy(o) && o.status !== 'CANCELLED';
+    case 'PENDING': return o.status === 'PENDING';
+    case 'CANCELLED': return o.status === 'CANCELLED';
+    default: return true;
+  }
+}
+
+const money = (n: number) => `$${n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const STATUS_MAP: Record<string, { label: string, color: string, icon: any }> = {
   PENDING: { label: 'Pendiente', color: 'bg-zinc-800 text-zinc-400 border-zinc-700', icon: AlertCircle },
@@ -61,6 +115,8 @@ export default function AdminOrdersPage() {
 
   const [selectedEventId, setSelectedEventId] = useState<string>('ALL');
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+  type TicketFilter = 'ALL' | 'PAID' | 'COURTESY' | 'PENDING' | 'CANCELLED';
+  const [ticketFilter, setTicketFilter] = useState<TicketFilter>(paidOnly ? 'PAID' : 'ALL');
 
   const fetchData = async () => {
     try {
@@ -234,45 +290,24 @@ export default function AdminOrdersPage() {
   const isMerchOrder = (order: any) => order.items?.some((i: any) => !isTicketItem(i));
   const isTicketOrder = (order: any) => order.items?.some(isTicketItem);
 
-  // Categorize a ticket item into General, 1ª Fila, 2ª Fila, 3ª Fila or Other
-  const getTicketCategory = (item: any) => {
-    const pName = (item.product_name || '').toLowerCase();
-    const size = (item.size || '').toLowerCase();
-    const rowName = item.seat_details?.row_name || '';
-    const zoneType = item.seat_details?.zone_type || '';
-
-    if (zoneType === 'GENERAL' || pName.includes('general') || size.includes('general')) {
-      return 'GENERAL';
-    }
-    if (
-      rowName === 'A' || 
-      pName.includes('1ª fila') || pName.includes('1a fila') || pName.includes('primera fila') ||
-      size.includes('fila a') || size.includes('1ª fila') || size.includes('1a fila') || size.includes('primera fila')
-    ) {
-      return 'FIRST_ROW';
-    }
-    if (
-      rowName === 'B' || 
-      pName.includes('2ª fila') || pName.includes('2a fila') || pName.includes('segunda fila') ||
-      size.includes('fila b') || size.includes('2ª fila') || size.includes('2a fila') || size.includes('segunda fila')
-    ) {
-      return 'SECOND_ROW';
-    }
-    if (
-      rowName === 'C' || 
-      pName.includes('3ª fila') || pName.includes('3a fila') || pName.includes('tercera fila') ||
-      size.includes('fila c') || size.includes('3ª fila') || size.includes('3a fila') || size.includes('tercera fila')
-    ) {
-      return 'THIRD_ROW';
-    }
-    return 'OTHER';
-  };
-
   // Selected event title helper
   const selectedEventObj = useMemo(() => {
     if (selectedEventId === 'ALL') return null;
     return events.find(e => e.id.toString() === selectedEventId);
   }, [events, selectedEventId]);
+
+  // Evento al que pertenece un boleto. Usa el id del evento; si el boleto no lo
+  // trae (boletos viejos), lo busca por título exacto dentro del nombre.
+  const itemEventKey = useMemo(() => {
+    const sortedByTitle = [...events].sort((a, b) => (b.title || '').length - (a.title || '').length);
+    return (item: any): string => {
+      const id = item.event ?? item.event_id;
+      if (id != null) return String(id);
+      const text = `${item.event_title || ''} ${item.product_name || ''}`.toLowerCase();
+      const ev = sortedByTitle.find(e => e.title && text.includes(e.title.toLowerCase()));
+      return ev ? String(ev.id) : 'NONE';
+    };
+  }, [events]);
 
   // Filter orders according to tab, search query, and event selection
   const filteredOrders = useMemo(() => {
@@ -289,76 +324,130 @@ export default function AdminOrdersPage() {
 
       if (activeTab === 'TICKETS') {
         if (!isTicketOrder(o)) return false;
-        if (paidOnly && o.status !== 'PAID') return false;
 
         if (selectedEventId !== 'ALL') {
-          const selectedIdNum = parseInt(selectedEventId);
-          const hasMatchingEvent = o.items?.some((item: any) => {
-            if (!isTicketItem(item)) return false;
-            if (item.event === selectedIdNum || item.event_id === selectedIdNum) return true;
-            if (selectedEventObj?.title) {
-              const itemTitle = item.event_title || item.product_name || '';
-              return itemTitle.toLowerCase().includes(selectedEventObj.title.toLowerCase());
-            }
-            return false;
-          });
-          return hasMatchingEvent;
+          const hasMatchingEvent = o.items?.some((item: any) => isTicketItem(item) && itemEventKey(item) === selectedEventId);
+          if (!hasMatchingEvent) return false;
         }
-        return true;
+        return matchesTicketFilter(o, ticketFilter);
       }
 
       return false;
     });
-  }, [orders, activeTab, paidOnly, searchQuery, selectedEventId, selectedEventObj]);
+  }, [orders, activeTab, searchQuery, selectedEventId, ticketFilter, itemEventKey]);
 
-  // Compute breakdown stats for tickets (using PAID status orders for financial/ticket precision)
+  // Cuántos pedidos hay en cada filtro (respetando evento y búsqueda)
+  const ticketFilterCounts = useMemo(() => {
+    const counts: Record<TicketFilter, number> = { ALL: 0, PAID: 0, COURTESY: 0, PENDING: 0, CANCELLED: 0 };
+    const q = searchQuery.toLowerCase();
+    orders.forEach(o => {
+      if (!isTicketOrder(o)) return;
+      if (q && !(o.contact_email?.toLowerCase().includes(q) || o.id.toString().includes(q))) return;
+      if (selectedEventId !== 'ALL' && !o.items?.some((i: any) => isTicketItem(i) && itemEventKey(i) === selectedEventId)) return;
+      (Object.keys(counts) as TicketFilter[]).forEach(k => { if (matchesTicketFilter(o, k)) counts[k]++; });
+    });
+    return counts;
+  }, [orders, searchQuery, selectedEventId, itemEventKey]);
+
+  // Corte de caja: pedidos PAGADOS del evento elegido, separando ventas y cortesías.
+  // No depende de la búsqueda: siempre cuadra contra el evento completo.
   const ticketStats = useMemo(() => {
-    let totalTickets = 0;
-    let generalCount = 0;
-    let firstRowCount = 0;
-    let secondRowCount = 0;
-    let thirdRowOtherCount = 0;
-    let totalRevenue = 0;
+    type Line = { qty: number; gross: number; discount: number; revenue: number };
+    const line = (): Line => ({ qty: 0, gross: 0, discount: 0, revenue: 0 });
+    const sales: Record<string, Line> = {};
+    const courtesies: Record<string, Line> = {};
+    const methods: Record<string, { orders: Set<number>; revenue: number }> = {};
+    const pending = { orders: new Set<number>(), qty: 0, amount: 0 };
+    const salesOrders = new Set<number>();
+    const courtesyOrders = new Set<number>();
+    // Con un evento elegido se agrupa por zona; con todos, por evento
+    const groupKey = (item: any) => (selectedEventId === 'ALL' ? itemEventKey(item) : getTicketZone(item));
 
-    const paidOrders = filteredOrders.filter(o => o.status === 'PAID');
-
-    paidOrders.forEach(order => {
+    orders.forEach(order => {
+      if (!isTicketOrder(order)) return;
+      if (order.status !== 'PAID' && order.status !== 'PENDING') return;
+      const ratio = orderPaidRatio(order);
       order.items?.forEach((item: any) => {
-        if (isTicketItem(item)) {
-          // Check event match if selected
-          if (selectedEventId !== 'ALL') {
-            const selectedIdNum = parseInt(selectedEventId);
-            const matchesEv = 
-              item.event === selectedIdNum || 
-              item.event_id === selectedIdNum || 
-              (selectedEventObj?.title && (item.event_title || item.product_name || '').toLowerCase().includes(selectedEventObj.title.toLowerCase()));
-            if (!matchesEv) return;
-          }
+        if (!isTicketItem(item)) return;
+        if (selectedEventId !== 'ALL' && itemEventKey(item) !== selectedEventId) return;
+        const qty = item.quantity || 1;
+        const gross = parseFloat(item.price || 0) * qty;
 
-          const qty = item.quantity || 1;
-          const price = parseFloat(item.price || 0);
-          const category = getTicketCategory(item);
-
-          totalTickets += qty;
-          totalRevenue += price * qty;
-
-          if (category === 'GENERAL') generalCount += qty;
-          else if (category === 'FIRST_ROW') firstRowCount += qty;
-          else if (category === 'SECOND_ROW') secondRowCount += qty;
-          else thirdRowOtherCount += qty;
+        if (order.status === 'PENDING') {
+          pending.orders.add(order.id);
+          pending.qty += qty;
+          pending.amount += gross * ratio;
+          return;
         }
+        const courtesy = isCourtesy(order, item);
+        const l = ((courtesy ? courtesies : sales)[groupKey(item)] ||= line());
+        l.qty += qty;
+        if (courtesy) {
+          courtesyOrders.add(order.id);
+          return;
+        }
+        l.gross += gross;
+        l.revenue += gross * ratio;
+        l.discount += gross * (1 - ratio);
+        salesOrders.add(order.id);
+        const m = (methods[order.payment_method || 'OTRO'] ||= { orders: new Set(), revenue: 0 });
+        m.orders.add(order.id);
+        m.revenue += gross * ratio;
       });
     });
 
+    const zoneOrder = ['MESAS_VIP_RINGSIDE', 'MESAS_VIP', 'PRIMERA_FILA', 'SEGUNDA_FILA', 'NORTE', 'SUR', 'ESTE', 'OESTE', 'GENERAL', 'CUSTOM', 'OTRO'];
+    const eventDate = (key: string) => new Date(events.find(e => String(e.id) === key)?.date_time || 0).getTime();
+    const sortLines = (rec: Record<string, Line>) =>
+      Object.entries(rec).sort((a, b) =>
+        selectedEventId === 'ALL' ? eventDate(b[0]) - eventDate(a[0]) : zoneOrder.indexOf(a[0]) - zoneOrder.indexOf(b[0]));
+    const sum = (rec: Record<string, Line>, k: keyof Line) => Object.values(rec).reduce((t, l) => t + l[k], 0);
+
     return {
-      totalTickets,
-      generalCount,
-      firstRowCount,
-      secondRowCount,
-      thirdRowOtherCount,
-      totalRevenue
+      sales: sortLines(sales),
+      courtesies: sortLines(courtesies),
+      soldQty: sum(sales, 'qty'),
+      revenue: sum(sales, 'revenue'),
+      discount: sum(sales, 'discount'),
+      courtesyQty: sum(courtesies, 'qty'),
+      salesOrders: salesOrders.size,
+      courtesyOrders: courtesyOrders.size,
+      methods: Object.entries(methods).sort((a, b) => b[1].revenue - a[1].revenue),
+      pending: { orders: pending.orders.size, qty: pending.qty, amount: pending.amount },
     };
-  }, [filteredOrders, selectedEventId, selectedEventObj]);
+  }, [orders, events, selectedEventId, itemEventKey]);
+
+  // Nombre de cada renglón del corte (zona o evento)
+  const corteLabel = (key: string) => {
+    if (selectedEventId !== 'ALL') return ZONE_LABELS[key] || 'Sin zona identificada';
+    const ev = events.find(e => String(e.id) === key);
+    return ev ? ev.title : 'Sin evento identificado';
+  };
+
+  // Resumen corto de los boletos de un pedido: "2 × Primera fila"
+  const renderTicketSummary = (order: any) => {
+    const groups: Record<string, number> = {};
+    order.items?.forEach((item: any) => {
+      if (!isTicketItem(item)) return;
+      if (selectedEventId !== 'ALL' && itemEventKey(item) !== selectedEventId) return;
+      const z = getTicketZone(item);
+      groups[z] = (groups[z] || 0) + (item.quantity || 1);
+    });
+    const entries = Object.entries(groups);
+    const evTitles = selectedEventId === 'ALL'
+      ? Array.from(new Set((order.items || []).filter(isTicketItem).map((i: any) => events.find(e => String(e.id) === itemEventKey(i))?.title).filter(Boolean)))
+      : [];
+    return (
+      <div className="space-y-1">
+        {evTitles.length > 0 && <div className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wide">{evTitles.join(', ')}</div>}
+        {entries.map(([z, qty]) => (
+          <div key={z} className="text-sm text-zinc-200">
+            <span className="font-bold text-white">{qty} ×</span> {ZONE_LABELS[z] || 'Boleto'}
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   const renderPaymentBadge = (method: string) => {
     switch (method) {
@@ -384,23 +473,19 @@ export default function AdminOrdersPage() {
         icon={<Package className="w-8 h-8 animate-pulse" />}
       />
 
-      {/* Tabs bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
-        <div className="flex gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+      {/* Pestañas y evento */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="inline-flex rounded-xl bg-zinc-900 border border-white/10 p-1 self-start">
           <button
             onClick={() => selectView('merch')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap ${
-              activeTab === 'MERCH' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-800 border border-white/5'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm transition-colors whitespace-nowrap ${activeTab === 'MERCH' ? 'bg-white text-black' : 'text-zinc-400 hover:text-white'}`}
           >
             <ShoppingBag className="w-4 h-4" />
-            Productos Físicos
+            Productos físicos
           </button>
           <button
-            onClick={() => selectView(paidOnly ? 'paid-tickets' : 'tickets')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap ${
-              activeTab === 'TICKETS' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-800 border border-white/5'
-            }`}
+            onClick={() => selectView('tickets')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm transition-colors whitespace-nowrap ${activeTab === 'TICKETS' ? 'bg-white text-black' : 'text-zinc-400 hover:text-white'}`}
           >
             <Ticket className="w-4 h-4" />
             Boletos
@@ -408,130 +493,196 @@ export default function AdminOrdersPage() {
         </div>
 
         {activeTab === 'TICKETS' && (
-          <label className="flex items-center gap-2 text-sm text-zinc-300">
-            <input type="checkbox" checked={paidOnly} className="accent-blue-600"
-              onChange={event => selectView(event.target.checked ? 'paid-tickets' : 'tickets')} />
-            Solo pedidos pagados
-          </label>
-        )}
-
-        {/* Counter Pill */}
-        <div className="text-xs text-zinc-400 bg-zinc-900 border border-white/5 px-3 py-1.5 rounded-lg font-medium hidden sm:block">
-          Mostrando <span className="text-white font-bold">{filteredOrders.length}</span> pedido(s)
-        </div>
-      </div>
-
-      {/* Ticket Breakdown Cards (Only visible in TICKETS tab) */}
-      {activeTab === 'TICKETS' && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
-              <Layers className="w-3.5 h-3.5 text-blue-400" />
-              Resumen de Boletos Vendidos {selectedEventObj ? `— ${selectedEventObj.title}` : '(Todos los eventos)'}
-            </h3>
-            <span className="text-[11px] text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded font-semibold">
-              Solo órdenes PAGADAS
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-            {/* Total Boletos */}
-            <div className="bg-zinc-900/80 border border-white/10 rounded-xl p-3.5 flex flex-col justify-between">
-              <span className="text-xs text-zinc-400 font-medium">Total Vendidos</span>
-              <div className="text-xl sm:text-2xl font-black text-white mt-1 flex items-baseline gap-1">
-                {ticketStats.totalTickets}
-                <span className="text-xs font-normal text-zinc-500">boletos</span>
-              </div>
-            </div>
-
-            {/* General */}
-            <div className="bg-zinc-900/80 border border-blue-500/20 rounded-xl p-3.5 flex flex-col justify-between">
-              <span className="text-xs text-blue-400 font-medium flex items-center gap-1">
-                <Ticket className="w-3 h-3" /> General
-              </span>
-              <div className="text-xl sm:text-2xl font-black text-blue-300 mt-1">
-                {ticketStats.generalCount}
-              </div>
-            </div>
-
-            {/* 1a Fila */}
-            <div className="bg-zinc-900/80 border border-purple-500/20 rounded-xl p-3.5 flex flex-col justify-between">
-              <span className="text-xs text-purple-400 font-medium flex items-center gap-1">
-                🥇 1ª Fila
-              </span>
-              <div className="text-xl sm:text-2xl font-black text-purple-300 mt-1">
-                {ticketStats.firstRowCount}
-              </div>
-            </div>
-
-            {/* 2a Fila */}
-            <div className="bg-zinc-900/80 border border-amber-500/20 rounded-xl p-3.5 flex flex-col justify-between">
-              <span className="text-xs text-amber-400 font-medium flex items-center gap-1">
-                🥈 2ª Fila
-              </span>
-              <div className="text-xl sm:text-2xl font-black text-amber-300 mt-1">
-                {ticketStats.secondRowCount}
-              </div>
-            </div>
-
-            {/* 3a / Otras Filas */}
-            <div className="bg-zinc-900/80 border border-emerald-500/20 rounded-xl p-3.5 flex flex-col justify-between">
-              <span className="text-xs text-emerald-400 font-medium flex items-center gap-1">
-                🥉 Otras Filas
-              </span>
-              <div className="text-xl sm:text-2xl font-black text-emerald-300 mt-1">
-                {ticketStats.thirdRowOtherCount}
-              </div>
-            </div>
-
-            {/* Total Ingresos */}
-            <div className="bg-gradient-to-br from-green-950/40 to-zinc-900 border border-green-500/30 rounded-xl p-3.5 flex flex-col justify-between col-span-2 sm:col-span-1">
-              <span className="text-xs text-green-400 font-medium flex items-center gap-1">
-                <DollarSign className="w-3 h-3" /> Recaudado
-              </span>
-              <div className="text-lg sm:text-xl font-black text-green-400 mt-1">
-                ${ticketStats.totalRevenue.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Filters & Search Controls */}
-      <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-        {/* Search Input */}
-        <div className={`relative ${activeTab === 'TICKETS' ? 'sm:col-span-7 md:col-span-8' : 'sm:col-span-12'}`}>
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar pedido por email o ID..."
-            className="w-full bg-zinc-950 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-blue-500/50 focus:bg-zinc-900 transition-all"
-          />
-        </div>
-
-        {/* Event Filter Dropdown (TICKETS tab only) */}
-        {activeTab === 'TICKETS' && (
-          <div className="sm:col-span-5 md:col-span-4 relative">
-            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-400 pointer-events-none">
-              <Calendar className="w-4 h-4" />
-            </div>
+          <div className="relative w-full sm:w-80">
+            <Calendar className="w-4 h-4 text-red-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <select
               value={selectedEventId}
               onChange={(e) => setSelectedEventId(e.target.value)}
-              className="w-full appearance-none bg-zinc-950 border border-white/10 text-xs sm:text-sm text-white rounded-xl py-3 pl-10 pr-8 focus:outline-none focus:border-blue-500 focus:bg-zinc-900 transition-all cursor-pointer font-medium"
+              aria-label="Evento"
+              className="w-full appearance-none bg-zinc-900 border border-white/10 hover:border-white/30 text-sm text-white rounded-xl py-3 pl-10 pr-9 focus:outline-none focus:border-red-500 transition-colors cursor-pointer font-semibold"
             >
-              <option value="ALL">🗓️ Todos los Eventos</option>
-              {events.map((ev) => (
-                <option key={ev.id} value={ev.id.toString()}>
-                  {ev.title} ({new Date(ev.date_time).toLocaleDateString('es-MX', { month: 'short', day: 'numeric' })})
-                </option>
-              ))}
+              <option value="ALL">Todos los eventos</option>
+              {[...events]
+                .sort((a, b) => new Date(b.date_time).getTime() - new Date(a.date_time).getTime())
+                .map((ev) => (
+                  <option key={ev.id} value={ev.id.toString()}>
+                    {ev.title} · {new Date(ev.date_time).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </option>
+                ))}
             </select>
             <ChevronDown className="w-4 h-4 text-zinc-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
         )}
+      </div>
+
+      {/* Corte de caja (solo pestaña Boletos) */}
+      {activeTab === 'TICKETS' && (
+        <section className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-4 items-start">
+          {/* Ticket principal */}
+          <div className="rounded-2xl border border-white/10 bg-zinc-950 overflow-hidden">
+            <div className="flex items-baseline justify-between gap-3 px-5 py-4 border-b border-white/10">
+              <div className="min-w-0">
+                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-500">Corte de caja</p>
+                <h3 className="text-lg font-black text-white truncate">
+                  {selectedEventObj ? selectedEventObj.title : 'Todos los eventos'}
+                </h3>
+              </div>
+              {selectedEventObj && (
+                <span className="text-sm text-zinc-400 whitespace-nowrap">
+                  {new Date(selectedEventObj.date_time).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </span>
+              )}
+            </div>
+
+            {/* Ventas */}
+            <div className="px-5 pt-4 pb-1 flex items-center justify-between">
+              <span className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-400">Ventas</span>
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-600">Boletos · Importe</span>
+            </div>
+            {ticketStats.sales.length === 0 ? (
+              <p className="px-5 py-3 text-sm text-zinc-500">Todavía no hay ventas pagadas.</p>
+            ) : (
+              ticketStats.sales.map(([key, l]) => (
+                <div key={key} className="flex items-baseline justify-between gap-4 px-5 py-2.5 border-t border-white/5 text-sm">
+                  <span className="min-w-0 text-zinc-200">
+                    <span className="font-semibold text-white">{corteLabel(key)}</span>
+                    <span className="text-zinc-500"> · {l.qty}</span>
+                    {l.discount > 0.005 && <span className="text-zinc-500"> (cupón −{money(l.discount)})</span>}
+                    {selectedEventId === 'ALL' && key !== 'NONE' && (
+                      <button onClick={() => setSelectedEventId(key)} className="ml-2 text-xs font-bold text-red-400 hover:text-red-300">
+                        ver
+                      </button>
+                    )}
+                  </span>
+                  <span className="text-white tabular-nums">{money(l.revenue)}</span>
+                </div>
+              ))
+            )}
+            <div className="flex items-baseline justify-between px-5 py-3 border-t border-white/15 bg-zinc-900/60 text-sm">
+              <span className="font-bold text-white">Subtotal ventas · {ticketStats.soldQty} boleto{ticketStats.soldQty === 1 ? '' : 's'}</span>
+              <span className="font-black text-green-400 tabular-nums">{money(ticketStats.revenue)}</span>
+            </div>
+
+            {/* Cortesías */}
+            <div className="px-5 pt-5 pb-1">
+              <span className="text-[11px] font-black uppercase tracking-[0.2em] text-yellow-400">Cortesías</span>
+            </div>
+            {ticketStats.courtesies.length === 0 ? (
+              <p className="px-5 py-3 text-sm text-zinc-500">Sin cortesías.</p>
+            ) : (
+              ticketStats.courtesies.map(([key, l]) => (
+                <div key={key} className="flex items-baseline justify-between gap-4 px-5 py-2.5 border-t border-white/5 text-sm">
+                  <span className="min-w-0">
+                    <span className="font-semibold text-white">{corteLabel(key)}</span>
+                    <span className="text-zinc-500"> · {l.qty}</span>
+                  </span>
+                  <span className="text-zinc-500 tabular-nums">$0.00</span>
+                </div>
+              ))
+            )}
+            <div className="flex items-baseline justify-between px-5 py-3 border-t border-white/15 bg-zinc-900/60 text-sm">
+              <span className="font-bold text-white">Subtotal cortesías · {ticketStats.courtesyQty} boleto{ticketStats.courtesyQty === 1 ? '' : 's'}</span>
+              <span className="font-black text-zinc-400 tabular-nums">$0.00</span>
+            </div>
+
+            {/* Total */}
+            <div className="flex flex-wrap items-end justify-between gap-3 px-5 py-5 border-t-2 border-dashed border-white/15">
+              <div>
+                <p className="text-sm font-bold text-white">Total del {selectedEventObj ? 'evento' : 'periodo'}</p>
+                <p className="text-xs text-zinc-500 mt-0.5">
+                  {ticketStats.soldQty + ticketStats.courtesyQty} personas con boleto ({ticketStats.soldQty} pagados + {ticketStats.courtesyQty} cortesías)
+                </p>
+              </div>
+              <p className="text-3xl font-black text-green-400 tabular-nums">{money(ticketStats.revenue)}</p>
+            </div>
+          </div>
+
+          {/* Columna lateral: cómo entró el dinero y lo que falta */}
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-white/10 bg-zinc-950 overflow-hidden">
+              <p className="px-5 py-3 text-[11px] font-black uppercase tracking-[0.2em] text-zinc-400 border-b border-white/10">Cómo se cobró</p>
+              {ticketStats.methods.length === 0 ? (
+                <p className="px-5 py-3 text-sm text-zinc-500">Sin cobros.</p>
+              ) : (
+                ticketStats.methods.map(([m, v]) => (
+                  <div key={m} className="flex items-baseline justify-between gap-3 px-5 py-2.5 border-t border-white/5 first:border-t-0 text-sm">
+                    <span className="text-white font-semibold">
+                      {PAYMENT_LABELS[m] || m}
+                      <span className="text-zinc-500 font-normal"> · {v.orders.size} pedido{v.orders.size === 1 ? '' : 's'}</span>
+                    </span>
+                    <span className="text-white tabular-nums">{money(v.revenue)}</span>
+                  </div>
+                ))
+              )}
+              {ticketStats.discount > 0.005 && (
+                <p className="px-5 py-2.5 border-t border-white/5 text-xs text-zinc-500">
+                  Descuentos por cupón: −{money(ticketStats.discount)}
+                </p>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setTicketFilter('PENDING')}
+              className="w-full text-left rounded-2xl border border-white/10 bg-zinc-950 hover:border-white/30 transition-colors px-5 py-4"
+            >
+              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-400">Pendientes de pago</p>
+              <p className="text-xl font-black text-white mt-1 tabular-nums">{money(ticketStats.pending.amount)}</p>
+              <p className="text-xs text-zinc-500 mt-0.5">
+                {ticketStats.pending.orders} pedido{ticketStats.pending.orders === 1 ? '' : 's'} · {ticketStats.pending.qty} boleto{ticketStats.pending.qty === 1 ? '' : 's'} · no entran al corte
+              </p>
+            </button>
+          </div>
+        </section>
+      )}
+
+      {/* Pedidos: búsqueda y filtro */}
+      <div className="space-y-3">
+        {activeTab === 'TICKETS' && (
+          <h3 className="text-sm font-black uppercase tracking-wider text-white pt-2">
+            Pedidos <span className="text-zinc-500 font-bold">({filteredOrders.length})</span>
+          </h3>
+        )}
+        <div className="flex flex-col lg:flex-row gap-3 lg:items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar por correo o número de pedido"
+              className="w-full bg-zinc-950 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-white/30 transition-colors"
+            />
+          </div>
+          {activeTab === 'TICKETS' && (
+            <div className="flex gap-2 overflow-x-auto pb-1 lg:pb-0">
+              {([
+                ['ALL', 'Todos'],
+                ['PAID', 'Pagados'],
+                ['COURTESY', 'Cortesías'],
+                ['PENDING', 'Pendientes'],
+                ['CANCELLED', 'Cancelados'],
+              ] as [TicketFilter, string][]).map(([k, label]) => {
+                const active = ticketFilter === k;
+                return (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => setTicketFilter(k)}
+                    className={`shrink-0 inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-bold transition-colors ${
+                      active
+                        ? k === 'COURTESY' ? 'bg-yellow-400 text-black border-yellow-400' : 'bg-white text-black border-white'
+                        : 'border-white/10 text-zinc-300 hover:border-white/30'
+                    }`}
+                  >
+                    {label}
+                    <span className={`rounded-full px-1.5 text-[11px] ${active ? 'bg-black/15' : 'bg-white/10 text-zinc-400'}`}>{ticketFilterCounts[k]}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Orders List Content */}
@@ -563,7 +714,7 @@ export default function AdminOrdersPage() {
                   <th className="px-6 py-4 font-semibold tracking-wider">Orden ID</th>
                   <th className="px-6 py-4 font-semibold tracking-wider">Fecha</th>
                   <th className="px-6 py-4 font-semibold tracking-wider">Cliente</th>
-                  <th className="px-6 py-4 font-semibold tracking-wider">Artículos</th>
+                  <th className="px-6 py-4 font-semibold tracking-wider">{activeTab === 'TICKETS' ? 'Boletos' : 'Artículos'}</th>
                   <th className="px-6 py-4 font-semibold tracking-wider">Total</th>
                   <th className="px-6 py-4 font-semibold tracking-wider">Estado</th>
                   <th className="px-6 py-4 font-semibold tracking-wider text-right">Acción</th>
@@ -584,19 +735,22 @@ export default function AdminOrdersPage() {
                         {new Date(order.created_at).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })}
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-white font-medium">{order.contact_email}</div>
+                        {order.contact_name && <div className="text-sm text-white font-semibold">{order.contact_name}</div>}
+                        <div className={order.contact_name ? 'text-xs text-zinc-400' : 'text-sm text-white font-medium'}>{order.contact_email}</div>
                         {order.contact_phone && <div className="text-xs text-zinc-500">{order.contact_phone}</div>}
                         {renderPaymentBadge(order.payment_method)}
                       </td>
                       <td className="px-6 py-4">
-                        <div className="space-y-1">
-                          {order.items?.map((item: any) => (
-                            <div key={item.id} className="text-xs">
-                              <span className="font-bold text-blue-400">{item.quantity}x</span> {item.product_name}
-                              {item.size && <span className="text-zinc-500 ml-1">({item.size})</span>}
-                            </div>
-                          ))}
-                        </div>
+                        {activeTab === 'TICKETS' ? renderTicketSummary(order) : (
+                          <div className="space-y-1">
+                            {order.items?.map((item: any) => (
+                              <div key={item.id} className="text-xs">
+                                <span className="font-bold text-blue-400">{item.quantity}x</span> {item.product_name}
+                                {item.size && <span className="text-zinc-500 ml-1">({item.size})</span>}
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4 font-bold text-white">${parseFloat(order.total_amount).toFixed(2)}</td>
                       <td className="px-6 py-4">
@@ -681,6 +835,9 @@ export default function AdminOrdersPage() {
                   </div>
 
                   {/* Items List */}
+                  {activeTab === 'TICKETS' ? (
+                    <div className="bg-zinc-900/60 rounded-lg p-2.5 border border-white/5">{renderTicketSummary(order)}</div>
+                  ) : (
                   <div className="bg-zinc-900/60 rounded-lg p-2.5 space-y-1.5 border border-white/5">
                     {order.items?.map((item: any) => (
                       <div key={item.id} className="text-xs flex justify-between items-start">
@@ -694,6 +851,7 @@ export default function AdminOrdersPage() {
                       </div>
                     ))}
                   </div>
+                  )}
 
                   {/* Bottom Row: Total & Action dropdown */}
                   <div className="flex items-center justify-between pt-1" onClick={e => e.stopPropagation()}>
