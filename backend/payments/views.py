@@ -258,6 +258,33 @@ class CreateOrderView(APIView):
             
             # Use standard parser for items
             items_data = data.get('items', [])
+            # Validar boletos numerados ANTES de crear una orden PENDING.
+            # De otro modo una única petición puede retener todo el recinto.
+            if not isinstance(items_data, list):
+                return Response({"error": "Artículos de compra inválidos."},
+                                status=status.HTTP_400_BAD_REQUEST)
+            seen_seats = set()
+            for item in items_data:
+                if not isinstance(item, dict):
+                    return Response({"error": "Artículo inválido."},
+                                    status=status.HTTP_400_BAD_REQUEST)
+                seat_id = item.get('seat_id')
+                if seat_id is None or seat_id == '':
+                    continue
+                if (type(seat_id) is not int or seat_id <= 0
+                        or type(item.get('quantity', 1)) is not int
+                        or item.get('quantity', 1) != 1
+                        or item.get('valid_for_day', 'ALL') not in {'ALL', 'BOTH', 'DAY_1', 'DAY_2'}):
+                    return Response({"error": "Selección de asientos inválida."},
+                                    status=status.HTTP_400_BAD_REQUEST)
+                if seat_id in seen_seats:
+                    return Response({"error": "El mismo asiento aparece varias veces."},
+                                    status=status.HTTP_400_BAD_REQUEST)
+                seen_seats.add(seat_id)
+                if len(seen_seats) > 6:
+                    return Response({"error": "Máximo 6 asientos numerados por compra."},
+                                    status=status.HTTP_400_BAD_REQUEST)
+
             
             # Calculate total and validate products
             total_amount = 0
