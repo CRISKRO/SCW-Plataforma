@@ -6,6 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db import transaction
 from django.db.models import Q
+from datetime import timedelta
 from django.utils import timezone
 from .locking import (
     SEAT_HOLD_TTL, MAX_SEATS_PER_SESSION, MAX_SEATS_PER_IP,
@@ -412,7 +413,7 @@ class SeatViewSet(viewsets.ModelViewSet):
 
         if not isinstance(session_id, str) or not SESSION_ID_PATTERN.fullmatch(session_id):
             return Response({"error": "Sesión de reserva inválida."}, status=400)
-        if requested_day not in VALID_DAYS:
+        if not isinstance(requested_day, str) or requested_day not in VALID_DAYS:
             return Response({"error": "Día seleccionado inválido."}, status=400)
         if not isinstance(seat_ids, list) or not 1 <= len(seat_ids) <= MAX_SEATS_PER_SESSION:
             return Response({"error": "Máximo 6 asientos por compra."}, status=400)
